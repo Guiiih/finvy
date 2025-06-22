@@ -6,11 +6,11 @@ import { RouterLink, RouterView } from 'vue-router'
   <header>
     <div class="wrapper">
       <h1 class="title">Finvy</h1>
-      <nav>
-        <RouterLink to="/">Dashboard</RouterLink>
-        <RouterLink to="/products">Produtos</RouterLink>
-        <RouterLink to="/reports">Relatórios</RouterLink>
-      </nav>
+        <nav>
+          <RouterLink to="/">Dashboard</RouterLink>
+          <RouterLink to="/accounts">Plano de Contas</RouterLink> <RouterLink to="/products">Produtos</RouterLink>
+          <RouterLink to="/reports">Relatórios</RouterLink>
+        </nav>
     </div>
   </header>
 
