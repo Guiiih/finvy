@@ -294,16 +294,6 @@ const addSaleEntry1 = () => {
 
   ];
   submitEntry();
-
-  // LANÇAMENTO DO CUSTO DA MERCADORIA VENDIDA (CMV) E BAIXA DO ESTOQUE
-  resetForm();
-  newEntryDate.value = '2025-01-07';
-  newEntryDescription.value = 'Baixa de Estoque - Custo da Mercadoria Vendida (20000 unds do produto X)';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Custo da Mercadoria Vendida')?.id || '', amount: 81931.03, type: 'debit' },
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', amount: 81931.03, type: 'credit' },
-  ];
-  submitEntry();
 };
 
 
@@ -314,8 +304,10 @@ const addIcmsSettlementEntry1 = () => {
   newEntryDescription.value = 'Apuração e Transferência de ICMS Mês 1';
   newEntryLines.value = [
     // Apuração de ICMS sobre Compras (ativos a recuperar)
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 16200, type: 'credit' }, // Total ICMS Compras (9000+7200)
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 16200, type: 'debit' },
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'credit' }, // Total ICMS Compras (9000+7200)
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 9000, type: 'debit' },
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'credit' }, // Total ICMS Compras (9000+7200)
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 7200, type: 'debit' },
 
     // Apuração de ICMS sobre Vendas (dedução da receita, natureza devedora)
     { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, // Total ICMS Vendas

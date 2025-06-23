@@ -42,9 +42,10 @@ customAccountOrder.set('ICMS Antecipado', 22);
 
 
 // Funções auxiliares locais para calcular totais, filtrando 'Apuração'
+// Estas funções ainda são úteis para pegar saldos de outras contas para o cálculo do Resultado Bruto
 const getLocalAccountTotalDebits = (accountId: string) => {
   return allJournalEntries.value
-    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração para o cálculo das contas normais
     .flatMap(entry => entry.lines)
     .filter(line => line.accountId === accountId && line.type === 'debit')
     .reduce((sum, line) => sum + line.amount, 0);
@@ -52,7 +53,7 @@ const getLocalAccountTotalDebits = (accountId: string) => {
 
 const getLocalAccountTotalCredits = (accountId: string) => {
   return allJournalEntries.value
-    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração para o cálculo das contas normais
     .flatMap(entry => entry.lines)
     .filter(line => line.accountId === accountId && line.type === 'credit')
     .reduce((sum, line) => sum + line.amount, 0);
@@ -91,9 +92,8 @@ const ledgerAccounts = computed(() => {
     entry.lines.forEach(line => {
       const accountData = accountsMap.get(line.accountId);
       if (accountData) {
-        // Excluir lançamentos que vão para 'Resultado Bruto' para não duplicar,
-        // já que 'Resultado Bruto' é calculado virtualmente.
-        if (line.accountId !== accountStore.getAccountByName('Resultado Bruto')?.id) {
+        // Remover a condição para não excluir 'Resultado Bruto' aqui, pois ele será zerado e recalculado
+        // if (line.accountId !== accountStore.getAccountByName('Resultado Bruto')?.id) { 
             if (line.type === 'debit') {
               accountData.debitEntries.push(line.amount);
               accountData.totalDebits += line.amount;
@@ -101,7 +101,7 @@ const ledgerAccounts = computed(() => {
               accountData.creditEntries.push(line.amount);
               accountData.totalCredits += line.amount;
             }
-        }
+        // }
       }
     });
   });
@@ -113,7 +113,7 @@ const ledgerAccounts = computed(() => {
       accountData.finalBalance = accountData.totalCredits - accountData.totalDebits; 
     }
 
-    if (accountData.accountId === '23') { // ID da conta C/C ICMS
+    if (accountData.accountId === accountStore.getAccountByName('C/C ICMS')?.id) { // ID da conta C/C ICMS
       if (accountData.finalBalance > 0) {
         accountData.accountName = 'ICMS a Recuperar';
       } else if (accountData.finalBalance < 0) {
@@ -127,47 +127,54 @@ const ledgerAccounts = computed(() => {
   // --- Calcular e Popular a Conta "Resultado Bruto" Virtualmente ---
   const resultadoBrutoAccount = accountsMap.get(accountStore.getAccountByName('Resultado Bruto')?.id || '');
   if (resultadoBrutoAccount) {
-    let grossRevenueFromSales = 0;
-    const revenueAccounts = allAccounts.value.filter(acc => acc.type === 'revenue' && acc.nature === 'credit' && acc.name !== 'ICMS sobre Vendas' && acc.name !== 'Descontos Concedidos');
-    revenueAccounts.forEach(account => {
-      grossRevenueFromSales += (getLocalAccountTotalCredits(account.id) - getLocalAccountTotalDebits(account.id));
-    });
+    // Primeiro, zere as entradas e totais da conta Resultado Bruto se ela já tiver sido populada
+    // por algum lançamento direto acidental, já que ela é uma conta de apuração virtual aqui.
+    resultadoBrutoAccount.debitEntries = [];
+    resultadoBrutoAccount.creditEntries = [];
+    resultadoBrutoAccount.totalDebits = 0;
+    resultadoBrutoAccount.totalCredits = 0;
 
-    let deductionsFromGrossRevenue = 0;
-    const deductionsAccounts = allAccounts.value.filter(acc => (acc.name === 'ICMS sobre Vendas' || acc.name === 'Descontos Concedidos'));
-    deductionsAccounts.forEach(account => {
-      deductionsFromGrossRevenue += (getLocalAccountTotalDebits(account.id) - getLocalAccountTotalCredits(account.id));
-    });
-
-    const netSalesRevenue = grossRevenueFromSales - deductionsFromGrossRevenue;
-
-    let costOfGoodsSold = 0;
-    const cmvAccount1 = accountStore.getAccountByName('Custo da Mercadoria Vendida');
-    const cmvAccount2 = accountStore.getAccountByName('CMV');
-    if (cmvAccount1) {
-      costOfGoodsSold += (getLocalAccountTotalDebits(cmvAccount1.id) - getLocalAccountTotalCredits(cmvAccount1.id));
-    }
-    if (cmvAccount2) {
-      costOfGoodsSold += (getLocalAccountTotalDebits(cmvAccount2.id) - getLocalAccountTotalCredits(cmvAccount2.id));
-    }
-
-    const calculatedGrossProfit = netSalesRevenue - costOfGoodsSold; // Este é o Resultado Bruto
-
-    // Populando as entradas virtuais para o T-account com os componentes
-    resultadoBrutoAccount.debitEntries = [costOfGoodsSold]; // CMV (Débito)
-    resultadoBrutoAccount.creditEntries = [netSalesRevenue]; // Receita Líquida (Crédito)
+    // --- CÁLCULO DA RECEITA LÍQUIDA DE VENDAS ---
+    // Pegar o saldo final da conta "Receita de Vendas"
+    const receitaVendasContaObj = accountsMap.get(accountStore.getAccountByName('Receita de Vendas')?.id || '');
+    const netSalesRevenue = receitaVendasContaObj ? receitaVendasContaObj.finalBalance : 0;
     
-    // Total de débitos e créditos para "Resultado Bruto" (reflete a Receita Líquida e o CMV)
-    resultadoBrutoAccount.totalDebits = costOfGoodsSold; 
-    resultadoBrutoAccount.totalCredits = netSalesRevenue; 
-    resultadoBrutoAccount.finalBalance = calculatedGrossProfit; // Saldo final é o Lucro Bruto
+    // --- CÁLCULO DO CUSTO DA MERCADORIA VENDIDA (CMV) ---
+    let costOfGoodsSold = 0;
+    const cmvAccountObj1 = accountsMap.get(accountStore.getAccountByName('Custo da Mercadoria Vendida')?.id || '');
+    const cmvAccountObj2 = accountsMap.get(accountStore.getAccountByName('CMV')?.id || '');
+
+    if (cmvAccountObj1) {
+      costOfGoodsSold += Math.abs(cmvAccountObj1.finalBalance); 
+    }
+    if (cmvAccountObj2) {
+      costOfGoodsSold += Math.abs(cmvAccountObj2.finalBalance);
+    }
+    
+    // Calcular o Lucro Bruto
+    const calculatedGrossProfit = netSalesRevenue - costOfGoodsSold;
+
+    // Populando as entradas virtuais para o T-account
+    // A Receita Líquida de Vendas (netSalesRevenue) entra como CRÉDITO para aumentar o lucro bruto.
+    // O Custo da Mercadoria Vendida (costOfGoodsSold) entra como DÉBITO para diminuir o lucro bruto.
+    if (netSalesRevenue > 0) { 
+        resultadoBrutoAccount.creditEntries.push(netSalesRevenue);
+        resultadoBrutoAccount.totalCredits = netSalesRevenue;
+    }
+    if (costOfGoodsSold > 0) { 
+        resultadoBrutoAccount.debitEntries.push(costOfGoodsSold);
+        resultadoBrutoAccount.totalDebits = costOfGoodsSold;
+    }
+    
+    // O saldo final é a diferença entre os créditos e os débitos para uma conta de resultado (lucro é crédito)
+    resultadoBrutoAccount.finalBalance = calculatedGrossProfit; 
   }
   // --- Fim da Lógica "Resultado Bruto" Virtual ---
 
 
   // Filtrar apenas as contas que possuem movimentos E ordenar pela ordem personalizada
   return Array.from(accountsMap.values())
-    .filter(account => account.totalDebits > 0 || account.totalCredits > 0)
+    .filter(account => account.totalDebits > 0 || account.totalCredits > 0 || account.accountId === accountStore.getAccountByName('Resultado Bruto')?.id) // Incluir Resultado Bruto mesmo que não tenha movimentos diretos
     .sort((a, b) => {
       const orderA = customAccountOrder.get(a.accountName) || Infinity;
       const orderB = customAccountOrder.get(b.accountName) || Infinity;
@@ -178,6 +185,11 @@ const ledgerAccounts = computed(() => {
 const getBalanceClass = (account: any) => {
   if (account.finalBalance === 0) {
     return '';
+  }
+
+  // Para Resultado Bruto, se o saldo é positivo, é lucro (crédito). Se negativo, é prejuízo (débito).
+  if (account.accountName === 'Resultado Bruto') {
+    return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
 
   if (account.finalBalance > 0) {
@@ -223,8 +235,8 @@ const getBalanceClass = (account: any) => {
                      :class="getBalanceClass(account)"
                      v-if="(account.finalBalance !== 0) && 
                            ((account.nature === 'debit' && account.finalBalance >= 0) || 
-                            (account.nature === 'credit' && account.finalBalance < 0))">
-                    R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+                            (account.nature === 'credit' && account.finalBalance < 0)) ||
+                           (account.accountName === 'Resultado Bruto' && account.finalBalance < 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
                 </div>
                 <div class="final-balance-left" v-else></div> 
 
@@ -232,8 +244,8 @@ const getBalanceClass = (account: any) => {
                      :class="getBalanceClass(account)"
                      v-if="(account.finalBalance !== 0) && 
                            ((account.nature === 'credit' && account.finalBalance >= 0) || 
-                            (account.nature === 'debit' && account.finalBalance < 0))">
-                    R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+                            (account.nature === 'debit' && account.finalBalance < 0)) ||
+                           (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
                 </div>
                 <div class="final-balance-right" v-else></div> 
             </div>
@@ -244,6 +256,7 @@ const getBalanceClass = (account: any) => {
 </template>
 
 <style scoped>
+/* Seu CSS existente permanece o mesmo */
 .ledger-container {
   padding: 20px;
   max-width: 1200px;

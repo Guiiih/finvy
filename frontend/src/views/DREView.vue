@@ -63,27 +63,44 @@ const ledgerAccounts = computed(() => {
 const dreData = computed(() => {
   const accounts = ledgerAccounts.value;
 
-  const getAccountBalance = (name: string) => {
+  const getAccountTotalDebits = (name: string) => {
+    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
+    return account ? account.debits : 0;
+  };
+
+  const getAccountTotalCredits = (name: string) => {
+    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
+    return account ? account.credits : 0;
+  };
+
+  const getAccountFinalBalance = (name: string) => {
     const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
     return account ? account.finalBalance : 0;
   };
 
   // 1. Receita Bruta de Vendas
-  const receitaBrutaVendas = getAccountBalance('Receita de Vendas');
+  // Deve ser o total de CRÉDITOS da conta "Receita de Vendas"
+  const receitaBrutaVendas = getAccountTotalCredits('Receita de Vendas');
 
   // 2. (-) Deduções da Receita Bruta
-  // ICMS sobre Vendas é uma dedução da receita (Natureza Débito no accountStore)
-  const icmsSobreVendas = Math.abs(getAccountBalance('ICMS sobre Vendas')); // Usar Math.abs pois o saldo será negativo se for débito
+  // ICMS sobre Vendas é uma dedução. A conta "ICMS sobre Vendas" tem natureza devedora
+  // e representa uma diminuição da receita. Portanto, pegamos o total de débitos dela.
+  const icmsSobreVendas = getAccountTotalDebits('ICMS sobre Vendas');
   const deducoesReceitaBruta = icmsSobreVendas; // Pode incluir outras como vendas canceladas, descontos
 
   // 3. (=) Receita Líquida de Vendas
   const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
 
   // 4. (-) Custo da Mercadoria Vendida (CMV)
-  const cmv = Math.abs(getAccountBalance('Custo da Mercadoria Vendida')); // Usar Math.abs pois é uma despesa (débito)
+  // Pegar o saldo final da conta CMV (ou Custo da Mercadoria Vendida)
+  // Usamos Math.abs porque despesas são débitos e aparecem como valores positivos na DRE
+  const cmv = Math.abs(getAccountFinalBalance('Custo da Mercadoria Vendida')); 
+  // Caso você tenha a conta 'CMV' separada
+  const cmvAlt = Math.abs(getAccountFinalBalance('CMV'));
+  const totalCustoMercadoriaVendida = cmv > 0 ? cmv : cmvAlt; // Usar o valor da conta que tiver movimento
 
   // 5. (=) Lucro Bruto
-  const lucroBruto = receitaLiquidaVendas - cmv;
+  const lucroBruto = receitaLiquidaVendas - totalCustoMercadoriaVendida;
 
   // TO-DO: Adicionar Despesas Operacionais, Receitas Financeiras, Despesas Financeiras
   // Por enquanto, vamos para o Lucro Líquido com o que temos
@@ -95,7 +112,7 @@ const dreData = computed(() => {
     receitaBrutaVendas,
     deducoesReceitaBruta,
     receitaLiquidaVendas,
-    cmv,
+    cmv: totalCustoMercadoriaVendida, // Usar o valor combinado/selecionado
     lucroBruto,
     lucroLiquido,
   };
