@@ -81,7 +81,7 @@ const submitEntry = () => {
 
 const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId: string) => {
   const stockAccount = accountStore.getAccountByName('Compras de Mercadoria');
-  const cmvAccount = accountStore.getAccountByName('Custo da Mercadoria Vendida');
+  const cmvAccount = accountStore.getAccountByName('CMV');
   const icmsComprasAccount = accountStore.getAccountByName('ICMS sobre Compras');
 
   if (!stockAccount || !cmvAccount || !icmsComprasAccount) {
@@ -158,7 +158,8 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
         if (quantity > 0) {
           const currentProductBalance = stockControlStore.getBalanceByProductId(productId);
           const averageCost = currentProductBalance ? currentProductBalance.unitCost : (productX ? productX.unitPrice : 0);
-          const totalValueCMV = debitCMVLine.amount;
+          // The totalValueCMV comes directly from the debit to CMV in the journal entry
+          const totalValueCMV = debitCMVLine.amount; 
 
           stockControlStore.addMovement({
             id: journalEntryId + '-mov-venda',
@@ -167,8 +168,8 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
             type: 'out',
             productId: productId,
             quantity: quantity,
-            unitPrice: averageCost,
-            totalValue: totalValueCMV
+            unitPrice: averageCost, // This unitPrice is the *cost* of the item being sold (average cost)
+            totalValue: totalValueCMV // This is the total cost of goods sold
           });
           console.log('Movimento de VENDA de estoque (OUT) adicionado via lançamento.');
         }
@@ -289,9 +290,15 @@ const addSaleEntry1 = () => {
     { accountId: accountStore.getAccountByName('Clientes')?.id || '', amount: 140000, type: 'debit' },
     // Crédito para a Receita Bruta de Vendas
     { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 400000, type: 'credit' },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Total ICMS Vendas
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'debit' },
+    // Impostos sobre Vendas (débito na conta de imposto, que é uma dedução da receita)
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Débito na conta de dedução
+    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'debit' }, // Débito na conta de dedução
 
+    // LANÇAMENTO DO CUSTO DA MERCADORIA VENDIDA (CMV) - Importante para o estoque e DRE
+    // Débito na conta de CMV (despesa)
+    { accountId: accountStore.getAccountByName('CMV')?.id || '', amount: 82000, type: 'debit' }, // Exemplo de CMV, ajuste conforme custo médio real
+    // Crédito na conta de Estoque (ou Compras de Mercadoria, se for o caso do seu controle)
+    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', amount: 82000, type: 'credit' }, // Crédito na conta de estoque/compras (baixa do estoque)
   ];
   submitEntry();
 };
