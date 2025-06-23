@@ -2,220 +2,148 @@
 import { computed } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
-import type { JournalEntry, EntryLine, Account, LedgerAccount } from '@/types/index';
+import type { Account } from '@/types/index';
 
-// Stores necessários
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
 
-// Reutilizar a lógica de cálculo dos saldos do razão
-const ledgerAccounts = computed(() => {
-  const accountsMap = new Map<string, LedgerAccount>();
+const allJournalEntries = computed(() => journalEntryStore.getAllJournalEntries);
+const allAccounts = computed(() => accountStore.getAllAccounts);
 
-  accountStore.getAllAccounts.forEach((account: Account) => {
-    accountsMap.set(account.id, {
-      accountId: account.id,
-      accountName: account.name,
-      type: account.type,
-      debits: 0,
-      credits: 0,
-      nature: account.nature,
-      finalBalance: 0,
-    });
-  });
+// Funções auxiliares para obter total de débitos/créditos de uma conta,
+// EXCLUINDO lançamentos de apuração para a DRE.
+const getAccountTotalDebits = (accountId: string) => {
+  return allJournalEntries.value
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .flatMap(entry => entry.lines)
+    .filter(line => line.accountId === accountId && line.type === 'debit')
+    .reduce((sum, line) => sum + line.amount, 0);
+};
 
-  journalEntryStore.getAllJournalEntries.forEach((entry: JournalEntry) => {
-    entry.lines.forEach((line: EntryLine) => {
-      const accountData = accountsMap.get(line.accountId);
-      if (accountData) {
-        if (line.type === 'debit') {
-          accountData.debits += line.amount;
-        } else {
-          accountData.credits += line.amount;
-        }
-      }
-    });
-  });
+const getAccountTotalCredits = (accountId: string) => {
+  return allJournalEntries.value
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .flatMap(entry => entry.lines)
+    .filter(line => line.accountId === accountId && line.type === 'credit')
+    .reduce((sum, line) => sum + line.amount, 0);
+};
 
-  accountsMap.forEach(accountData => {
-    if (accountData.nature === 'debit') {
-      accountData.finalBalance = accountData.debits - accountData.credits;
-    } else { // nature === 'credit'
-      accountData.finalBalance = accountData.credits - accountData.debits;
+
+const dreData = computed(() => {
+  let grossRevenueFromSales = 0;
+  let deductionsFromGrossRevenue = 0;
+  let netSalesRevenue = 0;
+  let costOfGoodsSold = 0;
+  let grossProfit = 0;
+  let netIncome = 0; // Para a DRE simplificada, netIncome é igual ao grossProfit por enquanto
+
+  // 1. Receita Bruta de Vendas (contas de receita, natureza crédito)
+  const revenueAccounts = allAccounts.value.filter(acc => acc.type === 'revenue' && acc.nature === 'credit');
+  revenueAccounts.forEach(account => {
+    // Para contas de receita (natureza crédito), os créditos aumentam e os débitos diminuem.
+    // Excluímos aqui o ICMS sobre Vendas e Descontos, pois são deduções e serão tratados abaixo.
+    if (account.name !== 'ICMS sobre Vendas' && account.name !== 'Descontos Concedidos') {
+      const totalCredits = getAccountTotalCredits(account.id);
+      const totalDebits = getAccountTotalDebits(account.id);
+      grossRevenueFromSales += (totalCredits - totalDebits);
     }
   });
 
-  return accountsMap;
-});
+  // 2. Deduções da Receita Bruta (ex: ICMS sobre Vendas, Descontos Concedidos)
+  // Contas que são deduções de receita geralmente têm natureza devedora e diminuem a receita bruta
+  const deductionsAccounts = allAccounts.value.filter(acc => 
+    (acc.name === 'ICMS sobre Vendas' || acc.name === 'Descontos Concedidos')
+  );
+  deductionsAccounts.forEach(account => {
+    // Para contas de dedução (como ICMS sobre Vendas, que acumula débitos), o débito aumenta a dedução.
+    const totalDebits = getAccountTotalDebits(account.id);
+    const totalCredits = getAccountTotalCredits(account.id); // Créditos diminuem a dedução
+    deductionsFromGrossRevenue += (totalDebits - totalCredits);
+  });
+  
+  netSalesRevenue = grossRevenueFromSales - deductionsFromGrossRevenue;
 
-// Função getAccountBalance (copiada do Balanço/DRE para ser autossuficiente)
-const getAccountBalance = (name: string): number => {
-    const accounts = ledgerAccounts.value;
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.finalBalance : 0;
-};
+  // 3. Custo da Mercadoria Vendida (CMV)
+  // CMV é uma conta de despesa, natureza devedora
+  const cmvAccount1 = accountStore.getAccountByName('Custo da Mercadoria Vendida'); // Principal CMV
+  const cmvAccount2 = accountStore.getAccountByName('CMV'); // CMV duplicada (se o usuário a mantém)
 
-// Computed para calcular o Lucro Líquido do Exercício (replicado da DRE para o DFC)
-// Esta lógica precisa ser autocontida para que DFCView não dependa de DREView
-const lucroLiquidoExercicio = computed(() => {
-  const receitaBrutaVendas = getAccountBalance('Receita de Vendas');
-  const icmsSobreVendas = Math.abs(getAccountBalance('ICMS sobre Vendas'));
-  const deducoesReceitaBruta = icmsSobreVendas;
+  if (cmvAccount1) {
+    costOfGoodsSold += (getAccountTotalDebits(cmvAccount1.id) - getAccountTotalCredits(cmvAccount1.id));
+  }
+  if (cmvAccount2) {
+    costOfGoodsSold += (getAccountTotalDebits(cmvAccount2.id) - getAccountTotalCredits(cmvAccount2.id));
+  }
 
-  const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
+  // Resultado Bruto
+  grossProfit = netSalesRevenue - costOfGoodsSold;
 
-  const cmv = Math.abs(getAccountBalance('Custo da Mercadoria Vendida'));
-
-  const lucroBruto = receitaLiquidaVendas - cmv;
-
-  return lucroBruto; // Atualmente, Lucro Bruto = Lucro Líquido
-});
-
-// Computed para calcular os valores do DFC
-const dfcData = computed(() => {
-  // Lucro do Exercício (Ponto de partida)
-  const lucroDoExercicio = lucroLiquidoExercicio.value;
-
-  // --- Atividades Operacionais ---
-  // Variações hardcoded do PDF para o Mês 1
-  // Em um sistema real, estas seriam calculadas a partir da diferença dos saldos do Balanço de dois períodos.
-  const varFornecedores = 114000;
-  const varImpostos = 55800;
-  const varClientes = -126000;
-  const varEstoque = -36868.97;
-
-  const totalAtividadeOperacional =
-    lucroDoExercicio +
-    varFornecedores +
-    varImpostos +
-    varClientes +
-    varEstoque;
-
-  // --- Atividades de Investimento ---
-  const varImobilizado = -500000;
-
-  const totalAtividadeInvestimento = varImobilizado;
-
-  // --- Atividades de Financiamento ---
-  const varCapitalSocial = 1000000;
-
-  const totalAtividadeFinanciamento = varCapitalSocial;
-
-
-  // Saldo Final de Caixa
-  const saldoFinalDeCaixa =
-    totalAtividadeOperacional +
-    totalAtividadeInvestimento +
-    totalAtividadeFinanciamento;
-
-  // Para verificar, o saldo final de caixa também deve bater com o total das contas de disponibilidades
-  const saldoFinalDisponibilidadesBalanço =
-    getAccountBalance('Caixa') +
-    getAccountBalance('Caixa Econômica Federal') +
-    getAccountBalance('Banco Itaú') +
-    getAccountBalance('Banco Bradesco');
-
-  const isCashFlowBalanced = Math.abs(saldoFinalDeCaixa - saldoFinalDisponibilidadesBalanço) < 0.01;
+  // Por enquanto, o Lucro Líquido é o mesmo que o Lucro Bruto para esta DRE simplificada.
+  // Em uma DRE completa, teríamos despesas operacionais, financeiras, etc.
+  netIncome = grossProfit; 
 
   return {
-    lucroDoExercicio,
-    varFornecedores,
-    varImpostos,
-    varClientes,
-    varEstoque,
-    totalAtividadeOperacional,
-    varImobilizado,
-    totalAtividadeInvestimento,
-    varCapitalSocial,
-    totalAtividadeFinanciamento,
-    saldoFinalDeCaixa,
-    saldoFinalDisponibilidadesBalanço,
-    isCashFlowBalanced,
+    grossRevenueFromSales,
+    deductionsFromGrossRevenue,
+    netSalesRevenue,
+    costOfGoodsSold,
+    grossProfit,
+    netIncome,
   };
 });
 </script>
 
 <template>
-  <div class="dfc-container">
-    <h1>Demonstração de Fluxo de Caixa (DFC) - Método Indireto</h1>
+  <div class="dre-container">
+    <h1>Demonstração de Resultado do Exercício (DRE)</h1>
 
-    <p v-if="journalEntryStore.getAllJournalEntries.length === 0" class="no-entries-message">
-      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar o DFC.
+    <p v-if="allJournalEntries.length === 0" class="no-entries-message">
+      Nenhum lançamento contábil registrado ainda. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DRE.
     </p>
 
-    <div v-else class="dfc-report">
-      <div class="dfc-section header">
-        <span>Descrição</span>
-        <span>Valor (R$)</span>
+    <div v-else class="dre-table">
+      <div class="dre-row header-row">
+        <div class="description">Receita Bruta de Vendas</div>
+        <div class="amount">R$ {{ dreData.grossRevenueFromSales.toFixed(2) }}</div>
       </div>
 
-      <div class="dfc-line">
-        <span class="description strong">(=) Lucro do Exercício</span>
-        <span class="value strong">{{ dfcData.lucroDoExercicio.toFixed(2) }}</span>
+      <div class="dre-row sub-header-row">
+        <div class="description">(-) Deduções da Receita Bruta</div>
+        <div class="amount">R$ {{ dreData.deductionsFromGrossRevenue.toFixed(2) }}</div>
       </div>
 
-      <div class="dfc-category-header">ATIVIDADES OPERACIONAIS</div>
-      <div class="dfc-line item">
-        <span class="description">(+) Var. Fornecedores</span>
-        <span class="value">{{ dfcData.varFornecedores.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line item">
-        <span class="description">(+) Var. Impostos</span>
-        <span class="value">{{ dfcData.varImpostos.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line item">
-        <span class="description">(-) Var. Clientes</span>
-        <span class="value">{{ dfcData.varClientes.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line item">
-        <span class="description">(-) Var. Estoque</span>
-        <span class="value">{{ dfcData.varEstoque.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line subtotal">
-        <span class="description strong">(=) Atividade Operacional</span>
-        <span class="value strong">{{ dfcData.totalAtividadeOperacional.toFixed(2) }}</span>
+      <div class="dre-row total-row">
+        <div class="description">Receita Líquida de Vendas</div>
+        <div class="amount">R$ {{ dreData.netSalesRevenue.toFixed(2) }}</div>
       </div>
 
-      <div class="dfc-category-header">ATIVIDADES DE INVESTIMENTO</div>
-      <div class="dfc-line item">
-        <span class="description">(-) Var. Imobilizado</span>
-        <span class="value">{{ dfcData.varImobilizado.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line subtotal">
-        <span class="description strong">(=) Atividade Investimento</span>
-        <span class="value strong">{{ dfcData.totalAtividadeInvestimento.toFixed(2) }}</span>
+      <div class="dre-row sub-header-row">
+        <div class="description">(-) Custo da Mercadoria Vendida (CMV)</div>
+        <div class="amount">R$ {{ dreData.costOfGoodsSold.toFixed(2) }}</div>
       </div>
 
-      <div class="dfc-category-header">ATIVIDADES DE FINANCIAMENTO</div>
-      <div class="dfc-line item">
-        <span class="description">(+) Var. Capital Social</span>
-        <span class="value">{{ dfcData.varCapitalSocial.toFixed(2) }}</span>
-      </div>
-      <div class="dfc-line subtotal">
-        <span class="description strong">(=) Atividade Financiamento</span>
-        <span class="value strong">{{ dfcData.totalAtividadeFinanciamento.toFixed(2) }}</span>
+      <div class="dre-row total-row gross-profit-row">
+        <div class="description">Lucro Bruto</div>
+        <div class="amount">R$ {{ dreData.grossProfit.toFixed(2) }}</div>
       </div>
 
-      <div class="dfc-line final-result">
-        <span class="description strong">(=) Saldo Final de Caixa</span>
-        <span class="value strong">{{ dfcData.saldoFinalDeCaixa.toFixed(2) }}</span>
-      </div>
-
-      <div class="dfc-verification" :class="{ 'balanced': dfcData.isCashFlowBalanced, 'unbalanced': !dfcData.isCashFlowBalanced }">
-        <p>Verificação com Disponibilidades do Balanço: R$ {{ dfcData.saldoFinalDisponibilidadesBalanço.toFixed(2) }}</p>
-        <p v-if="dfcData.isCashFlowBalanced">DFC Fechando com o Saldo de Caixa do Balanço!</p>
-        <p v-else>DFC NÃO Fechando! Diferença: R$ {{ (dfcData.saldoFinalDeCaixa - dfcData.saldoFinalDisponibilidadesBalanço).toFixed(2) }}</p>
+      <div class="dre-row total-row net-income-row">
+        <div class="description">Lucro Líquido do Exercício</div>
+        <div class="amount">R$ {{ dreData.netIncome.toFixed(2) }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.dfc-container {
+.dre-container {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -231,91 +159,68 @@ h1 {
   margin-top: 50px;
 }
 
-.dfc-report {
-  background-color: #f9f9f9;
+.dre-table {
+  display: flex;
+  flex-direction: column;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.dfc-section.header {
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  font-weight: bold;
-  border-bottom: 2px solid #333;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
+.dre-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
 }
 
-.dfc-line {
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  padding: 8px 0;
-  border-bottom: 1px dashed #eee;
-  align-items: center;
+.dre-row:last-child {
+  border-bottom: none;
 }
 
-.dfc-line.item {
-  padding-left: 20px;
+.dre-row .description {
+  flex: 1;
+  color: #333;
 }
 
-.dfc-line.strong {
-  font-weight: bold;
-}
-
-.dfc-line .description {
-  padding-left: 10px;
-}
-
-.dfc-line .value {
+.dre-row .amount {
+  width: 150px;
   text-align: right;
-  padding-right: 10px;
-  font-weight: 500;
-}
-
-.dfc-category-header {
   font-weight: bold;
-  background-color: #eef;
-  padding: 8px 10px;
-  margin-top: 15px;
-  margin-bottom: 10px;
-  border-radius: 4px;
+  color: #007bff; /* Cor padrão para valores */
 }
 
-.subtotal {
+.header-row {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  color: #222;
+  border-bottom: 2px solid #ccc;
+}
+
+.sub-header-row {
+  background-color: #f8f8f8;
+  font-style: italic;
+  color: #555;
+}
+
+.total-row {
+  background-color: #e9ecef;
   font-weight: bold;
   border-top: 1px solid #ccc;
-  margin-top: 5px;
-  padding-top: 5px;
+  border-bottom: 2px solid #ccc;
 }
 
-.final-result {
-  border-top: 2px solid #333;
-  margin-top: 15px;
-  padding-top: 15px;
-  font-size: 1.2rem;
-  color: #0056b3;
+.gross-profit-row .amount {
+  color: #28a745; /* Verde para lucro bruto */
 }
 
-.dfc-verification {
-  text-align: center;
-  margin-top: 30px;
-  padding: 15px;
-  border-radius: 8px;
-  font-weight: bold;
+.net-income-row {
+  background-color: #d4edda; /* Fundo verde claro para lucro líquido */
   font-size: 1.1rem;
 }
 
-.dfc-verification.balanced {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.dfc-verification.unbalanced {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+.net-income-row .amount {
+  color: #28a745; /* Verde escuro para lucro líquido */
 }
 </style>

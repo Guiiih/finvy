@@ -12,6 +12,53 @@ const accountStore = useAccountStore();
 const allJournalEntries = computed(() => journalEntryStore.getAllJournalEntries);
 const allAccounts = computed(() => accountStore.getAllAccounts);
 
+// Definir uma ordem personalizada para as contas
+const customAccountOrder = new Map<string, number>();
+// Ordem baseada nas imagens fornecidas e nos nomes das contas do accountStore.ts
+customAccountOrder.set('Capital Social Subscrito', 1);
+customAccountOrder.set('Capital Social a Integralizar', 2);
+customAccountOrder.set('Caixa Econômica Federal', 3);
+customAccountOrder.set('Móveis e Utensílios', 4);
+customAccountOrder.set('Compras de Mercadoria', 5);
+customAccountOrder.set('Fornecedores', 6);
+customAccountOrder.set('Caixa', 7);
+customAccountOrder.set('Banco Itaú', 8);
+customAccountOrder.set('Banco Bradesco', 9);
+customAccountOrder.set('Receita de Vendas', 10);
+customAccountOrder.set('Clientes', 11);
+customAccountOrder.set('ICMS sobre Compras', 12);
+customAccountOrder.set('ICMS sobre Vendas', 13);
+customAccountOrder.set('C/C ICMS (Zerada)', 14);
+customAccountOrder.set('ICMS a Recuperar', 14);
+customAccountOrder.set('ICMS a Recolher', 14);
+customAccountOrder.set('CMV', 15);
+customAccountOrder.set('Custo da Mercadoria Vendida', 16);
+customAccountOrder.set('Resultado Bruto', 17); // Adicionado na ordem
+customAccountOrder.set('Reserva de Lucro', 18);
+customAccountOrder.set('Salários a Pagar', 19);
+customAccountOrder.set('Despesas com Salários', 20);
+customAccountOrder.set('Impostos a Pagar', 21);
+customAccountOrder.set('ICMS Antecipado', 22);
+
+
+// Funções auxiliares locais para calcular totais, filtrando 'Apuração'
+const getLocalAccountTotalDebits = (accountId: string) => {
+  return allJournalEntries.value
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .flatMap(entry => entry.lines)
+    .filter(line => line.accountId === accountId && line.type === 'debit')
+    .reduce((sum, line) => sum + line.amount, 0);
+};
+
+const getLocalAccountTotalCredits = (accountId: string) => {
+  return allJournalEntries.value
+    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração
+    .flatMap(entry => entry.lines)
+    .filter(line => line.accountId === accountId && line.type === 'credit')
+    .reduce((sum, line) => sum + line.amount, 0);
+};
+
+
 // Computed para calcular os saldos detalhados do razão
 const ledgerAccounts = computed(() => {
   const accountsMap = new Map<string, {
@@ -44,12 +91,16 @@ const ledgerAccounts = computed(() => {
     entry.lines.forEach(line => {
       const accountData = accountsMap.get(line.accountId);
       if (accountData) {
-        if (line.type === 'debit') {
-          accountData.debitEntries.push(line.amount);
-          accountData.totalDebits += line.amount;
-        } else {
-          accountData.creditEntries.push(line.amount);
-          accountData.totalCredits += line.amount;
+        // Excluir lançamentos que vão para 'Resultado Bruto' para não duplicar,
+        // já que 'Resultado Bruto' é calculado virtualmente.
+        if (line.accountId !== accountStore.getAccountByName('Resultado Bruto')?.id) {
+            if (line.type === 'debit') {
+              accountData.debitEntries.push(line.amount);
+              accountData.totalDebits += line.amount;
+            } else {
+              accountData.creditEntries.push(line.amount);
+              accountData.totalCredits += line.amount;
+            }
         }
       }
     });
@@ -73,7 +124,55 @@ const ledgerAccounts = computed(() => {
     }
   });
 
-  return Array.from(accountsMap.values()).sort((a, b) => a.accountName.localeCompare(b.accountName));
+  // --- Calcular e Popular a Conta "Resultado Bruto" Virtualmente ---
+  const resultadoBrutoAccount = accountsMap.get(accountStore.getAccountByName('Resultado Bruto')?.id || '');
+  if (resultadoBrutoAccount) {
+    let grossRevenueFromSales = 0;
+    const revenueAccounts = allAccounts.value.filter(acc => acc.type === 'revenue' && acc.nature === 'credit' && acc.name !== 'ICMS sobre Vendas' && acc.name !== 'Descontos Concedidos');
+    revenueAccounts.forEach(account => {
+      grossRevenueFromSales += (getLocalAccountTotalCredits(account.id) - getLocalAccountTotalDebits(account.id));
+    });
+
+    let deductionsFromGrossRevenue = 0;
+    const deductionsAccounts = allAccounts.value.filter(acc => (acc.name === 'ICMS sobre Vendas' || acc.name === 'Descontos Concedidos'));
+    deductionsAccounts.forEach(account => {
+      deductionsFromGrossRevenue += (getLocalAccountTotalDebits(account.id) - getLocalAccountTotalCredits(account.id));
+    });
+
+    const netSalesRevenue = grossRevenueFromSales - deductionsFromGrossRevenue;
+
+    let costOfGoodsSold = 0;
+    const cmvAccount1 = accountStore.getAccountByName('Custo da Mercadoria Vendida');
+    const cmvAccount2 = accountStore.getAccountByName('CMV');
+    if (cmvAccount1) {
+      costOfGoodsSold += (getLocalAccountTotalDebits(cmvAccount1.id) - getLocalAccountTotalCredits(cmvAccount1.id));
+    }
+    if (cmvAccount2) {
+      costOfGoodsSold += (getLocalAccountTotalDebits(cmvAccount2.id) - getLocalAccountTotalCredits(cmvAccount2.id));
+    }
+
+    const calculatedGrossProfit = netSalesRevenue - costOfGoodsSold; // Este é o Resultado Bruto
+
+    // Populando as entradas virtuais para o T-account com os componentes
+    resultadoBrutoAccount.debitEntries = [costOfGoodsSold]; // CMV (Débito)
+    resultadoBrutoAccount.creditEntries = [netSalesRevenue]; // Receita Líquida (Crédito)
+    
+    // Total de débitos e créditos para "Resultado Bruto" (reflete a Receita Líquida e o CMV)
+    resultadoBrutoAccount.totalDebits = costOfGoodsSold; 
+    resultadoBrutoAccount.totalCredits = netSalesRevenue; 
+    resultadoBrutoAccount.finalBalance = calculatedGrossProfit; // Saldo final é o Lucro Bruto
+  }
+  // --- Fim da Lógica "Resultado Bruto" Virtual ---
+
+
+  // Filtrar apenas as contas que possuem movimentos E ordenar pela ordem personalizada
+  return Array.from(accountsMap.values())
+    .filter(account => account.totalDebits > 0 || account.totalCredits > 0)
+    .sort((a, b) => {
+      const orderA = customAccountOrder.get(a.accountName) || Infinity;
+      const orderB = customAccountOrder.get(b.accountName) || Infinity;
+      return orderA - orderB;
+    });
 });
 
 const getBalanceClass = (account: any) => {
@@ -81,7 +180,6 @@ const getBalanceClass = (account: any) => {
     return '';
   }
 
-  // A cor 'positive' é para o saldo na sua natureza. A 'negative' é para o saldo na natureza oposta.
   if (account.finalBalance > 0) {
     return account.nature === 'debit' ? 'positive' : 'positive';
   } else { // finalBalance < 0
@@ -174,6 +272,9 @@ h1 {
 
 .ledger-card {
   background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -211,6 +312,7 @@ h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
+    border-bottom: 1px solid #e0e0e0;
     padding-bottom: 5px;
     margin-bottom: 5px;
 }
@@ -244,7 +346,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   font-weight: bold;
-  border-bottom: none; /* CORRIGIDO: Explicita a remoção da borda inferior */ 
+  border-bottom: none;
   padding: 8px 15px;
   background-color: #f0f0f0;
 }
