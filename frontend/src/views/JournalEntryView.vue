@@ -158,7 +158,7 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
         if (quantity > 0) {
           const currentProductBalance = stockControlStore.getBalanceByProductId(productId);
           const averageCost = currentProductBalance ? currentProductBalance.unitCost : (productX ? productX.unitPrice : 0);
-          // The totalValueCMV comes directly from the debit to CMV in the journal entry
+          // O totalValueCMV vem diretamente do débito para CMV no lançamento contábil
           const totalValueCMV = debitCMVLine.amount; 
 
           stockControlStore.addMovement({
@@ -168,8 +168,8 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
             type: 'out',
             productId: productId,
             quantity: quantity,
-            unitPrice: averageCost, // This unitPrice is the *cost* of the item being sold (average cost)
-            totalValue: totalValueCMV // This is the total cost of goods sold
+            unitPrice: averageCost, // Este unitPrice é o *custo* do item vendido (custo médio)
+            totalValue: totalValueCMV // Este é o custo total da mercadoria vendida
           });
           console.log('Movimento de VENDA de estoque (OUT) adicionado via lançamento.');
         }
@@ -292,13 +292,8 @@ const addSaleEntry1 = () => {
     { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 400000, type: 'credit' },
     // Impostos sobre Vendas (débito na conta de imposto, que é uma dedução da receita)
     { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Débito na conta de dedução
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'debit' }, // Débito na conta de dedução
+    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'debit' }, // Crédito na conta de Receita de Vendas para deduzir
 
-    // LANÇAMENTO DO CUSTO DA MERCADORIA VENDIDA (CMV) - Importante para o estoque e DRE
-    // Débito na conta de CMV (despesa)
-    { accountId: accountStore.getAccountByName('CMV')?.id || '', amount: 82000, type: 'debit' }, // Exemplo de CMV, ajuste conforme custo médio real
-    // Crédito na conta de Estoque (ou Compras de Mercadoria, se for o caso do seu controle)
-    { accountId: accountStore.getAccountByName('Custo da Mercadoria Vendida')?.id || '', amount: 82000, type: 'credit' }, // Crédito na conta de estoque/compras (baixa do estoque)
   ];
   submitEntry();
 };
@@ -311,13 +306,13 @@ const addIcmsSettlementEntry1 = () => {
   newEntryDescription.value = 'Apuração e Transferência de ICMS Mês 1';
   newEntryLines.value = [
     // Apuração de ICMS sobre Compras (ativos a recuperar)
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'credit' }, // Total ICMS Compras (9000+7200)
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'credit' }, 
     { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 9000, type: 'debit' },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'credit' }, // Total ICMS Compras (9000+7200)
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'credit' }, 
     { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 7200, type: 'debit' },
 
     // Apuração de ICMS sobre Vendas (dedução da receita, natureza devedora)
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, // Total ICMS Vendas
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, 
     { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 72000, type: 'credit' },
   ];
   submitEntry();
