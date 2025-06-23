@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
-import { useAccountStore } from '@/stores/accountStore'; // Corrigido para accountStore
+import { useAccountStore } from '@/stores/accountStore';
+import { useStockControlStore } from '@/stores/stockControlStore'; // Import the stock control store
 import type { JournalEntry, EntryLine, Account, LedgerAccount } from '@/types/index';
 
 // Stores necessários
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
+const stockControlStore = useStockControlStore(); // Initialize stock control store
 
 // Reutilizar a lógica de cálculo dos saldos do razão
 const ledgerAccounts = computed(() => {
@@ -45,6 +47,24 @@ const ledgerAccounts = computed(() => {
     }
   });
 
+  // CRUCIAL: Update 'Estoque Final' balance from stockControlStore
+  const finalStockAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
+  if (finalStockAccount) {
+    const productX = stockControlStore.getBalanceByProductId('prod-x-1'); // Assuming 'prod-x-1' is the ID for Produto X
+    if (productX) {
+      // Set the finalBalance of 'Estoque Final' account to the totalValue from stock control
+      finalStockAccount.finalBalance = productX.totalValue;
+      // For a balance sheet, only the final balance matters.
+      // If you want to show it as a single debit, you can ensure it's represented as such:
+      finalStockAccount.debits = productX.totalValue; // Represent the FCE value as a debit entry
+      finalStockAccount.credits = 0;
+    } else {
+      finalStockAccount.finalBalance = 0;
+      finalStockAccount.debits = 0;
+      finalStockAccount.credits = 0;
+    }
+  }
+
   return accountsMap;
 });
 
@@ -64,11 +84,15 @@ const lucroLiquidoExercicio = computed(() => {
 
   const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
 
-  const cmv = Math.abs(getAccountBalance('Custo da Mercadoria Vendida'));
+  // Cálculo do CMV idêntico ao DRE para consistência;
+  const estoqueInicial = 0; // Assumindo 0 se não há histórico
+  const comprasDeMercadoria = getAccountBalance('Compras de Mercadoria');
+  const estoqueFinal = getAccountBalance('Estoque Final'); // Valor do FCE
+  const cmv = estoqueInicial + comprasDeMercadoria - estoqueFinal;
 
   const lucroBruto = receitaLiquidaVendas - cmv;
 
-  return lucroBruto; // Atualmente, Lucro Bruto = Lucro Líquido
+  return lucroBruto; // Atualmente, Lucro Bruto = Lucro Líquido, ajuste conforme DRE
 });
 
 
@@ -83,16 +107,24 @@ const balanceSheetData = computed(() => {
   // Categorizar contas
   accounts.forEach((account: LedgerAccount) => {
     if (account.type === 'asset') {
-      if (['Caixa', 'Caixa Econômica Federal', 'Banco Itaú', 'Banco Bradesco', 'Clientes', 'Estoque de Mercadorias', 'ICMS sobre Compras', 'ICMS Antecipado'].includes(account.accountName)) {
-        assets.current.push(account);
+      if (['Caixa', 'Caixa Econômica Federal', 'Banco Itaú', 'Banco Bradesco', 'Clientes', 'ICMS sobre Compras', 'ICMS Antecipado', 'Estoque Final'].includes(account.accountName)) { // 'Estoque Final' é um ativo circulante
+        if (account.finalBalance !== 0) {
+          assets.current.push(account);
+        }
       } else if (['Móveis e Utensílios'].includes(account.accountName)) {
-        assets.nonCurrent.push(account);
+        if (account.finalBalance !== 0) {
+          assets.nonCurrent.push(account);
+        }
       }
     } else if (account.type === 'liability') {
        if (['Fornecedores', 'ICMS a Recolher', 'Salários a Pagar', 'Impostos a Pagar'].includes(account.accountName)) {
-        liabilities.current.push(account);
+        if (account.finalBalance !== 0) {
+          liabilities.current.push(account);
+        }
        } else {
-         liabilities.nonCurrent.push(account);
+         if (account.finalBalance !== 0) {
+           liabilities.nonCurrent.push(account);
+         }
        }
     } else if (account.type === 'equity') {
       if (account.accountName === 'Capital Social Subscrito') {
@@ -105,7 +137,7 @@ const balanceSheetData = computed(() => {
     }
   });
 
-  // Calcular totais
+  // Calculate totals
   const totalCurrentAssets = assets.current.reduce((sum, acc) => sum + acc.finalBalance, 0);
   const totalNonCurrentAssets = assets.nonCurrent.reduce((sum, acc) => sum + acc.finalBalance, 0);
   const totalAssets = totalCurrentAssets + totalNonCurrentAssets;
@@ -204,7 +236,7 @@ const balanceSheetData = computed(() => {
         <ul>
           <li v-for="account in balanceSheetData.liabilities.nonCurrent" :key="account.accountId">
             <span>{{ account.accountName }}</span>
-            <span>R$ {{ balanceSheetData.totalNonCurrentLiabilities.toFixed(2) }}</span>
+            <span>R$ {{ account.finalBalance.toFixed(2) }}</span>
           </li>
         </ul>
         <div class="total-line">

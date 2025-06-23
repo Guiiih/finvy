@@ -4,12 +4,11 @@ import type { Account } from '@/types/index';
 
 export const useAccountStore = defineStore('accountStore', () => {
   const accounts = ref<Account[]>([
-    // Existing accounts...
     { id: '1', name: 'Capital Social Subscrito', type: 'equity', nature: 'credit' },
     { id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit' },
     { id: '3', name: 'Caixa Econômica Federal', type: 'asset', nature: 'debit' },
     { id: '4', name: 'Móveis e Utensílios', type: 'asset', nature: 'debit' },
-    { id: '5', name: 'Compras de Mercadoria', type: 'asset', nature: 'debit' }, // Conta de resultado (custo), mas tratada aqui como transitória ou estoque
+    { id: '5', name: 'Compras de Mercadoria', type: 'expense', nature: 'debit' }, // Alterado para expense, pois é uma conta de resultado que compõe o CMV
     { id: '6', name: 'Fornecedores', type: 'liability', nature: 'credit' },
     { id: '7', name: 'Caixa', type: 'asset', nature: 'debit' },
     { id: '8', name: 'Banco Itaú', type: 'asset', nature: 'debit' },
@@ -19,16 +18,15 @@ export const useAccountStore = defineStore('accountStore', () => {
     { id: '12', name: 'ICMS sobre Compras', type: 'asset', nature: 'debit' }, // ICMS a recuperar
     { id: '13', name: 'ICMS sobre Vendas', type: 'expense', nature: 'debit' }, // Dedução de Receita
     { id: '14', name: 'C/C ICMS', type: 'asset', nature: 'debit' }, // Conta transitória para apuração de ICMS
-    { id: '15', name: 'CMV', type: 'expense', nature: 'debit' }, // Custo da Mercadoria Vendida
-    { id: '16', name: 'Custo da Mercadoria Vendida', type: 'expense', nature: 'debit' }, // Outra conta CMV
-    { id: '17', name: 'Resultado Bruto', type: 'revenue', nature: 'credit' }, // Conta de apuração
+    { id: '15', name: 'CMV', type: 'expense', nature: 'debit' }, // Custo da Mercadoria Vendida - Pode ser usada para lançamentos diretos ou apuração
+    { id: '16', name: 'Custo da Mercadoria Vendida', type: 'expense', nature: 'debit' }, // Outra conta CMV (manter se houver distinção)
+    { id: '17', 'name': 'Resultado Bruto', type: 'revenue', nature: 'credit' }, // Conta de apuração
     { id: '18', name: 'Reserva de Lucro', type: 'equity', nature: 'credit' },
     { id: '19', name: 'Salários a Pagar', type: 'liability', nature: 'credit' },
     { id: '20', name: 'Despesas com Salários', type: 'expense', nature: 'debit' },
     { id: '21', name: 'Impostos a Pagar', type: 'liability', nature: 'credit' },
     { id: '22', name: 'ICMS Antecipado', type: 'asset', nature: 'debit' },
-    // Adicione a nova conta aqui:
-    { id: '26', name: 'Estoque Final', type: 'asset', nature: 'debit' }, // Novo!
+    { id: '26', name: 'Estoque Final', type: 'asset', nature: 'debit' }, // Conta para o estoque final (ativo)
   ]);
 
   const getAllAccounts = computed(() => accounts.value);

@@ -307,7 +307,7 @@ const addIcmsSettlementEntry1 = () => {
     { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'credit' }, // Total ICMS Compras (9000+7200)
     { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 9000, type: 'debit' },
     { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'credit' }, // Total ICMS Compras (9000+7200)
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 7200, type: 'debit' },
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 16200, type: 'debit' },
 
     // Apuração de ICMS sobre Vendas (dedução da receita, natureza devedora)
     { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, // Total ICMS Vendas
