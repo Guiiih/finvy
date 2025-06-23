@@ -298,7 +298,7 @@ const addSaleEntry1 = () => {
     // Débito na conta de CMV (despesa)
     { accountId: accountStore.getAccountByName('CMV')?.id || '', amount: 82000, type: 'debit' }, // Exemplo de CMV, ajuste conforme custo médio real
     // Crédito na conta de Estoque (ou Compras de Mercadoria, se for o caso do seu controle)
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', amount: 82000, type: 'credit' }, // Crédito na conta de estoque/compras (baixa do estoque)
+    { accountId: accountStore.getAccountByName('Custo da Mercadoria Vendida')?.id || '', amount: 82000, type: 'credit' }, // Crédito na conta de estoque/compras (baixa do estoque)
   ];
   submitEntry();
 };
