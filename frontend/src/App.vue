@@ -8,8 +8,14 @@ import { RouterLink, RouterView } from 'vue-router'
       <h1 class="title">Finvy</h1>
         <nav>
           <RouterLink to="/">Dashboard</RouterLink>
-          <RouterLink to="/accounts">Plano de Contas</RouterLink> <RouterLink to="/products">Produtos</RouterLink>
-          <RouterLink to="/reports">Relatórios</RouterLink>
+          <RouterLink to="/accounts">Plano de Contas</RouterLink>
+          <RouterLink to="/journal-entries">Lançamentos Contábeis</RouterLink>
+          <RouterLink to="/products">Produtos</RouterLink>
+          <RouterLink to="/stock-control">Controle de Estoque</RouterLink>
+          <RouterLink to="/ledger">Razão</RouterLink>
+          <RouterLink to="/dre">DRE</RouterLink>
+          <RouterLink to="/balance-sheet">Balanço Patrimonial</RouterLink>
+          <RouterLink to="/dfc">DFC</RouterLink> <RouterLink to="/reports">Relatórios</RouterLink>
         </nav>
     </div>
   </header>

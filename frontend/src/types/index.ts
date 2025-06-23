@@ -14,7 +14,17 @@ export interface Account {
   type: AccountType;
 }
 
+// A estrutura de um produto
+export interface Product {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 // A estrutura de uma linha dentro de um lançamento contábil
+export type EntryType = 'debit' | 'credit';
+
 export interface EntryLine {
   accountId: string; // ID da conta que está sendo movimentada
   type: 'debit' | 'credit';
@@ -24,7 +34,33 @@ export interface EntryLine {
 // O lançamento contábil que representa uma operação completa
 export interface JournalEntry {
   id: string;
-  date: Date;
-  description: string; // Ex: "Venda de mercadoria conf. NF 123"
-  lines: EntryLine[];  // Um lançamento sempre terá pelo menos 2 linhas (débito e crédito)
+  date: string;
+  description: string;
+  lines: EntryLine[];
+}
+
+// Tipos para Controle de Estoque
+export interface StockMovement {
+  id: string;
+  journalEntryId?: string; // Link para o lançamento contábil que gerou o movimento
+  date: string;
+  type: 'purchase' | 'sale'; // Tipo de movimento
+  productId: string;
+  quantity: number;
+  unitCost: number; // Custo unitário da compra ou custo médio da venda
+  totalValue: number;
+}
+
+export interface StockBalance {
+  productId: string;
+  quantity: number;
+  unitCost: number; // Custo médio atual
+  totalValue: number;
+}
+
+// NOVO: Interface para uma conta com saldos do razão
+export interface LedgerAccount extends Account {
+  debits: number;
+  credits: number;
+  finalBalance: number;
 }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAccountStore } from '@/stores/accountStore';
 
-// Acessando nosso armazém de contas
 const accountStore = useAccountStore();
 </script>
 

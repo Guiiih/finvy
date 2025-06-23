@@ -1,15 +1,31 @@
+// src/stores/productStore.ts
+import { defineStore } from 'pinia';
+import type { Product } from '../types/index'; 
 
-import { defineStore } from 'pinia'
-import type { Product } from '@/types' 
+interface ProductState {
+  products: Product[];
+}
 
 export const useProductStore = defineStore('products', {
-  state: () => ({
+  state: (): ProductState => ({
     products: [
-      { id: '1', name: 'Caneta Azul', quantity: 150, unitPrice: 1.50 },
-      { id: '2', name: 'Caderno 96fls', quantity: 40, unitPrice: 22.90 },
-      { id: '3', name: 'Lapiseira 0.7mm', quantity: 85, unitPrice: 8.75 }
-    ] as Product[]
+      { id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0 },
+    ],
   }),
-
-  actions: {}
-})
+  actions: {
+    addProduct(product: Product) {
+      this.products.push(product);
+    },
+  },
+  getters: {
+    getAllProducts(state: ProductState) { // Adicione ': ProductState' aqui
+      return state.products;
+    },
+    getProductById: (state: ProductState) => (id: string) => { // Adicione ': ProductState' aqui
+      return state.products.find(product => product.id === id);
+    },
+    getProductByName: (state: ProductState) => (name: string) => { // Adicione ': ProductState' aqui
+      return state.products.find(product => product.name === name);
+    }
+  },
+});
