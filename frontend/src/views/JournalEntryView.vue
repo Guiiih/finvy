@@ -4,14 +4,14 @@ import { useJournalEntryStore } from '../stores/journalEntryStore';
 import { useAccountStore } from '../stores/accountStore';
 import { useStockControlStore } from '../stores/stockControlStore';
 import { useProductStore } from '../stores/productStore';
-import type { JournalEntry, EntryLine, EntryType } from '../types/index';
+import type { JournalEntry, EntryLine, StockMovement } from '../types/index'; // EntryType não é mais necessário aqui
 
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
 const stockControlStore = useStockControlStore();
 const productStore = useProductStore();
 
-const newEntryDate = ref('');
+const newEntryDate = ref<string>(new Date().toISOString().substring(0, 10));
 const newEntryDescription = ref('');
 const newEntryLines = ref<EntryLine[]>([
   { accountId: '', amount: 0, type: 'debit' },
@@ -19,6 +19,8 @@ const newEntryLines = ref<EntryLine[]>([
 ]);
 
 const accounts = computed(() => accountStore.getAllAccounts);
+const allJournalEntries = computed(() => journalEntryStore.getAllJournalEntries); // Adicionado para o histórico
+
 
 const addLine = () => {
   newEntryLines.value.push({ accountId: '', amount: 0, type: 'debit' });
@@ -29,7 +31,7 @@ const removeLine = (index: number) => {
 };
 
 const resetForm = () => {
-  newEntryDate.value = '';
+  newEntryDate.value = new Date().toISOString().substring(0, 10);
   newEntryDescription.value = '';
   newEntryLines.value = [
     { accountId: '', amount: 0, type: 'debit' },
@@ -47,18 +49,19 @@ const calculateTotals = computed(() => {
       totalCredits += line.amount;
     }
   });
-  return { totalDebits, totalCredits, balanced: totalDebits === totalCredits };
+  return { totalDebits, totalCredits, balanced: totalDebits === totalCredits && totalDebits > 0 };
 });
 
 const submitEntry = () => {
-  if (!newEntryDate.value || !newEntryDescription.value || newEntryLines.value.length === 0) {
-    alert('Por favor, preencha todos os campos e adicione ao menos uma linha.');
+  if (!calculateTotals.value.balanced) {
+    alert('Débitos e Créditos devem ser iguais e maiores que zero para o lançamento ser válido.');
     return;
   }
 
-  if (!calculateTotals.value.balanced) {
-    alert('Débitos e Créditos devem ser iguais para que o lançamento seja balanceado.');
-    return;
+  const filteredLines = newEntryLines.value.filter(line => line.accountId && line.amount > 0);
+  if (filteredLines.length === 0) {
+      alert('Adicione ao menos uma linha válida ao lançamento.');
+      return;
   }
 
   const newJournalEntryId = Date.now().toString();
@@ -66,7 +69,7 @@ const submitEntry = () => {
     id: newJournalEntryId,
     date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: newEntryLines.value,
+    lines: filteredLines,
   };
 
   journalEntryStore.addJournalEntry(newJournalEntry);
@@ -78,14 +81,13 @@ const submitEntry = () => {
   // alert('Lançamento adicionado com sucesso!'); // Desativado para não ter múltiplos alertas ao usar o botão "Adicionar Tudo"
 };
 
-// Função para lidar com o movimento de estoque
+// Função para lidar com o movimento de estoque (CORRIGIDA)
 const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId: string) => {
   const stockAccount = accountStore.getAccountByName('Compras de Mercadoria');
-  const revenueAccount = accountStore.getAccountByName('Receita de Vendas');
   const cmvAccount = accountStore.getAccountByName('Custo da Mercadoria Vendida');
 
-  if (!stockAccount || !revenueAccount || !cmvAccount) {
-    console.warn('Contas essenciais para o controle de estoque (Compras de Mercadoria, Receita, CMV) não encontradas. Verifique o Plano de Contas.');
+  if (!stockAccount || !cmvAccount) {
+    console.warn('Contas essenciais para o controle de estoque (Compras de Mercadoria, Custo da Mercadoria Vendida) não encontradas. Verifique o Plano de Contas.');
     return;
   }
 
@@ -104,42 +106,34 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
 
   // --- Lógica para identificar COMPRA ---
   const debitStockLine = entry.lines.find(line => line.accountId === stockAccount.id && line.type === 'debit');
-  const creditPaymentLine = entry.lines.find(line =>
-    (accountStore.getAccountById(line.accountId)?.name === 'Fornecedores' ||
-     accountStore.getAccountById(line.accountId)?.type === 'asset'
-    ) && line.type === 'credit'
-  );
 
-  if (debitStockLine && creditPaymentLine && entry.description.toLowerCase().includes('compra de mercadoria')) {
+  if (debitStockLine && entry.description.toLowerCase().includes('compra de mercadoria')) {
     isStockMovementIdentified = true;
     const quantityMatch = entry.description.match(/(\d[\d\.,]*)\s*(?:unds|unidade|unidades)\b/i);
-    const valueMatch = entry.description.match(/(?:no valor total de aquisição de|por)\s*R\$?\s*([\d\.,]+)/i);
 
-
-    if (quantityMatch && quantityMatch[1] && valueMatch && valueMatch[1]) {
+    if (quantityMatch && quantityMatch[1]) {
         quantity = parseFloat(quantityMatch[1].replace(/[.,]/g, ''));
-        const totalValueStr = valueMatch[1].replace(/\./g, '').replace(',', '.');
         
         const totalValueOfStockEntry = debitStockLine.amount;
 
         if (quantity > 0 && totalValueOfStockEntry > 0) {
-          const unitCost = totalValueOfStockEntry / quantity;
+          const unitPriceCalculated = totalValueOfStockEntry / quantity;
           stockControlStore.addMovement({
             id: journalEntryId + '-mov-compra',
             journalEntryId: journalEntryId,
             date: entry.date,
-            type: 'purchase',
+            type: 'in', // Tipo 'in' para entrada
             productId: productId,
             quantity: quantity,
-            unitCost: unitCost,
-            totalValue: totalValueOfStockEntry,
+            unitPrice: unitPriceCalculated, // Usar unitPrice
+            totalValue: totalValueOfStockEntry // TotalValue também é parte da interface StockMovement
           });
-          console.log('Movimento de COMPRA de estoque adicionado via lançamento (valor líquido).');
+          console.log('Movimento de COMPRA de estoque (IN) adicionado via lançamento.');
         } else {
              console.warn('Quantidade ou valor de estoque inválido para a compra. Movimento de estoque não adicionado. Lançamento ID:', journalEntryId);
         }
     } else {
-        console.warn('Não foi possível extrair quantidade e/ou valor da descrição para a compra. Movimento de estoque pode estar impreciso. Lançamento ID:', journalEntryId);
+        console.warn('Não foi possível extrair quantidade da descrição para a compra. Movimento de estoque pode estar impreciso. Lançamento ID:', journalEntryId);
     }
   }
 
@@ -155,17 +149,21 @@ const handleStockMovementFromJournalEntry = (entry: JournalEntry, journalEntryId
         quantity = parseFloat(quantityMatch[1].replace(/[.,]/g, ''));
 
         if (quantity > 0) {
+          const currentProductBalance = stockControlStore.getBalanceByProductId(productId);
+          const averageCost = currentProductBalance ? currentProductBalance.unitCost : (productX ? productX.unitPrice : 0);
+          const totalValueCMV = debitCMVLine.amount; // O CMV da linha do lançamento
+
           stockControlStore.addMovement({
             id: journalEntryId + '-mov-venda',
             journalEntryId: journalEntryId,
             date: entry.date,
-            type: 'sale',
+            type: 'out', // Tipo 'out' para saída
             productId: productId,
             quantity: quantity,
-            unitCost: 0, // Será preenchido pelo store
-            totalValue: 0, // Será preenchido pelo store
+            unitPrice: averageCost, // Usar o custo médio para a saída
+            totalValue: totalValueCMV // TotalValue também é parte da interface StockMovement
           });
-          console.log('Movimento de VENDA de estoque adicionado via lançamento.');
+          console.log('Movimento de VENDA de estoque (OUT) adicionado via lançamento.');
         }
     } else {
         console.warn('Não foi possível extrair quantidade da descrição para a venda de estoque. Movimento de estoque pode estar impreciso. Lançamento ID:', journalEntryId);
@@ -196,7 +194,7 @@ const addInitialCapitalEntry = () => {
 const addPurchaseEntry1 = () => {
   resetForm();
   newEntryDate.value = '2025-01-02';
-  newEntryDescription.value = 'Compra de mercadoria para revenda de 15000 unds de produto X no valor total de R$ 75.000,00';
+  newEntryDescription.value = 'Compra de mercadoria para revenda de 15000 unds de produto X no valor total de aquisição de R$ 75.000,00';
   newEntryLines.value = [
     { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', amount: 66000, type: 'debit' },
     { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'debit' },
@@ -282,13 +280,6 @@ const addSaleEntry1 = () => {
     { accountId: accountStore.getAccountByName('Clientes')?.id || '', amount: 140000, type: 'debit' },
     // Crédito para a Receita Bruta de Vendas
     { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 400000, type: 'credit' },
-    // Débito para o ICMS sobre Vendas (retificação da receita)
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' },
-    // Crédito para o ICMS a Recolher (o imposto que deve ser pago ao governo)
-    // OBS: O ICMS a Recolher aqui não é mais o final, mas o imposto bruto da venda.
-    // A apuração final do ICMS vai para a C/C ICMS.
-    // Como a conta ICMS a Recolher será zerada na apuração, manter ela aqui.
-    { accountId: accountStore.getAccountByName('ICMS a Recolher')?.id || '', amount: 72000, type: 'credit' },
   ];
   submitEntry();
 
@@ -312,16 +303,16 @@ const addIcmsSettlementEntry1 = () => {
   newEntryLines.value = [
     // 1. Transferir ICMS sobre Compras para C/C ICMS
     // Zerar ICMS sobre Compras (Débito) e debitar C/C ICMS
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'debit' }, // Credita ICMS sobre Compras (Compra 1) para zerar
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 9000, type: 'credit' }, // Debita C/C ICMS
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 9000, type: 'credit' }, // Credita ICMS sobre Compras (Compra 1) para zerar
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 9000, type: 'debit' }, // Debita C/C ICMS
 
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'debit' }, // Credita ICMS sobre Compras (Compra 2) para zerar
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 7200, type: 'credit' }, // Debita C/C ICMS
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', amount: 7200, type: 'credit' }, // Credita ICMS sobre Compras (Compra 2) para zerar
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 7200, type: 'debit' }, // Debita C/C ICMS
 
     // 2. Transferir ICMS sobre Vendas para C/C ICMS
     // Zerar ICMS sobre Vendas (Débito) e creditar C/C ICMS
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Credita ICMS sobre Vendas para zerar
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 72000, type: 'debit' }, // Credita C/C ICMS
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, // Débito para zerar ICMS sobre Vendas
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', amount: 72000, type: 'credit' }, // Crédito em C/C ICMS
 
   ];
   submitEntry();
@@ -337,7 +328,7 @@ const addRcmSettlementEntry1 = () => {
   newEntryLines.value = [
     // Zerar Receita de Vendas (400k C) e ICMS sobre Vendas (72k D), transferindo a Receita Líquida (328k) para RCM (Crédito)
     { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 400000, type: 'debit' },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' },
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Crédito para zerar ICMS sobre Vendas
     { accountId: accountStore.getAccountByName('RCM')?.id || '', amount: 328000, type: 'credit' },
 
     // Zerar Custo da Mercadoria Vendida (CMV) e transferir para RCM (Débito)
@@ -349,8 +340,9 @@ const addRcmSettlementEntry1 = () => {
 
 // NOVO BOTÃO Mestre: Adicionar todos os lançamentos do Mês 1
 const addAllMonth1Entries = async () => {
-  journalEntryStore.$reset();
-  stockControlStore.$reset();
+  journalEntryStore.journalEntries = []; // Limpa lançamentos
+  stockControlStore.movements = []; // Limpa movimentos de estoque
+  stockControlStore.balances = []; // Limpa saldos de estoque
   
   // Ordem lógica e de data dos lançamentos do Mês 1
   addInitialCapitalEntry();
@@ -434,19 +426,23 @@ const addAllMonth1Entries = async () => {
 
     <div class="journal-entries-list">
       <h2>Lançamentos Registrados</h2>
-      <p v-if="journalEntryStore.getAllJournalEntries.length === 0">Nenhum lançamento registrado ainda.</p>
-      <div v-else>
-        <div v-for="entry in journalEntryStore.getAllJournalEntries" :key="entry.id" class="journal-entry-item">
-          <h3>Lançamento ID: {{ entry.id }}</h3>
+      <p v-if="allJournalEntries.length === 0" class="no-entries-message">Nenhum lançamento registrado ainda.</p>
+      <div v-else class="journal-entries-grid">
+        <div v-for="entry in allJournalEntries" :key="entry.id" class="journal-entry-card">
+          <h3>ID: {{ entry.id }}</h3>
           <p><strong>Data:</strong> {{ entry.date }}</p>
           <p><strong>Descrição:</strong> {{ entry.description }}</p>
-          <ul>
-            <li v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
-              {{ line.type === 'debit' ? 'D' : 'C' }} -
-              {{ accountStore.getAccountById(line.accountId)?.name || 'Conta Desconhecida' }}:
-              R$ {{ line.amount.toFixed(2) }}
-            </li>
-          </ul>
+          <div class="entry-lines-summary-card">
+            <h4>Linhas:</h4>
+            <ul>
+              <li v-for="(line, lineIndex) in entry.lines" :key="lineIndex"
+                  :class="{ 'debit-line': line.type === 'debit', 'credit-line': line.type === 'credit' }">
+                <span class="line-type">{{ line.type === 'debit' ? 'D' : 'C' }}</span>
+                <span class="account-name">{{ accountStore.getAccountById(line.accountId)?.name || 'Conta Desconhecida' }}</span>
+                <span class="line-amount">R$ {{ line.amount.toFixed(2) }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -610,7 +606,7 @@ select {
   background-color: #218838;
 }
 
-.journal-entry-item {
+.journal-entry-item { /* Estilo antigo, pode ser substituído por .journal-entry-card */
   border: 1px solid #e0e0e0;
   padding: 20px;
   margin-bottom: 20px;
@@ -668,5 +664,93 @@ select {
 
 .btn-all-entries:hover {
   background-color: #45a049;
+}
+
+/* --- Novos estilos para a lista de histórico --- */
+.journal-entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.journal-entry-card { /* Novo estilo para cards individuais de lançamento */
+  background-color: #fefefe;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.journal-entry-card h3 {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #ddd;
+  padding-bottom: 5px;
+  text-align: left;
+}
+
+.journal-entry-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.entry-lines-summary-card h4 {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  text-align: left;
+  border-bottom: none; /* Já tem no pai, não precisa aqui */
+  padding-bottom: 0;
+}
+
+.entry-lines-summary-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.entry-lines-summary-card li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 3px 0;
+  border-bottom: 1px dotted #eee;
+}
+
+.entry-lines-summary-card li:last-child {
+  border-bottom: none;
+}
+
+.entry-lines-summary-card .line-type {
+  font-weight: bold;
+  width: 20px;
+}
+
+.entry-lines-summary-card .account-name {
+  flex-grow: 1;
+  margin-left: 5px;
+  text-align: left;
+}
+
+.entry-lines-summary-card .line-amount {
+  text-align: right;
+  width: 80px;
+}
+
+.debit-line {
+  color: #28a745; /* Verde */
+}
+
+.credit-line {
+  color: #007bff; /* Azul */
+}
+
+.no-entries-message {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  margin-top: 20px;
 }
 </style>

@@ -11,11 +11,10 @@ const journalEntryStore = useJournalEntryStore();
 
 const selectedProductId = ref('');
 
-const products = computed(() => productStore.products);
+const products = computed(() => productStore.getAllProducts);
 
 const movementsForSelectedProduct = computed(() => {
   if (!selectedProductId.value) return [];
-  // Ordena os movimentos por data para garantir o cálculo correto do custo médio.
   return stockControlStore.getMovementsByProductId(selectedProductId.value);
 });
 
@@ -24,7 +23,7 @@ const currentBalanceForSelectedProduct = computed(() => {
   return stockControlStore.getBalanceByProductId(selectedProductId.value);
 });
 
-// NOVO COMPUTED: Ficha de Estoque com Saldo Acumulado
+// Ficha de Estoque com Saldo Acumulado
 const stockLedgerTable = computed(() => {
   const movements = movementsForSelectedProduct.value;
   if (movements.length === 0) return [];
@@ -35,50 +34,61 @@ const stockLedgerTable = computed(() => {
 
   const tableData: any[] = [];
 
-  movements.forEach(movement => {
-    // Calculamos o saldo e custo médio para CADA LINHA, como se o store fizesse isso incrementalmente
-    // No entanto, o stockControlStore já faz o cálculo acumulado no `balances`.
-    // Aqui, vamos SIMULAR o acumulado para a exibição na tabela.
+  // Variáveis para somar os totais da tabela
+  let totalEntradaValor = 0;
+  let totalSaidaValor = 0;
 
-    if (movement.type === 'purchase') {
+  movements.forEach(movement => {
+    if (movement.type === 'in') {
       currentQuantity += movement.quantity;
-      currentTotalValue += movement.totalValue;
-      currentUnitCost = currentTotalValue / currentQuantity;
-    } else { // type === 'sale'
-      // Para venda, o custo unitário já vem do custo médio do momento da venda
-      // A lógica de updateBalance no store já ajusta o unitCost e totalValue do movimento de venda.
+      currentTotalValue += (movement.quantity * movement.unitPrice);
+      totalEntradaValor += movement.totalValue; // Adiciona ao total de entrada
+    } else { // type === 'out'
       currentQuantity -= movement.quantity;
-      currentTotalValue -= movement.totalValue;
-      // Se o estoque ficar zerado, zera o custo unitário
-      if (currentQuantity <= 0) { // Pode ficar negativo se vender mais do que tem, como no exercício.
-          currentQuantity = Math.max(0, currentQuantity); // Para não exibir qts negativas na tabela, apenas no final
-          currentTotalValue = Math.max(0, currentTotalValue);
-          currentUnitCost = 0;
-      }
+      currentTotalValue -= (movement.quantity * movement.unitPrice);
+      totalSaidaValor += movement.totalValue; // Adiciona ao total de saída
     }
+
+    currentUnitCost = (currentQuantity > 0) ? (currentTotalValue / currentQuantity) : 0;
 
     tableData.push({
       id: movement.id,
       date: movement.date,
-      type: movement.type === 'purchase' ? 'Compra' : 'Venda',
-      qty_entrada: movement.type === 'purchase' ? movement.quantity : '-',
-      custo_unit_entrada: movement.type === 'purchase' ? movement.unitCost : '-',
-      valor_total_entrada: movement.type === 'purchase' ? movement.totalValue : '-',
-      qty_saida: movement.type === 'sale' ? movement.quantity : '-',
-      custo_unit_saida: movement.type === 'sale' ? movement.unitCost : '-', // Este é o custo médio no momento da saída
-      valor_total_saida: movement.type === 'sale' ? movement.totalValue : '-', // Este é o CMV
+      type: movement.type === 'in' ? 'Compra' : 'Venda',
+      qty_entrada: movement.type === 'in' ? movement.quantity : '-',
+      custo_unit_entrada: movement.type === 'in' ? movement.unitPrice : '-',
+      valor_total_entrada: movement.type === 'in' ? movement.totalValue : '-',
+      qty_saida: movement.type === 'out' ? movement.quantity : '-',
+      custo_unit_saida: movement.type === 'out' ? movement.unitPrice : '-',
+      valor_total_saida: movement.type === 'out' ? movement.totalValue : '-',
       saldo_qty: currentQuantity,
       saldo_custo_unit: currentUnitCost,
       saldo_valor_total: currentTotalValue,
-      historico_lanc: getJournalEntryDescription(movement.journalEntryId),
     });
   });
+
+  // Adiciona a linha de total
+  tableData.push({
+    id: 'total-row',
+    type: 'Total',
+    qty_entrada: '-',
+    custo_unit_entrada: '-',
+    valor_total_entrada: totalEntradaValor,
+    qty_saida: '-',
+    custo_unit_saida: '-',
+    valor_total_saida: totalSaidaValor,
+    saldo_qty: '-',
+    saldo_custo_unit: '-',
+    saldo_valor_total: currentTotalValue, // O saldo final total é o último saldo acumulado
+    isTotalRow: true // Propriedade para identificar a linha de total
+  });
+
 
   return tableData;
 });
 
 const getProductName = (productId: string) => {
-  return productStore.products.find((p: { id: string; name: string }) => p.id === productId)?.name || 'Produto Desconhecido';
+  return productStore.getProductById(productId)?.name || 'Produto Desconhecido';
 };
 
 const getJournalEntryDescription = (journalEntryId?: string) => {
@@ -86,13 +96,13 @@ const getJournalEntryDescription = (journalEntryId?: string) => {
   return journalEntryStore.getJournalEntryById(journalEntryId)?.description || 'Lançamento Contábil Desconhecido';
 };
 
-// Funções de teste, mantidas para depuração
+// Funções de teste
 const addTestPurchase = () => {
   const productId = products.value[0]?.id;
   if (!productId) { alert('Nenhum produto disponível.'); return; }
   const newMovement: StockMovement = {
-    id: Date.now().toString() + '-test-compra', date: '2025-01-05', type: 'purchase', productId: productId,
-    quantity: 100, unitCost: 5.00, totalValue: 100 * 5.00, journalEntryId: 'test-journal-entry-1'
+    id: Date.now().toString() + '-test-compra', date: '2025-01-05', type: 'in', productId: productId,
+    quantity: 100, unitPrice: 5.00, totalValue: 100 * 5.00, journalEntryId: 'test-journal-entry-1'
   };
   stockControlStore.addMovement(newMovement);
 };
@@ -101,8 +111,8 @@ const addTestSale = () => {
   const productId = products.value[0]?.id;
   if (!productId) { alert('Nenhum produto disponível.'); return; }
   const newMovement: StockMovement = {
-    id: Date.now().toString() + '-test-venda', date: '2025-01-10', type: 'sale', productId: productId,
-    quantity: 50, unitCost: 0, totalValue: 0, journalEntryId: 'test-journal-entry-2'
+    id: Date.now().toString() + '-test-venda', date: '2025-01-10', type: 'out', productId: productId,
+    quantity: 50, unitPrice: 0, totalValue: 0, journalEntryId: 'test-journal-entry-2'
   };
   stockControlStore.addMovement(newMovement);
 };
@@ -138,7 +148,6 @@ const addTestSale = () => {
             <th colspan="3">Entrada</th>
             <th colspan="3">Saída</th>
             <th colspan="3">Saldo</th>
-            <th rowspan="2">Histórico Lanç.</th>
           </tr>
           <tr>
             <th>QTD</th>
@@ -153,7 +162,7 @@ const addTestSale = () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in stockLedgerTable" :key="row.id">
+          <tr v-for="row in stockLedgerTable" :key="row.id" :class="{ 'total-row': row.isTotalRow }">
             <td>{{ row.type }}</td>
             <td>{{ row.qty_entrada }}</td>
             <td>{{ typeof row.custo_unit_entrada === 'number' ? 'R$ ' + row.custo_unit_entrada.toFixed(2) : row.custo_unit_entrada }}</td>
@@ -162,9 +171,8 @@ const addTestSale = () => {
             <td>{{ typeof row.custo_unit_saida === 'number' ? 'R$ ' + row.custo_unit_saida.toFixed(2) : row.custo_unit_saida }}</td>
             <td>{{ typeof row.valor_total_saida === 'number' ? 'R$ ' + row.valor_total_saida.toFixed(2) : row.valor_total_saida }}</td>
             <td>{{ row.saldo_qty }}</td>
-            <td>{{ 'R$ ' + row.saldo_custo_unit.toFixed(2) }}</td>
-            <td>{{ 'R$ ' + row.saldo_valor_total.toFixed(2) }}</td>
-            <td>{{ row.historico_lanc }}</td>
+            <td>{{ typeof row.saldo_custo_unit === 'number' ? 'R$ ' + row.saldo_custo_unit.toFixed(2) : row.saldo_custo_unit }}</td>
+            <td>{{ typeof row.saldo_valor_total === 'number' ? 'R$ ' + row.saldo_valor_total.toFixed(2) : row.saldo_valor_total }}</td>
           </tr>
         </tbody>
       </table>
@@ -183,7 +191,7 @@ const addTestSale = () => {
 <style scoped>
 .stock-control-container {
   padding: 20px;
-  max-width: 1400px; /* Aumentado para acomodar mais colunas */
+  max-width: 1400px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
 }
@@ -243,18 +251,27 @@ th, td {
   border: 1px solid #e0e0e0;
   padding: 10px;
   text-align: left;
-  font-size: 0.85rem; /* Ajustado para caber mais colunas */
+  font-size: 0.85rem;
 }
 
 th {
   background-color: #eef;
   font-weight: bold;
   color: #444;
-  text-align: center; /* Centraliza cabeçalhos */
+  text-align: center;
 }
 
 tbody tr:nth-child(even) {
   background-color: #f6f6f6;
+}
+
+.total-row { /* Novo estilo para a linha de total */
+  font-weight: bold;
+  background-color: #eef; /* Mesma cor do cabeçalho */
+  border-top: 2px solid #ccc; /* Borda superior para destacar */
+}
+.total-row td {
+  color: #333;
 }
 
 .select-product-prompt {

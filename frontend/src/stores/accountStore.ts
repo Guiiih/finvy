@@ -18,16 +18,15 @@ export const useAccountStore = defineStore('accounts', {
       { id: '10', name: 'Compras de Mercadoria', type: 'asset', nature: 'debit' }, 
       { id: '12', name: 'ICMS sobre Vendas', type: 'revenue', nature: 'credit' }, 
       { id: '13', name: 'Receita de Vendas', type: 'revenue', nature: 'credit' }, 
-      { id: '14', name: 'CMV', type: 'expense', nature: 'debit' }, 
       { id: '15', name: 'Salários a Pagar', type: 'liability', nature: 'credit' }, 
       { id: '16', name: 'Despesas com Salários', type: 'expense', nature: 'debit' }, 
       { id: '17', name: 'ICMS sobre Compras', type: 'asset', nature: 'debit' }, 
-      { id: '18', name: 'Custo da Mercadoria Vendida', type: 'expense', nature: 'debit' },
+      { id: '18', name: 'Custo da Mercadoria Vendida', type: 'expense', nature: 'debit' }, 
       { id: '19', name: 'Reserva de Lucro', type: 'equity', nature: 'credit' }, 
       { id: '20', name: 'Impostos a Pagar', type: 'liability', nature: 'credit' }, 
       { id: '21', name: 'ICMS Antecipado', type: 'asset', nature: 'debit' },
       { id: '22', name: 'RCM', type: 'revenue', nature: 'credit' },
-      { id: '23', name: 'C/C ICMS', type: 'liability', nature: 'credit' } // MANTIDA
+      { id: '23', name: 'C/C ICMS', type: 'liability', nature: 'credit' } 
     ] as Account[]
   }),
   getters: {

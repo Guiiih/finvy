@@ -44,17 +44,17 @@ export interface StockMovement {
   id: string;
   journalEntryId?: string; // Link para o lançamento contábil que gerou o movimento
   date: string;
-  type: 'purchase' | 'sale'; // Tipo de movimento
+  type: 'purchase' | 'sale' | 'in' | 'out'; // Tipo de movimento (adicionei 'in' | 'out' para flexibilidade)
   productId: string;
   quantity: number;
-  unitCost: number; // Custo unitário da compra ou custo médio da venda
-  totalValue: number;
+  unitPrice: number; // ALTERADO: de 'unitCost' para 'unitPrice'
+  totalValue: number; // Mantido, embora o addMovement não o use diretamente
 }
 
 export interface StockBalance {
   productId: string;
   quantity: number;
-  unitCost: number; // Custo médio atual
+  unitCost: number; // Custo médio atual (mantém unitCost aqui, pois é um conceito de balanço)
   totalValue: number;
 }
 

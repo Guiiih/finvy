@@ -17,19 +17,20 @@ const ledgerAccounts = computed(() => {
   const accountsMap = new Map<string, {
     accountId: string;
     accountName: string;
+    type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
     nature: 'debit' | 'credit';
-    debitEntries: number[]; // Lista de valores de débito
-    creditEntries: number[]; // Lista de valores de crédito
-    totalDebits: number; // Soma total dos débitos
-    totalCredits: number; // Soma total dos créditos
-    finalBalance: number; // Saldo final
+    debitEntries: number[];
+    creditEntries: number[];
+    totalDebits: number;
+    totalCredits: number;
+    finalBalance: number;
   }>();
 
-  // Inicializar todas as contas com listas vazias para os movimentos
   allAccounts.value.forEach(account => {
     accountsMap.set(account.id, {
       accountId: account.id,
       accountName: account.name,
+      type: account.type,
       nature: account.nature,
       debitEntries: [],
       creditEntries: [],
@@ -39,47 +40,54 @@ const ledgerAccounts = computed(() => {
     });
   });
 
-  // Processar cada lançamento para registrar e somar débitos e créditos
   allJournalEntries.value.forEach(entry => {
     entry.lines.forEach(line => {
       const accountData = accountsMap.get(line.accountId);
       if (accountData) {
-        if (line.type === 'debit') { // Se a linha do lançamento é um DÉBITO
-          accountData.debitEntries.push(line.amount); // Adiciona ao lado dos débitos
+        if (line.type === 'debit') {
+          accountData.debitEntries.push(line.amount);
           accountData.totalDebits += line.amount;
-        } else { // Se a linha do lançamento é um CRÉDITO
-          accountData.creditEntries.push(line.amount); // Adiciona ao lado dos créditos
+        } else {
+          accountData.creditEntries.push(line.amount);
           accountData.totalCredits += line.amount;
         }
       }
     });
   });
 
-  // Calcular o saldo final para cada conta
   accountsMap.forEach(accountData => {
     if (accountData.nature === 'debit') {
       accountData.finalBalance = accountData.totalDebits - accountData.totalCredits;
     } else { // nature === 'credit'
-      accountData.finalBalance = accountData.totalCredits - accountData.totalDebits;
+      accountData.finalBalance = accountData.totalCredits - accountData.totalDebits; 
+    }
+
+    if (accountData.accountId === '23') { // ID da conta C/C ICMS
+      if (accountData.finalBalance > 0) {
+        accountData.accountName = 'ICMS a Recuperar';
+      } else if (accountData.finalBalance < 0) {
+        accountData.accountName = 'ICMS a Recolher';
+      } else {
+        accountData.accountName = 'C/C ICMS (Zerada)';
+      }
     }
   });
 
-  // Converter o mapa de volta para um array para renderização
   return Array.from(accountsMap.values()).sort((a, b) => a.accountName.localeCompare(b.accountName));
 });
 
-// Computed para obter o nome da conta dinamicamente para C/C ICMS
-const getDynamicAccountName = (account: any) => { // Use 'any' aqui ou LedgerAccount se tiver certeza do tipo
-  if (account.accountName === 'C/C ICMS') {
-    if (account.finalBalance > 0) { // Saldo credor (positivo para natureza 'credit')
-      return 'ICMS a Recolher';
-    } else if (account.finalBalance < 0) { // Saldo devedor (negativo para natureza 'credit', ou positivo para natureza 'debit')
-      return 'ICMS a Recuperar';
-    }
+const getBalanceClass = (account: any) => {
+  if (account.finalBalance === 0) {
+    return '';
   }
-  return account.accountName; // Retorna o nome normal para outras contas ou saldo zero
-};
 
+  // A cor 'positive' é para o saldo na sua natureza. A 'negative' é para o saldo na natureza oposta.
+  if (account.finalBalance > 0) {
+    return account.nature === 'debit' ? 'positive' : 'positive';
+  } else { // finalBalance < 0
+    return account.nature === 'debit' ? 'negative' : 'negative';
+  }
+};
 </script>
 
 <template>
@@ -92,39 +100,45 @@ const getDynamicAccountName = (account: any) => { // Use 'any' aqui ou LedgerAcc
 
     <div v-else class="ledger-accounts-grid">
       <div v-for="account in ledgerAccounts" :key="account.accountId" class="ledger-card">
-        <h3>{{ getDynamicAccountName(account) }}</h3>
-        <div class="t-account-wrapper">
-            <div class="t-account-header"></div> <div class="t-side debit-side">
-                <ul>
-                    <li v-for="(amount, index) in account.debitEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
-                </ul>
+        <h3>{{ account.accountName }}</h3>
+        <div class="ledger-content">
+            <div class="t-account-wrapper">
+                <div class="t-side debit-side"> 
+                    <ul>
+                        <li v-for="(amount, index) in account.debitEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
+                    </ul>
+                </div>
+                <div class="t-side credit-side">
+                    <ul>
+                        <li v-for="(amount, index) in account.creditEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
+                    </ul>
+                </div>
             </div>
-            <div class="t-side credit-side">
-                <ul>
-                    <li v-for="(amount, index) in account.creditEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
-                </ul>
+            
+            <div class="totals-row">
+                <div class="total-debits-sum">R$ {{ account.totalDebits.toFixed(2) }}</div>
+                <div class="total-credits-sum">R$ {{ account.totalCredits.toFixed(2) }}</div>
             </div>
-        </div>
-        
-        <div class="totals-row">
-            <div class="total-debits-sum">R$ {{ account.totalDebits.toFixed(2) }}</div>
-            <div class="total-credits-sum">R$ {{ account.totalCredits.toFixed(2) }}</div>
-        </div>
 
-        <div class="final-balance-row">
-            <div class="final-balance-left" :class="{ 'positive': account.finalBalance > 0 && account.nature === 'debit', 'negative': account.finalBalance < 0 && account.nature === 'credit' }">
-                <span v-if="(account.finalBalance > 0 && account.nature === 'debit') || (account.finalBalance < 0 && account.nature === 'credit')">
+            <div class="final-balance-row">
+                <div class="final-balance-left" 
+                     :class="getBalanceClass(account)"
+                     v-if="(account.finalBalance !== 0) && 
+                           ((account.nature === 'debit' && account.finalBalance >= 0) || 
+                            (account.nature === 'credit' && account.finalBalance < 0))">
                     R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
-                </span>
-            </div>
-            <div class="final-balance-right" :class="{ 'positive': account.finalBalance > 0 && account.nature === 'credit', 'negative': account.finalBalance < 0 && account.nature === 'debit' }">
-                <span v-if="(account.finalBalance > 0 && account.nature === 'credit') || (account.finalBalance < 0 && account.nature === 'debit')">
+                </div>
+                <div class="final-balance-left" v-else></div> 
+
+                <div class="final-balance-right" 
+                     :class="getBalanceClass(account)"
+                     v-if="(account.finalBalance !== 0) && 
+                           ((account.nature === 'credit' && account.finalBalance >= 0) || 
+                            (account.nature === 'debit' && account.finalBalance < 0))">
                     R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
-                </span>
+                </div>
+                <div class="final-balance-right" v-else></div> 
             </div>
-        </div>
-        <div class="final-balance-nature">
-             ({{ account.finalBalance >= 0 ? account.nature === 'debit' ? 'D' : 'C' : account.nature === 'debit' ? 'C' : 'D' }})
         </div>
       </div>
     </div>
@@ -154,20 +168,15 @@ h1 {
 
 .ledger-accounts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, 1fr); 
   gap: 25px;
-  justify-content: center;
 }
 
 .ledger-card {
   background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   padding: 0;
   display: flex;
   flex-direction: column;
-  width: 300px;
   overflow: hidden;
 }
 
@@ -181,15 +190,13 @@ h1 {
   border-bottom: 1px solid #e0e0e0;
 }
 
-.t-account-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    border-bottom: 1px solid #e0e0e0;
+.ledger-content {
     position: relative;
+    flex-grow: 1;
+    padding-bottom: 10px;
 }
 
-.t-account-wrapper::after {
+.ledger-content::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -200,18 +207,27 @@ h1 {
     transform: translateX(-50%);
 }
 
+.t-account-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
 .t-side {
   padding: 5px 15px;
   text-align: center;
+  min-height: 80px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
 }
 
 .t-side ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  min-height: 50px;
 }
 
 .t-side li {
@@ -228,7 +244,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   font-weight: bold;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: none; /* CORRIGIDO: Explicita a remoção da borda inferior */ 
   padding: 8px 15px;
   background-color: #f0f0f0;
 }
@@ -261,14 +277,6 @@ h1 {
 .final-balance-right {
     flex: 1;
     text-align: right;
-    color: #007bff;
-}
-
-.final-balance-nature {
-    text-align: center;
-    font-size: 0.9em;
-    padding-bottom: 10px;
-    color: #666;
 }
 
 .final-balance-row .positive {

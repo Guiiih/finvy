@@ -1,23 +1,6 @@
+// frontend/src/stores/stockControlStore.ts
 import { defineStore } from 'pinia';
-import type { JournalEntry } from '@/types/index'; 
-
-export interface StockMovement {
-  id: string;
-  journalEntryId?: string; 
-  date: string;
-  type: 'purchase' | 'sale'; 
-  productId: string;
-  quantity: number;
-  unitCost: number; 
-  totalValue: number;
-}
-
-export interface StockBalance {
-  productId: string;
-  quantity: number;
-  unitCost: number; 
-  totalValue: number;
-}
+import type { StockMovement, StockBalance } from '../types/index'; // Importe StockBalance também
 
 interface StockControlState {
   movements: StockMovement[];
@@ -30,7 +13,7 @@ export const useStockControlStore = defineStore('stockControl', {
     balances: [],
   }),
   actions: {
-    addMovement(movement: StockMovement) {
+    addMovement(movement: StockMovement) { // Recebe StockMovement com unitPrice
       this.movements.push(movement);
       this.updateBalance(movement);
     },
@@ -42,24 +25,25 @@ export const useStockControlStore = defineStore('stockControl', {
         currentBalance = {
           productId: newMovement.productId,
           quantity: 0,
-          unitCost: 0,
+          unitCost: 0, // unitCost para o balanço interno
           totalValue: 0,
         };
         this.balances.push(currentBalance);
       }
 
-      if (newMovement.type === 'purchase') {
+      if (newMovement.type === 'purchase' || newMovement.type === 'in') { // A compra/entrada usa o unitPrice do movimento
         const newTotalQuantity = currentBalance.quantity + newMovement.quantity;
-        const newTotalValue = currentBalance.totalValue + newMovement.totalValue;
+        const newTotalValue = currentBalance.totalValue + (newMovement.quantity * newMovement.unitPrice); // Multiplica quantidade pelo unitPrice
         currentBalance.quantity = newTotalQuantity;
         currentBalance.totalValue = newTotalValue;
         currentBalance.unitCost = newTotalValue / newTotalQuantity; 
-      } else { 
-        newMovement.unitCost = currentBalance.unitCost; 
-        newMovement.totalValue = newMovement.quantity * currentBalance.unitCost;
+      } else { // type === 'sale' || type === 'out'
+        // Para venda/saída, o custo unitário vem do custo médio atual do estoque
+        newMovement.totalValue = newMovement.quantity * currentBalance.unitCost; // Calcula o CMV com base no custo médio do estoque
+        newMovement.unitPrice = currentBalance.unitCost; // Define o unitPrice do movimento de saída como o custo médio
 
         currentBalance.quantity -= newMovement.quantity;
-        currentBalance.totalValue -= newMovement.totalValue;
+        currentBalance.totalValue -= newMovement.totalValue; // Subtrai o CMV
 
         if (currentBalance.quantity < 0) {
           console.warn(`Venda excedeu o estoque para o produto ${newMovement.productId}`);
