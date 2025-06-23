@@ -34,7 +34,6 @@ customAccountOrder.set('C/C ICMS (Zerada)', 14);
 customAccountOrder.set('ICMS a Recuperar', 14);
 customAccountOrder.set('ICMS a Recolher', 14);
 customAccountOrder.set('CMV', 15);
-customAccountOrder.set('Custo da Mercadoria Vendida', 16);
 customAccountOrder.set('Resultado Bruto', 17); // Adicionado na ordem
 customAccountOrder.set('Reserva de Lucro', 18);
 customAccountOrder.set('Salários a Pagar', 19);

@@ -19,7 +19,6 @@ export const useAccountStore = defineStore('accountStore', () => {
     { id: '13', name: 'ICMS sobre Vendas', type: 'expense', nature: 'debit' }, // Dedução de Receita
     { id: '14', name: 'C/C ICMS', type: 'asset', nature: 'debit' }, // Conta transitória para apuração de ICMS
     { id: '15', name: 'CMV', type: 'expense', nature: 'debit' }, // Custo da Mercadoria Vendida - Pode ser usada para lançamentos diretos ou apuração
-    { id: '16', name: 'Custo da Mercadoria Vendida', type: 'expense', nature: 'debit' }, // Outra conta CMV (manter se houver distinção)
     { id: '17', 'name': 'Resultado Bruto', type: 'revenue', nature: 'credit' }, // Conta de apuração
     { id: '18', name: 'Reserva de Lucro', type: 'equity', nature: 'credit' },
     { id: '19', name: 'Salários a Pagar', type: 'liability', nature: 'credit' },

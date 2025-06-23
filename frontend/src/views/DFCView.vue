@@ -65,14 +65,10 @@ const dreData = computed(() => {
 
   // 3. Custo da Mercadoria Vendida (CMV)
   // CMV é uma conta de despesa, natureza devedora
-  const cmvAccount1 = accountStore.getAccountByName('Custo da Mercadoria Vendida'); // Principal CMV
-  const cmvAccount2 = accountStore.getAccountByName('CMV'); // CMV duplicada (se o usuário a mantém)
+  const cmvAccount1 = accountStore.getAccountByName('CMV'); // CMV duplicada (se o usuário a mantém)
 
   if (cmvAccount1) {
     costOfGoodsSold += (getAccountTotalDebits(cmvAccount1.id) - getAccountTotalCredits(cmvAccount1.id));
-  }
-  if (cmvAccount2) {
-    costOfGoodsSold += (getAccountTotalDebits(cmvAccount2.id) - getAccountTotalCredits(cmvAccount2.id));
   }
 
   // Resultado Bruto
