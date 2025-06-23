@@ -291,8 +291,8 @@ const addSaleEntry1 = () => {
     // Crédito para a Receita Bruta de Vendas
     { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 400000, type: 'credit' },
     // Impostos sobre Vendas (débito na conta de imposto, que é uma dedução da receita)
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'debit' }, // Débito na conta de dedução
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'credit' }, // Crédito na conta de Receita de Vendas para deduzir
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', amount: 72000, type: 'credit' }, // Débito na conta de dedução
+    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', amount: 72000, type: 'debit' }, // Crédito na conta de Receita de Vendas para deduzir
 
     // LANÇAMENTO DO CUSTO DA MERCADORIA VENDIDA (CMV) - Importante para o estoque e DRE
     // Débito na conta de CMV (despesa)
