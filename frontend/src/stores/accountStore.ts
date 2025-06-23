@@ -63,7 +63,7 @@ export const useAccountStore = defineStore('accountStore', () => {
       { id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit' },
       { id: '3', name: 'Caixa Econômica Federal', type: 'asset', nature: 'debit' },
       { id: '4', name: 'Móveis e Utensílios', type: 'asset', nature: 'debit' },
-      { id: '5', name: 'Compras de Mercadoria', type: 'expense', nature: 'debit' },
+      { id: '5', name: 'Compras de Mercadoria', type: 'asset', nature: 'debit' },
       { id: '6', name: 'Fornecedores', type: 'liability', nature: 'credit' },
       { id: '7', name: 'Caixa', type: 'asset', nature: 'debit' },
       { id: '8', name: 'Banco Itaú', type: 'asset', nature: 'debit' },

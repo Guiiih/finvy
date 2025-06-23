@@ -2,11 +2,16 @@
 import { computed } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
+import { useStockControlStore } from '@/stores/stockControlStore'; // Importar o stockControlStore
+import { useProductStore } from '@/stores/productStore'; // Importar o productStore
 import type { JournalEntry, EntryLine } from '@/types/index';
 
 // Stores necessários
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
+const stockControlStore = useStockControlStore(); // Instanciar o stockControlStore
+const productStore = useProductStore(); // Instanciar o productStore
+
 
 // Computed para calcular os saldos do razão (reutilizando lógica similar ao LedgerView)
 const ledgerAccounts = computed(() => {
@@ -56,6 +61,26 @@ const ledgerAccounts = computed(() => {
     }
   });
 
+  // NEW: Popular 'Estoque Final' com o valor do Stock Control
+  const estoqueFinalAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
+  const produtoXId = productStore.getProductByName('Produto X')?.id;
+
+  if (estoqueFinalAccount && produtoXId) {
+    const productXBalance = stockControlStore.getBalanceByProductId(produtoXId);
+    if (productXBalance) {
+      // Para a DRE, o que importa é o saldo final, então atribuímos ao finalBalance
+      estoqueFinalAccount.finalBalance = productXBalance.totalValue;
+      // Para fins de registro, podemos simular um débito aqui, mas o saldo final é o que a DRE usará
+      estoqueFinalAccount.debits = productXBalance.totalValue;
+      estoqueFinalAccount.credits = 0;
+    } else {
+      estoqueFinalAccount.finalBalance = 0;
+      estoqueFinalAccount.debits = 0;
+      estoqueFinalAccount.credits = 0;
+    }
+  }
+
+
   return accountsMap;
 });
 
@@ -83,24 +108,23 @@ const dreData = computed(() => {
   const receitaBrutaVendas = getAccountTotalCredits('Receita de Vendas');
 
   // 2. (-) Deduções da Receita Bruta
-  // ICMS sobre Vendas é uma dedução. A conta "ICMS sobre Vendas" tem natureza devedora
-  // e representa uma diminuição da receita. Portanto, pegamos o total de débitos dela.
-  const icmsSobreVendas = getAccountTotalDebits('ICMS sobre Vendas');
+  const icmsSobreVendas = getAccountTotalDebits('ICMS sobre Vendas'); // ICMS sobre Vendas é uma dedução de receita, pega os débitos
   const deducoesReceitaBruta = icmsSobreVendas; // Pode incluir outras como vendas canceladas, descontos
 
   // 3. (=) Receita Líquida de Vendas
   const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
 
-  // 4. (-) Custo da Mercadoria Vendida (CMV)
-  // Pegar o saldo final da conta CMV (ou Custo da Mercadoria Vendida)
-  // Usamos Math.abs porque despesas são débitos e aparecem como valores positivos na DRE
-  const cmv = Math.abs(getAccountFinalBalance('Custo da Mercadoria Vendida')); 
-  // Caso você tenha a conta 'CMV' separada
-  const cmvAlt = Math.abs(getAccountFinalBalance('CMV'));
-  const totalCustoMercadoriaVendida = cmv > 0 ? cmv : cmvAlt; // Usar o valor da conta que tiver movimento
+  // 4. (-) Custo da Mercadoria Vendida (CMV) - AGORA CALCULADO PELA FÓRMULA DE INVENTÁRIO PERIÓDICO
+  const comprasDeMercadoria = getAccountFinalBalance('Compras de Mercadoria'); // Saldo final (débito) de Compras de Mercadoria (que agora é um ativo)
+  const estoqueFinal = getAccountFinalBalance('Estoque Final'); // Saldo final da conta Estoque Final (populada do stockControlStore)
+
+  let cmv = comprasDeMercadoria - estoqueFinal;
+  if (cmv < 0) { // CMV não pode ser negativo
+    cmv = 0;
+  }
 
   // 5. (=) Lucro Bruto
-  const lucroBruto = receitaLiquidaVendas - totalCustoMercadoriaVendida;
+  const lucroBruto = receitaLiquidaVendas - cmv;
 
   // TO-DO: Adicionar Despesas Operacionais, Receitas Financeiras, Despesas Financeiras
   // Por enquanto, vamos para o Lucro Líquido com o que temos
@@ -112,7 +136,7 @@ const dreData = computed(() => {
     receitaBrutaVendas,
     deducoesReceitaBruta,
     receitaLiquidaVendas,
-    cmv: totalCustoMercadoriaVendida, // Usar o valor combinado/selecionado
+    cmv, // Usar o CMV calculado pela fórmula
     lucroBruto,
     lucroLiquido,
   };

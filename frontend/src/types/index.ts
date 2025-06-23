@@ -64,3 +64,10 @@ export interface LedgerAccount extends Account {
   credits: number;
   finalBalance: number;
 }
+
+export interface ProductBalance {
+  productId: string;
+  quantity: number;
+  unitCost: number; // Custo médio unitário
+  totalValue: number; // Valor total do estoque
+}

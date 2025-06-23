@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
-import { useStockControlStore } from '@/stores/stockControlStore'; // Import the stock control store
+import { useStockControlStore } from '@/stores/stockControlStore';
+import { useProductStore } from '@/stores/productStore';
 import type { JournalEntry, EntryLine, Account, LedgerAccount } from '@/types/index';
 
 // Stores necessários
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
-const stockControlStore = useStockControlStore(); // Initialize stock control store
+const stockControlStore = useStockControlStore();
+const productStore = useProductStore();
 
 // Getter para todos os lançamentos
 const allJournalEntries = computed(() => journalEntryStore.getAllJournalEntries);
@@ -16,7 +18,6 @@ const allAccounts = computed(() => accountStore.getAllAccounts);
 
 // Definir uma ordem personalizada para as contas
 const customAccountOrder = new Map<string, number>();
-// Ordem baseada nas imagens fornecidas e nos nomes das contas do accountStore.ts
 customAccountOrder.set('Capital Social Subscrito', 1);
 customAccountOrder.set('Capital Social a Integralizar', 2);
 customAccountOrder.set('Caixa Econômica Federal', 3);
@@ -34,28 +35,29 @@ customAccountOrder.set('C/C ICMS (Zerada)', 14);
 customAccountOrder.set('ICMS a Recuperar', 14);
 customAccountOrder.set('ICMS a Recolher', 14);
 customAccountOrder.set('CMV', 15);
-customAccountOrder.set('Resultado Bruto', 17); // Adicionado na ordem
-customAccountOrder.set('Reserva de Lucro', 18);
-customAccountOrder.set('Salários a Pagar', 19);
-customAccountOrder.set('Despesas com Salários', 20);
-customAccountOrder.set('Impostos a Pagar', 21);
-customAccountOrder.set('ICMS Antecipado', 22);
-customAccountOrder.set('Estoque Final', 23); // NEW: Add 'Estoque Final' to custom order
+customAccountOrder.set('Resultado Bruto', 16); // Ajustado para ser antes de Reserva de Lucro
+customAccountOrder.set('Reserva de Lucro', 17); // Ordem para Reserva de Lucro
+customAccountOrder.set('Salários a Pagar', 18);
+customAccountOrder.set('Despesas com Salários', 19);
+customAccountOrder.set('Impostos a Pagar', 20);
+customAccountOrder.set('ICMS Antecipado', 21);
+customAccountOrder.set('Estoque Final', 22);
 
 
 // Funções auxiliares locais para calcular totais, filtrando 'Apuração'
-// Estas funções ainda são úteis para pegar saldos de outras contas para o cálculo do Resultado Bruto
 const getLocalAccountTotalDebits = (accountId: string) => {
+  if (!allJournalEntries.value) return 0;
   return allJournalEntries.value
-    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração para o cálculo das contas normais
+    .filter(entry => !entry.description.includes('Apuração'))
     .flatMap(entry => entry.lines)
     .filter(line => line.accountId === accountId && line.type === 'debit')
     .reduce((sum, line) => sum + line.amount, 0);
 };
 
 const getLocalAccountTotalCredits = (accountId: string) => {
+  if (!allJournalEntries.value) return 0;
   return allJournalEntries.value
-    .filter(entry => !entry.description.includes('Apuração')) // Exclui lançamentos de apuração para o cálculo das contas normais
+    .filter(entry => !entry.description.includes('Apuração'))
     .flatMap(entry => entry.lines)
     .filter(line => line.accountId === accountId && line.type === 'credit')
     .reduce((sum, line) => sum + line.amount, 0);
@@ -76,6 +78,8 @@ const ledgerAccounts = computed(() => {
     finalBalance: number;
   }>();
 
+  if (!allAccounts.value) return [];
+
   allAccounts.value.forEach(account => {
     accountsMap.set(account.id, {
       accountId: account.id,
@@ -90,59 +94,69 @@ const ledgerAccounts = computed(() => {
     });
   });
 
-  allJournalEntries.value.forEach(entry => {
-    entry.lines.forEach(line => {
-      const accountData = accountsMap.get(line.accountId);
-      if (accountData) {
-        // Remover a condição para não excluir 'Resultado Bruto' aqui, pois ele será zerado e recalculado
-        // if (line.accountId !== accountStore.getAccountByName('Resultado Bruto')?.id) { 
-            if (line.type === 'debit') {
-              accountData.debitEntries.push(line.amount);
-              accountData.totalDebits += line.amount;
-            } else {
-              accountData.creditEntries.push(line.amount);
-              accountData.totalCredits += line.amount;
-            }
-        // }
-      }
+  if (allJournalEntries.value) {
+    allJournalEntries.value.forEach(entry => {
+      entry.lines.forEach(line => {
+        const accountData = accountsMap.get(line.accountId);
+        if (accountData) {
+              if (line.type === 'debit') {
+                accountData.debitEntries.push(line.amount);
+                accountData.totalDebits += line.amount;
+              } else {
+                accountData.creditEntries.push(line.amount);
+                accountData.totalCredits += line.amount;
+              }
+        }
+      });
     });
-  });
+  }
 
   accountsMap.forEach(accountData => {
-    if (accountData.nature === 'debit') {
-      accountData.finalBalance = accountData.totalDebits - accountData.totalCredits;
-    } else { // nature === 'credit'
-      accountData.finalBalance = accountData.totalCredits - accountData.totalDebits; 
-    }
+    const accountDetails = allAccounts.value.find(acc => acc.id === accountData.accountId);
+    if (accountDetails) {
+        if (accountDetails.nature === 'debit') {
+            accountData.finalBalance = accountData.totalDebits - accountData.totalCredits;
+        } else {
+            accountData.finalBalance = accountData.totalCredits - accountData.totalDebits;
+        }
 
-    if (accountData.accountId === accountStore.getAccountByName('C/C ICMS')?.id) { // ID da conta C/C ICMS
-      if (accountData.finalBalance > 0) {
-        accountData.accountName = 'ICMS a Recuperar';
-      } else if (accountData.finalBalance < 0) {
-        accountData.accountName = 'ICMS a Recolher';
-      } else {
-        accountData.accountName = 'C/C ICMS (Zerada)';
-      }
+        if (accountData.accountId === accountStore.getAccountByName('C/C ICMS')?.id) {
+            if (accountData.finalBalance > 0) {
+                accountData.accountName = 'ICMS a Recuperar';
+            } else if (accountData.finalBalance < 0) {
+                accountData.accountName = 'ICMS a Recolher';
+            } else {
+                accountData.accountName = 'C/C ICMS (Zerada)';
+            }
+        }
     }
   });
 
-  // NEW: Populate 'Estoque Final' from Stock Control
+
+  // Populate 'Estoque Final' from Stock Control (needs to happen before CMV calculation)
   const estoqueFinalAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
-  const productXBalance = stockControlStore.getBalanceByProductId('prod-x-1'); // Assuming 'prod-x-1' is the ID for Produto X
+  const produtoXId = productStore.products ? productStore.getProductByName('Produto X')?.id : undefined;
 
-  if (estoqueFinalAccount && productXBalance) {
-    // Clear any existing direct entries if this account was used in a journal entry
-    estoqueFinalAccount.debitEntries = [];
-    estoqueFinalAccount.creditEntries = [];
-    estoqueFinalAccount.totalDebits = 0;
-    estoqueFinalAccount.totalCredits = 0;
+  if (estoqueFinalAccount && produtoXId) {
+    const productXBalance = stockControlStore.getBalanceByProductId(produtoXId);
 
-    // The final stock value comes as a debit to the 'Estoque Final' account
-    estoqueFinalAccount.debitEntries.push(productXBalance.totalValue);
-    estoqueFinalAccount.totalDebits = productXBalance.totalValue;
-    estoqueFinalAccount.finalBalance = productXBalance.totalValue; // Since it's an asset, final balance is debits - credits
+    if (productXBalance) {
+      estoqueFinalAccount.debitEntries = [];
+      estoqueFinalAccount.creditEntries = [];
+      estoqueFinalAccount.totalDebits = 0;
+      estoqueFinalAccount.totalCredits = 0;
+
+      estoqueFinalAccount.debitEntries.push(productXBalance.totalValue);
+      estoqueFinalAccount.totalDebits = productXBalance.totalValue;
+      estoqueFinalAccount.finalBalance = productXBalance.totalValue;
+    } else {
+      estoqueFinalAccount.debitEntries = [];
+      estoqueFinalAccount.creditEntries = [];
+      estoqueFinalAccount.totalDebits = 0;
+      estoqueFinalAccount.totalCredits = 0;
+      estoqueFinalAccount.finalBalance = 0;
+    }
   } else if (estoqueFinalAccount) {
-    // If no productXBalance, ensure 'Estoque Final' is zeroed out
     estoqueFinalAccount.debitEntries = [];
     estoqueFinalAccount.creditEntries = [];
     estoqueFinalAccount.totalDebits = 0;
@@ -150,92 +164,160 @@ const ledgerAccounts = computed(() => {
     estoqueFinalAccount.finalBalance = 0;
   }
 
+  // --- Calculate CMV based on FinalBalance of Compras de Mercadoria and Estoque Final ---
+  const cmvAccount = accountsMap.get(accountStore.getAccountByName('CMV')?.id || '');
+  const comprasDeMercadoriaAccount = accountsMap.get(accountStore.getAccountByName('Compras de Mercadoria')?.id || '');
+  const currentEstoqueFinalAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
+
+
+  if (cmvAccount && comprasDeMercadoriaAccount && currentEstoqueFinalAccount) {
+    const estoqueDisponivelParaVenda = comprasDeMercadoriaAccount.finalBalance;
+    const estoqueFinal = currentEstoqueFinalAccount.finalBalance;
+
+    let cmvCalculado = estoqueDisponivelParaVenda - estoqueFinal;
+
+    if (cmvCalculado < 0) {
+      cmvCalculado = 0;
+    }
+
+    cmvAccount.debitEntries = [];
+    cmvAccount.creditEntries = [];
+    cmvAccount.totalDebits = 0;
+    cmvAccount.totalCredits = 0;
+
+
+    // INJETAR OS VALORES E LABELS VIRTUAIS
+    if (estoqueDisponivelParaVenda > 0) {
+        cmvAccount.debitEntries.push(estoqueDisponivelParaVenda);
+        cmvAccount.totalDebits += estoqueDisponivelParaVenda;
+    }
+
+    if (estoqueFinal > 0) {
+        cmvAccount.creditEntries.push(estoqueFinal);
+        cmvAccount.totalCredits += estoqueFinal;
+    }
+    
+    cmvAccount.finalBalance = cmvCalculado;
+  }
+
   // --- Calcular e Popular a Conta "Resultado Bruto" Virtualmente ---
   const resultadoBrutoAccount = accountsMap.get(accountStore.getAccountByName('Resultado Bruto')?.id || '');
   if (resultadoBrutoAccount) {
-    // Primeiro, zere as entradas e totais da conta Resultado Bruto se ela já tiver sido populada
-    // por algum lançamento direto acidental, já que ela é uma conta de apuração virtual aqui.
     resultadoBrutoAccount.debitEntries = [];
     resultadoBrutoAccount.creditEntries = [];
     resultadoBrutoAccount.totalDebits = 0;
     resultadoBrutoAccount.totalCredits = 0;
 
-    // --- CÁLCULO DA RECEITA LÍQUIDA DE VENDAS ---
-    // Pegar o saldo final da conta "Receita de Vendas"
     const receitaVendasContaObj = accountsMap.get(accountStore.getAccountByName('Receita de Vendas')?.id || '');
     const netSalesRevenue = receitaVendasContaObj ? receitaVendasContaObj.finalBalance : 0;
-    
-    // --- CÁLCULO DO CUSTO DA MERCADORIA VENDIDA (CMV) ---
-    let costOfGoodsSold = 0;
-    const cmvAccountObj1 = accountsMap.get(accountStore.getAccountByName('Custo da Mercadoria Vendida')?.id || '');
-    const cmvAccountObj2 = accountsMap.get(accountStore.getAccountByName('CMV')?.id || '');
 
-    if (cmvAccountObj1) {
-      costOfGoodsSold += Math.abs(cmvAccountObj1.finalBalance); 
-    }
-    if (cmvAccountObj2) {
-      costOfGoodsSold += Math.abs(cmvAccountObj2.finalBalance);
-    }
-    
-    // Calcular o Lucro Bruto
+    let costOfGoodsSold = cmvAccount ? cmvAccount.finalBalance : 0;
+
     const calculatedGrossProfit = netSalesRevenue - costOfGoodsSold;
 
-    // Populando as entradas virtuais para o T-account
-    // A Receita Líquida de Vendas (netSalesRevenue) entra como CRÉDITO para aumentar o lucro bruto.
-    // O Custo da Mercadoria Vendida (costOfGoodsSold) entra como DÉBITO para diminuir o lucro bruto.
-    if (netSalesRevenue > 0) { 
+    if (netSalesRevenue > 0) {
         resultadoBrutoAccount.creditEntries.push(netSalesRevenue);
         resultadoBrutoAccount.totalCredits = netSalesRevenue;
     }
-    if (costOfGoodsSold > 0) { 
+    if (costOfGoodsSold > 0) {
         resultadoBrutoAccount.debitEntries.push(costOfGoodsSold);
         resultadoBrutoAccount.totalDebits = costOfGoodsSold;
     }
-    
-    // O saldo final é a diferença entre os créditos e os débitos para uma conta de resultado (lucro é crédito)
-    resultadoBrutoAccount.finalBalance = calculatedGrossProfit; 
+
+    resultadoBrutoAccount.finalBalance = calculatedGrossProfit;
   }
-  // --- Fim da Lógica "Resultado Bruto" Virtual ---
+  
+  // --- NEW: Lógica para "Reserva de Lucro" - injetando o valor do Resultado Bruto ---
+  const reservaDeLucroAccount = accountsMap.get(accountStore.getAccountByName('Reserva de Lucro')?.id || '');
+  if (reservaDeLucroAccount) {
+      // Limpa entradas existentes
+      reservaDeLucroAccount.debitEntries = [];
+      reservaDeLucroAccount.creditEntries = [];
+      reservaDeLucroAccount.totalDebits = 0;
+      reservaDeLucroAccount.totalCredits = 0;
+
+      // Pega o lucro/prejuízo bruto do Resultado Bruto
+      const lucroBruto = resultadoBrutoAccount ? resultadoBrutoAccount.finalBalance : 0;
+
+      if (lucroBruto > 0) {
+          // Se o Resultado Bruto é lucro, ele vai para a Reserva de Lucro como CRÉDITO
+          reservaDeLucroAccount.creditEntries.push(lucroBruto);
+          reservaDeLucroAccount.totalCredits = lucroBruto;
+          reservaDeLucroAccount.finalBalance = lucroBruto; // Saldo credor para PL
+      } else if (lucroBruto < 0) {
+          // Se o Resultado Bruto é prejuízo, ele iria para uma conta de Prejuízos Acumulados
+          // ou seria um DÉBITO na Reserva de Lucro (reduzindo-a).
+          // Para este exemplo, se for prejuízo, assumimos que não vai para Reserva de Lucro (ou zera ela)
+          reservaDeLucroAccount.finalBalance = 0; // Ou Math.abs(lucroBruto) se for para mostrar o prejuízo
+      } else {
+          reservaDeLucroAccount.finalBalance = 0;
+      }
+  }
 
 
-  // Filtrar apenas as contas que possuem movimentos E ordenar pela ordem personalizada
-  return Array.from(accountsMap.values())
-    .filter(account => account.totalDebits > 0 || account.totalCredits > 0 || account.accountId === accountStore.getAccountByName('Resultado Bruto')?.id || account.accountId === accountStore.getAccountByName('Estoque Final')?.id) // NEW: Include 'Estoque Final'
+  // Filtrar e ordenar contas
+  const finalLedgerAccounts: any[] = [];
+
+  Array.from(accountsMap.values())
+    .filter(account =>
+        account.totalDebits > 0 ||
+        account.totalCredits > 0 ||
+        account.accountName === 'Resultado Bruto' ||
+        account.accountName === 'Estoque Final' ||
+        account.accountName === 'CMV' ||
+        account.accountName.includes('ICMS a') ||
+        account.accountName === 'C/C ICMS (Zerada)' ||
+        account.accountName === 'Reserva de Lucro' // Incluir Reserva de Lucro no filtro
+    )
     .sort((a, b) => {
       const orderA = customAccountOrder.get(a.accountName) || Infinity;
       const orderB = customAccountOrder.get(b.accountName) || Infinity;
       return orderA - orderB;
-    });
+    })
+    .forEach(account => finalLedgerAccounts.push(account));
+
+  return finalLedgerAccounts;
 });
 
-const getBalanceClass = (account: any) => {
+function getBalanceClass(account: any) {
   if (account.finalBalance === 0) {
     return '';
   }
 
-  // Para Resultado Bruto, se o saldo é positivo, é lucro (crédito). Se negativo, é prejuízo (débito).
   if (account.accountName === 'Resultado Bruto') {
     return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
 
-  // NEW: For 'Estoque Final', it's always an asset (debit nature)
   if (account.accountName === 'Estoque Final') {
-    return account.finalBalance >= 0 ? 'positive' : 'negative'; // Should always be positive for an asset
+    return account.finalBalance >= 0 ? 'positive' : 'negative';
+  }
+  
+  if (account.accountName === 'CMV') {
+      return account.finalBalance > 0 ? 'positive' : '';
+  }
+
+  // Lógica para Reserva de Lucro (é uma conta de PL, saldo credor é positivo)
+  if (account.accountName === 'Reserva de Lucro') {
+      return account.finalBalance >= 0 ? 'positive' : 'negative'; // Lucro positivo, prejuízo negativo
   }
 
   if (account.finalBalance > 0) {
-    return account.nature === 'debit' ? 'positive' : 'positive';
-  } else { // finalBalance < 0
-    return account.nature === 'debit' ? 'negative' : 'negative';
+    return account.nature === 'debit' ? 'positive' : 'negative';
+  } else {
+    return account.nature === 'debit' ? 'negative' : 'positive';
   }
-};
+}
+
+onMounted(() => {
+  console.log('LedgerView mounted. Journal entries:', journalEntryStore.getAllJournalEntries.length);
+});
 </script>
 
 <template>
   <div class="ledger-container">
     <h1>Razão (Ledger)</h1>
 
-    <p v-if="allJournalEntries.length === 0" class="no-entries-message">
+    <p v-if="!allJournalEntries || allJournalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado ainda. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para ver o Razão.
     </p>
 
@@ -244,14 +326,22 @@ const getBalanceClass = (account: any) => {
         <h3>{{ account.accountName }}</h3>
         <div class="ledger-content">
             <div class="t-account-wrapper">
-                <div class="t-side debit-side"> 
+                <div class="t-side debit-side">
                     <ul>
-                        <li v-for="(amount, index) in account.debitEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
+                        <li v-for="(amount, index) in account.debitEntries" :key="index">
+                            <span v-if="account.accountName === 'CMV' && index === 0"></span>
+                            <span v-else></span>
+                            R$ {{ amount.toFixed(2) }}
+                        </li>
                     </ul>
                 </div>
                 <div class="t-side credit-side">
                     <ul>
-                        <li v-for="(amount, index) in account.creditEntries" :key="index">R$ {{ amount.toFixed(2) }}</li>
+                        <li v-for="(amount, index) in account.creditEntries" :key="index">
+                            <span v-if="account.accountName === 'CMV' && index === 0"></span>
+                            <span v-else></span>
+                            R$ {{ amount.toFixed(2) }}
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -262,25 +352,29 @@ const getBalanceClass = (account: any) => {
             </div>
 
             <div class="final-balance-row">
-                <div class="final-balance-left" 
+                <div class="final-balance-left"
                      :class="getBalanceClass(account)"
-                     v-if="(account.finalBalance !== 0) && 
-                           ((account.nature === 'debit' && account.finalBalance >= 0) || 
+                     v-if="(account.finalBalance !== 0) &&
+                           ((account.nature === 'debit' && account.finalBalance >= 0) ||
                             (account.nature === 'credit' && account.finalBalance < 0)) ||
                            (account.accountName === 'Resultado Bruto' && account.finalBalance < 0) ||
-                           (account.accountName === 'Estoque Final' && account.finalBalance >= 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+                           (account.accountName === 'Estoque Final' && account.finalBalance >= 0) ||
+                           (account.accountName === 'CMV' && account.finalBalance >= 0) ||
+                           (account.accountName === 'Reserva de Lucro' && account.finalBalance < 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
                 </div>
-                <div class="final-balance-left" v-else></div> 
+                <div class="final-balance-left" v-else></div>
 
-                <div class="final-balance-right" 
+                <div class="final-balance-right"
                      :class="getBalanceClass(account)"
-                     v-if="(account.finalBalance !== 0) && 
-                           ((account.nature === 'credit' && account.finalBalance >= 0) || 
+                     v-if="(account.finalBalance !== 0) &&
+                           ((account.nature === 'credit' && account.finalBalance >= 0) ||
                             (account.nature === 'debit' && account.finalBalance < 0)) ||
                            (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0) ||
-                           (account.accountName === 'Estoque Final' && account.finalBalance < 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+                           (account.accountName === 'Estoque Final' && account.finalBalance < 0) ||
+                           (account.accountName === 'CMV' && account.finalBalance < 0) ||
+                           (account.accountName === 'Reserva de Lucro' && account.finalBalance >= 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
                 </div>
-                <div class="final-balance-right" v-else></div> 
+                <div class="final-balance-right" v-else></div>
             </div>
         </div>
       </div>
@@ -312,7 +406,7 @@ h1 {
 
 .ledger-accounts-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); 
+  grid-template-columns: repeat(4, 1fr);
   gap: 25px;
 }
 
@@ -382,6 +476,16 @@ h1 {
   padding: 2px 0;
   font-size: 0.95rem;
   color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.t-side li span:first-child {
+    font-size: 0.85em;
+    color: #666;
+    margin-right: 5px;
+    text-align: left;
+    flex-grow: 1;
 }
 
 .t-side h4 {
