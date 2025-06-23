@@ -13,6 +13,21 @@ export const useJournalEntryStore = defineStore('journalEntry', {
     addJournalEntry(entry: JournalEntry) {
       this.journalEntries.push(entry);
     },
+    // NEW: Add updateEntry action
+    updateEntry(updatedEntry: JournalEntry) {
+      const index = this.journalEntries.findIndex(entry => entry.id === updatedEntry.id);
+      if (index !== -1) {
+        this.journalEntries[index] = updatedEntry;
+      }
+    },
+    // NEW: Add deleteEntry action
+    deleteEntry(id: string) {
+      this.journalEntries = this.journalEntries.filter(entry => entry.id !== id);
+    },
+    // NEW: Add reset action for Pinia stores
+    $reset() {
+      this.journalEntries = [];
+    }
   },
   getters: {
     getAllJournalEntries(state) {
