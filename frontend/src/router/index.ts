@@ -8,8 +8,9 @@ import StockControlView from '../views/StockControlView.vue'
 import LedgerView from '../views/LedgerView.vue'
 import DREView from '../views/DREView.vue'
 import BalanceSheetView from '../views/BalanceSheetView.vue'
-import DFCView from '../views/DFCView.vue' // IMPORTAR A NOVA VIEW DO DFC
+import DFCView from '../views/DFCView.vue'
 import ReportsView from '../views/ReportsView.vue'
+import VariationView from '../views/VariationView.vue' // IMPORTAR A NOVA VIEW DE VARIAÇÃO
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,7 +56,7 @@ const router = createRouter({
       component: BalanceSheetView
     },
     {
-      path: '/dfc', // NOVA ROTA PARA O DFC
+      path: '/dfc',
       name: 'dfc',
       component: DFCView
     },
@@ -63,6 +64,11 @@ const router = createRouter({
       path: '/reports',
       name: 'reports',
       component: ReportsView
+    },
+    {
+      path: '/variations', // NOVA ROTA PARA VARIAÇÕES
+      name: 'variations',
+      component: VariationView
     }
   ]
 })

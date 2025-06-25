@@ -15,7 +15,8 @@ import { RouterLink, RouterView } from 'vue-router'
           <RouterLink to="/ledger">Razão</RouterLink>
           <RouterLink to="/dre">DRE</RouterLink>
           <RouterLink to="/balance-sheet">Balanço Patrimonial</RouterLink>
-          <RouterLink to="/dfc">DFC</RouterLink> <RouterLink to="/reports">Relatórios</RouterLink>
+          <RouterLink to="/dfc">DFC</RouterLink>
+          <RouterLink to="/variations">Variações</RouterLink> <RouterLink to="/reports">Relatórios</RouterLink>
         </nav>
     </div>
   </header>
