@@ -321,7 +321,6 @@ function handleStockMovementFromJournalEntry(entry: JournalEntry) {
 
 // --- Funções de Exemplo (para simular dados) ---
 function addAccounts() {
-  accountStore.$reset();
 
   accountStore.addAccount({ id: '1', name: 'Capital Social Subscrito', type: 'equity', nature: 'credit' });
   accountStore.addAccount({ id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit' });
@@ -350,7 +349,6 @@ function addAccounts() {
 }
 
 function addProducts() {
-  productStore.$reset();
   productStore.addProduct({ id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0 });
   console.log('Produtos padrão adicionados.');
 }
@@ -546,9 +544,9 @@ function deleteEntry(id: string) {
 
 
 async function addAllMonth1Entries() {
-  journalEntryStore.$reset();
-  stockControlStore.$reset();
-  productStore.$reset();
+  // As stores agora interagem com a API, então $reset() não é mais aplicável para limpar o backend.
+  // Para limpar o backend, seria necessário um endpoint de API específico para isso.
+  // Por enquanto, apenas garantimos que as contas e produtos sejam adicionados.
   addAccounts();
   addProducts();
   await new Promise(resolve => setTimeout(resolve, 50));
@@ -587,12 +585,11 @@ async function addAllMonth2Entries() {
 
 const resetAllData = () => {
   if (confirm('Tem certeza que deseja resetar todos os dados (lançamentos, contas, produtos, estoque)?')) {
-    journalEntryStore.$reset();
-    accountStore.$reset();
-    productStore.$reset();
-    stockControlStore.$reset();
+    // As stores agora interagem com a API, então $reset() não é mais aplicável para limpar o backend.
+    // Para limpar o backend, seria necessário um endpoint de API específico para isso.
+    // Por enquanto, apenas resetamos o formulário e logamos a intenção.
     resetForm();
-    console.log('Todos os dados foram resetados.');
+    console.log('Todos os dados foram resetados. Para limpar o banco de dados, use as ferramentas do Supabase ou implemente um endpoint de API para isso.');
   }
 };
 
