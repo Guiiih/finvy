@@ -168,7 +168,7 @@ function resetForm() {
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', amount: 0, type: 'debit' });
+  newEntryLines.value.push({ accountId: '', debit: 0, credit: 0 });
 }
 
 function removeLine(index: number) {
@@ -176,7 +176,13 @@ function removeLine(index: number) {
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
-  return lines.filter(line => line.type === type).reduce((sum, line) => sum + line.amount, 0);
+  return lines.reduce((sum, line) => {
+    if (type === 'debit') {
+      return sum + (line.debit || 0);
+    } else {
+      return sum + (line.credit || 0);
+    }
+  }, 0);
 }
 
 function getAccountName(accountId: string): string {
@@ -189,129 +195,21 @@ function toggleDetails(id: string) {
 
 // --- Lógica de Integração com Controle de Estoque ---
 function handleStockMovementFromJournalEntry(entry: JournalEntry) {
-  const stockAccount = accountStore.getAccountByName('Compras de Mercadoria'); // Ou "Estoque" se você tiver uma conta mais específica
-  const cmvAccount = accountStore.getAccountByName('CMV');
-  const salesRevenueAccount = accountStore.getAccountByName('Receita de Vendas');
-  const productId = productStore.getProductByName('Produto X')?.id; // Supondo que você sempre vende "Produto X"
+  // A lógica de controle de estoque agora é centralizada no stockControlStore
+  // que observa as mudanças em journalEntryStore.journalEntries.
+  // Esta função agora serve apenas para garantir que os dados de estoque
+  // (productId, quantity, unitCost) estejam presentes nas EntryLine's
+  // quando um lançamento é criado, se aplicável.
+  // A inferência de tipo de movimento ('in'/'out') e o cálculo do CMV
+  // são feitos dentro do stockControlStore.
 
-  if (!stockAccount || !cmvAccount || !salesRevenueAccount || !productId) {
-    console.warn('Contas de estoque, CMV, Receita de Vendas ou Produto X não encontrados. Ajuste as configurações.');
-    return;
-  }
-
-  let isStockMovementIdentified = false;
-  let quantity = 0;
-
-  // --- Lógica para identificar COMPRA DE MERCADORIA ---
-  const debitStockLine = entry.lines.find(line => line.accountId === stockAccount.id && line.type === 'debit');
-  if (debitStockLine && entry.description.toLowerCase().includes('compra de mercadoria')) {
-    isStockMovementIdentified = true;
-    const quantityMatch = entry.description.match(/(\d[\d\.,]*)\s*(?:unds|unidade|unidades)\b/i);
-    if (quantityMatch && quantityMatch[1]) {
-      quantity = parseFloat(quantityMatch[1].replace(/[.,]/g, ''));
-      if (quantity > 0) {
-        let purchaseValue = debitStockLine.amount; // Valor bruto da compra
-
-        // Tentar encontrar o crédito para 'Compras de Mercadoria' que representa a redução do ICMS
-        // OU o débito na conta 'ICMS sobre Compras'
-        const icmsOnPurchasesAccount = accountStore.getAccountByName('ICMS sobre Compras');
-        let icmsAmount = 0;
-
-        if (icmsOnPurchasesAccount) {
-            // Verifique se há uma linha que credita "Compras de Mercadoria" pelo valor do ICMS
-            // ou se há uma linha que debita "ICMS sobre Compras" e seu valor corresponde ao ICMS da descrição.
-            // Para seus exemplos, o ICMS é um DÉBITO em "ICMS sobre Compras" e um CRÉDITO em "Compras de Mercadoria"
-            // para mostrar a recuperação do imposto.
-
-            const creditStockForIcms = entry.lines.find(line =>
-                line.accountId === stockAccount.id && line.type === 'credit' &&
-                (entry.description.includes('ICMS de 12%') || entry.description.includes('ICMS sobre Compras')) // Melhorar a detecção se a descrição é consistente
-            );
-            
-            // Para o cenário de "Compras de Mercadoria" (débito) e "Compras de Mercadoria" (crédito pelo ICMS)
-            if (creditStockForIcms) {
-                purchaseValue -= creditStockForIcms.amount; // Subtrai o valor do ICMS recuperado
-                icmsAmount = creditStockForIcms.amount; // Armazena o valor do ICMS
-            } 
-            // Cenário onde ICMS sobre Compras é debitado para ICMS a Recuperar
-            // No seu exemplo, a compra de R$ 75.000 tem um débito de ICMS sobre Compras de R$ 9.000
-            // E a compra de R$ 60.000 tem um débito de ICMS sobre Compras de R$ 7.200
-            const debitIcmsOnPurchases = entry.lines.find(line => 
-                line.accountId === icmsOnPurchasesAccount.id && line.type === 'debit'
-            );
-            // Se o lançamento tem um débito para ICMS sobre Compras (ativo)
-            // e não foi subtraído anteriormente (para evitar duplicação em lançamentos compostos como o Exemplo 2)
-            if (debitIcmsOnPurchases && !creditStockForIcms) {
-                 // Assumimos que este débito diretamente reduz o custo da mercadoria na FCE
-                 purchaseValue -= debitIcmsOnPurchases.amount;
-                 icmsAmount = debitIcmsOnPurchases.amount;
-            }
-        }
-        
-        const netPurchaseValue = purchaseValue; // O valor líquido agora
-
-        if (quantity > 0 && netPurchaseValue >= 0) { // Valor líquido deve ser não-negativo
-          stockControlStore.addMovement({
-            id: entry.id + '-mov-compra',
-            journalEntryId: entry.id,
-            date: entry.date,
-            type: 'in',
-            productId: productId,
-            quantity: quantity,
-            unitPrice: netPurchaseValue / quantity, // Custo unitário LÍQUIDO
-            totalValue: netPurchaseValue // Valor total LÍQUIDO
-          });
-          console.log(`Movimento de COMPRA de estoque (IN) adicionado via lançamento. Valor Líquido: R$ ${netPurchaseValue.toFixed(2)}`);
-        } else {
-             console.warn('Quantidade ou valor de estoque (líquido) inválido para a compra. Movimento de estoque não adicionado. Lançamento ID:', entry.id);
-        }
-      }
-    } else {
-        console.warn('Não foi possível extrair quantidade da descrição para a compra. Movimento de estoque pode estar impreciso. Lançamento ID:', entry.id);
+  // Exemplo de como você pode verificar se uma linha de lançamento
+  // contém informações de estoque relevantes para o stockControlStore
+  entry.lines.forEach(line => {
+    if (line.productId && (line.quantity !== undefined) && (line.unitCost !== undefined)) {
+      console.log(`Linha de lançamento com dados de estoque identificada para o produto ${line.productId}.`);
     }
-  }
-  // --- NOVA Lógica para identificar VENDA DE MERCADORIA e gerar CMV automaticamente ---
-  // Procuramos por um crédito na conta de "Receita de Vendas"
-  const creditSalesRevenueLine = entry.lines.find(line => line.accountId === salesRevenueAccount.id && line.type === 'credit');
-
-  if (creditSalesRevenueLine && entry.description.toLowerCase().includes('venda de mercadoria')) {
-    isStockMovementIdentified = true;
-    const quantityMatch = entry.description.match(/(\d[\d\.,]*)\s*(?:unds|unidade|unidades)\b/i);
-
-    if (quantityMatch && quantityMatch[1]) {
-      quantity = parseFloat(quantityMatch[1].replace(/[.,]/g, ''));
-
-      if (quantity > 0) {
-        const currentProductBalance = stockControlStore.getBalanceByProductId(productId);
-        const unitCostAtSale = currentProductBalance ? currentProductBalance.unitCost : (productStore.getProductById(productId)?.unitPrice || 0); // Pegar o custo médio atual ou o custo inicial do produto
-
-        if (unitCostAtSale > 0) {
-          const totalCMV = quantity * unitCostAtSale;
-
-          stockControlStore.addMovement({
-            id: entry.id + '-mov-venda',
-            journalEntryId: entry.id,
-            date: entry.date,
-            type: 'out',
-            productId: productId,
-            quantity: quantity,
-            unitPrice: unitCostAtSale, // O custo unitário da venda (CMV unitário)
-            totalValue: totalCMV // O custo total da mercadoria vendida
-          });
-          console.log('Movimento de VENDA de estoque (OUT - CMV automático) adicionado via lançamento de Receita.');
-
-        } else {
-          console.warn('Custo unitário do produto X é zero ou não definido. CMV não calculado. Lançamento ID:', entry.id);
-        }
-      }
-    } else {
-      console.warn('Não foi possível extrair quantidade da descrição para a venda de estoque. Movimento de estoque pode estar impreciso. Lançamento ID:', entry.id);
-    }
-  }
-
-  if (!isStockMovementIdentified) {
-    console.log('Lançamento não identificado como compra ou venda de mercadoria para fins de estoque. Lançamento ID:', entry.id);
-  }
+  });
 }
 
 // --- Funções de Exemplo (para simular dados) ---
@@ -353,10 +251,10 @@ function addInitialCapitalEntry() {
   newEntryDate.value = '2025-01-01';
   newEntryDescription.value = 'Integralização de Capital Social Inicial';
   newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', amount: 500000, type: 'debit' },
-    { accountId: accountStore.getAccountByName('Móveis e Utensílios')?.id || '', amount: 500000, type: 'debit' },
-    { accountId: accountStore.getAccountByName('Capital Social a Integralizar')?.id || '', amount: 1000000, type: 'debit' },
-    { accountId: accountStore.getAccountByName('Capital Social Subscrito')?.id || '', amount: 2000000, type: 'credit' },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 500000 },
+    { accountId: accountStore.getAccountByName('Móveis e Utensílios')?.id || '', debit: 500000 },
+    { accountId: accountStore.getAccountByName('Capital Social a Integralizar')?.id || '', debit: 1000000 },
+    { accountId: accountStore.getAccountByName('Capital Social Subscrito')?.id || '', credit: 2000000 },
   ];
   submitEntry();
 }
@@ -502,7 +400,15 @@ async function submitEntry() {
     id: editingEntryId.value || `JE-${Date.now()}`,
     date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: newEntryLines.value.map(line => ({ ...line })),
+    lines: newEntryLines.value.map(line => ({
+      accountId: line.accountId,
+      debit: line.debit || 0,
+      credit: line.credit || 0,
+      productId: line.productId,
+      quantity: line.quantity,
+      unitCost: line.unitCost,
+    })),
+    user_id: "00000000-0000-0000-0000-000000000000", // Adicionado user_id
   };
 
   if (editingEntryId.value) {
@@ -520,7 +426,14 @@ function editEntry(entry: JournalEntry) {
   editingEntryId.value = entry.id;
   newEntryDate.value = entry.date;
   newEntryDescription.value = entry.description;
-  newEntryLines.value = entry.lines.map(line => ({ ...line }));
+  newEntryLines.value = entry.lines.map(line => ({
+    accountId: line.accountId,
+    debit: line.debit || 0,
+    credit: line.credit || 0,
+    productId: line.productId,
+    quantity: line.quantity,
+    unitCost: line.unitCost,
+  }));
 }
 
 function cancelEdit() {

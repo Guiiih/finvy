@@ -42,6 +42,7 @@ export interface JournalEntry {
   date: string;
   description: string;
   lines: EntryLine[];
+  user_id: string; // Adicionado para corresponder ao DB
 }
 
 // Tipos para Controle de Estoque
