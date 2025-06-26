@@ -10,7 +10,12 @@ import DREView from '../views/DREView.vue'
 import BalanceSheetView from '../views/BalanceSheetView.vue'
 import DFCView from '../views/DFCView.vue'
 import ReportsView from '../views/ReportsView.vue'
-import VariationView from '../views/VariationView.vue' // IMPORTAR A NOVA VIEW DE VARIAÇÃO
+import VariationView from '../views/VariationView.vue'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import UpdatePasswordView from '../views/UpdatePasswordView.vue'
+import { supabase } from '../supabase'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,59 +23,103 @@ const router = createRouter({
     {
       path: '/',
       name: 'dashboard',
-      component: DashboardView
+      component: DashboardView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/accounts',
       name: 'accounts',
-      component: AccountsView
+      component: AccountsView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/journal-entries',
       name: 'journal-entries',
-      component: JournalEntryView
+      component: JournalEntryView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/products',
       name: 'products',
-      component: ProductsView
+      component: ProductsView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/stock-control',
       name: 'stock-control',
-      component: StockControlView
+      component: StockControlView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/ledger',
       name: 'ledger',
-      component: LedgerView
+      component: LedgerView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dre',
       name: 'dre',
-      component: DREView
+      component: DREView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/balance-sheet',
       name: 'balance-sheet',
-      component: BalanceSheetView
+      component: BalanceSheetView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dfc',
       name: 'dfc',
-      component: DFCView
+      component: DFCView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/reports',
       name: 'reports',
-      component: ReportsView
+      component: ReportsView,
+      meta: { requiresAuth: true }
     },
     {
-      path: '/variations', // NOVA ROTA PARA VARIAÇÕES
+      path: '/variations',
       name: 'variations',
-      component: VariationView
+      component: VariationView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPasswordView
+    },
+    {
+      path: '/update-password',
+      name: 'update-password',
+      component: UpdatePasswordView
     }
   ]
 })
+
+router.beforeEach(async (to, from, next) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+
+  if (requiresAuth && !session) {
+    next('/login');
+  } else if ((to.path === '/login' || to.path === '/register' || to.path === '/forgot-password') && session) {
+    next('/');
+  } else {
+    next();
+  }
+});
 
 export default router

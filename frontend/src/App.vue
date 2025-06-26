@@ -1,11 +1,35 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { supabase } from './supabase'
+
+const router = useRouter()
+const session = ref(null)
+
+supabase.auth.getSession().then(({ data }) => {
+  session.value = data.session
+})
+
+supabase.auth.onAuthStateChange((_, _session) => {
+  session.value = _session
+})
+
+const handleLogout = async () => {
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    router.push('/login')
+  } catch (error: any) {
+    alert(error.message)
+  }
+}
 </script>
 
 <template>
-  <header>
-    <div class="wrapper">
-      <h1 class="title">Finvy</h1>
+  <div v-if="session">
+    <header>
+      <div class="wrapper">
+        <h1 class="title">Finvy</h1>
         <nav>
           <RouterLink to="/">Dashboard</RouterLink>
           <RouterLink to="/accounts">Plano de Contas</RouterLink>
@@ -14,16 +38,21 @@ import { RouterLink, RouterView } from 'vue-router'
           <RouterLink to="/stock-control">Controle de Estoque</RouterLink>
           <RouterLink to="/ledger">Razão</RouterLink>
           <RouterLink to="/dre">DRE</RouterLink>
-          <RouterLink to="/balance-sheet">Balanço Patrimonial</RouterLink>
-          <RouterLink to="/dfc">DFC</RouterLink>
-          <RouterLink to="/variations">Variações</RouterLink> <RouterLink to="/reports">Relatórios</RouterLink>
+          <RouterLink to="/balance-sheet">Balanço Patrimonial</n          ><RouterLink to="/dfc">DFC</RouterLink>
+          <RouterLink to="/variations">Variações</RouterLink>
+          <RouterLink to="/reports">Relatórios</RouterLink>
+          <button @click="handleLogout" class="logout-button">Sair</button>
         </nav>
-    </div>
-  </header>
+      </div>
+    </header>
 
-  <main>
+    <main>
+      <RouterView />
+    </main>
+  </div>
+  <div v-else>
     <RouterView />
-  </main>
+  </div>
 </template>
 
 <style scoped>
@@ -59,5 +88,19 @@ nav a {
 
 nav a:first-of-type {
   border: 0;
+}
+
+.logout-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
 }
 </style>
