@@ -13,6 +13,7 @@ export interface Account {
   nature: AccountNature;
   type: AccountType;
   parentId?: string | null; // Adicionado como opcional, se estiver usando
+  user_id?: string; // Adicionado para corresponder ao DB
 }
 
 // A estrutura de um produto
@@ -20,8 +21,10 @@ export interface Product {
   id: string;
   name: string;
   description?: string; // Adicionado para corresponder ao DB
-  unit_cost: number; // Alterado de unitPrice
+  unitPrice: number; // Alterado de unitPrice
   current_stock: number; // Alterado de quantity
+  quantity: number; // Quantidade opcional, pode ser usada para controle de estoqu
+  user_id: string; // Adicionado para corresponder ao DB
 }
 
 // A estrutura de uma linha dentro de um lançamento contábil
@@ -29,11 +32,12 @@ export type EntryType = 'debit' | 'credit';
 
 export interface EntryLine {
   accountId: string; // ID da conta que está sendo movimentada
-  debit?: number; // Valor a débito (opcional)
-  credit?: number; // Valor a crédito (opcional)
+  debit: number; // Valor a débito (opcional)
+  credit: number; // Valor a crédito (opcional)
   productId?: string; // Opcional: para lançamentos de estoque
   quantity?: number; // Quantidade para movimentos de estoque
   unitCost?: number; // Custo unitário para movimentos de estoque
+  amount: number; // Valor total do movimento (opcional, usado para lançamentos de receita/despesa
 }
 
 // O lançamento contábil que representa uma operação completa
