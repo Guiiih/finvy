@@ -1,6 +1,10 @@
 <template>
   <div class="auth-page-container">
-    <div class="auth-left-column">
+    <div class="auth-logo-column">
+
+    </div>
+
+    <div class="auth-form-column">
       <div class="auth-form-wrapper">
         <h2 class="auth-title">Fazer login</h2>
         <form @submit.prevent="handleLogin" class="auth-form">
@@ -10,16 +14,8 @@
           <div class="form-group password-group">
             <input :type="passwordFieldType" id="password" v-model="password" placeholder="Senha" required class="auth-input" />
             <span class="password-toggle" @click="togglePasswordVisibility">
-              <svg v-if="passwordFieldType === 'password'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.5"></path>
-                <path d="M2 2l20 20"></path>
-                <path d="M13.5 13.5L10.5 10.5"></path>
-                <path d="M8.09 5.83A10.07 10.07 0 0 1 12 4c7 0 11 8 11 8a18.54 18.54 0 0 1-2.94 3.5"></path>
-              </svg>
+              <span v-if="passwordFieldType === 'password'">🙈</span>
+              <span v-else>👁️</span>
             </span>
           </div>
           <div class="form-options">
@@ -34,8 +30,6 @@
         <p class="auth-footer-text">Não tem uma conta? <router-link to="/register" class="auth-link">Cadastre-se</router-link></p>
       </div>
     </div>
-    <div class="auth-right-column">
-    </div>
   </div>
 </template>
 
@@ -47,7 +41,7 @@ import { useRouter } from 'vue-router';
 const email = ref('');
 const password = ref('');
 const router = useRouter();
-const passwordFieldType = ref('password'); // Para controlar a visibilidade da senha
+const passwordFieldType = ref('password'); 
 
 const togglePasswordVisibility = () => {
   passwordFieldType.value = passwordFieldType.value === 'password' ? 'text' : 'password';
@@ -73,33 +67,52 @@ const handleLogin = async () => {
 .auth-page-container {
   display: flex;
   min-height: 100vh;
-  background-color: #F8F8F8; /* Fundo claro da coluna esquerda */
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Garante que não haverá barras de rolagem desnecessárias */
+  background-color: #F8F8F8; /* Fundo claro para a coluna do formulário (direita) */
 }
 
-/* Coluna da esquerda (formulário) */
-.auth-left-column {
+/* Coluna do logo (visualmente à esquerda) */
+.auth-logo-column {
+  flex: 1;
+  background-color: #1A1A1A; /* Fundo escuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  max-width: 80%;
+  height: auto;
+}
+
+/* Coluna do formulário (visualmente à direita) */
+.auth-form-column {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 20px; /* Padding geral da coluna */
+  background-color: #F8F8F8; /* Certifica o fundo claro */
 }
 
 .auth-form-wrapper {
-  max-width: 380px; /* Largura máxima do formulário */
+  max-width: 380px; /* Largura máxima para o conteúdo do formulário */
   width: 100%;
-  padding: 40px; /* Mais padding para o formulário */
-  background-color: #F8F8F8; /* Fundo correspondente à coluna */
-  border-radius: 8px;
+  padding: 0 40px; /* Padding horizontal para afastar do lado da coluna */
+  box-sizing: border-box; /* Garante que padding seja incluído na largura */
 }
 
 .auth-title {
-  color: #333333; /* Cor do título */
+  color: #333333;
   font-size: 2.2em;
   margin-bottom: 25px;
   text-align: left;
   font-weight: 600;
+  margin-top: 0;
 }
 
 .auth-form .form-group {
@@ -110,37 +123,75 @@ const handleLogin = async () => {
 .auth-input {
   width: 100%;
   padding: 15px 20px;
-  border: none;
+  border: 1px solid transparent; /* **AJUSTADO:** Bordas transparentes por padrão */
   border-radius: 8px;
-  background-color: #F0F0F0; /* Fundo cinza claro para inputs */
+  background-color: white; /* **AJUSTADO:** Fundo BRANCO para inputs */
   font-size: 1em;
-  color: #4A4A4A;
+  color: #4A4A4A; /* Cor do texto padrão */
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
+
+.auth-input:focus {
+  border-left: 3px solid #926EEB !important; /* Borda roxa de 3px no lado esquerdo */
+  padding-left: 17px !important; /* Ajusta o padding para compensar a borda */
+}
+
 
 .auth-input::placeholder {
   color: #A0A0A0;
 }
 
-/* Estilo para o ícone de olho da senha */
+/* ESTILOS PARA INPUTS PREENCHIDOS / AUTOFILL */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+    /* Define a cor de fundo para a cor desejada (BRANCO) */
+    -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+    /* Define a cor do texto para a cor desejada (cinza escuro) */
+    -webkit-text-fill-color: #4A4A4A !important;
+    /* Transição para que a mudança de cor seja imediata */
+    transition: background-color 50000s ease-in-out 0s !important;
+    /* **NOVO:** Remove a borda lateral roxa que o navegador pode adicionar */
+    border: 1px solid transparent !important;
+}
+
+/* **NOVO:** Estilo específico para quando o input de senha está focado e preenchido, para a borda roxa lateral */
+.password-group input#password:focus {
+    border-left: 3px solid #926EEB !important; /* Borda roxa de 3px no lado esquerdo */
+    padding-left: 17px !important; /* Ajusta o padding para compensar a borda */
+}
+.password-group input#password:-webkit-autofill:focus {
+    border-left: 3px solid #926EEB !important; /* Aplica também no autofill */
+    padding-left: 17px !important;
+    border-color: transparent !important;
+}
+
 .password-group .password-toggle {
   position: absolute;
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #A0A0A0;
-  display: flex; /* Para centralizar o SVG */
+  color: #A0A0A0; /* Cor do ícone no estado normal */
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.password-toggle svg {
-    width: 20px; /* Tamanho do ícone SVG */
-    height: 20px;
+/* **NOVO:** Cor do ícone de olho quando o input está preenchido/focado */
+.password-group .auth-input:not(:placeholder-shown) + .password-toggle, /* Quando o input tem valor */
+.password-group .auth-input:focus + .password-toggle {
+    color: #926EEB; /* Cor roxa, como na imagem */
 }
 
+
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
+}
 
 .form-options {
   display: flex;
@@ -160,7 +211,7 @@ const handleLogin = async () => {
   margin-right: 8px;
   width: 16px;
   height: 16px;
-  accent-color: #00E676; /* Cor do checkbox quando marcado */
+  accent-color: #00E676;
 }
 
 .forgot-password-link {
@@ -174,9 +225,9 @@ const handleLogin = async () => {
 }
 
 .auth-button {
-  width: 100%;
+  width: 100%; /* Ajuste para ter o mesmo espaçamento horizontal dos inputs */
   padding: 15px;
-  background-color: #00E676; /* Verde vibrante */
+  background-color: #00E676;
   color: white;
   border: none;
   border-radius: 8px;
@@ -187,7 +238,7 @@ const handleLogin = async () => {
 }
 
 .auth-button:hover {
-  background-color: #00C853; /* Verde um pouco mais escuro no hover */
+  background-color: #00C853;
 }
 
 .auth-footer-text {
@@ -198,27 +249,14 @@ const handleLogin = async () => {
 }
 
 .auth-link {
-  color: #00E676;
+  color: #926EEB; /* **AJUSTADO:** Cor roxa para o link "Cadastre-se" */
   text-decoration: none;
   font-weight: bold;
+  transition: color 0.2s ease;
 }
 
 .auth-link:hover {
   text-decoration: underline;
-}
-
-/* Coluna da direita (logo) */
-.auth-right-column {
-  flex: 1;
-  background-color: #1A1A1A; /* Fundo escuro para a coluna da direita */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.drak-logo {
-  max-width: 80%;
-  height: auto;
 }
 
 /* Responsividade básica */
@@ -227,11 +265,11 @@ const handleLogin = async () => {
     flex-direction: column;
   }
 
-  .auth-right-column {
+  .auth-logo-column {
     display: none; /* Esconde a coluna do logo em telas menores */
   }
 
-  .auth-left-column {
+  .auth-form-column {
     flex: none;
     width: 100%;
   }

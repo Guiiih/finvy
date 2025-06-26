@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router' // Adicione useRoute
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { supabase } from './supabase'
 
 const router = useRouter()
+const route = useRoute() // NOVO: Obtenha a rota atual
 import type { Session } from '@supabase/supabase-js'
 
 const session = ref<Session | null>(null)
@@ -25,10 +26,15 @@ const handleLogout = async () => {
     alert(error.message)
   }
 }
+
+// NOVO: Computed property para esconder a navbar
+const shouldHideNavbar = computed(() => {
+  return route.meta.hideNavbar || false; // Retorna true se hideNavbar for true na meta da rota
+});
 </script>
 
 <template>
-  <div v-if="session">
+  <div v-if="session && !shouldHideNavbar">
     <header>
       <div class="wrapper">
         <h1 class="title">Finvy</h1>
@@ -105,5 +111,4 @@ nav a:first-of-type {
 
 .logout-button:hover {
   background-color: #c82333;
-}
-</style>
+}</style>

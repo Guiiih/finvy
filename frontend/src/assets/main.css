@@ -1,0 +1,18 @@
+/* frontend/src/assets/main.css */
+
+/* Reset básico para remover margens/paddings padrão do navegador */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Evita scroll horizontal indesejado */
+  box-sizing: border-box; /* Garante que padding e border sejam incluídos na largura/altura */
+}
+
+/* Opcional: Para usar uma fonte global no seu projeto */
+body {
+  font-family: Arial, sans-serif; /* Exemplo de fonte */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Restante dos seus estilos globais, se houver */

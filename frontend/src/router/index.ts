@@ -15,6 +15,8 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import UpdatePasswordView from '../views/UpdatePasswordView.vue'
+import RegistrationSuccessView from '../views/RegistrationSuccessView.vue' 
+import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue' 
 import { supabase } from '../supabase'
 
 const router = createRouter({
@@ -105,7 +107,19 @@ const router = createRouter({
       path: '/update-password',
       name: 'update-password',
       component: UpdatePasswordView
-    }
+    },
+    {
+      path: '/registration-success',
+      name: 'registration-success',
+      component: RegistrationSuccessView,
+      meta: { hideNavbar: true }
+    },
+    {
+      path: '/password-reset-success', 
+      name: 'password-reset-success',
+      component: PasswordResetSuccessView,
+      meta: { hideNavbar: true } 
+    },
   ]
 })
 
