@@ -251,12 +251,10 @@ function addInitialCapitalEntry() {
   newEntryDate.value = '2025-01-01';
   newEntryDescription.value = 'Integralização de Capital Social Inicial';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 500000 },
-    { accountId: accountStore.getAccountByName('Móveis e Utensílios')?.id || '', debit: 500000 },
-    { accountId: accountStore.getAccountByName('Capital Social a Integralizar')?.id || '', debit: 1000000 },
-    { accountId: accountStore.getAccountByName('Capital Social Subscrito')?.id || '', credit: 2000000 },
-  ];
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 500000, credit: 0, amount: 500000 },
+    { accountId: accountStore.getAccountByName('Móveis e Utensílios')?.id || '', debit: 500000, credit: 0, amount: 500000 },
+    { accountId: accountStore.getAccountByName('Capital Social a Integralizar')?.id || '', debit: 1000000, credit: 0, amount: 1000000 },
+    { accountId: accountStore.getAccountByName('Capital Social Subscrito')?.id || '', debit: 0, credit: 2000000, amount: 2000000 },
   ];
   submitEntry();
 }
@@ -266,12 +264,10 @@ function addPurchaseEntry1() {
   newEntryDate.value = '2025-01-02';
   newEntryDescription.value = 'Compra de mercadoria para revenda de 15000 unds de produto X no valor total de aquisição de R$ 75.000,00';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 75000 },
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', credit: 75000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 9000 },
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', credit: 9000 },
-  ];
+    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 75000, credit: 0, amount: 75000 },
+    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 0, credit: 75000, amount: 75000 },
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 9000, credit: 0, amount: 9000 },
+    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 0, credit: 9000, amount: 9000 },
   ];
   submitEntry();
 }
@@ -281,13 +277,11 @@ function addPurchaseEntry2() {
   newEntryDate.value = '2025-01-03';
   newEntryDescription.value = 'Compra de mercadoria para revenda sendo 25% a vista com pagamento efetuado via transferência bancária do banco CEF, de 14000 unds de produto X por R$ 60.000,00, com conhecimento de transporte terrestre (CIF) no valor de R$ 5.000,00, com ICMS de 12%';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 60000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 7200 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', credit: 15000 },
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', credit: 45000 },
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', credit: 7200 },
-  ];
+    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 60000, credit: 0, amount: 60000 },
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 7200, credit: 0, amount: 7200 },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 15000, amount: 15000 },
+    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 0, credit: 45000, amount: 45000 },
+    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 0, credit: 7200, amount: 7200 },
   ];
   submitEntry();
 }
@@ -297,10 +291,8 @@ function addWithdrawalEntry() {
   newEntryDate.value = '2025-01-03';
   newEntryDescription.value = 'Saque da conta corrente no valor de R$ 150.000,00';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 150000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', credit: 150000 },
-  ];
+    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 150000, credit: 0, amount: 150000 },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 150000, amount: 150000 },
   ];
   submitEntry();
 }
@@ -310,10 +302,8 @@ function addTransferToItauEntry() {
   newEntryDate.value = '2025-01-05';
   newEntryDescription.value = 'Transferência de recursos via TED para o banco Itaú no valor de R$ 100.000,00';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Banco Itaú')?.id || '', debit: 100000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', credit: 100000 },
-  ];
+    { accountId: accountStore.getAccountByName('Banco Itaú')?.id || '', debit: 100000, credit: 0, amount: 100000 },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 100000, amount: 100000 },
   ];
   submitEntry();
 }
@@ -323,10 +313,8 @@ function addClientReceiptEntry() {
   newEntryDate.value = '2025-01-08';
   newEntryDescription.value = 'Recebimento de 10% do saldo da conta clientes (R$ 14.000,00)';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', credit: 14000 },
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 14000 },
-  ];
+    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 0, credit: 14000, amount: 14000 },
+    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 14000, credit: 0, amount: 14000 },
   ];
   submitEntry();
 }
@@ -336,10 +324,8 @@ function addSupplierPaymentEntry() {
   newEntryDate.value = '2025-01-09';
   newEntryDescription.value = 'Pagamento de 5% do saldo da conta Fornecedor (R$ 6.000,00) via Caixa Econômica Federal';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 6000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', credit: 6000 },
-  ];
+    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 6000, credit: 0, amount: 6000 },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 6000, amount: 6000 },
   ];
   submitEntry();
 }
@@ -349,15 +335,13 @@ function addSaleEntry1() {
   newEntryDate.value = '2025-01-07';
   newEntryDescription.value = 'Venda de mercadoria por R$ 400.000,00, vendidas 20000 unds do produto X (Receita e Impostos)';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 60000 },
-    { accountId: accountStore.getAccountByName('Banco Bradesco')?.id || '', debit: 80000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 120000 },
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 140000 },
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', credit: 400000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', credit: 72000 },
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', debit: 72000 },
-  ];
+    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 60000, credit: 0, amount: 60000 },
+    { accountId: accountStore.getAccountByName('Banco Bradesco')?.id || '', debit: 80000, credit: 0, amount: 80000 },
+    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 120000, credit: 0, amount: 120000 },
+    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 140000, credit: 0, amount: 140000 },
+    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', debit: 0, credit: 400000, amount: 400000 },
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', debit: 0, credit: 72000, amount: 72000 },
+    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', debit: 72000, credit: 0, amount: 72000 },
   ];
   submitEntry();
 }
@@ -367,14 +351,12 @@ function addIcmsSettlementEntry1() {
   newEntryDate.value = '2025-01-31';
   newEntryDescription.value = 'Apuração e Transferência de ICMS Mês 1';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', credit: 9000 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 9000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', credit: 7200 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 7200 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', debit: 72000 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', credit: 72000 },
-  ];
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 0, credit: 9000, amount: 9000 },
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 9000, credit: 0, amount: 9000 },
+    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 0, credit: 7200, amount: 7200 },
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 7200, credit: 0, amount: 7200 },
+    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', debit: 72000, credit: 0, amount: 72000 },
+    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 0, credit: 72000, amount: 72000 },
   ];
   submitEntry();
 }
@@ -386,10 +368,8 @@ function addMonth2Entries() {
   newEntryDate.value = '2025-02-10';
   newEntryDescription.value = 'Recebimento de clientes';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Bancos')?.id || '', debit: 300000 },
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', credit: 300000 },
-  ];
+    { accountId: accountStore.getAccountByName('Bancos')?.id || '', debit: 300000, credit: 0, amount: 300000 },
+    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 0, credit: 300000, amount: 300000 },
   ];
   submitEntry();
 
@@ -398,10 +378,8 @@ function addMonth2Entries() {
   newEntryDate.value = '2025-02-28';
   newEntryDescription.value = 'Pagamento de salários';
   newEntryLines.value = [
-    newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Despesas com Salários')?.id || '', debit: 50000 },
-    { accountId: accountStore.getAccountByName('Bancos')?.id || '', credit: 50000 },
-  ];
+    { accountId: accountStore.getAccountByName('Despesas com Salários')?.id || '', debit: 50000, credit: 0, amount: 50000 },
+    { accountId: accountStore.getAccountByName('Bancos')?.id || '', debit: 0, credit: 50000, amount: 50000 },
   ];
   submitEntry();
 }
