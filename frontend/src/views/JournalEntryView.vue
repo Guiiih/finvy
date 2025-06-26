@@ -32,11 +32,8 @@
             </option>
           </optgroup>
         </select>
-        <input type="number" v-model.number="line.amount" placeholder="Valor" step="0.01" required min="0" />
-        <select v-model="line.type" required>
-          <option value="debit">Débito</option>
-          <option value="credit">Crédito</option>
-        </select>
+        <input type="number" v-model.number="line.debit" placeholder="Débito" step="0.01" min="0" :disabled="line.credit > 0" />
+        <input type="number" v-model.number="line.credit" placeholder="Crédito" step="0.01" min="0" :disabled="line.debit > 0" />
         <button type="button" @click="removeLine(index)">Remover</button>
       </div>
       <button type="button" @click="addLine">Adicionar Linha</button>
@@ -98,8 +95,8 @@
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
                     <td>{{ getAccountName(line.accountId) }}</td>
-                    <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
-                    <td>R$ {{ line.amount.toFixed(2) }}</td>
+                    <td>{{ line.debit > 0 ? 'Débito' : 'Crédito' }}</td>
+                    <td>R$ {{ (line.debit || line.credit || 0).toFixed(2) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -128,8 +125,8 @@ const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
 const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', amount: 0, type: 'debit' },
-  { accountId: '', amount: 0, type: 'credit' },
+  { accountId: '', debit: 0, credit: 0 },
+  { accountId: '', debit: 0, credit: 0 },
 ]);
 const editingEntryId = ref<string | null>(null);
 const showDetails = ref<{ [key: string]: boolean }>({});
@@ -137,14 +134,12 @@ const showDetails = ref<{ [key: string]: boolean }>({});
 // Computed properties for totals
 const totalDebits = computed(() =>
   newEntryLines.value
-    .filter((line) => line.type === 'debit')
-    .reduce((sum, line) => sum + line.amount, 0)
+    .reduce((sum, line) => sum + (line.debit || 0), 0)
 );
 
 const totalCredits = computed(() =>
   newEntryLines.value
-    .filter((line) => line.type === 'credit')
-    .reduce((sum, line) => sum + line.amount, 0)
+    .reduce((sum, line) => sum + (line.credit || 0), 0)
 );
 
 const sortedJournalEntries = computed(() => {
@@ -165,8 +160,8 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', amount: 0, type: 'debit' },
-    { accountId: '', amount: 0, type: 'credit' },
+    { accountId: '', debit: 0, credit: 0 },
+    { accountId: '', debit: 0, credit: 0 },
   ];
   editingEntryId.value = null;
   showAddEntryForm.value = false;
