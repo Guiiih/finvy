@@ -1,17 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Variáveis de ambiente do Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) não configuradas.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase, handleErrorResponse } from './utils/supabaseClient'; 
 
 export default async function (req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); // Em produção, substitua '*' pelo domínio do seu frontend
+  res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -19,9 +10,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // Lógica para requisições GET: Listar produtos
-  if (req.method === 'GET') {
-    try {
+  try {
+    if (req.method === 'GET') {
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -29,24 +19,17 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao buscar produtos:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       return res.status(200).json(data);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao buscar produtos:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições POST: Criar um novo produto
-  if (req.method === 'POST') {
-    try {
+    if (req.method === 'POST') {
       const { name, description, unit_cost, current_stock, user_id } = req.body;
 
       if (!name || !unit_cost || !user_id) {
-        return res.status(400).json({ error: 'Campos obrigatórios faltando: name, unit_cost, user_id.' });
+        return handleErrorResponse(res, 400, 'Campos obrigatórios faltando: name, unit_cost, user_id.');
       }
 
       const { data, error } = await supabase
@@ -56,29 +39,22 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao criar produto:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       return res.status(201).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao criar produto:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições PUT: Atualizar um produto existente
-  if (req.method === 'PUT') {
-    try {
-      const { id } = req.query; // ID do produto a ser atualizado
+    if (req.method === 'PUT') {
+      const { id } = req.query; 
       const { name, description, unit_cost, current_stock, user_id } = req.body;
 
       if (!id) {
-        return res.status(400).json({ error: 'ID do produto é obrigatório para atualização.' });
+        return handleErrorResponse(res, 400, 'ID do produto é obrigatório para atualização.');
       }
 
       if (!name && !description && !unit_cost && !current_stock && !user_id) {
-        return res.status(400).json({ error: 'Nenhum campo para atualizar fornecido.' });
+        return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
       const updateData: { [key: string]: any } = {};
@@ -96,28 +72,21 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao atualizar produto:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       if (!data || data.length === 0) {
-        return res.status(404).json({ error: 'Produto não encontrado ou não autorizado para atualização.' });
+        return handleErrorResponse(res, 404, 'Produto não encontrado ou não autorizado para atualização.');
       }
 
       return res.status(200).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao atualizar produto:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições DELETE: Remover um produto
-  if (req.method === 'DELETE') {
-    try {
-      const { id } = req.query; // ID do produto a ser deletado
+    if (req.method === 'DELETE') {
+      const { id } = req.query; 
 
       if (!id) {
-        return res.status(400).json({ error: 'ID do produto é obrigatório para exclusão.' });
+        return handleErrorResponse(res, 400, 'ID do produto é obrigatório para exclusão.');
       }
 
       const { error, count } = await supabase
@@ -127,22 +96,20 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao deletar produto:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       if (count === 0) {
-        return res.status(404).json({ error: 'Produto não encontrado ou não autorizado para exclusão.' });
+        return handleErrorResponse(res, 404, 'Produto não encontrado ou não autorizado para exclusão.');
       }
 
-      return res.status(204).end(); // No Content
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao deletar produto:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
+      return res.status(204).end(); 
     }
-  }
 
-  // Se o método HTTP não for suportado
-  res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
+  } catch (error: any) {
+    console.error('Erro inesperado na API de produtos:', error);
+    return handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+  }
 }

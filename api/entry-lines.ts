@@ -1,14 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Variáveis de ambiente do Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) não configuradas.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase, handleErrorResponse } from './utils/supabaseClient'; 
 
 export default async function (req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); 
@@ -19,9 +10,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // Lógica para requisições GET: Listar linhas de lançamento (opcionalmente por journal_entry_id)
-  if (req.method === 'GET') {
-    try {
+  try {
+    if (req.method === 'GET') {
       const { journal_entry_id } = req.query;
       let query = supabase.from('entry_lines').select('*');
 
@@ -33,24 +23,17 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao buscar linhas de lançamento:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       return res.status(200).json(data);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao buscar linhas de lançamento:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições POST: Criar uma nova linha de lançamento
-  if (req.method === 'POST') {
-    try {
+    if (req.method === 'POST') {
       const { journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost } = req.body;
 
       if (!journal_entry_id || !account_id || (debit === undefined && credit === undefined)) {
-        return res.status(400).json({ error: 'Campos obrigatórios faltando: journal_entry_id, account_id, e pelo menos debit ou credit.' });
+        return handleErrorResponse(res, 400, 'Campos obrigatórios faltando: journal_entry_id, account_id, e pelo menos debit ou credit.');
       }
 
       const { data, error } = await supabase
@@ -60,29 +43,22 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao criar linha de lançamento:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       return res.status(201).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao criar linha de lançamento:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições PUT: Atualizar uma linha de lançamento existente
-  if (req.method === 'PUT') {
-    try {
-      const { id } = req.query; // ID da linha de lançamento a ser atualizada
+    if (req.method === 'PUT') {
+      const { id } = req.query; 
       const { account_id, debit, credit, product_id, quantity, unit_cost } = req.body;
 
       if (!id) {
-        return res.status(400).json({ error: 'ID da linha de lançamento é obrigatório para atualização.' });
+        return handleErrorResponse(res, 400, 'ID da linha de lançamento é obrigatório para atualização.');
       }
 
       if (!account_id && debit === undefined && credit === undefined && product_id === undefined && quantity === undefined && unit_cost === undefined) {
-        return res.status(400).json({ error: 'Nenhum campo para atualizar fornecido.' });
+        return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
       const updateData: { [key: string]: any } = {};
@@ -101,28 +77,21 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao atualizar linha de lançamento:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       if (!data || data.length === 0) {
-        return res.status(404).json({ error: 'Linha de lançamento não encontrada ou não autorizada para atualização.' });
+        return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada ou não autorizada para atualização.');
       }
 
       return res.status(200).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao atualizar linha de lançamento:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
     }
-  }
 
-  // Lógica para requisições DELETE: Remover uma linha de lançamento
-  if (req.method === 'DELETE') {
-    try {
-      const { id } = req.query; // ID da linha de lançamento a ser deletada
+    if (req.method === 'DELETE') {
+      const { id } = req.query; 
 
       if (!id) {
-        return res.status(400).json({ error: 'ID da linha de lançamento é obrigatório para exclusão.' });
+        return handleErrorResponse(res, 400, 'ID da linha de lançamento é obrigatório para exclusão.');
       }
 
       const { error, count } = await supabase
@@ -132,22 +101,20 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (error) {
         console.error('Erro ao deletar linha de lançamento:', error);
-        return res.status(500).json({ error: error.message });
+        return handleErrorResponse(res, 500, error.message);
       }
 
       if (count === 0) {
-        return res.status(404).json({ error: 'Linha de lançamento não encontrada ou não autorizada para exclusão.' });
+        return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada ou não autorizada para exclusão.');
       }
 
-      return res.status(204).end(); // No Content
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao deletar linha de lançamento:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
+      return res.status(204).end();
     }
-  }
 
-  // Se o método HTTP não for suportado
-  res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
+  } catch (error: any) {
+    console.error('Erro inesperado na API de linhas de lançamento:', error);
+    return handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+  }
 }

@@ -1,148 +1,53 @@
-import { createClient } from '@supabase/supabase-js';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { supabase, handleErrorResponse } from './utils/supabaseClient'; 
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Variáveis de ambiente do Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) não configuradas.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export default async function (req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); 
+export default async (req: VercelRequest, res: VercelResponse) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(200).send('');
   }
 
-  // Lógica para requisições GET: Listar contas
-  if (req.method === 'GET') {
-    try {
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .order('code', { ascending: true });
-
-      if (error) {
-        console.error('Erro ao buscar contas:', error);
-        return res.status(500).json({ error: error.message });
-      }
-
+  try {
+    if (req.method === 'GET') {
+      const { data, error } = await supabase.from('accounts').select('*');
+      if (error) throw error;
       return res.status(200).json(data);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao buscar contas:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
-    }
-  }
-
-  // Lógica para requisições POST: Criar uma nova conta
-  if (req.method === 'POST') {
-    try {
-      const { code, name, type, nature, user_id } = req.body;
-
-      if (!code || !name || !type || !nature || !user_id) {
-        return res.status(400).json({ error: 'Campos obrigatórios faltando: code, name, type, nature, user_id.' });
+    } else if (req.method === 'POST') {
+      const { name, type, user_id } = req.body;
+      if (!name || !type || !user_id) {
+        return handleErrorResponse(res, 400, 'Nome, tipo e user_id são obrigatórios.');
       }
-
-      const { data, error } = await supabase
-        .from('accounts')
-        .insert([{ code, name, type, nature, user_id }])
-        .select();
-
-      if (error) {
-        console.error('Erro ao criar conta:', error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      return res.status(201).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao criar conta:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
-    }
-  }
-
-  // Lógica para requisições PUT: Atualizar uma conta existente
-  if (req.method === 'PUT') {
-    try {
-      const { id } = req.query; // ID da conta a ser atualizada
-      const { code, name, type, nature, user_id } = req.body;
-
+      const { data, error } = await supabase.from('accounts').insert({ name, type, user_id }).select();
+      if (error) throw error;
+      return res.status(201).json(data);
+    } else if (req.method === 'PUT') {
+      const { id } = req.query;
+      const { name, type } = req.body;
       if (!id) {
-        return res.status(400).json({ error: 'ID da conta é obrigatório para atualização.' });
+        return handleErrorResponse(res, 400, 'ID da conta é obrigatório.');
       }
-
-      if (!code && !name && !type && !nature && !user_id) {
-        return res.status(400).json({ error: 'Nenhum campo para atualizar fornecido.' });
+      if (!name || !type) {
+        return handleErrorResponse(res, 400, 'Nome e tipo da conta são obrigatórios.');
       }
-
-      const updateData: { [key: string]: any } = {};
-      if (code) updateData.code = code;
-      if (name) updateData.name = name;
-      if (type) updateData.type = type;
-      if (nature) updateData.nature = nature;
-      if (user_id) updateData.user_id = user_id;
-
-      const { data, error } = await supabase
-        .from('accounts')
-        .update(updateData)
-        .eq('id', id)
-        .select();
-
-      if (error) {
-        console.error('Erro ao atualizar conta:', error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      if (!data || data.length === 0) {
-        return res.status(404).json({ error: 'Conta não encontrada ou não autorizada para atualização.' });
-      }
-
-      return res.status(200).json(data[0]);
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao atualizar conta:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
-    }
-  }
-
-  // Lógica para requisições DELETE: Remover uma conta
-  if (req.method === 'DELETE') {
-    try {
-      const { id } = req.query; // ID da conta a ser deletada
-
+      const { data, error } = await supabase.from('accounts').update({ name, type }).eq('id', id).select();
+      if (error) throw error;
+      return res.status(200).json(data);
+    } else if (req.method === 'DELETE') {
+      const { id } = req.query;
       if (!id) {
-        return res.status(400).json({ error: 'ID da conta é obrigatório para exclusão.' });
+        return handleErrorResponse(res, 400, 'ID da conta é obrigatório.');
       }
-
-      const { error, count } = await supabase
-        .from('accounts')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Erro ao deletar conta:', error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      if (count === 0) {
-        return res.status(404).json({ error: 'Conta não encontrada ou não autorizada para exclusão.' });
-      }
-
-      return res.status(204).end(); // No Content
-
-    } catch (error: any) {
-      console.error('Erro inesperado ao deletar conta:', error);
-      return res.status(500).json({ error: error.message || 'Erro interno do servidor.' });
+      const { error } = await supabase.from('accounts').delete().eq('id', id);
+      if (error) throw error;
+      return res.status(204).send(''); 
+    } else {
+      return handleErrorResponse(res, 405, 'Método não permitido');
     }
+  } catch (error: any) {
+    console.error('Erro na API de contas:', error.message);
+    return handleErrorResponse(res, 500, 'Erro interno do servidor: ' + error.message);
   }
-
-  // Se o método HTTP não for suportado
-  res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+};
