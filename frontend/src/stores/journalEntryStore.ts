@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { JournalEntry } from '../types/index';
+import type { JournalEntry, EntryLine } from '../types/index';
 
 import { ref, computed } from 'vue';
 
@@ -8,7 +8,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
   async function fetchJournalEntries() {
     try {
-      const response = await fetch('/api/journal-entries');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -16,7 +16,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       // Para cada lançamento, buscar suas linhas
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
-        const linesResponse = await fetch(`/api/entry-lines?journal_entry_id=${entry.id}`);
+        const linesResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines?journal_entry_id=${entry.id}`);
         if (!linesResponse.ok) {
           throw new Error(`HTTP error! status: ${linesResponse.status}`);
         }
@@ -40,7 +40,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     try {
       // 1. Criar o cabeçalho do lançamento
       const { lines, ...entryHeader } = entry;
-      const response = await fetch('/api/journal-entries', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       // 2. Criar as linhas do lançamento
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineResponse = await fetch('/api/entry-lines', {
+        const lineResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     try {
       // 1. Atualizar o cabeçalho do lançamento
       const { lines, ...entryHeader } = updatedEntry;
-      const response = await fetch(`/api/journal-entries?id=${updatedEntry.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries?id=${updatedEntry.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,13 +92,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       // 2. Deletar linhas existentes e recriar
       // (Abordagem simplificada: deleta todas e recria. Em produção, otimizar para comparar e atualizar/deletar/criar seletivamente)
-      await fetch(`/api/entry-lines?journal_entry_id=${updatedEntry.id}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines?journal_entry_id=${updatedEntry.id}`, {
         method: 'DELETE',
       }); // Assumindo que a API de entry-lines pode deletar por journal_entry_id
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineResponse = await fetch('/api/entry-lines', {
+        const lineResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
   async function deleteEntry(id: string) {
     try {
-      const response = await fetch(`/api/journal-entries?id=${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries?id=${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

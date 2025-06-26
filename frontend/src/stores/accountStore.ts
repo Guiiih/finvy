@@ -7,7 +7,7 @@ export const useAccountStore = defineStore('accountStore', () => {
 
   async function fetchAccounts() {
     try {
-      const response = await fetch('/api/accounts');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -42,7 +42,7 @@ export const useAccountStore = defineStore('accountStore', () => {
 
   async function addAccount(account: Account) {
     try {
-      const response = await fetch('/api/accounts', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,8 +61,7 @@ export const useAccountStore = defineStore('accountStore', () => {
 
   async function updateAccount(id: string, updatedFields: Partial<Account>) {
     try {
-      const response = await fetch(`/api/accounts?id=${id}`, {
-        method: 'PUT',
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts?id=${id}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -83,8 +82,7 @@ export const useAccountStore = defineStore('accountStore', () => {
 
   async function deleteAccount(id: string) {
     try {
-      const response = await fetch(`/api/accounts?id=${id}`, {
-        method: 'DELETE',
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts?id=${id}`, {
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

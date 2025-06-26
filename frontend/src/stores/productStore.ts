@@ -9,7 +9,7 @@ export const useProductStore = defineStore('products', () => {
 
   async function fetchProducts() {
     try {
-      const response = await fetch('/api/products');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -32,7 +32,7 @@ export const useProductStore = defineStore('products', () => {
 
   async function addProduct(product: Product) {
     try {
-      const response = await fetch('/api/products', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,8 +51,7 @@ export const useProductStore = defineStore('products', () => {
 
   async function updateProduct(id: string, updatedFields: Partial<Product>) {
     try {
-      const response = await fetch(`/api/products?id=${id}`, {
-        method: 'PUT',
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products?id=${id}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -73,8 +72,7 @@ export const useProductStore = defineStore('products', () => {
 
   async function deleteProduct(id: string) {
     try {
-      const response = await fetch(`/api/products?id=${id}`, {
-        method: 'DELETE',
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products?id=${id}`, {
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
