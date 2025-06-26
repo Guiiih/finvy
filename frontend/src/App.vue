@@ -4,7 +4,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { supabase } from './supabase'
 
 const router = useRouter()
-const session = ref(null)
+import type { Session } from '@supabase/supabase-js'
+
+const session = ref<Session | null>(null)
 
 supabase.auth.getSession().then(({ data }) => {
   session.value = data.session
@@ -38,7 +40,8 @@ const handleLogout = async () => {
           <RouterLink to="/stock-control">Controle de Estoque</RouterLink>
           <RouterLink to="/ledger">Razão</RouterLink>
           <RouterLink to="/dre">DRE</RouterLink>
-          <RouterLink to="/balance-sheet">Balanço Patrimonial</n          ><RouterLink to="/dfc">DFC</RouterLink>
+          <RouterLink to="/balance-sheet">Balanço Patrimonial</RouterLink>
+          <RouterLink to="/dfc">DFC</RouterLink>
           <RouterLink to="/variations">Variações</RouterLink>
           <RouterLink to="/reports">Relatórios</RouterLink>
           <button @click="handleLogout" class="logout-button">Sair</button>
