@@ -322,34 +322,34 @@ function handleStockMovementFromJournalEntry(entry: JournalEntry) {
 // --- Funções de Exemplo (para simular dados) ---
 function addAccounts() {
 
-  accountStore.addAccount({ id: '1', name: 'Capital Social Subscrito', type: 'equity', nature: 'credit' });
-  accountStore.addAccount({ id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit' });
-  accountStore.addAccount({ id: '3', name: 'Caixa Econômica Federal', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '4', name: 'Móveis e Utensílios', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '5', name: 'Compras de Mercadoria', type: 'expense', nature: 'debit' }); // Alterado para expense, pois é uma conta de resultado que compõe o CMV
-  accountStore.addAccount({ id: '6', name: 'Fornecedores', type: 'liability', nature: 'credit' });
-  accountStore.addAccount({ id: '7', name: 'Caixa', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '8', name: 'Banco Itaú', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '9', name: 'Banco Bradesco', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '10', name: 'Receita de Vendas', type: 'revenue', nature: 'credit' });
-  accountStore.addAccount({ id: '11', name: 'Clientes', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '12', name: 'ICMS sobre Compras', type: 'asset', nature: 'debit' }); // ICMS a recuperar
-  accountStore.addAccount({ id: '13', name: 'ICMS sobre Vendas', type: 'expense', nature: 'debit' }); // Dedução de Receita
-  accountStore.addAccount({ id: '14', name: 'C/C ICMS', type: 'asset', nature: 'debit' }); // Conta transitória para apuração de ICMS
-  accountStore.addAccount({ id: '15', name: 'CMV', type: 'expense', nature: 'debit' }); // Custo da Mercadoria Vendida - Pode ser usada para lançamentos diretos ou apuração
-  accountStore.addAccount({ id: '17', 'name': 'Resultado Bruto', type: 'revenue', nature: 'credit' }); // Conta de apuração
-  accountStore.addAccount({ id: '18', name: 'Reserva de Lucro', type: 'equity', nature: 'credit' });
-  accountStore.addAccount({ id: '19', name: 'Salários a Pagar', type: 'liability', nature: 'credit' });
-  accountStore.addAccount({ id: '20', name: 'Despesas com Salários', type: 'expense', nature: 'debit' });
-  accountStore.addAccount({ id: '21', name: 'Impostos a Pagar', type: 'liability', nature: 'credit' });
-  accountStore.addAccount({ id: '22', name: 'ICMS Antecipado', type: 'asset', nature: 'debit' });
-  accountStore.addAccount({ id: '26', name: 'Estoque Final', type: 'asset', nature: 'debit' });
+  accountStore.addAccount({ id: '1', name: 'Capital Social Subscrito', type: 'equity', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '3', name: 'Caixa Econômica Federal', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '4', name: 'Móveis e Utensílios', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '5', name: 'Compras de Mercadoria', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Alterado para expense, pois é uma conta de resultado que compõe o CMV
+  accountStore.addAccount({ id: '6', name: 'Fornecedores', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '7', name: 'Caixa', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '8', name: 'Banco Itaú', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '9', name: 'Banco Bradesco', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '10', name: 'Receita de Vendas', type: 'revenue', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '11', name: 'Clientes', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '12', name: 'ICMS sobre Compras', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // ICMS a recuperar
+  accountStore.addAccount({ id: '13', name: 'ICMS sobre Vendas', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Dedução de Receita
+  accountStore.addAccount({ id: '14', name: 'C/C ICMS', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Conta transitória para apuração de ICMS
+  accountStore.addAccount({ id: '15', name: 'CMV', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Custo da Mercadoria Vendida - Pode ser usada para lançamentos diretos ou apuração
+  accountStore.addAccount({ id: '17', 'name': 'Resultado Bruto', type: 'revenue', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" }); // Conta de apuração
+  accountStore.addAccount({ id: '18', name: 'Reserva de Lucro', type: 'equity', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '19', name: 'Salários a Pagar', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '20', name: 'Despesas com Salários', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '21', name: 'Impostos a Pagar', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '22', name: 'ICMS Antecipado', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
+  accountStore.addAccount({ id: '26', name: 'Estoque Final', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
 
   console.log('Contas padrão adicionadas.');
 }
 
 function addProducts() {
-  productStore.addProduct({ id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0 });
+  productStore.addProduct({ id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0, user_id: "00000000-0000-0000-0000-000000000000" });
   console.log('Produtos padrão adicionados.');
 }
 

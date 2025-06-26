@@ -19,8 +19,9 @@ export interface Account {
 export interface Product {
   id: string;
   name: string;
-  quantity: number; // Quantidade atual em estoque (se relevante para produto)
-  unitPrice: number; // Preço unitário (custo de aquisição)
+  description?: string; // Adicionado para corresponder ao DB
+  unit_cost: number; // Alterado de unitPrice
+  current_stock: number; // Alterado de quantity
 }
 
 // A estrutura de uma linha dentro de um lançamento contábil
