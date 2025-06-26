@@ -14,6 +14,7 @@ export interface Account {
   type: AccountType;
   parentId?: string | null; // Adicionado como opcional, se estiver usando
   user_id?: string; // Adicionado para corresponder ao DB
+  code?: number; // Adicionado para corresponder ao D
 }
 
 // A estrutura de um produto

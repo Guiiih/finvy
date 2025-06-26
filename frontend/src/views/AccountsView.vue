@@ -12,7 +12,7 @@
         </div>
         <div class="form-group">
           <label for="account-code">Código:</label>
-          <input type="text" id="account-code" v-model="newAccount.code" required />
+          <input type="number" id="account-code" v-model.number="newAccount.code" required />
         </div>
         <div class="form-group">
           <label for="account-type">Tipo:</label>
@@ -67,9 +67,9 @@ const accountStore = useAccountStore();
 
 const newAccount = ref<Partial<Account>>({
   name: '',
-  code: '',
-  type: '',
-  nature: '',
+  code: undefined,
+  type: undefined,
+  nature: undefined,
 });
 
 async function addNewAccount() {
@@ -79,7 +79,7 @@ async function addNewAccount() {
     const accountToSave: Account = {
       id: `acc-${Date.now()}`, // ID temporário, será substituído pelo DB
       name: newAccount.value.name,
-      code: newAccount.value.code,
+      code: Number(newAccount.value.code),
       type: newAccount.value.type,
       nature: newAccount.value.nature,
       user_id: "00000000-0000-0000-0000-000000000000", 
@@ -88,9 +88,9 @@ async function addNewAccount() {
     // Limpar formulário
     newAccount.value = {
       name: '',
-      code: '',
-      type: '',
-      nature: '',
+      code: undefined,
+      type: undefined,
+      nature: undefined,
     };
   } else {
     alert('Por favor, preencha todos os campos da conta.');
