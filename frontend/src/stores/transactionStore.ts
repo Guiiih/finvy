@@ -37,12 +37,12 @@ export const useTransactionStore = defineStore('transactionStore', () => {
       // 2. Criar as linhas de lançamento para a venda
       const journalEntryLines: EntryLine[] = [
         // Lançamento da Receita de Venda
-        { accountId: customerAccountId, debit: quantity * salePrice }, // Débito: Clientes/Caixa
-        { accountId: revenueAccountId, credit: quantity * salePrice }, // Crédito: Receita de Vendas
+        { accountId: customerAccountId, debit: quantity * salePrice, credit: 0, amount: quantity * salePrice }, // Débito: Clientes/Caixa
+        { accountId: revenueAccountId, debit: 0, credit: quantity * salePrice, amount: quantity * salePrice }, // Crédito: Receita de Vendas
 
         // Lançamento do Custo da Mercadoria Vendida (CMV)
-        { accountId: cogsAccountId, debit: quantity * costOfGoods }, // Débito: CMV
-        { accountId: inventoryAccountId, credit: quantity * costOfGoods, productId: productId, quantity: quantity, unitCost: costOfGoods }, // Crédito: Estoques (com detalhes do produto para controle de estoque)
+        { accountId: cogsAccountId, debit: quantity * costOfGoods, credit: 0, amount: quantity * costOfGoods }, // Débito: CMV
+        { accountId: inventoryAccountId, debit: 0, credit: quantity * costOfGoods, amount: quantity * costOfGoods, productId: productId, quantity: quantity, unitCost: costOfGoods }, // Crédito: Estoques (com detalhes do produto para controle de estoque)
       ];
 
       const newJournalEntry: JournalEntry = {
@@ -50,6 +50,7 @@ export const useTransactionStore = defineStore('transactionStore', () => {
         date: date,
         description: description,
         lines: journalEntryLines,
+        user_id: '', // Defina o user_id apropriado aqui
       };
 
       // 3. Adicionar o lançamento contábil
