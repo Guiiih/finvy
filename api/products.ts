@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function (req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); // Em produção, substitua '*' pelo domínio do seu frontend
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Em produção, substitua '*' pelo domínio do seu frontend
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
