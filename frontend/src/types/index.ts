@@ -57,7 +57,7 @@ export interface StockMovement {
   totalValue: number; // Valor total do movimento
 }
 
-export interface StockBalance { // Foi renomeada para ProductBalance no stockControlStore
+export interface ProductBalance {
   productId: string;
   quantity: number;
   unitCost: number; // Custo médio atual

@@ -50,8 +50,8 @@ const getLocalAccountTotalDebits = (accountId: string) => {
   return allJournalEntries.value
     .filter(entry => !entry.description.includes('Apuração'))
     .flatMap(entry => entry.lines)
-    .filter(line => line.accountId === accountId && line.type === 'debit')
-    .reduce((sum, line) => sum + line.amount, 0);
+    .filter(line => line.accountId === accountId && line.debit !== undefined)
+    .reduce((sum, line) => sum + (line.debit || 0), 0);
 };
 
 const getLocalAccountTotalCredits = (accountId: string) => {
@@ -59,8 +59,8 @@ const getLocalAccountTotalCredits = (accountId: string) => {
   return allJournalEntries.value
     .filter(entry => !entry.description.includes('Apuração'))
     .flatMap(entry => entry.lines)
-    .filter(line => line.accountId === accountId && line.type === 'credit')
-    .reduce((sum, line) => sum + line.amount, 0);
+    .filter(line => line.accountId === accountId && line.credit !== undefined)
+    .reduce((sum, line) => sum + (line.credit || 0), 0);
 };
 
 
@@ -99,12 +99,13 @@ const ledgerAccounts = computed(() => {
       entry.lines.forEach(line => {
         const accountData = accountsMap.get(line.accountId);
         if (accountData) {
-              if (line.type === 'debit') {
-                accountData.debitEntries.push(line.amount);
-                accountData.totalDebits += line.amount;
-              } else {
-                accountData.creditEntries.push(line.amount);
-                accountData.totalCredits += line.amount;
+              if (line.debit !== undefined && line.debit > 0) {
+                accountData.debitEntries.push(line.debit);
+                accountData.totalDebits += line.debit;
+              }
+              if (line.credit !== undefined && line.credit > 0) {
+                accountData.creditEntries.push(line.credit);
+                accountData.totalCredits += line.credit;
               }
         }
       });

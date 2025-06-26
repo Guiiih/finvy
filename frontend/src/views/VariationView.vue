@@ -47,10 +47,11 @@ const ledgerAccounts = computed(() => {
     entry.lines.forEach((line: EntryLine) => {
       const accountData = accountsMap.get(line.accountId);
       if (accountData) {
-        if (line.type === 'debit') {
-          accountData.debits += line.amount;
-        } else {
-          accountData.credits += line.amount;
+        if (line.debit) {
+          accountData.debits += line.debit;
+        }
+        if (line.credit) {
+          accountData.credits += line.credit;
         }
       }
     });
