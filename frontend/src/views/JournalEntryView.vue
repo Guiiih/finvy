@@ -6,8 +6,7 @@
       <button @click="showAddEntryForm = !showAddEntryForm">
         {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
       </button>
-      <button @click="addAllMonth1Entries">Adicionar Lançamentos do Mês 1 (Exemplo)</button>
-      <button @click="addAllMonth2Entries">Adicionar Lançamentos do Mês 2 (Exemplo)</button>
+      
       <button @click="resetAllData">Resetar Todos os Dados</button>
     </div>
 
@@ -213,176 +212,7 @@ function handleStockMovementFromJournalEntry(entry: JournalEntry) {
 }
 
 // --- Funções de Exemplo (para simular dados) ---
-function addAccounts() {
 
-  accountStore.addAccount({ id: '1', name: 'Capital Social Subscrito', type: 'equity', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '2', name: 'Capital Social a Integralizar', type: 'equity', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '3', name: 'Caixa Econômica Federal', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '4', name: 'Móveis e Utensílios', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '5', name: 'Compras de Mercadoria', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Alterado para expense, pois é uma conta de resultado que compõe o CMV
-  accountStore.addAccount({ id: '6', name: 'Fornecedores', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '7', name: 'Caixa', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '8', name: 'Banco Itaú', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '9', name: 'Banco Bradesco', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '10', name: 'Receita de Vendas', type: 'revenue', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '11', name: 'Clientes', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '12', name: 'ICMS sobre Compras', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // ICMS a recuperar
-  accountStore.addAccount({ id: '13', name: 'ICMS sobre Vendas', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Dedução de Receita
-  accountStore.addAccount({ id: '14', name: 'C/C ICMS', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Conta transitória para apuração de ICMS
-  accountStore.addAccount({ id: '15', name: 'CMV', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" }); // Custo da Mercadoria Vendida - Pode ser usada para lançamentos diretos ou apuração
-  accountStore.addAccount({ id: '17', 'name': 'Resultado Bruto', type: 'revenue', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" }); // Conta de apuração
-  accountStore.addAccount({ id: '18', name: 'Reserva de Lucro', type: 'equity', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '19', name: 'Salários a Pagar', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '20', name: 'Despesas com Salários', type: 'expense', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '21', name: 'Impostos a Pagar', type: 'liability', nature: 'credit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '22', name: 'ICMS Antecipado', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-  accountStore.addAccount({ id: '26', name: 'Estoque Final', type: 'asset', nature: 'debit', user_id: "00000000-0000-0000-0000-000000000000" });
-
-  console.log('Contas padrão adicionadas.');
-}
-
-function addProducts() {
-  productStore.addProduct({ id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0, user_id: "00000000-0000-0000-0000-000000000000", current_stock: 0 });
-  console.log('Produtos padrão adicionados.');
-}
-
-function addInitialCapitalEntry() {
-  resetForm();
-  newEntryDate.value = '2025-01-01';
-  newEntryDescription.value = 'Integralização de Capital Social Inicial';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 500000, credit: 0, amount: 500000 },
-    { accountId: accountStore.getAccountByName('Móveis e Utensílios')?.id || '', debit: 500000, credit: 0, amount: 500000 },
-    { accountId: accountStore.getAccountByName('Capital Social a Integralizar')?.id || '', debit: 1000000, credit: 0, amount: 1000000 },
-    { accountId: accountStore.getAccountByName('Capital Social Subscrito')?.id || '', debit: 0, credit: 2000000, amount: 2000000 },
-  ];
-  submitEntry();
-}
-
-function addPurchaseEntry1() {
-  resetForm();
-  newEntryDate.value = '2025-01-02';
-  newEntryDescription.value = 'Compra de mercadoria para revenda de 15000 unds de produto X no valor total de aquisição de R$ 75.000,00';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 75000, credit: 0, amount: 75000 },
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 0, credit: 75000, amount: 75000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 9000, credit: 0, amount: 9000 },
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 0, credit: 9000, amount: 9000 },
-  ];
-  submitEntry();
-}
-
-function addPurchaseEntry2() {
-  resetForm();
-  newEntryDate.value = '2025-01-03';
-  newEntryDescription.value = 'Compra de mercadoria para revenda sendo 25% a vista com pagamento efetuado via transferência bancária do banco CEF, de 14000 unds de produto X por R$ 60.000,00, com conhecimento de transporte terrestre (CIF) no valor de R$ 5.000,00, com ICMS de 12%';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 60000, credit: 0, amount: 60000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 7200, credit: 0, amount: 7200 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 15000, amount: 15000 },
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 0, credit: 45000, amount: 45000 },
-    { accountId: accountStore.getAccountByName('Compras de Mercadoria')?.id || '', debit: 0, credit: 7200, amount: 7200 },
-  ];
-  submitEntry();
-}
-
-function addWithdrawalEntry() {
-  resetForm();
-  newEntryDate.value = '2025-01-03';
-  newEntryDescription.value = 'Saque da conta corrente no valor de R$ 150.000,00';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 150000, credit: 0, amount: 150000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 150000, amount: 150000 },
-  ];
-  submitEntry();
-}
-
-function addTransferToItauEntry() {
-  resetForm();
-  newEntryDate.value = '2025-01-05';
-  newEntryDescription.value = 'Transferência de recursos via TED para o banco Itaú no valor de R$ 100.000,00';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Banco Itaú')?.id || '', debit: 100000, credit: 0, amount: 100000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 100000, amount: 100000 },
-  ];
-  submitEntry();
-}
-
-function addClientReceiptEntry() {
-  resetForm();
-  newEntryDate.value = '2025-01-08';
-  newEntryDescription.value = 'Recebimento de 10% do saldo da conta clientes (R$ 14.000,00)';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 0, credit: 14000, amount: 14000 },
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 14000, credit: 0, amount: 14000 },
-  ];
-  submitEntry();
-}
-
-function addSupplierPaymentEntry() {
-  resetForm();
-  newEntryDate.value = '2025-01-09';
-  newEntryDescription.value = 'Pagamento de 5% do saldo da conta Fornecedor (R$ 6.000,00) via Caixa Econômica Federal';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Fornecedores')?.id || '', debit: 6000, credit: 0, amount: 6000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 0, credit: 6000, amount: 6000 },
-  ];
-  submitEntry();
-}
-
-function addSaleEntry1() {
-  resetForm();
-  newEntryDate.value = '2025-01-07';
-  newEntryDescription.value = 'Venda de mercadoria por R$ 400.000,00, vendidas 20000 unds do produto X (Receita e Impostos)';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Caixa')?.id || '', debit: 60000, credit: 0, amount: 60000 },
-    { accountId: accountStore.getAccountByName('Banco Bradesco')?.id || '', debit: 80000, credit: 0, amount: 80000 },
-    { accountId: accountStore.getAccountByName('Caixa Econômica Federal')?.id || '', debit: 120000, credit: 0, amount: 120000 },
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 140000, credit: 0, amount: 140000 },
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', debit: 0, credit: 400000, amount: 400000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', debit: 0, credit: 72000, amount: 72000 },
-    { accountId: accountStore.getAccountByName('Receita de Vendas')?.id || '', debit: 72000, credit: 0, amount: 72000 },
-  ];
-  submitEntry();
-}
-
-function addIcmsSettlementEntry1() {
-  resetForm();
-  newEntryDate.value = '2025-01-31';
-  newEntryDescription.value = 'Apuração e Transferência de ICMS Mês 1';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 0, credit: 9000, amount: 9000 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 9000, credit: 0, amount: 9000 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Compras')?.id || '', debit: 0, credit: 7200, amount: 7200 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 7200, credit: 0, amount: 7200 },
-    { accountId: accountStore.getAccountByName('ICMS sobre Vendas')?.id || '', debit: 72000, credit: 0, amount: 72000 },
-    { accountId: accountStore.getAccountByName('C/C ICMS')?.id || '', debit: 0, credit: 72000, amount: 72000 },
-  ];
-  submitEntry();
-}
-
-// Example additional entries for Month 2 (ensure this is a function, not a const arrow function)
-function addMonth2Entries() {
-  // Recebimento de Clientes M2
-  resetForm();
-  newEntryDate.value = '2025-02-10';
-  newEntryDescription.value = 'Recebimento de clientes';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Bancos')?.id || '', debit: 300000, credit: 0, amount: 300000 },
-    { accountId: accountStore.getAccountByName('Clientes')?.id || '', debit: 0, credit: 300000, amount: 300000 },
-  ];
-  submitEntry();
-
-  // Pagamento de Salários M2
-  resetForm();
-  newEntryDate.value = '2025-02-28';
-  newEntryDescription.value = 'Pagamento de salários';
-  newEntryLines.value = [
-    { accountId: accountStore.getAccountByName('Despesas com Salários')?.id || '', debit: 50000, credit: 0, amount: 50000 },
-    { accountId: accountStore.getAccountByName('Bancos')?.id || '', debit: 0, credit: 50000, amount: 50000 },
-  ];
-  submitEntry();
-}
 
 // --- Main Action Functions (can call helpers above) ---
 async function submitEntry() {
@@ -451,47 +281,6 @@ function deleteEntry(id: string) {
   }
 }
 
-
-async function addAllMonth1Entries() {
-  // As stores agora interagem com a API, então $reset() não é mais aplicável para limpar o backend.
-  // Para limpar o backend, seria necessário um endpoint de API específico para isso.
-  // Por enquanto, apenas garantimos que as contas e produtos sejam adicionados.
-  addAccounts();
-  addProducts();
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  addInitialCapitalEntry();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addPurchaseEntry1();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addPurchaseEntry2();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addWithdrawalEntry();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addTransferToItauEntry();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addSaleEntry1();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addClientReceiptEntry();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addSupplierPaymentEntry();
-  await new Promise(resolve => setTimeout(resolve, 50));
-  addIcmsSettlementEntry1();
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  alert('Todos os lançamentos do Mês 1 adicionados com sucesso!');
-}
-
-async function addAllMonth2Entries() {
-  if (journalEntryStore.journalEntries.length === 0) {
-    await addAllMonth1Entries(); // This call is now correctly resolved
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  addMonth2Entries(); // This call should now be resolved
-  alert('Todos os lançamentos do Mês 2 adicionados com sucesso!');
-}
-
 const resetAllData = () => {
   if (confirm('Tem certeza que deseja resetar todos os dados (lançamentos, contas, produtos, estoque)?')) {
     // As stores agora interagem com a API, então $reset() não é mais aplicável para limpar o backend.
@@ -504,8 +293,6 @@ const resetAllData = () => {
 
 onMounted(() => {
   resetForm();
-  addAccounts();
-  addProducts();
 });
 </script>
 
