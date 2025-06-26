@@ -1,7 +1,8 @@
-// frontend/src/stores/stockControlStore.ts
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { StockMovement } from '@/types/index';
+import { ref, computed, watch } from 'vue';
+import type { StockMovement, Product } from '@/types/index';
+import { useJournalEntryStore } from './journalEntryStore';
+import { useProductStore } from './productStore';
 
 interface ProductBalance {
   productId: string;
@@ -11,6 +12,9 @@ interface ProductBalance {
 }
 
 export const useStockControlStore = defineStore('stockControlStore', () => {
+  const journalEntryStore = useJournalEntryStore();
+  const productStore = useProductStore();
+
   const movements = ref<StockMovement[]>([]);
   const balances = ref<ProductBalance[]>([]);
 
@@ -22,86 +26,104 @@ export const useStockControlStore = defineStore('stockControlStore', () => {
     return balances.value.find(balance => balance.productId === productId);
   });
 
-  // Ação para adicionar um movimento e atualizar o balanço
-  function addMovement(newMovement: StockMovement) {
-    const existingBalanceIndex = balances.value.findIndex(b => b.productId === newMovement.productId);
-    let currentBalance: ProductBalance = { productId: newMovement.productId, quantity: 0, unitCost: 0, totalValue: 0 };
+  // Função para recalcular o estoque com base nos lançamentos contábeis
+  function recalculateStock() {
+    movements.value = [];
+    balances.value = [];
 
-    if (existingBalanceIndex !== -1) {
-      currentBalance = balances.value[existingBalanceIndex];
-    }
+    const tempBalances: { [productId: string]: ProductBalance } = {};
 
-    let newQuantity = currentBalance.quantity;
-    let newTotalValue = currentBalance.totalValue;
-    let newUnitCost = currentBalance.unitCost;
+    // Coletar todos os movimentos de estoque dos lançamentos
+    const rawStockMovements: StockMovement[] = [];
+    journalEntryStore.journalEntries.forEach(entry => {
+      entry.lines.forEach(line => {
+        if (line.productId && line.quantity && line.unitCost) {
+          // Determinar o tipo de movimento (compra/venda) com base na conta e no débito/crédito
+          // Esta lógica pode precisar ser mais sofisticada dependendo das contas usadas
+          // Por exemplo, se a conta de estoque é debitada (entrada) ou creditada (saída)
+          // Por simplicidade, vamos assumir que um débito na conta de estoque é uma entrada
+          // e um crédito é uma saída, ou que o tipo é inferido de outras formas.
+          // Para este exemplo, vamos inferir 'in' se for um débito e 'out' se for um crédito
+          // na conta de estoque, ou se for uma linha de produto com quantidade e custo.
 
-    if (newMovement.type === 'in') {
-      // Compra
-      newQuantity += newMovement.quantity;
-      newTotalValue += newMovement.totalValue;
-      newUnitCost = newTotalValue / newQuantity; // Recalcula custo médio
-    } else if (newMovement.type === 'out') {
-      // Venda (baixa pelo custo médio atual)
-      if (newMovement.quantity > newQuantity) {
-        console.warn(`Tentativa de vender mais do que o estoque disponível para ${newMovement.productId}. Ajustando quantidade.`);
-        newMovement.quantity = newQuantity; // Ajusta para a quantidade máxima disponível
-        newMovement.totalValue = newMovement.quantity * currentBalance.unitCost; // Ajusta o valor total
+          // Para o propósito de controle de estoque, vamos considerar que:
+          // - Débito em conta de estoque (e crédito em fornecedor/caixa) é uma compra (IN)
+          // - Crédito em conta de estoque (e débito em CMV/cliente) é uma venda (OUT)
+
+          // Simplificando para o exemplo: se a linha tem productId, quantity e unitCost,
+          // e é um débito, é uma entrada. Se é um crédito, é uma saída.
+          const type: 'in' | 'out' = (line.debit && line.debit > 0) ? 'in' : 'out';
+
+          rawStockMovements.push({
+            id: `${entry.id}-${line.accountId}-${line.productId}`,
+            journalEntryId: entry.id,
+            date: entry.date,
+            type: type,
+            productId: line.productId,
+            quantity: line.quantity,
+            unitPrice: line.unitCost,
+            totalValue: line.quantity * line.unitCost,
+          });
+        }
+      });
+    });
+
+    // Ordenar movimentos por data para calcular o custo médio corretamente
+    rawStockMovements.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    rawStockMovements.forEach(newMovement => {
+      let currentBalance = tempBalances[newMovement.productId] || { productId: newMovement.productId, quantity: 0, unitCost: 0, totalValue: 0 };
+
+      let newQuantity = currentBalance.quantity;
+      let newTotalValue = currentBalance.totalValue;
+      let newUnitCost = currentBalance.unitCost;
+
+      if (newMovement.type === 'in') {
+        newQuantity += newMovement.quantity;
+        newTotalValue += newMovement.totalValue;
+        newUnitCost = newTotalValue / newQuantity; // Recalcula custo médio
+      } else if (newMovement.type === 'out') {
+        if (newMovement.quantity > newQuantity) {
+          console.warn(`Tentativa de vender mais do que o estoque disponível para ${newMovement.productId}. Ajustando quantidade.`);
+          newMovement.quantity = newQuantity; // Ajusta para a quantidade máxima disponível
+          newMovement.totalValue = newMovement.quantity * currentBalance.unitCost; // Ajusta o valor total
+        }
+
+        const costOfGoodsSold = newMovement.quantity * currentBalance.unitCost; // CMV da operação
+
+        newQuantity -= newMovement.quantity;
+        newTotalValue -= costOfGoodsSold; // Reduz o valor total do estoque pelo CMV
+
+        if (newQuantity <= 0) {
+          newUnitCost = 0;
+          newTotalValue = 0;
+        } else {
+          newUnitCost = newTotalValue / newQuantity; // Recalcula custo médio
+        }
       }
-      
-      const costOfGoodsSold = newMovement.quantity * currentBalance.unitCost; // CMV da operação
-      
-      newQuantity -= newMovement.quantity;
-      newTotalValue -= costOfGoodsSold; // Reduz o valor total do estoque pelo CMV
-      
-      // Se a quantidade for zero, zera o custo médio para evitar NaN ou divisões por zero futuras
-      if (newQuantity <= 0) {
-         newUnitCost = 0;
-         newTotalValue = 0; // Garante que o total também seja 0
-      } else {
-         newUnitCost = newTotalValue / newQuantity; // Recalcula custo médio
-      }
-      
-      // Armazena o CMV para uso futuro (por exemplo, em um getter)
-      // Para simplificar, o CMV é o totalValue do movimento 'out'
-    }
 
-    if (existingBalanceIndex !== -1) {
-      balances.value[existingBalanceIndex] = {
+      tempBalances[newMovement.productId] = {
         productId: newMovement.productId,
         quantity: newQuantity,
         unitCost: newUnitCost,
         totalValue: newTotalValue,
       };
-    } else {
-      balances.value.push({
-        productId: newMovement.productId,
-        quantity: newQuantity,
-        unitCost: newUnitCost,
-        totalValue: newTotalValue,
-      });
-    }
-    movements.value.push(newMovement);
+      movements.value.push(newMovement);
+    });
+
+    balances.value = Object.values(tempBalances);
   }
 
-  // Ação para resetar os movimentos e balanços
-  function resetMovements() {
-    movements.value = [];
-  }
-
-  function resetBalances() {
-    balances.value = [];
-  }
-
-  function $reset() {
-    movements.value = [];
-    balances.value = [];
-  }
+  // Observar mudanças nos lançamentos contábeis para recalcular o estoque
+  watch(() => journalEntryStore.journalEntries, () => {
+    recalculateStock();
+  }, { deep: true, immediate: true });
 
   // NEW: Getter para calcular o CMV total
   const totalCostOfGoodsSold = computed(() => {
     return movements.value
       .filter(m => m.type === 'out')
-      .reduce((sum, m) => sum + m.totalValue, 0); // O totalValue do movimento 'out' já é o CMV daquele movimento
+      .reduce((sum, m) => sum + m.totalValue, 0);
   });
 
   // NEW: Getter para o valor do Estoque Final
@@ -115,11 +137,8 @@ export const useStockControlStore = defineStore('stockControlStore', () => {
     balances,
     getAllMovements,
     getBalanceByProductId,
-    addMovement,
-    resetMovements,
-    resetBalances,
-    $reset,
-    totalCostOfGoodsSold, // Expor o CMV total
-    finalInventoryValue // Expor o Estoque Final por produto
+    totalCostOfGoodsSold,
+    finalInventoryValue,
+    recalculateStock, // Expor para chamadas manuais se necessário
   };
 });

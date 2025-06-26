@@ -28,8 +28,11 @@ export type EntryType = 'debit' | 'credit';
 
 export interface EntryLine {
   accountId: string; // ID da conta que está sendo movimentada
-  type: 'debit' | 'credit';
-  amount: number;
+  debit?: number; // Valor a débito (opcional)
+  credit?: number; // Valor a crédito (opcional)
+  productId?: string; // Opcional: para lançamentos de estoque
+  quantity?: number; // Quantidade para movimentos de estoque
+  unitCost?: number; // Custo unitário para movimentos de estoque
 }
 
 // O lançamento contábil que representa uma operação completa

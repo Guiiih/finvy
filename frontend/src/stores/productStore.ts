@@ -2,30 +2,97 @@
 import { defineStore } from 'pinia';
 import type { Product } from '../types/index'; 
 
-interface ProductState {
-  products: Product[];
-}
+import { ref, computed } from 'vue';
 
-export const useProductStore = defineStore('products', {
-  state: (): ProductState => ({
-    products: [
-      { id: 'prod-x-1', name: 'Produto X', quantity: 0, unitPrice: 0 },
-    ],
-  }),
-  actions: {
-    addProduct(product: Product) {
-      this.products.push(product);
-    },
-  },
-  getters: {
-    getAllProducts(state: ProductState) { // Adicione ': ProductState' aqui
-      return state.products;
-    },
-    getProductById: (state: ProductState) => (id: string) => { // Adicione ': ProductState' aqui
-      return state.products.find(product => product.id === id);
-    },
-    getProductByName: (state: ProductState) => (name: string) => { // Adicione ': ProductState' aqui
-      return state.products.find(product => product.name === name);
+export const useProductStore = defineStore('products', () => {
+  const products = ref<Product[]>([]);
+
+  async function fetchProducts() {
+    try {
+      const response = await fetch('/api/products');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Product[] = await response.json();
+      products.value = data;
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
     }
-  },
+  }
+
+  const getAllProducts = computed(() => products.value);
+
+  const getProductById = computed(() => (id: string) => {
+    return products.value.find(product => product.id === id);
+  });
+
+  const getProductByName = computed(() => (name: string) => {
+    return products.value.find(product => product.name === name);
+  });
+
+  async function addProduct(product: Product) {
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const newProduct: Product = await response.json();
+      products.value.push(newProduct);
+    } catch (error) {
+      console.error("Erro ao adicionar produto:", error);
+    }
+  }
+
+  async function updateProduct(id: string, updatedFields: Partial<Product>) {
+    try {
+      const response = await fetch(`/api/products?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedFields),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const updatedProduct: Product = await response.json();
+      const index = products.value.findIndex(prod => prod.id === id);
+      if (index !== -1) {
+        products.value[index] = updatedProduct;
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar produto:", error);
+    }
+  }
+
+  async function deleteProduct(id: string) {
+    try {
+      const response = await fetch(`/api/products?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      products.value = products.value.filter(prod => prod.id !== id);
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error);
+    }
+  }
+
+  return {
+    products,
+    getAllProducts,
+    getProductById,
+    getProductByName,
+    fetchProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+  };
 });
