@@ -1,13 +1,36 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase, handleErrorResponse } from './utils/supabaseClient'; 
+import { supabase, handleErrorResponse } from './utils/supabaseClient';
+import { handleCors } from './utils/corsHandler';
+import {
+  idSchema,
+  createProductSchema,
+  updateProductSchema
+} from './utils/schemas';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://finvy.vercel.app'); 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (handleCors(req, res)) {
+    return;
+  }
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    return handleErrorResponse(res, 401, 'Token de autenticação não fornecido.');
+  }
+
+  let user_id: string;
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Erro de autenticação:', authError?.message || 'Usuário não encontrado.');
+      return handleErrorResponse(res, 401, 'Token de autenticação inválido ou expirado.');
+    }
+    user_id = user.id;
+  } catch (error: any) {
+    console.error('Erro ao verificar token:', error);
+    return handleErrorResponse(res, 500, 'Erro interno ao verificar autenticação.');
   }
 
   try {
@@ -15,6 +38,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .eq('user_id', user_id) 
         .order('name', { ascending: true });
 
       if (error) {
@@ -23,18 +47,16 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json(data);
-    }
-
-    if (req.method === 'POST') {
-      const { name, description, unit_cost, current_stock, user_id } = req.body;
-
-      if (!name || !unit_cost || !user_id) {
-        return handleErrorResponse(res, 400, 'Campos obrigatórios faltando: name, unit_cost, user_id.');
+    } else if (req.method === 'POST') {
+      const parsedBody = createProductSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
+      const { name, description, unit_cost, current_stock } = parsedBody.data; 
 
       const { data, error } = await supabase
         .from('products')
-        .insert([{ name, description, unit_cost, current_stock, user_id }])
+        .insert([{ name, description, unit_cost, current_stock, user_id }]) 
         .select();
 
       if (error) {
@@ -43,31 +65,28 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(201).json(data[0]);
-    }
-
-    if (req.method === 'PUT') {
-      const { id } = req.query; 
-      const { name, description, unit_cost, current_stock, user_id } = req.body;
-
-      if (!id) {
-        return handleErrorResponse(res, 400, 'ID do produto é obrigatório para atualização.');
+    } else if (req.method === 'PUT') {
+      const parsedQuery = idSchema.safeParse(req.query);
+      if (!parsedQuery.success) {
+        return handleErrorResponse(res, 400, parsedQuery.error.errors.map(err => err.message).join(', '));
       }
+      const { id } = parsedQuery.data;
 
-      if (!name && !description && !unit_cost && !current_stock && !user_id) {
+      const parsedBody = updateProductSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
+      }
+      const updateData = parsedBody.data;
+
+      if (Object.keys(updateData).length === 0) {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
-
-      const updateData: { [key: string]: any } = {};
-      if (name) updateData.name = name;
-      if (description) updateData.description = description;
-      if (unit_cost) updateData.unit_cost = unit_cost;
-      if (current_stock) updateData.current_stock = current_stock;
-      if (user_id) updateData.user_id = user_id;
 
       const { data, error } = await supabase
         .from('products')
         .update(updateData)
         .eq('id', id)
+        .eq('user_id', user_id) 
         .select();
 
       if (error) {
@@ -76,23 +95,22 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       if (!data || data.length === 0) {
-        return handleErrorResponse(res, 404, 'Produto não encontrado ou não autorizado para atualização.');
+        return handleErrorResponse(res, 404, 'Produto não encontrado ou você não tem permissão para atualizar.');
       }
 
       return res.status(200).json(data[0]);
-    }
-
-    if (req.method === 'DELETE') {
-      const { id } = req.query; 
-
-      if (!id) {
-        return handleErrorResponse(res, 400, 'ID do produto é obrigatório para exclusão.');
+    } else if (req.method === 'DELETE') {
+      const parsedQuery = idSchema.safeParse(req.query);
+      if (!parsedQuery.success) {
+        return handleErrorResponse(res, 400, parsedQuery.error.errors.map(err => err.message).join(', '));
       }
+      const { id } = parsedQuery.data;
 
       const { error, count } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user_id); 
 
       if (error) {
         console.error('Erro ao deletar produto:', error);
@@ -100,14 +118,14 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       if (count === 0) {
-        return handleErrorResponse(res, 404, 'Produto não encontrado ou não autorizado para exclusão.');
+        return handleErrorResponse(res, 404, 'Produto não encontrado ou você não tem permissão para deletar.');
       }
 
-      return res.status(204).end(); 
+      return res.status(204).end();
+    } else {
+      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+      return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
     }
-
-    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: any) {
     console.error('Erro inesperado na API de produtos:', error);
     return handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
