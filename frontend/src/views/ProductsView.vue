@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watchEffect } from 'vue';
 import { useProductStore } from '@/stores/productStore';
+import { useAuthStore } from '@/stores/authStore'; // Importar o authStore
 import type { Product } from '@/types';
 import BaseTable from '@/components/BaseTable.vue';
 
 const productStore = useProductStore();
+const authStore = useAuthStore(); // Instanciar o authStore
 
 const newProductName = ref('');
 const newProductDescription = ref('');
@@ -133,9 +135,13 @@ async function handleDeleteProduct(id: string) {
   }
 }
 
-onMounted(() => {
-  loadProducts();
+// Usar watchEffect para carregar produtos apenas quando o authStore estiver pronto e logado
+watchEffect(() => {
+  if (!authStore.loading && authStore.isLoggedIn) {
+    loadProducts();
+  }
 });
+
 </script>
 
 <template>
