@@ -258,12 +258,11 @@ async function submitEntry() {
     description: newEntryDescription.value,
     lines: validLines.map(line => ({
       accountId: line.accountId,
-      debit: line.type === 'debit' ? line.amount : 0,
-      credit: line.type === 'credit' ? line.amount : 0,
+      type: line.type,
+      amount: line.amount,
       productId: line.productId || undefined,
       quantity: line.quantity || undefined,
       unit_cost: line.unit_cost || undefined,
-      amount: line.amount,
     })),
   };
 
