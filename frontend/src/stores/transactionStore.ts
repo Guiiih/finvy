@@ -28,10 +28,10 @@ export const useTransactionStore = defineStore('transactionStore', () => {
       const costOfGoods = product.unit_cost;
 
       const journalEntryLines: EntryLine[] = [
-        { accountId: customerAccountId, debit: quantity * salePrice, credit: 0, amount: quantity * salePrice },
-        { accountId: revenueAccountId, debit: 0, credit: quantity * salePrice, amount: quantity * salePrice },
-        { accountId: cogsAccountId, debit: quantity * costOfGoods, credit: 0, amount: quantity * costOfGoods },
-        { accountId: inventoryAccountId, debit: 0, credit: quantity * costOfGoods, amount: quantity * costOfGoods, productId: productId, quantity: quantity, unit_cost: costOfGoods },
+        { accountId: customerAccountId, type: 'debit', debit: quantity * salePrice, credit: 0, amount: quantity * salePrice },
+        { accountId: revenueAccountId, type: 'credit', debit: 0, credit: quantity * salePrice, amount: quantity * salePrice },
+        { accountId: cogsAccountId, type: 'debit', debit: quantity * costOfGoods, credit: 0, amount: quantity * costOfGoods },
+        { accountId: inventoryAccountId, type: 'credit', debit: 0, credit: quantity * costOfGoods, amount: quantity * costOfGoods, productId: productId, quantity: quantity, unit_cost: costOfGoods },
       ];
 
       const newJournalEntry: JournalEntry = {
