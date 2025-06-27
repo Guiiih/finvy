@@ -8,129 +8,48 @@ import BaseTable from '@/components/BaseTable.vue';
 const productStore = useProductStore();
 const authStore = useAuthStore(); // Instanciar o authStore
 
-const newProductName = ref('');
-const newProductDescription = ref('');
-const newProductUnitCost = ref(0);
-const newProductCurrentStock = ref(0);
-
-const isEditing = ref(false);
-const editingProduct = ref<Product | null>(null);
-
-const filteredProducts = computed(() => productStore.products);
+const filteredProducts = computed(() => {
+  return productStore.products.map(product => {
+    const total_gross_stock = product.unit_cost * product.current_stock;
+    const icms_rate = product.icms_rate || 0;
+    const icms_value_stock = total_gross_stock * (icms_rate / 100);
+    const total_net_stock = total_gross_stock - icms_value_stock;
+    return {
+      ...product,
+      total_gross_stock,
+      icms_value_stock,
+      total_net_stock,
+    };
+  });
+});
 
 const headers = [
   { key: 'name', label: 'Nome', align: 'left' as const },
   { key: 'description', label: 'Descrição', align: 'left' as const },
   { key: 'unit_cost', label: 'Custo Unitário', align: 'right' as const },
+  { key: 'icms_rate', label: 'Alíquota ICMS (%)', align: 'center' as const },
   { key: 'current_stock', label: 'Estoque Atual', align: 'center' as const },
+  { key: 'total_gross_stock', label: 'Valor Bruto Total (Estoque)', align: 'right' as const },
+  { key: 'icms_value_stock', label: 'ICMS Total (Estoque)', align: 'right' as const },
+  { key: 'total_net_stock', label: 'Valor Líquido Total (Estoque)', align: 'right' as const },
   { key: 'actions', label: 'Ações', align: 'center' as const },
 ];
 
-const productNameModel = computed({
-  get() {
-    return isEditing.value && editingProduct.value ? editingProduct.value.name : newProductName.value;
-  },
-  set(newValue: string) {
-    if (isEditing.value && editingProduct.value) {
-      editingProduct.value.name = newValue;
-    } else {
-      newProductName.value = newValue;
-    }
-  }
-});
-
-const productDescriptionModel = computed({
-  get() {
-    return isEditing.value && editingProduct.value ? editingProduct.value.description || '' : newProductDescription.value;
-  },
-  set(newValue: string) {
-    if (isEditing.value && editingProduct.value) {
-      editingProduct.value.description = newValue;
-    } else {
-      newProductDescription.value = newValue;
-    }
-  }
-});
-
-const productUnitCostModel = computed({
-  get() {
-    return isEditing.value && editingProduct.value ? editingProduct.value.unit_cost : newProductUnitCost.value;
-  },
-  set(newValue: number) {
-    if (isEditing.value && editingProduct.value) {
-      editingProduct.value.unit_cost = newValue;
-    } else {
-      newProductUnitCost.value = newValue;
-    }
-  }
-});
-
-const productCurrentStockModel = computed({
-  get() {
-    return isEditing.value && editingProduct.value ? editingProduct.value.current_stock : newProductCurrentStock.value;
-  },
-  set(newValue: number) {
-    if (isEditing.value && editingProduct.value) {
-      editingProduct.value.current_stock = newValue;
-    } else {
-      newProductCurrentStock.value = newValue;
-    }
-  }
-});
-
 async function loadProducts() {
   await productStore.fetchProducts();
-}
-
-async function handleAddProduct() {
-  if (!newProductName.value || newProductUnitCost.value === 0) {
-    alert('Por favor, preencha o nome e o custo unitário do produto.');
-    return;
-  }
-  try {
-    await productStore.addProduct({
-      name: newProductName.value,
-      description: newProductDescription.value,
-      unit_cost: newProductUnitCost.value,
-      current_stock: newProductCurrentStock.value,
-    });
-    newProductName.value = '';
-    newProductDescription.value = '';
-    newProductUnitCost.value = 0;
-    newProductCurrentStock.value = 0;
-  } catch (error) {
-    alert(productStore.error || 'Erro ao adicionar produto.');
-  }
-}
-
-function startEdit(product: Product) {
-  isEditing.value = true;
-  editingProduct.value = { ...product };
-}
-
-async function handleUpdateProduct() {
-  if (!editingProduct.value || !editingProduct.value.id) return;
-
-  try {
-    await productStore.updateProduct(editingProduct.value.id, {
-      name: editingProduct.value.name,
-      description: editingProduct.value.description,
-      unit_cost: editingProduct.value.unit_cost,
-      current_stock: editingProduct.value.current_stock,
-    });
-    isEditing.value = false;
-    editingProduct.value = null;
-  } catch (error) {
-    alert(productStore.error || 'Erro ao atualizar produto.');
-  }
 }
 
 async function handleDeleteProduct(id: string) {
   if (confirm('Tem certeza de que deseja excluir este produto?')) {
     try {
       await productStore.deleteProduct(id);
-    } catch (error) {
-      alert(productStore.error || 'Erro ao deletar produto.');
+    } catch (err: unknown) { 
+      console.error("Erro ao deletar produto:", err);
+      if (err instanceof Error) {
+        alert(err.message || 'Erro ao deletar produto.');
+      } else {
+        alert('Erro ao deletar produto.');
+      }
     }
   }
 }
@@ -148,29 +67,7 @@ watchEffect(() => {
   <div class="products-container">
     <h1>Gerenciar Produtos</h1>
 
-    <div class="form-section">
-      <h2>{{ isEditing ? 'Editar Produto' : 'Adicionar Novo Produto' }}</h2>
-      <form @submit.prevent="isEditing ? handleUpdateProduct() : handleAddProduct()">
-        <div class="form-group">
-          <label for="productName">Nome do Produto:</label>
-          <input type="text" id="productName" v-model="productNameModel" required />
-        </div>
-        <div class="form-group">
-          <label for="productDescription">Descrição:</label>
-          <input type="text" id="productDescription" v-model="productDescriptionModel" />
-        </div>
-        <div class="form-group">
-          <label for="productUnitCost">Custo Unitário:</label>
-          <input type="number" id="productUnitCost" v-model.number="productUnitCostModel" required step="0.01" />
-        </div>
-        <div class="form-group">
-          <label for="productCurrentStock">Estoque Atual:</label>
-          <input type="number" id="productCurrentStock" v-model.number="productCurrentStockModel" required />
-        </div>
-        <button type="submit">{{ isEditing ? 'Atualizar Produto' : 'Adicionar Produto' }}</button>
-        <button v-if="isEditing" type="button" @click="isEditing = false; editingProduct = null">Cancelar</button>
-      </form>
-    </div>
+    
 
     <div class="products-list-section">
       <h2>Produtos Existentes</h2>
@@ -198,7 +95,6 @@ watchEffect(() => {
           R$ {{ value.toFixed(2) }}
         </template>
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item as Product)">Editar</button>
           <button @click="handleDeleteProduct(item.id!)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>
