@@ -23,7 +23,6 @@ const ledgerAccounts = computed(() => {
       type: account.type,
       debits: 0,
       credits: 0,
-      nature: account.nature,
       debitEntries: [],
       creditEntries: [],
       totalDebits: 0,
@@ -47,11 +46,6 @@ const ledgerAccounts = computed(() => {
   });
 
   accountsMap.forEach((accountData) => {
-    if (accountData.nature === 'debit') {
-      accountData.finalBalance = accountData.debits - accountData.credits;
-    } else { // nature === 'credit'
-      accountData.finalBalance = accountData.credits - accountData.debits;
-    }
 
     if (accountData.accountId === accountStore.getAccountByName('C/C ICMS')?.id) {
       if (accountData.finalBalance > 0) {
