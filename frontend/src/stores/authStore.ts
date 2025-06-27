@@ -19,7 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('DEBUG AUTH: (initAuthListener) Chamando supabase.auth.getSession()');
       const { data: { session: initialSession }, error: initialSessionError } = await supabase.auth.getSession();
-
+      
       console.log('DEBUG AUTH: (initAuthListener) Retorno de getSession - session:', initialSession, 'error:', initialSessionError);
 
       if (initialSessionError) {
@@ -31,6 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = initialSession?.user || null;
       console.log('DEBUG AUTH: (initAuthListener) Estado inicial da store - user:', user.value?.id, 'isLoggedIn:', !!user.value);
 
+      // Listener para mudanças de estado de autenticação em tempo real
       supabase.auth.onAuthStateChange((event, newSession) => {
         console.log('DEBUG AUTH: (onAuthStateChange) Evento:', event, 'Nova sessão:', newSession);
         session.value = newSession;
@@ -84,15 +85,20 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     error.value = null;
     try {
+      console.log('DEBUG AUTH: (signUp) Tentando registrar para:', email);
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
+      console.log('DEBUG AUTH: (signUp) Retorno do registro - data:', data, 'error:', authError);
+
       if (authError) throw authError;
-      console.log('Registro bem-sucedido. Verifique seu email para confirmar:', data);
+      user.value = data.user;
+      session.value = data.session;
+      console.log('DEBUG AUTH: (signUp) Registro bem-sucedido - user:', user.value?.id, 'session:', session.value);
       return true;
-    } catch (err: unknown) { 
-      console.error('Erro no registro:', err);
+    } catch (err: unknown) {
+      console.error('DEBUG AUTH: (signUp) Erro no registro (capturado):', err);
       if (err instanceof AuthApiError) {
         error.value = err.message;
       } else if (err instanceof Error) {
@@ -110,69 +116,21 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     error.value = null;
     try {
+      console.log('DEBUG AUTH: (signOut) Tentando fazer logout.');
       const { error: authError } = await supabase.auth.signOut();
+      console.log('DEBUG AUTH: (signOut) Retorno do logout - error:', authError);
+
       if (authError) throw authError;
       user.value = null;
       session.value = null;
-      console.log('Logout bem-sucedido.');
+      console.log('DEBUG AUTH: (signOut) Logout bem-sucedido. user e session são null.');
       return true;
-    } catch (err: unknown) { 
-      console.error('Erro no logout:', err);
+    } catch (err: unknown) {
+      console.error('DEBUG AUTH: (signOut) Erro no logout (capturado):', err);
       if (err instanceof Error) {
-        error.value = err.message;
+        error.value = err.message || 'Falha ao fazer logout.';
       } else {
-        error.value = 'Falha no logout.';
-      }
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  async function resetPassword(email: string) {
-    loading.value = true;
-    error.value = null;
-    try {
-      const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
-      if (authError) throw authError;
-      console.log('Link de redefinição de senha enviado para o email.');
-      return true;
-    } catch (err: unknown) { 
-      console.error('Erro ao resetar senha:', err);
-      if (err instanceof AuthApiError) {
-        error.value = err.message;
-      } else if (err instanceof Error) {
-        error.value = err.message;
-      } else {
-        error.value = 'Falha ao solicitar redefinição de senha.';
-      }
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  async function updatePassword(newPassword: string) {
-    loading.value = true;
-    error.value = null;
-    try {
-      const { data, error: authError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (authError) throw authError;
-      user.value = data.user;
-      console.log('Senha atualizada com sucesso.');
-      return true;
-    } catch (err: unknown) { 
-      console.error('Erro ao atualizar senha:', err);
-      if (err instanceof AuthApiError) {
-        error.value = err.message;
-      } else if (err instanceof Error) {
-        error.value = err.message;
-      } else {
-        error.value = 'Falha ao atualizar senha.';
+        error.value = 'Falha ao fazer logout.';
       }
       return false;
     } finally {
@@ -191,7 +149,5 @@ export const useAuthStore = defineStore('auth', () => {
     signIn,
     signUp,
     signOut,
-    resetPassword,
-    updatePassword
   };
 });
