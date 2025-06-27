@@ -1,49 +1,71 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
-import { ref, onMounted, computed, watch } from 'vue'; // Adicione watch
-import { supabase } from './supabase';
-import { useAuthStore } from './stores/authStore'; // Importe a authStore
-import { useAccountStore } from './stores/accountStore'; // Importe accountStore
-import { useProductStore } from './stores/productStore'; // Importe productStore
-import { useJournalEntryStore } from './stores/journalEntryStore'; // Importe journalEntryStore
+import { ref, onMounted, computed, watch } from 'vue';
+import { supabase } from './supabase'; // Mantenha a importação do cliente Supabase, mas a autenticação principal vem da authStore
+import { useAuthStore } from './stores/authStore';
+import { useAccountStore } from './stores/accountStore';
+import { useProductStore } from './stores/productStore';
+import { useJournalEntryStore } from './stores/journalEntryStore';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore(); // Instancie authStore
-const accountStore = useAccountStore(); // Instancie accountStore
-const productStore = useProductStore(); // Instancie productStore
-const journalEntryStore = useJournalEntryStore(); // Instancie journalEntryStore
+const authStore = useAuthStore();
+const accountStore = useAccountStore();
+const productStore = useProductStore();
+const journalEntryStore = useJournalEntryStore();
 
-// A sessão agora é gerenciada pela authStore
 const session = computed(() => authStore.session);
+const isLoggedIn = computed(() => authStore.isLoggedIn);
+const shouldHideNavbar = computed(() => {
+  return route.meta.hideNavbar || false;
+});
 
-// NOVO: Adicione um watcher para carregar dados quando o usuário logar
+// --- Logs de Depuração (Para ajudar a entender o estado) ---
+watch(isLoggedIn, (newValue) => {
+  console.log('DEBUG: authStore.isLoggedIn changed to:', newValue);
+});
+
+watch(shouldHideNavbar, (newValue) => {
+  console.log('DEBUG: shouldHideNavbar changed to:', newValue);
+  console.log('DEBUG: Current route meta.hideNavbar:', route.meta.hideNavbar);
+});
+
+watch(route, (newRoute) => {
+  console.log('DEBUG: Route changed to:', newRoute.path, 'meta:', newRoute.meta);
+}, { immediate: true });
+
+onMounted(() => {
+  console.log('DEBUG: App.vue mounted. Initial isLoggedIn:', isLoggedIn.value);
+  console.log('DEBUG: App.vue mounted. Initial shouldHideNavbar:', shouldHideNavbar.value);
+});
+// --- Fim dos Logs de Depuração ---
+
+// Carregamento de dados globais quando a sessão muda (usuário loga/desloga)
 watch(session, async (newSession) => {
   if (newSession && newSession.user) {
-    console.log('Sessão ativa detectada, carregando dados globais...');
+    console.log('DEBUG: Sessão ativa detectada, carregando dados globais...');
     await accountStore.fetchAccounts();
     await productStore.fetchProducts();
     await journalEntryStore.fetchJournalEntries();
-    // Você pode adicionar mais stores aqui que precisam de dados iniciais após o login
+  } else {
+    // Limpar os dados das stores caso a sessão seja perdida ou nula
+    console.log('DEBUG: Nenhuma sessão ativa detectada, limpando dados globais.');
+    accountStore.accounts = [];
+    productStore.products = [];
+    journalEntryStore.journalEntries = [];
   }
-}, { immediate: true }); // Executa imediatamente se a sessão já estiver ativa ao montar
+}, { immediate: true }); // 'immediate: true' para verificar a sessão logo na montagem
 
-// Remova handleLogout daqui, pois agora está na authStore
 const handleLogout = async () => {
-  await authStore.signOut(); // Usa a ação signOut da authStore
+  await authStore.signOut();
   if (!authStore.isLoggedIn) {
     router.push('/login');
   }
 };
-
-const shouldHideNavbar = computed(() => {
-  return route.meta.hideNavbar || false;
-});
 </script>
 
 <template>
-  <div v-if="authStore.isLoggedIn && !shouldHideNavbar">
-    <header>
+  <div v-if="isLoggedIn && !shouldHideNavbar"> <header>
       <div class="wrapper">
         <h1 class="title">Finvy</h1>
         <nav>
