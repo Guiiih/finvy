@@ -7,6 +7,8 @@ import { useAccountStore } from './stores/accountStore';
 import { useProductStore } from './stores/productStore';
 import { useJournalEntryStore } from './stores/journalEntryStore';
 
+onMounted(async () => {});
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
