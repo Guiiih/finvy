@@ -44,9 +44,6 @@
                 {{ product.name }}
             </option>
         </select>
-        <input type="number" v-model.number="line.quantity" placeholder="Quantidade" step="1" min="0" :disabled="!line.productId" />
-        <input type="number" v-model.number="line.unit_cost" placeholder="Custo Unitário" step="0.01" min="0" :disabled="!line.productId" />
-
         <button type="button" @click="removeLine(index)">Remover</button>
       </div>
       <button type="button" @click="addLine">Adicionar Linha</button>
@@ -105,20 +102,14 @@
                     <th>Conta</th>
                     <th>Tipo</th>
                     <th>Valor</th>
-                    <th>Produto</th>
-                    <th>Qtd</th>
-                    <th>Custo Unit.</th>
-                  </tr>
+                    <th>Produto</th> </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
                     <td>{{ getAccountName(line.accountId) }}</td>
                     <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
                     <td>R$ {{ line.amount.toFixed(2) }}</td>
-                    <td>{{ getProductName(line.productId) }}</td>
-                    <td>{{ line.quantity || '-' }}</td>
-                    <td>R$ {{ (line.unit_cost || 0).toFixed(2) }}</td>
-                  </tr>
+                    <td>{{ getProductName(line.productId) }}</td> </tr>
                 </tbody>
               </table>
             </td>
@@ -134,7 +125,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
 import { useProductStore } from '@/stores/productStore';
-import { useStockControlStore } from '@/stores/stockControlStore';
+// useStockControlStore é importado mas não usado diretamente neste arquivo.
+// Se não houver uso futuro, pode ser removido.
+// import { useStockControlStore } from '@/stores/stockControlStore';
 import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index';
 
 const journalEntryStore = useJournalEntryStore();
@@ -145,8 +138,8 @@ const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
 const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
-  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+  { accountId: '', type: 'debit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
+  { accountId: '', type: 'credit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
 ]);
 const editingEntryId = ref<string | null>(null);
 const showDetails = ref<{ [key: string]: boolean }>({});
@@ -176,14 +169,14 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
-    { accountId: '', type: 'credit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+    { accountId: '', type: 'debit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
+    { accountId: '', type: 'credit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
   ];
   editingEntryId.value = null;
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 });
+  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '' }); // REMOVIDOS: quantity e unit_cost
 }
 
 function removeLine(index: number) {
@@ -214,20 +207,14 @@ function toggleDetails(id: string) {
 
 function handleAccountChange(line: JournalEntryLine) {
   line.productId = '';
-  line.quantity = 0;
-  line.unit_cost = 0;
+  // REMOVIDOS: line.quantity = 0; e line.unit_cost = 0;
 }
 
 function handleProductChange(line: JournalEntryLine) {
-  if (line.productId) {
-    const product = productStore.getProductById(line.productId);
-    if (product) {
-      line.unit_cost = product.unit_cost;
-    }
-  } else {
-    line.quantity = 0;
-    line.unit_cost = 0;
-  }
+  // REMOVIDA: A lógica que definia line.quantity e line.unit_cost com base no produto.
+  // Se você precisa que o unit_cost seja puxado automaticamente para alguma lógica interna
+  // sem ser visível no UI, esta função ainda poderia ser usada para isso, mas o código atual
+  // já não o faz após a remoção dos campos vinculados no template.
 }
 
 async function submitEntry() {
@@ -243,6 +230,8 @@ async function submitEntry() {
     return;
   }
 
+  // REMOVIDA: A validação que verificava quantity e unit_cost para linhas com produto.
+  /*
   for (const line of validLines) {
     if (line.productId) {
       if (line.quantity === undefined || line.quantity <= 0 || line.unit_cost === undefined || line.unit_cost <= 0) {
@@ -251,6 +240,7 @@ async function submitEntry() {
       }
     }
   }
+  */
 
   const newEntry: JournalEntry = {
     id: editingEntryId.value || `JE-${Date.now()}`,
@@ -260,9 +250,8 @@ async function submitEntry() {
       accountId: line.accountId,
       type: line.type,
       amount: line.amount,
-      productId: line.productId || undefined,
-      quantity: line.quantity || undefined,
-      unit_cost: line.unit_cost || undefined,
+      productId: line.productId || undefined, // MANTIDO: productId
+      // REMOVIDOS: quantity e unit_cost
     })),
   };
 
@@ -292,8 +281,8 @@ function editEntry(entry: JournalEntry) {
     type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
     amount: (line.debit && line.debit > 0) ? line.debit : (line.credit || 0),
     productId: line.productId || '',
-    quantity: line.quantity || 0,
-    unit_cost: line.unit_cost || 0,
+    quantity: 0, // Definido como 0 ou undefined, pois o campo não existe mais no UI
+    unit_cost: 0, // Definido como 0 ou undefined, pois o campo não existe mais no UI
   }));
 }
 
@@ -325,6 +314,10 @@ const resetAllData = () => {
 </script>
 
 <style scoped>
+/* O CSS pode precisar de pequenos ajustes nos flexboxes ou larguras */
+/* para garantir que os campos restantes ocupem bem o espaço após a remoção. */
+/* O estilo abaixo é o original, você pode ajustá-lo conforme necessário. */
+
 .journal-entry-view {
   padding: 20px;
   max-width: 1200px;
@@ -405,6 +398,7 @@ h1, h2, h3 {
   border-radius: 4px;
 }
 
+/* Ajuste o flex para as colunas restantes se necessário */
 .entry-line select:not(.product-select) {
   flex: 2;
   min-width: 150px;
@@ -416,10 +410,9 @@ h1, h2, h3 {
 }
 
 .entry-line .product-select {
-  flex: 2;
+  flex: 2; /* Pode ser ajustado para ocupar mais espaço */
   min-width: 180px;
 }
-
 
 .entry-line button {
   padding: 8px 12px;
