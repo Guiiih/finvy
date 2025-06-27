@@ -48,7 +48,7 @@ async function seedDatabase() {
   console.log('Iniciando o seeding de contas...');
 
   // Para cada usuário existente, insere as contas padrão
-  const { data: users, error: usersError } = await supabase.from('users').select('id');
+  const { data: users, error: usersError } = await supabase.from('users').select('id', { schema: 'auth' });
 
   if (usersError) {
     console.error('Erro ao buscar usuários:', usersError.message);
