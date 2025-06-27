@@ -20,7 +20,7 @@ const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false;
 });
 
-// --- Logs de Depuração (Mantidos para ajudar a entender o estado) ---
+// --- Logs de Depuração Adicionados ---
 watch(isLoggedIn, (newValue) => {
   console.log('DEBUG: authStore.isLoggedIn changed to:', newValue);
 });
@@ -63,7 +63,8 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div> <header v-if="!shouldHideNavbar"> <div class="wrapper">
+  <div v-if="isLoggedIn && !shouldHideNavbar"> <header>
+      <div class="wrapper">
         <h1 class="title">Finvy</h1>
         <nav>
           <RouterLink to="/">Dashboard</RouterLink>
@@ -86,7 +87,10 @@ const handleLogout = async () => {
       <RouterView />
     </main>
   </div>
-  </template>
+  <div v-else>
+    <RouterView />
+  </div>
+</template>
 
 <style scoped>
 header {
