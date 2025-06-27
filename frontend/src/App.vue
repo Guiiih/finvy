@@ -20,6 +20,7 @@ const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false;
 });
 
+// --- Logs de Depuração (Mantidos para ajudar a entender o estado) ---
 watch(isLoggedIn, (newValue) => {
   console.log('DEBUG: authStore.isLoggedIn changed to:', newValue);
 });
@@ -37,6 +38,7 @@ onMounted(() => {
   console.log('DEBUG: App.vue mounted. Initial isLoggedIn:', isLoggedIn.value);
   console.log('DEBUG: App.vue mounted. Initial shouldHideNavbar:', shouldHideNavbar.value);
 });
+// --- Fim dos Logs de Depuração ---
 
 watch(session, async (newSession) => {
   if (newSession && newSession.user) {
@@ -61,9 +63,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div v-if="isLoggedIn && !shouldHideNavbar">
-    <header>
-      <div class="wrapper">
+  <div> <header v-if="!shouldHideNavbar"> <div class="wrapper">
         <h1 class="title">Finvy</h1>
         <nav>
           <RouterLink to="/">Dashboard</RouterLink>
@@ -86,10 +86,7 @@ const handleLogout = async () => {
       <RouterView />
     </main>
   </div>
-  <div v-else>
-    <RouterView />
-  </div>
-</template>
+  </template>
 
 <style scoped>
 header {
