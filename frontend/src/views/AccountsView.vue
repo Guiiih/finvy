@@ -8,7 +8,6 @@ const accountStore = useAccountStore();
 
 const newAccountName = ref('');
 const newAccountType = ref<Account['type']>('asset');
-const newAccountNature = ref<Account['nature']>('debit');
 
 const isEditing = ref(false);
 const editingAccount = ref<Account | null>(null);
@@ -18,7 +17,6 @@ const filteredAccounts = computed(() => accountStore.accounts);
 const headers = [
   { key: 'name', label: 'Nome', align: 'left' as const },
   { key: 'type', label: 'Tipo', align: 'left' as const },
-  { key: 'nature', label: 'Natureza', align: 'left' as const },
   { key: 'actions', label: 'Ações', align: 'center' as const },
 ];
 
@@ -48,19 +46,6 @@ const accountTypeModel = computed({
   }
 });
 
-const accountNatureModel = computed({
-  get() {
-    return isEditing.value && editingAccount.value ? editingAccount.value.nature : newAccountNature.value;
-  },
-  set(newValue: Account['nature']) {
-    if (isEditing.value && editingAccount.value) {
-      editingAccount.value.nature = newValue;
-    } else {
-      newAccountNature.value = newValue;
-    }
-  }
-});
-
 
 // Removido loadAccounts, pois o App.vue agora carrega os dados
 // async function loadAccounts() {
@@ -68,7 +53,7 @@ const accountNatureModel = computed({
 // }
 
 async function handleAddAccount() {
-  if (!newAccountName.value || !newAccountType.value || !newAccountNature.value) {
+  if (!newAccountName.value || !newAccountType.value) {
     alert('Por favor, preencha todos os campos da conta.');
     return;
   }
@@ -76,11 +61,9 @@ async function handleAddAccount() {
     await accountStore.addAccount({
       name: newAccountName.value,
       type: newAccountType.value,
-      nature: newAccountNature.value,
     });
     newAccountName.value = '';
     newAccountType.value = 'asset';
-    newAccountNature.value = 'debit';
   } catch {
     alert(accountStore.error || 'Erro ao adicionar conta.');
   }
@@ -98,7 +81,6 @@ async function handleUpdateAccount() {
     await accountStore.updateAccount(editingAccount.value.id, {
       name: editingAccount.value.name,
       type: editingAccount.value.type,
-      nature: editingAccount.value.nature,
     });
     isEditing.value = false;
     editingAccount.value = null;
@@ -142,13 +124,6 @@ async function handleDeleteAccount(id: string) {
             <option value="equity">Patrimônio Líquido</option>
             <option value="revenue">Receita</option>
             <option value="expense">Despesa</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="accountNature">Natureza:</label>
-          <select id="accountNature" v-model="accountNatureModel" required>
-            <option value="debit">Débito</option>
-            <option value="credit">Crédito</option>
           </select>
         </div>
         <button type="submit">{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</button>

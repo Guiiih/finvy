@@ -13,6 +13,7 @@ function getBalanceClass(account: any) {
     return '';
   }
 
+  // Special cases for specific accounts that might not follow standard nature rules
   if (account.accountName === 'Resultado Bruto') {
     return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
@@ -29,10 +30,13 @@ function getBalanceClass(account: any) {
       return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
 
-  if (account.finalBalance > 0) {
-    return account.nature === 'debit' ? 'positive' : 'negative';
-  } else {
-    return account.nature === 'debit' ? 'negative' : 'positive';
+  // Determine normal balance nature based on account type
+  const isDebitNature = ['asset', 'expense'].includes(account.type);
+
+  if (isDebitNature) {
+    return account.finalBalance >= 0 ? 'positive' : 'negative';
+  } else { // Credit nature (liability, equity, revenue)
+    return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
 }
 
@@ -82,8 +86,8 @@ onMounted(() => {
                 <div class="final-balance-left"
                      :class="getBalanceClass(account)"
                      v-if="(account.finalBalance !== 0) &&
-                           ((account.nature === 'debit' && account.finalBalance >= 0) ||
-                            (account.nature === 'credit' && account.finalBalance < 0)) ||
+                           ((['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
+                            (!['asset', 'expense'].includes(account.type) && account.finalBalance < 0)) ||
                            (account.accountName === 'Resultado Bruto' && account.finalBalance < 0) ||
                            (account.accountName === 'Estoque Final' && account.finalBalance >= 0) ||
                            (account.accountName === 'CMV' && account.finalBalance >= 0) ||
@@ -94,12 +98,12 @@ onMounted(() => {
                 <div class="final-balance-right"
                      :class="getBalanceClass(account)"
                      v-if="(account.finalBalance !== 0) &&
-                           ((account.nature === 'credit' && account.finalBalance >= 0) ||
+                           ((!['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
                             (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0) ||
                             (account.accountName === 'Estoque Final' && account.finalBalance < 0) ||
                             (account.accountName === 'CMV' && account.finalBalance < 0) ||
                             (account.accountName === 'Reserva de Lucro' && account.finalBalance >= 0) ||
-                            (account.nature === 'debit' && account.finalBalance < 0))"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+                            (['asset', 'expense'].includes(account.type) && account.finalBalance < 0))"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
                 </div>
                 <div class="final-balance-right" v-else></div>
             </div>

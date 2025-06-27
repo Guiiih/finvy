@@ -1,13 +1,10 @@
 // frontend/src/types/index.ts
 
-export type AccountNature = 'debit' | 'credit';
-
 export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
 
 export interface Account {
   id: string;
   name: string;
-  nature: AccountNature;
   type: AccountType;
   parentId?: string | null;
   user_id?: string;
@@ -67,7 +64,6 @@ export interface LedgerAccount {
   accountId: string;
   accountName: string;
   type: AccountType;
-  nature: AccountNature;
   debitEntries: number[];
   creditEntries: number[];
   totalDebits: number;

@@ -62,7 +62,6 @@ export const useReportStore = defineStore('report', () => {
         accountId: account.id,
         accountName: account.name,
         type: account.type,
-        nature: account.nature,
         debitEntries: [],
         creditEntries: [],
         totalDebits: 0,
@@ -96,7 +95,8 @@ export const useReportStore = defineStore('report', () => {
     accountsMap.forEach(accountData => {
       const accountDetails = allAccounts.value.find(acc => acc.id === accountData.accountId);
       if (accountDetails) {
-        if (accountDetails.nature === 'debit') {
+        const isDebitNature = ['asset', 'expense'].includes(accountDetails.type);
+        if (isDebitNature) {
           accountData.finalBalance = accountData.totalDebits - accountData.totalCredits;
         } else {
           accountData.finalBalance = accountData.totalCredits - accountData.totalDebits;

@@ -7,13 +7,11 @@ export const idSchema = z.object({
 export const createAccountSchema = z.object({
   name: z.string().min(1, 'Nome da conta é obrigatório.').max(100, 'Nome da conta muito longo.'),
   type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense'], { message: 'Tipo de conta inválido.' }),
-  nature: z.enum(['debit', 'credit'], { message: 'Natureza da conta inválida.' }),
 });
 
 export const updateAccountSchema = z.object({
   name: z.string().min(1, 'Nome da conta é obrigatório.').max(100, 'Nome da conta muito longo.').optional(),
   type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense'], { message: 'Tipo de conta inválido.' }).optional(),
-  nature: z.enum(['debit', 'credit'], { message: 'Natureza da conta inválida.' }).optional(),
 }).partial();
 
 export const createJournalEntrySchema = z.object({
