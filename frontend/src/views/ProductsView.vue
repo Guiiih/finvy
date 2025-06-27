@@ -185,6 +185,18 @@ watchEffect(() => {
         <template #cell(unit_cost)="{ value }">
           R$ {{ value.toFixed(2) }}
         </template>
+        <template #cell(icms_rate)="{ value }">
+          {{ value.toFixed(2) }}%
+        </template>
+        <template #cell(total_gross_stock)="{ value }">
+          R$ {{ value.toFixed(2) }}
+        </template>
+        <template #cell(icms_value_stock)="{ value }">
+          R$ {{ value.toFixed(2) }}
+        </template>
+        <template #cell(total_net_stock)="{ value }">
+          R$ {{ value.toFixed(2) }}
+        </template>
         <template #cell(actions)="{ item }">
           <button @click="startEdit(item as Product)">Editar</button>
           <button @click="handleDeleteProduct(item.id!)" class="delete-button">Excluir</button>

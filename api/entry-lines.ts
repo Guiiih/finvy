@@ -70,7 +70,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
-      const { journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost } = parsedBody.data;
+      const { journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, total_net } = parsedBody.data;
 
       const { data: journalEntry, error: journalError } = await supabase
         .from('journal_entries')
@@ -86,7 +86,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       const { data: newLine, error: insertError } = await supabase
         .from('entry_lines')
-        .insert([{ journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost }])
+        .insert([{ journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, total_net }])
         .select()
         .single();
 

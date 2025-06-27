@@ -44,6 +44,9 @@ export const updateEntryLineSchema = z.object({
   product_id: z.string().uuid({ message: 'Product ID inválido. Deve ser um UUID válido.' }).optional(),
   quantity: z.number().int().nonnegative('Quantidade deve ser um número inteiro não negativo.').optional(),
   unit_cost: z.number().nonnegative('Custo unitário deve ser um valor não negativo.').optional(),
+  total_gross: z.number().nonnegative('Valor total bruto deve ser um valor não negativo.').optional(),
+  icms_value: z.number().nonnegative('Valor do ICMS deve ser um valor não negativo.').optional(),
+  total_net: z.number().nonnegative('Valor total líquido deve ser um valor não negativo.').optional(),
 }).partial();
 
 export const createProductSchema = z.object({

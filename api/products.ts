@@ -74,6 +74,10 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
       const updateData = parsedBody.data;
 
+      if (updateData.icms_rate !== undefined && (typeof updateData.icms_rate !== 'number' || updateData.icms_rate < 0)) {
+        return handleErrorResponse(res, 400, 'Alíquota de ICMS inválida.');
+      }
+
       if (Object.keys(updateData).length === 0) {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }

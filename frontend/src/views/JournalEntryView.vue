@@ -128,7 +128,7 @@ import { useProductStore } from '@/stores/productStore';
 // useStockControlStore é importado mas não usado diretamente neste arquivo.
 // Se não houver uso futuro, pode ser removido.
 // import { useStockControlStore } from '@/stores/stockControlStore';
-import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index';
+import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index';
 
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
@@ -137,6 +137,67 @@ const productStore = useProductStore();
 const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
+
+watch(newEntryDescription, (newValue) => {
+  parseProductFromDescription(newValue);
+});
+
+async function parseProductFromDescription(description: string) {
+  const regex = /^(\d+)\s+(.+)$/; // Regex para "QUANTIDADE NOME_DO_PRODUTO"
+  const match = description.match(regex);
+
+  if (match) {
+    const quantity = parseFloat(match[1]);
+    const productName = match[2].trim();
+
+    const product = productStore.products.find(p => p.name.toLowerCase() === productName.toLowerCase()) as Product;
+
+    if (product) {
+      const unit_cost = product.unit_cost;
+      const icms_rate = product.icms_rate || 0; // Assume 0 se não definido
+
+      const total_gross = quantity * unit_cost;
+      const icms_value = total_gross * (icms_rate / 100);
+      const total_net = total_gross - icms_value;
+
+      // Atualiza a primeira linha do lançamento com os dados do produto
+      // Assumimos que a descrição do produto se refere à primeira linha
+      if (newEntryLines.value.length > 0) {
+        newEntryLines.value[0].productId = product.id;
+        newEntryLines.value[0].quantity = quantity;
+        newEntryLines.value[0].unit_cost = unit_cost;
+        newEntryLines.value[0].total_gross = total_gross;
+        newEntryLines.value[0].icms_value = icms_value;
+        newEntryLines.value[0].total_net = total_net;
+        // O amount da linha pode ser o total_gross ou total_net dependendo da conta
+        // Por enquanto, vamos manter o amount como o valor que o usuário digita,
+        // mas os campos calculados estarão disponíveis.
+        // Se a intenção é que o amount seja preenchido automaticamente, precisaremos de mais lógica.
+      }
+    } else {
+      // Se o produto não for encontrado, limpa os campos relacionados ao produto na primeira linha
+      if (newEntryLines.value.length > 0) {
+        newEntryLines.value[0].productId = undefined;
+        newEntryLines.value[0].quantity = undefined;
+        newEntryLines.value[0].unit_cost = undefined;
+        newEntryLines.value[0].total_gross = undefined;
+        newEntryLines.value[0].icms_value = undefined;
+        newEntryLines.value[0].total_net = undefined;
+      }
+    }
+  } else {
+    // Se a descrição não corresponder ao padrão, limpa os campos relacionados ao produto na primeira linha
+    if (newEntryLines.value.length > 0) {
+      newEntryLines.value[0].productId = undefined;
+      newEntryLines.value[0].quantity = undefined;
+      newEntryLines.value[0].unit_cost = undefined;
+      newEntryLines.value[0].total_gross = undefined;
+      newEntryLines.value[0].icms_value = undefined;
+      newEntryLines.value[0].total_net = undefined;
+    }
+  }
+}
+
 const newEntryLines = ref<JournalEntryLine[]>([
   { accountId: '', type: 'debit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
   { accountId: '', type: 'credit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
@@ -250,8 +311,12 @@ async function submitEntry() {
       accountId: line.accountId,
       type: line.type,
       amount: line.amount,
-      productId: line.productId || undefined, // MANTIDO: productId
-      // REMOVIDOS: quantity e unit_cost
+      productId: line.productId || undefined,
+      quantity: line.quantity || undefined,
+      unit_cost: line.unit_cost || undefined,
+      total_gross: line.total_gross || undefined,
+      icms_value: line.icms_value || undefined,
+      total_net: line.total_net || undefined,
     })),
   };
 
@@ -281,8 +346,11 @@ function editEntry(entry: JournalEntry) {
     type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
     amount: (line.debit && line.debit > 0) ? line.debit : (line.credit || 0),
     productId: line.productId || '',
-    quantity: 0, // Definido como 0 ou undefined, pois o campo não existe mais no UI
-    unit_cost: 0, // Definido como 0 ou undefined, pois o campo não existe mais no UI
+    quantity: line.quantity || undefined,
+    unit_cost: line.unit_cost || undefined,
+    total_gross: line.total_gross || undefined,
+    icms_value: line.icms_value || undefined,
+    total_net: line.total_net || undefined,
   }));
 }
 

@@ -17,7 +17,7 @@ export interface Product {
   description?: string;
   unit_cost: number; 
   current_stock: number;
-  quantity?: number; 
+  icms_rate?: number; // Nova propriedade para alíquota de ICMS
   user_id?: string;
 }
 
@@ -29,7 +29,10 @@ export interface EntryLine {
   amount: number;
   productId?: string;
   quantity?: number;
-  unit_cost?: number; 
+  unit_cost?: number; // Custo unitário do produto na linha
+  total_gross?: number; // Valor total bruto da linha (quantidade * unit_cost)
+  icms_value?: number; // Valor do ICMS calculado para a linha
+  total_net?: number; // Valor total líquido da linha (total_gross - icms_value)
   debit?: number;
   credit?: number;
 }

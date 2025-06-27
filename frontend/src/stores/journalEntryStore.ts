@@ -24,6 +24,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             productId: line.product_id || undefined,
             quantity: line.quantity || undefined,
             unit_cost: line.unit_cost || undefined,
+            total_gross: line.total_gross || undefined,
+            icms_value: line.icms_value || undefined,
+            total_net: line.total_net || undefined,
           }));
           return { ...entry, lines: convertedLines };
         } catch (lineError: unknown) { 
@@ -78,6 +81,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           product_id: line.productId,
           quantity: line.quantity,
           unit_cost: line.unit_cost,
+          total_gross: line.total_gross,
+          icms_value: line.icms_value,
+          total_net: line.total_net,
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
@@ -125,6 +131,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           product_id: line.productId,
           quantity: line.quantity,
           unit_cost: line.unit_cost,
+          total_gross: line.total_gross,
+          icms_value: line.icms_value,
+          total_net: line.total_net,
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
