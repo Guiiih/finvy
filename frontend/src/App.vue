@@ -1,40 +1,44 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router' // Adicione useRoute
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { supabase } from './supabase'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue'; 
+import { supabase } from './supabase';
+import { useAuthStore } from './stores/authStore'; 
+import { useAccountStore } from './stores/accountStore'; 
+import { useProductStore } from './stores/productStore'; 
+import { useJournalEntryStore } from './stores/journalEntryStore'; 
 
-const router = useRouter()
-const route = useRoute() // NOVO: Obtenha a rota atual
-import type { Session } from '@supabase/supabase-js'
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore(); 
+const accountStore = useAccountStore(); 
+const productStore = useProductStore(); 
+const journalEntryStore = useJournalEntryStore(); 
 
-const session = ref<Session | null>(null)
+const session = computed(() => authStore.session);
 
-supabase.auth.getSession().then(({ data }) => {
-  session.value = data.session
-})
-
-supabase.auth.onAuthStateChange((_, _session) => {
-  session.value = _session
-})
+watch(session, async (newSession) => {
+  if (newSession && newSession.user) {
+    console.log('Sessão ativa detectada, carregando dados globais...');
+    await accountStore.fetchAccounts();
+    await productStore.fetchProducts();
+    await journalEntryStore.fetchJournalEntries();
+  }
+}, { immediate: true });
 
 const handleLogout = async () => {
-  try {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    router.push('/login')
-  } catch (error: any) {
-    alert(error.message)
+  await authStore.signOut(); 
+  if (!authStore.isLoggedIn) {
+    router.push('/login');
   }
-}
+};
 
-// NOVO: Computed property para esconder a navbar
 const shouldHideNavbar = computed(() => {
-  return route.meta.hideNavbar || false; // Retorna true se hideNavbar for true na meta da rota
+  return route.meta.hideNavbar || false;
 });
 </script>
 
 <template>
-  <div v-if="session && !shouldHideNavbar">
+  <div v-if="authStore.isLoggedIn && !shouldHideNavbar">
     <header>
       <div class="wrapper">
         <h1 class="title">Finvy</h1>
@@ -111,4 +115,5 @@ nav a:first-of-type {
 
 .logout-button:hover {
   background-color: #c82333;
-}</style>
+}
+</style>

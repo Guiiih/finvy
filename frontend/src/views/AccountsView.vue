@@ -16,8 +16,8 @@ const editingAccount = ref<Account | null>(null);
 const filteredAccounts = computed(() => accountStore.accounts);
 
 const headers = [
-  { key: 'name', label: 'Nome', align: 'left' as const },      
-  { key: 'type', label: 'Tipo', align: 'left' as const },      
+  { key: 'name', label: 'Nome', align: 'left' as const },
+  { key: 'type', label: 'Tipo', align: 'left' as const },
   { key: 'nature', label: 'Natureza', align: 'left' as const },
   { key: 'actions', label: 'Ações', align: 'center' as const },
 ];
@@ -60,11 +60,6 @@ const accountNatureModel = computed({
     }
   }
 });
-
-
-async function loadAccounts() {
-  await accountStore.fetchAccounts();
-}
 
 async function handleAddAccount() {
   if (!newAccountName.value || !newAccountType.value || !newAccountNature.value) {
@@ -116,9 +111,6 @@ async function handleDeleteAccount(id: string) {
   }
 }
 
-onMounted(() => {
-  loadAccounts();
-});
 </script>
 
 <template>
