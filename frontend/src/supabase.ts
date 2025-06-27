@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true, 
-    storage: localStorage, 
+    persistSession: true, // Isso é importante para manter o usuário logado
+    storage: localStorage, // Explicitamente usar localStorage
   },
 });
