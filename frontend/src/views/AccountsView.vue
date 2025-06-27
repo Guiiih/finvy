@@ -61,6 +61,12 @@ const accountNatureModel = computed({
   }
 });
 
+
+// Removido loadAccounts, pois o App.vue agora carrega os dados
+// async function loadAccounts() {
+//   await accountStore.fetchAccounts();
+// }
+
 async function handleAddAccount() {
   if (!newAccountName.value || !newAccountType.value || !newAccountNature.value) {
     alert('Por favor, preencha todos os campos da conta.');
@@ -111,6 +117,10 @@ async function handleDeleteAccount(id: string) {
   }
 }
 
+// Removido onMounted, pois o App.vue agora carrega os dados
+// onMounted(() => {
+//   loadAccounts();
+// });
 </script>
 
 <template>
@@ -166,6 +176,7 @@ async function handleDeleteAccount(id: string) {
 </template>
 
 <style scoped>
+/* Seu CSS existente permanece o mesmo */
 .accounts-container {
   padding: 20px;
   max-width: 900px;
