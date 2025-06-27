@@ -1,23 +1,140 @@
-<template>
-  <div class="accounts">
-    <h2>Plano de Contas</h2>
-    <p>Aqui estão as contas contábeis da sua empresa. No futuro, você poderá adicionar, editar e remover contas.</p>
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useAccountStore } from '@/stores/accountStore';
+import type { Account } from '@/types';
+import BaseTable from '@/components/BaseTable.vue';
 
-    <div class="add-account-section">
-      <h3>Adicionar Nova Conta</h3>
-      <form @submit.prevent="addNewAccount" class="account-form">
+const accountStore = useAccountStore();
+
+const newAccountName = ref('');
+const newAccountType = ref<Account['type']>('asset');
+const newAccountNature = ref<Account['nature']>('debit');
+
+const isEditing = ref(false);
+const editingAccount = ref<Account | null>(null);
+
+const filteredAccounts = computed(() => accountStore.accounts);
+
+const headers = [
+  { key: 'name', label: 'Nome', align: 'left' as const },      
+  { key: 'type', label: 'Tipo', align: 'left' as const },      
+  { key: 'nature', label: 'Natureza', align: 'left' as const },
+  { key: 'actions', label: 'Ações', align: 'center' as const },
+];
+
+const accountNameModel = computed({
+  get() {
+    return isEditing.value && editingAccount.value ? editingAccount.value.name : newAccountName.value;
+  },
+  set(newValue: string) {
+    if (isEditing.value && editingAccount.value) {
+      editingAccount.value.name = newValue;
+    } else {
+      newAccountName.value = newValue;
+    }
+  }
+});
+
+const accountTypeModel = computed({
+  get() {
+    return isEditing.value && editingAccount.value ? editingAccount.value.type : newAccountType.value;
+  },
+  set(newValue: Account['type']) {
+    if (isEditing.value && editingAccount.value) {
+      editingAccount.value.type = newValue;
+    } else {
+      newAccountType.value = newValue;
+    }
+  }
+});
+
+const accountNatureModel = computed({
+  get() {
+    return isEditing.value && editingAccount.value ? editingAccount.value.nature : newAccountNature.value;
+  },
+  set(newValue: Account['nature']) {
+    if (isEditing.value && editingAccount.value) {
+      editingAccount.value.nature = newValue;
+    } else {
+      newAccountNature.value = newValue;
+    }
+  }
+});
+
+
+async function loadAccounts() {
+  await accountStore.fetchAccounts();
+}
+
+async function handleAddAccount() {
+  if (!newAccountName.value || !newAccountType.value || !newAccountNature.value) {
+    alert('Por favor, preencha todos os campos da conta.');
+    return;
+  }
+  try {
+    await accountStore.addAccount({
+      name: newAccountName.value,
+      type: newAccountType.value,
+      nature: newAccountNature.value,
+    });
+    newAccountName.value = '';
+    newAccountType.value = 'asset';
+    newAccountNature.value = 'debit';
+  } catch (error) {
+    alert(accountStore.error || 'Erro ao adicionar conta.');
+  }
+}
+
+function startEdit(account: Account) {
+  isEditing.value = true;
+  editingAccount.value = { ...account };
+}
+
+async function handleUpdateAccount() {
+  if (!editingAccount.value || !editingAccount.value.id) return;
+
+  try {
+    await accountStore.updateAccount(editingAccount.value.id, {
+      name: editingAccount.value.name,
+      type: editingAccount.value.type,
+      nature: editingAccount.value.nature,
+    });
+    isEditing.value = false;
+    editingAccount.value = null;
+  } catch (error) {
+    alert(accountStore.error || 'Erro ao atualizar conta.');
+  }
+}
+
+async function handleDeleteAccount(id: string) {
+  if (confirm('Tem certeza de que deseja excluir esta conta?')) {
+    try {
+      await accountStore.deleteAccount(id);
+    } catch (error) {
+      alert(accountStore.error || 'Erro ao deletar conta.');
+    }
+  }
+}
+
+onMounted(() => {
+  loadAccounts();
+});
+</script>
+
+<template>
+  <div class="accounts-container">
+    <h1>Gerenciar Contas Contábeis</h1>
+
+    <div class="form-section">
+      <h2>{{ isEditing ? 'Editar Conta' : 'Adicionar Nova Conta' }}</h2>
+      <form @submit.prevent="isEditing ? handleUpdateAccount() : handleAddAccount()">
         <div class="form-group">
-          <label for="account-name">Nome da Conta:</label>
-          <input type="text" id="account-name" v-model="newAccount.name" required />
+          <label for="accountName">Nome da Conta:</label>
+          <input type="text" id="accountName" v-model="accountNameModel" required />
         </div>
         <div class="form-group">
-          <label for="account-code">Código:</label>
-          <input type="number" id="account-code" v-model.number="newAccount.code" required />
-        </div>
-        <div class="form-group">
-          <label for="account-type">Tipo:</label>
-          <select id="account-type" v-model="newAccount.type" required>
-            <option value="">Selecione o Tipo</option>
+          <label for="accountType">Tipo:</label>
+          <select id="accountType" v-model="accountTypeModel" required>
             <option value="asset">Ativo</option>
             <option value="liability">Passivo</option>
             <option value="equity">Patrimônio Líquido</option>
@@ -26,141 +143,117 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="account-nature">Natureza:</label>
-          <select id="account-nature" v-model="newAccount.nature" required>
-            <option value="">Selecione a Natureza</option>
+          <label for="accountNature">Natureza:</label>
+          <select id="accountNature" v-model="accountNatureModel" required>
             <option value="debit">Débito</option>
             <option value="credit">Crédito</option>
           </select>
         </div>
-        <button type="submit">Adicionar Conta</button>
+        <button type="submit">{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</button>
+        <button v-if="isEditing" type="button" @click="isEditing = false; editingAccount = null">Cancelar</button>
       </form>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Nome da Conta</th>
-          <th>Código</th>
-          <th>Tipo</th>
-          <th>Natureza</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="account in accountStore.accounts" :key="account.id">
-          <td>{{ account.name }}</td>
-          <td>{{ account.code }}</td>
-          <td>{{ account.type }}</td>
-          <td>{{ account.nature }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="accounts-list-section">
+      <h2>Contas Existentes</h2>
+      <p v-if="accountStore.loading">Carregando contas...</p>
+      <p v-else-if="accountStore.error" class="error-message">{{ accountStore.error }}</p>
+      <BaseTable
+        v-else
+        :headers="headers"
+        :items="filteredAccounts"
+        empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
+      >
+        <template #cell(actions)="{ item }">
+          <button @click="startEdit(item)">Editar</button>
+          <button @click="handleDeleteAccount(item.id!)" class="delete-button">Excluir</button>
+        </template>
+      </BaseTable>
+    </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useAccountStore } from '@/stores/accountStore';
-import type { Account } from '@/types/index';
-
-const accountStore = useAccountStore();
-
-const newAccount = ref<Partial<Account>>({
-  name: '',
-  code: undefined,
-  type: undefined,
-  nature: undefined,
-});
-
-async function addNewAccount() {
-  if (newAccount.value.name && newAccount.value.code && newAccount.value.type && newAccount.value.nature) {
-    // Temporariamente, adicione um user_id hardcoded para testes
-    // Isso será substituído pela lógica de autenticação real na Fase 3
-    const accountToSave: Account = {
-      id: `acc-${Date.now()}`, // ID temporário, será substituído pelo DB
-      name: newAccount.value.name,
-      code: Number(newAccount.value.code),
-      type: newAccount.value.type,
-      nature: newAccount.value.nature,
-      user_id: "00000000-0000-0000-0000-000000000000", 
-    };
-    await accountStore.addAccount(accountToSave);
-    // Limpar formulário
-    newAccount.value = {
-      name: '',
-      code: undefined,
-      type: undefined,
-      nature: undefined,
-    };
-  } else {
-    alert('Por favor, preencha todos os campos da conta.');
-  }
+<style scoped>
+.accounts-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
 }
 
-onMounted(() => {
-  accountStore.fetchAccounts();
-});
-</script>
-
-<style scoped>
-.accounts { padding: 1rem; }
-
-.add-account-section {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+h1 {
+  text-align: center;
+  color: #333;
   margin-bottom: 30px;
 }
 
-.account-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+.form-section, .accounts-list-section {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: #555;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 5px;
+  color: #666;
   font-weight: bold;
 }
 
 .form-group input[type="text"],
 .form-group select {
-  width: 100%;
+  width: calc(100% - 22px);
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 1em;
 }
 
-.account-form button[type="submit"] {
-  grid-column: span 2;
+button {
   padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-right: 10px;
+}
+
+button[type="submit"] {
   background-color: #007bff;
   color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
 }
 
-.account-form button[type="submit"]:hover {
+button[type="submit"]:hover {
   background-color: #0056b3;
 }
 
-table {
-  width: 100%;
-  margin-top: 1.5rem;
-  border-collapse: collapse;
+.delete-button {
+  background-color: #dc3545;
+  color: white;
 }
-th, td {
-  border: 1px solid #e0e0e0;
-  padding: 0.75rem;
-  text-align: left;
+
+.delete-button:hover {
+  background-color: #c82333;
 }
-th {
-  background-color: #f8f8f8;
-  font-weight: 600;
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  margin-top: 10px;
 }
 </style>

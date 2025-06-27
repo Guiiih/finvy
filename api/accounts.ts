@@ -6,6 +6,7 @@ import {
   createAccountSchema,
   updateAccountSchema
 } from './utils/schemas';
+import { AuthApiError } from '@supabase/supabase-js';
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   if (handleCors(req, res)) {
@@ -13,7 +14,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   }
 
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1]; 
+  const token = authHeader?.split(' ')[1];
 
   if (!token) {
     return handleErrorResponse(res, 401, 'Token de autenticação não fornecido.');
@@ -25,38 +26,35 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     if (authError || !user) {
       console.error('Erro de autenticação:', authError?.message || 'Usuário não encontrado.');
+      if (authError && authError instanceof AuthApiError) {
+        return handleErrorResponse(res, 401, `Falha na autenticação: ${(authError as AuthApiError).message}`); 
+      }
       return handleErrorResponse(res, 401, 'Token de autenticação inválido ou expirado.');
     }
-    user_id = user.id; 
-  } catch (error: any) {
-    console.error('Erro ao verificar token:', error);
-    return handleErrorResponse(res, 500, 'Erro interno ao verificar autenticação.');
+    user_id = user.id;
+  } catch (error: unknown) { 
+    console.error('Erro ao verificar token (capturado):', error);
+    let message = 'Erro interno ao verificar autenticação.';
+    if (error instanceof Error) { 
+        message = error.message;
+    }
+    return handleErrorResponse(res, 500, message);
   }
 
   try {
     if (req.method === 'GET') {
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .eq('user_id', user_id); 
-
-      if (error) {
-        console.error('Erro ao buscar contas:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
+      const { data, error: dbError } = await supabase.from('accounts').select('*').eq('user_id', user_id);
+      if (dbError) throw dbError;
       return res.status(200).json(data);
     } else if (req.method === 'POST') {
       const parsedBody = createAccountSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
-      const { name, type } = parsedBody.data; 
+      const { name, type } = parsedBody.data;
 
-      const { data, error } = await supabase.from('accounts').insert({ name, type, user_id }).select();
-      if (error) {
-        console.error('Erro ao criar conta:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
+      const { data, error: dbError } = await supabase.from('accounts').insert({ name, type, user_id }).select();
+      if (dbError) throw dbError;
       return res.status(201).json(data);
     } else if (req.method === 'PUT') {
       const parsedQuery = idSchema.safeParse(req.query);
@@ -75,17 +73,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
-      const { data, error } = await supabase
-        .from('accounts')
-        .update(updateData)
-        .eq('id', id)
-        .eq('user_id', user_id) 
-        .select();
-
-      if (error) {
-        console.error('Erro ao atualizar conta:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
+      const { data, error: dbError } = await supabase.from('accounts').update(updateData).eq('id', id).eq('user_id', user_id).select();
+      if (dbError) throw dbError;
       if (!data || data.length === 0) {
         return handleErrorResponse(res, 404, 'Conta não encontrada ou você não tem permissão para atualizar esta conta.');
       }
@@ -97,16 +86,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       }
       const { id } = parsedQuery.data;
 
-      const { error, count } = await supabase
-        .from('accounts')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user_id); 
-
-      if (error) {
-        console.error('Erro ao deletar conta:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
+      const { error: dbError, count } = await supabase.from('accounts').delete().eq('id', id).eq('user_id', user_id);
+      if (dbError) throw dbError;
       if (count === 0) {
         return handleErrorResponse(res, 404, 'Conta não encontrada ou você não tem permissão para deletar esta conta.');
       }
@@ -115,8 +96,14 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
       return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
     }
-  } catch (error: any) {
+  } catch (error: unknown) { 
     console.error('Erro inesperado na API de contas:', error);
-    return handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+    let message = 'Erro interno do servidor.';
+    if (error instanceof Error) {
+        message = error.message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        message = (error as any).message;
+    }
+    return handleErrorResponse(res, 500, message);
   }
 };

@@ -1,71 +1,65 @@
 // frontend/src/types/index.ts
 
-// Define a natureza da conta (Ativo, Passivo, PL, Receita ou Despesa)
-export type AccountNature = 'debit' | 'credit'
+export type AccountNature = 'debit' | 'credit';
 
-// Define o tipo da conta para ajudar na geração dos relatórios
-export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
+export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
 
-// A estrutura de uma conta no nosso Plano de Contas
 export interface Account {
   id: string;
-  name: string;      // Ex: "Caixa", "Forncedores"
+  name: string;
   nature: AccountNature;
   type: AccountType;
-  parentId?: string | null; // Adicionado como opcional, se estiver usando
-  user_id?: string; // Adicionado para corresponder ao DB
-  code?: number; // Adicionado para corresponder ao D
+  parentId?: string | null;
+  user_id?: string;
+  code?: number;
 }
 
-// A estrutura de um produto
 export interface Product {
   id: string;
   name: string;
-  description?: string; // Adicionado para corresponder ao DB
-  unitPrice: number; // Alterado de unitPrice
-  current_stock: number; // Alterado de quantity
-  quantity: number; // Quantidade opcional, pode ser usada para controle de estoqu
-  user_id: string; // Adicionado para corresponder ao DB
+  description?: string;
+  unit_cost: number; 
+  current_stock: number;
+  quantity?: number; 
+  user_id?: string;
 }
 
-// A estrutura de uma linha dentro de um lançamento contábil
-export type EntryType = 'debit' | 'credit';
+export type EntryType = 'debit' | 'credit'; 
 
 export interface EntryLine {
-  accountId: string; // ID da conta que está sendo movimentada
-  debit: number; // Valor a débito (opcional)
-  credit: number; // Valor a crédito (opcional)
-  productId?: string; // Opcional: para lançamentos de estoque
-  quantity?: number; // Quantidade para movimentos de estoque
-  unitCost?: number; // Custo unitário para movimentos de estoque
-  amount: number; // Valor total do movimento (opcional, usado para lançamentos de receita/despesa
+  accountId: string;
+  debit?: number;
+  credit?: number;
+  productId?: string;
+  quantity?: number;
+  unit_cost?: number; 
+  amount: number; 
 }
 
-// O lançamento contábil que representa uma operação completa
 export interface JournalEntry {
   id: string;
   date: string;
   description: string;
   lines: EntryLine[];
-  user_id: string; // Adicionado para corresponder ao DB
+  user_id?: string;
 }
 
-// Tipos para Controle de Estoque
 export interface StockMovement {
   id: string;
-  journalEntryId?: string; // Link para o lançamento contábil que gerou o movimento
+  journalEntryId?: string;
   date: string;
-  type: 'purchase' | 'sale' | 'in' | 'out'; // Tipo de movimento
+  type: 'purchase' | 'sale' | 'in' | 'out';
   productId: string;
   quantity: number;
-  unitPrice: number; // Custo unitário do movimento
-  totalValue: number; // Valor total do movimento
+  unit_cost: number; 
+  totalValue: number;
 }
 
 export interface ProductBalance {
   productId: string;
+  productName: string;
   quantity: number;
-  unitCost: number; // Custo médio atual
+  unit_cost: number; 
   totalValue: number;
 }
 
@@ -74,17 +68,11 @@ export interface LedgerAccount {
   accountName: string;
   type: AccountType;
   nature: AccountNature;
-  
-  // Lista das entradas individuais (usado para exibir no Razão)
   debitEntries: number[];
   creditEntries: number[];
-  
-  // Totalizadores das entradas individuais (soma dos debitEntries/creditEntries)
   totalDebits: number;
   totalCredits: number;
-  
-  debits: number; // Adicionado para compatibilidade com a inicialização no accountsMap.set
-  credits: number; // Adicionado para compatibilidade com a inicialização no accountsMap.set
-
+  debits: number;
+  credits: number;
   finalBalance: number;
 }

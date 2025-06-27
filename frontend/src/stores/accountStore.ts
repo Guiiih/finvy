@@ -1,22 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Account } from '@/types/index';
+import type { Account } from '@/types';
+import { api } from '@/services/api';
 
-export const useAccountStore = defineStore('accountStore', () => {
+export const useAccountStore = defineStore('account', () => {
   const accounts = ref<Account[]>([]);
-
-  async function fetchAccounts() {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Account[] = await response.json();
-      accounts.value = data;
-    } catch (error) {
-      console.error("Erro ao buscar contas:", error);
-    }
-  }
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
   const getAllAccounts = computed(() => accounts.value);
 
@@ -28,81 +18,108 @@ export const useAccountStore = defineStore('accountStore', () => {
     return accounts.value.find(account => account.name === name);
   });
 
-  // NEW: Computed property to get unique account types
   const accountTypes = computed(() => {
     const types = new Set<string>();
     accounts.value.forEach(account => types.add(account.type));
     return Array.from(types);
   });
 
-  // NEW: Getter to get accounts filtered by type
   const getAccountsByType = computed(() => (type: string) => {
     return accounts.value.filter(account => account.type === type);
   });
 
-  async function addAccount(account: Account) {
+  async function fetchAccounts() {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(account),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await api.get<Account[]>('/accounts');
+      accounts.value = data;
+    } catch (err: unknown) { 
+      console.error('Erro ao buscar contas:', err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao buscar contas.';
+      } else {
+        error.value = 'Falha ao buscar contas.';
       }
-      const newAccount: Account = await response.json();
-      accounts.value.push(newAccount);
-    } catch (error) {
-      console.error("Erro ao adicionar conta:", error);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function addAccount(newAccount: Omit<Account, 'id'>) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const addedAccount = await api.post<Account>('/accounts', newAccount);
+      accounts.value.push(addedAccount);
+      return addedAccount;
+    } catch (err: unknown) { 
+      console.error('Erro ao adicionar conta:', err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao adicionar conta.';
+      } else {
+        error.value = 'Falha ao adicionar conta.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
   async function updateAccount(id: string, updatedFields: Partial<Account>) {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts?id=${id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedFields),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const updatedAccount: Account = await response.json();
-      const index = accounts.value.findIndex(acc => acc.id === id);
+      const response = await api.put<Account>(`/accounts?id=${id}`, updatedFields);
+      const index = accounts.value.findIndex((acc) => acc.id === id);
       if (index !== -1) {
-        accounts.value[index] = updatedAccount;
+        accounts.value[index] = { ...accounts.value[index], ...response };
       }
-    } catch (error) {
-      console.error("Erro ao atualizar conta:", error);
+      return response;
+    } catch (err: unknown) { 
+      console.error('Erro ao atualizar conta:', err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao atualizar conta.';
+      } else {
+        error.value = 'Falha ao atualizar conta.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
   async function deleteAccount(id: string) {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/accounts?id=${id}`, {
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      await api.delete(`/accounts?id=${id}`);
+      accounts.value = accounts.value.filter((acc) => acc.id !== id);
+    } catch (err: unknown) { 
+      console.error('Erro ao deletar conta:', err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao deletar conta.';
+      } else {
+        error.value = 'Falha ao deletar conta.';
       }
-      accounts.value = accounts.value.filter(acc => acc.id !== id);
-    } catch (error) {
-      console.error("Erro ao deletar conta:", error);
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
   return {
     accounts,
+    loading,
+    error,
+    fetchAccounts,
+    addAccount,
+    updateAccount,
+    deleteAccount,
     getAllAccounts,
     getAccountById,
     getAccountByName,
     accountTypes,
     getAccountsByType,
-    fetchAccounts,
-    addAccount,
-    updateAccount,
-    deleteAccount,
   };
 });

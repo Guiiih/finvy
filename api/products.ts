@@ -6,6 +6,7 @@ import {
   createProductSchema,
   updateProductSchema
 } from './utils/schemas';
+import { AuthApiError } from '@supabase/supabase-js'; 
 
 export default async function (req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) {
@@ -25,45 +26,44 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
     if (authError || !user) {
       console.error('Erro de autenticação:', authError?.message || 'Usuário não encontrado.');
+      if (authError && authError instanceof AuthApiError) {
+        return handleErrorResponse(res, 401, `Falha na autenticação: ${authError.message}`);
+      }
       return handleErrorResponse(res, 401, 'Token de autenticação inválido ou expirado.');
     }
     user_id = user.id;
-  } catch (error: any) {
-    console.error('Erro ao verificar token:', error);
-    return handleErrorResponse(res, 500, 'Erro interno ao verificar autenticação.');
+  } catch (error: unknown) { 
+    console.error('Erro ao verificar token (capturado):', error);
+    let message = 'Erro interno ao verificar autenticação.';
+    if (error instanceof Error) {
+        message = error.message;
+    }
+    return handleErrorResponse(res, 500, message);
   }
 
   try {
     if (req.method === 'GET') {
-      const { data, error } = await supabase
+      const { data, error: dbError } = await supabase
         .from('products')
         .select('*')
         .eq('user_id', user_id) 
         .order('name', { ascending: true });
 
-      if (error) {
-        console.error('Erro ao buscar produtos:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
-
+      if (dbError) throw dbError;
       return res.status(200).json(data);
     } else if (req.method === 'POST') {
       const parsedBody = createProductSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
-      const { name, description, unit_cost, current_stock } = parsedBody.data; 
+      const { name, description, unit_cost, current_stock } = parsedBody.data;
 
-      const { data, error } = await supabase
+      const { data, error: dbError } = await supabase
         .from('products')
-        .insert([{ name, description, unit_cost, current_stock, user_id }]) 
+        .insert([{ name, description, unit_cost, current_stock, user_id }])
         .select();
 
-      if (error) {
-        console.error('Erro ao criar produto:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
-
+      if (dbError) throw dbError;
       return res.status(201).json(data[0]);
     } else if (req.method === 'PUT') {
       const parsedQuery = idSchema.safeParse(req.query);
@@ -82,22 +82,17 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
-      const { data, error } = await supabase
+      const { data, error: dbError } = await supabase
         .from('products')
         .update(updateData)
         .eq('id', id)
         .eq('user_id', user_id) 
         .select();
 
-      if (error) {
-        console.error('Erro ao atualizar produto:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
-
+      if (dbError) throw dbError;
       if (!data || data.length === 0) {
         return handleErrorResponse(res, 404, 'Produto não encontrado ou você não tem permissão para atualizar.');
       }
-
       return res.status(200).json(data[0]);
     } else if (req.method === 'DELETE') {
       const parsedQuery = idSchema.safeParse(req.query);
@@ -106,28 +101,29 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
       const { id } = parsedQuery.data;
 
-      const { error, count } = await supabase
+      const { error: dbError, count } = await supabase
         .from('products')
         .delete()
         .eq('id', id)
         .eq('user_id', user_id); 
 
-      if (error) {
-        console.error('Erro ao deletar produto:', error);
-        return handleErrorResponse(res, 500, error.message);
-      }
-
+      if (dbError) throw dbError;
       if (count === 0) {
         return handleErrorResponse(res, 404, 'Produto não encontrado ou você não tem permissão para deletar.');
       }
-
       return res.status(204).end();
     } else {
       res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
       return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
     }
-  } catch (error: any) {
+  } catch (error: unknown) { 
     console.error('Erro inesperado na API de produtos:', error);
-    return handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+    let message = 'Erro interno do servidor.';
+    if (error instanceof Error) {
+        message = error.message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        message = (error as any).message; 
+    }
+    return handleErrorResponse(res, 500, message);
   }
 }

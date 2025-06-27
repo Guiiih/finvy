@@ -1,154 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useReportStore } from '@/stores/reportStore';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
-import { useAccountStore } from '@/stores/accountStore';
-import { useStockControlStore } from '@/stores/stockControlStore'; // Importar o stockControlStore
-import { useProductStore } from '@/stores/productStore'; // Importar o productStore
-import type { JournalEntry, EntryLine } from '@/types/index';
 
-// Stores necessários
+const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
-const accountStore = useAccountStore();
-const stockControlStore = useStockControlStore(); // Instanciar o stockControlStore
-const productStore = useProductStore(); // Instanciar o productStore
 
-
-// Computed para calcular os saldos do razão (reutilizando lógica similar ao LedgerView)
-const ledgerAccounts = computed(() => {
-  const accountsMap = new Map<string, {
-    accountId: string;
-    accountName: string;
-    type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
-    debits: number;
-    credits: number;
-    nature: 'debit' | 'credit';
-    finalBalance: number;
-  }>();
-
-  // Inicializar todas as contas
-  accountStore.getAllAccounts.forEach(account => {
-    accountsMap.set(account.id, {
-      accountId: account.id,
-      accountName: account.name,
-      type: account.type,
-      debits: 0,
-      credits: 0,
-      nature: account.nature,
-      finalBalance: 0,
-    });
-  });
-
-  // Processar cada lançamento para somar débitos e créditos
-  journalEntryStore.getAllJournalEntries.forEach(entry => {
-    entry.lines.forEach(line => {
-      const accountData = accountsMap.get(line.accountId);
-      if (accountData) {
-        if (line.debit) {
-          accountData.debits += line.debit;
-        }
-        if (line.credit) {
-          accountData.credits += line.credit;
-        }
-      }
-    });
-  });
-
-  // Calcular o saldo final para cada conta
-  accountsMap.forEach(accountData => {
-    if (accountData.nature === 'debit') {
-      accountData.finalBalance = accountData.debits - accountData.credits;
-    } else { // nature === 'credit'
-      accountData.finalBalance = accountData.credits - accountData.debits;
-    }
-  });
-
-  // NEW: Popular 'Estoque Final' com o valor do Stock Control
-  const estoqueFinalAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
-  const produtoXId = productStore.getProductByName('Produto X')?.id;
-
-  if (estoqueFinalAccount && produtoXId) {
-    const productXBalance = stockControlStore.getBalanceByProductId(produtoXId);
-    if (productXBalance) {
-      // Para a DRE, o que importa é o saldo final, então atribuímos ao finalBalance
-      estoqueFinalAccount.finalBalance = productXBalance.totalValue;
-      // Para fins de registro, podemos simular um débito aqui, mas o saldo final é o que a DRE usará
-      estoqueFinalAccount.debits = productXBalance.totalValue;
-      estoqueFinalAccount.credits = 0;
-    } else {
-      estoqueFinalAccount.finalBalance = 0;
-      estoqueFinalAccount.debits = 0;
-      estoqueFinalAccount.credits = 0;
-    }
-  }
-
-
-  return accountsMap;
-});
-
-// Computed para calcular os valores da DRE
-const dreData = computed(() => {
-  const accounts = ledgerAccounts.value;
-
-  const getAccountTotalDebits = (name: string) => {
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.debits : 0;
-  };
-
-  const getAccountTotalCredits = (name: string) => {
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.credits : 0;
-  };
-
-  const getAccountFinalBalance = (name: string) => {
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.finalBalance : 0;
-  };
-
-  // 1. Receita Bruta de Vendas
-  // Deve ser o total de CRÉDITOS da conta "Receita de Vendas"
-  const receitaBrutaVendas = getAccountTotalCredits('Receita de Vendas');
-
-  // 2. (-) Deduções da Receita Bruta
-  const icmsSobreVendas = getAccountTotalDebits('ICMS sobre Vendas'); // ICMS sobre Vendas é uma dedução de receita, pega os débitos
-  const deducoesReceitaBruta = icmsSobreVendas; // Pode incluir outras como vendas canceladas, descontos
-
-  // 3. (=) Receita Líquida de Vendas
-  const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
-
-  // 4. (-) Custo da Mercadoria Vendida (CMV) - AGORA CALCULADO PELA FÓRMULA DE INVENTÁRIO PERIÓDICO
-  const comprasDeMercadoria = getAccountFinalBalance('Compras de Mercadoria'); // Saldo final (débito) de Compras de Mercadoria (que agora é um ativo)
-  const estoqueFinal = getAccountFinalBalance('Estoque Final'); // Saldo final da conta Estoque Final (populada do stockControlStore)
-
-  let cmv = comprasDeMercadoria - estoqueFinal;
-  if (cmv < 0) { // CMV não pode ser negativo
-    cmv = 0;
-  }
-
-  // 5. (=) Lucro Bruto
-  const lucroBruto = receitaLiquidaVendas - cmv;
-
-  // TO-DO: Adicionar Despesas Operacionais, Receitas Financeiras, Despesas Financeiras
-  // Por enquanto, vamos para o Lucro Líquido com o que temos
-
-  // 6. Lucro Líquido do Exercício (Simplificado para agora)
-  const lucroLiquido = lucroBruto; // Por enquanto, o Lucro Bruto é o Lucro Líquido
-
-  return {
-    receitaBrutaVendas,
-    deducoesReceitaBruta,
-    receitaLiquidaVendas,
-    cmv, // Usar o CMV calculado pela fórmula
-    lucroBruto,
-    lucroLiquido,
-  };
-});
+const dreData = computed(() => reportStore.dreData);
 </script>
 
 <template>
   <div class="dre-container">
     <h1>Demonstração de Resultado do Exercício (DRE)</h1>
 
-    <p v-if="journalEntryStore.getAllJournalEntries.length === 0" class="no-entries-message">
+    <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DRE.
     </p>
 
@@ -252,7 +117,7 @@ h1 {
 }
 
 .deduction .value, .cost .value {
-  color: #dc3545; /* Red for deductions/costs */
+  color: #dc3545;
 }
 
 .subtotal, .total, .final-result {
@@ -267,6 +132,6 @@ h1 {
   margin-top: 15px;
   padding-top: 15px;
   font-size: 1.2rem;
-  color: #28a745; /* Green for profit */
+  color: #28a745;
 }
 </style>

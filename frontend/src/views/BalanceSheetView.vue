@@ -1,226 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useReportStore } from '@/stores/reportStore';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
-import { useAccountStore } from '@/stores/accountStore';
-import { useStockControlStore } from '@/stores/stockControlStore';
-import { useProductStore } from '@/stores/productStore';
-import type { JournalEntry, EntryLine, Account, LedgerAccount } from '@/types/index';
 
-// Stores necessários
+const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
-const accountStore = useAccountStore();
-const stockControlStore = useStockControlStore();
-const productStore = useProductStore();
 
-// Reutilizar a lógica de cálculo dos saldos do razão
-const ledgerAccounts = computed(() => {
-  const accountsMap = new Map<string, LedgerAccount>();
-
-  accountStore.getAllAccounts.forEach((account: Account) => {
-    accountsMap.set(account.id, {
-      accountId: account.id,
-      accountName: account.name,
-      type: account.type,
-      debits: 0,
-      credits: 0,
-      nature: account.nature,
-      debitEntries: [], // Inicializado para compatibilidade com LedgerAccount
-      creditEntries: [], // Inicializado para compatibilidade com LedgerAccount
-      totalDebits: 0, // Inicializado para compatibilidade com LedgerAccount
-      totalCredits: 0, // Inicializado para compatibilidade com LedgerAccount
-      finalBalance: 0,
-    });
-  });
-
-  journalEntryStore.getAllJournalEntries.forEach((entry: JournalEntry) => {
-    entry.lines.forEach((line: EntryLine) => {
-      const accountData = accountsMap.get(line.accountId);
-      if (accountData) {
-        if (line.debit) {
-          accountData.debits += line.debit;
-        }
-        if (line.credit) {
-          accountData.credits += line.credit;
-        }
-      }
-    });
-  });
-
-  accountsMap.forEach((accountData) => {
-    if (accountData.nature === 'debit') {
-      accountData.finalBalance = accountData.debits - accountData.credits;
-    } else { // nature === 'credit'
-      accountData.finalBalance = accountData.credits - accountData.debits;
-    }
-
-    if (accountData.accountId === accountStore.getAccountByName('C/C ICMS')?.id) {
-      if (accountData.finalBalance > 0) {
-        accountData.accountName = 'ICMS a Recuperar';
-        accountData.type = 'asset';
-      } else if (accountData.finalBalance < 0) {
-        accountData.accountName = 'ICMS a Recolher';
-        accountData.type = 'liability';
-        accountData.finalBalance = Math.abs(accountData.finalBalance);
-      } else {
-        accountData.accountName = 'C/C ICMS (Zerada)';
-      }
-    }
-  });
-
-  const finalStockAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
-  const productXId = productStore.getProductByName('Produto X')?.id;
-
-  if (finalStockAccount && productXId) {
-    const productXBalance = stockControlStore.getBalanceByProductId(productXId);
-    if (productXBalance) {
-      finalStockAccount.finalBalance = productXBalance.totalValue;
-      finalStockAccount.debits = finalStockAccount.totalDebits = productXBalance.totalValue;
-      finalStockAccount.credits = finalStockAccount.totalCredits = 0;
-    } else {
-      finalStockAccount.finalBalance = 0;
-      finalStockAccount.debits = finalStockAccount.totalDebits = 0;
-      finalStockAccount.credits = finalStockAccount.totalCredits = 0;
-    }
-  }
-
-  return accountsMap;
-});
-
-// Função getAccountBalance para obter o saldo final de uma conta específica
-const getAccountBalance = (name: string): number => {
-    const accounts = ledgerAccounts.value;
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.finalBalance : 0;
-};
-
-
-// Computed para calcular o Lucro Líquido do Exercício (para Reserva de Lucro)
-const lucroLiquidoExercicio = computed(() => {
-  const accounts = ledgerAccounts.value;
-
-  const getFinalBalanceForDRE = (name: string) => {
-    const account = Array.from(accounts.values()).find(acc => acc.accountName === name);
-    return account ? account.finalBalance : 0;
-  };
-
-  const receitaBrutaVendas = getFinalBalanceForDRE('Receita de Vendas');
-  const icmsSobreVendas = getFinalBalanceForDRE('ICMS sobre Vendas');
-  const deducoesReceitaBruta = icmsSobreVendas;
-
-  const receitaLiquidaVendas = receitaBrutaVendas - deducoesReceitaBruta;
-
-  const comprasDeMercadoria = getFinalBalanceForDRE('Compras de Mercadoria');
-  const estoqueFinal = getFinalBalanceForDRE('Estoque Final');
-
-  let cmv = comprasDeMercadoria - estoqueFinal;
-  if (cmv < 0) {
-    cmv = 0;
-  }
-
-  const lucroBruto = receitaLiquidaVendas - cmv;
-
-  return lucroBruto;
-});
-
-
-// Computed para estruturar os dados do Balanço Patrimonial
-const balanceSheetData = computed(() => {
-  const accounts = ledgerAccounts.value;
-
-  // ATIVO
-  const caixaCef = getAccountBalance('Caixa Econômica Federal');
-  const caixa = getAccountBalance('Caixa');
-  const bancoItau = getAccountBalance('Banco Itaú');
-  const bancoBradesco = getAccountBalance('Banco Bradesco');
-  const clientes = getAccountBalance('Clientes');
-  const estoqueFinal = getAccountBalance('Estoque Final');
-  const moveisEUtensilios = getAccountBalance('Móveis e Utensílios');
-
-  const disponibilidades = caixaCef + caixa + bancoItau + bancoBradesco;
-  const estoqueDeMercadorias = estoqueFinal;
-
-  const ativoCirculante =
-    disponibilidades +
-    clientes +
-    estoqueDeMercadorias;
-
-  const ativoNaoCirculante = moveisEUtensilios;
-
-  const totalDoAtivo = ativoCirculante + ativoNaoCirculante;
-
-  // PASSIVO E PL
-  const fornecedores = getAccountBalance('Fornecedores');
-  const salariosAPagar = getAccountBalance('Despesas com Salários');
-  const impostosAPagarGeral = getAccountBalance('Impostos a Pagar');
-  const icmsARecolher = getAccountBalance('ICMS a Recolher');
-
-  const impostoAPagarExibicao = impostosAPagarGeral + icmsARecolher;
-
-  const passivoCirculante = fornecedores + salariosAPagar + impostoAPagarExibicao;
-  const passivoNaoCirculante = 0; // Este é o valor que queremos que seja exibido como um total
-
-  const totalDoPassivo = passivoCirculante + passivoNaoCirculante;
-
-  const capitalSocialSubscrito = getAccountBalance('Capital Social Subscrito');
-  const capitalAIntegralizar = getAccountBalance('Capital Social a Integralizar');
-
-  const capitalSocialIntegralizado = capitalSocialSubscrito - capitalAIntegralizar;
-
-  const saldoReservaDeLucroExistente = getAccountBalance('Reserva de Lucro');
-  const reservaDeLucroTotal = saldoReservaDeLucroExistente + lucroLiquidoExercicio.value;
-
-  const totalPatrimonioLiquido =
-    capitalSocialIntegralizado +
-    (reservaDeLucroTotal > 0 ? reservaDeLucroTotal : 0);
-
-  const totalPassivoEPatrimonioLiquido = totalDoPassivo + totalPatrimonioLiquido;
-
-  const balanceDifference = totalDoAtivo - totalPassivoEPatrimonioLiquido;
-  const isBalanced = Math.abs(balanceDifference) < 0.01;
-
-  return {
-    // ATIVO
-    ativoCirculante,
-    disponibilidades,
-    caixa,
-    caixaCef,
-    bancoItau,
-    bancoBradesco,
-    clientes,
-    estoqueDeMercadorias,
-    ativoNaoCirculante,
-    moveisEUtensilios,
-    totalDoAtivo,
-
-    // PASSIVO E PL
-    passivoCirculante,
-    fornecedores,
-    despesasComPessoal: salariosAPagar,
-    salariosAPagar,
-    impostoAPagar: impostoAPagarExibicao,
-    icmsARecolher,
-    passivoNaoCirculante, // Manter o valor, será exibido no template
-    totalDoPassivo, // Manter este para cálculos internos
-    capitalSocial: capitalSocialIntegralizado,
-    capitalSocialSubscrito,
-    capitalAIntegralizar,
-    reservas: reservaDeLucroTotal,
-    reservaDeLucro: reservaDeLucroTotal,
-    totalPatrimonioLiquido,
-    totalPassivoEPatrimonioLiquido, // Manter este para exibição final
-
-    // Balanço
-    balanceDifference,
-    isBalanced,
-  };
-});
+const balanceSheetData = computed(() => reportStore.balanceSheetData);
 </script>
 
 <template>
   <div class="balance-sheet-container">
     <h1>Balanço Patrimonial</h1>
 
-    <p v-if="journalEntryStore.getAllJournalEntries.length === 0" class="no-entries-message">
+    <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar o Balanço Patrimonial.
     </p>
 
@@ -373,7 +166,6 @@ const balanceSheetData = computed(() => {
 </template>
 
 <style scoped>
-/* Estilos existentes */
 .balance-sheet-container {
   padding: 20px;
   max-width: 1000px;
@@ -404,10 +196,9 @@ h1 {
   justify-content: space-between;
   gap: 30px;
   padding: 20px;
-  align-items: stretch; /* Garante que os itens flex se estiquem para preencher o contêiner */
-  border: 1px solid #e0e0e0; /* Borda ao redor do relatório inteiro */
-  border-radius: 8px; /* Cantos arredondados */
-  /* NOVO: Adicionar padding-bottom para dar espaço à linha de totais */
+  align-items: stretch;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   padding-bottom: 0; 
 }
 
@@ -417,14 +208,13 @@ h1 {
   padding-left: 15px;
   padding-right: 15px;
   position: relative;
-  /* NOVO: Fundo branco para garantir que o conteúdo das colunas preencha */
   background-color: #fff; 
 }
 
 .column:first-child::after {
   content: '';
   position: absolute;
-  right: -15px; /* Metade do gap */
+  right: -15px;
   top: 0;
   bottom: 0;
   width: 1px;
@@ -512,37 +302,35 @@ li:last-of-type {
   font-size: 1rem;
 }
 
-/* NOVO: Estilo para o contêiner dos totais finais */
 .balance-sheet-totals {
   display: flex;
   justify-content: space-between;
-  width: 100%; /* Ocupa toda a largura do relatório */
-  padding: 0 20px; /* Alinha com o padding do .balance-sheet-report */
-  background-color: #fff; /* Fundo para a linha de totais */
-  border-top: 1px solid #e0e0e0; /* Borda superior para separar do conteúdo acima */
-  border-bottom-left-radius: 8px; /* Arredondar cantos inferiores */
+  width: 100%;
+  padding: 0 20px;
+  background-color: #fff;
+  border-top: 1px solid #e0e0e0;
+  border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
-  overflow: hidden; /* Garante que os cantos arredondados sejam aplicados corretamente */
-  box-sizing: border-box; /* Inclui padding e borda no width/height */
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .total-assets-line {
-  flex: 1; /* Para que cada total ocupe metade do espaço */
+  flex: 1;
   display: flex;
   justify-content: space-between;
   font-weight: bold;
   font-size: 1.3rem;
-  margin-top: 0; /* Remover margem superior */
-  padding: 8px 0; /* Manter padding */
-  border-top: 3px solid #333; /* Borda forte abaixo do título para separar visualmente */
-  /* NOVO: Ajuste de bordas e paddings para alinhar */
-  padding-left: 15px; /* Alinhar com o padding das colunas */
+  margin-top: 0;
+  padding: 8px 0;
+  border-top: 3px solid #333;
+  padding-left: 15px;
   padding-right: 15px;
   box-sizing: border-box;
 }
 
 .total-assets-line:first-child {
-  border-right: 1px solid #e0e0e0; /* Borda vertical entre os totais */
+  border-right: 1px solid #e0e0e0;
 }
 
 
@@ -553,12 +341,11 @@ li:last-of-type {
     font-size: 1.3rem;
 }
 
-/* Status do balanço */
 .balance-status {
   text-align: center;
-  margin-top: 0; /* Ajustar margem superior */
+  margin-top: 0;
   padding: 15px;
-  border-bottom-left-radius: 8px; /* Cantos arredondados na parte inferior */
+  border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   font-weight: bold;
   font-size: 1.2rem;

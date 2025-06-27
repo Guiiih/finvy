@@ -15,7 +15,7 @@
             <input :type="passwordFieldType" id="password" v-model="password" placeholder="Senha" required class="auth-input" />
             <span class="password-toggle" @click="togglePasswordVisibility">
               <span v-if="passwordFieldType === 'password'">🙈</span>
-              <span v-else>👁️</span>
+              <span v-else>🙉</span>
             </span>
           </div>
           <div class="form-options">

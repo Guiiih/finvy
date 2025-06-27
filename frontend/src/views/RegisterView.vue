@@ -19,14 +19,14 @@
             <input :type="passwordFieldType" id="password" v-model="password" placeholder="Senha" required class="auth-input" />
             <span class="password-toggle" @click="togglePasswordVisibility">
               <span v-if="passwordFieldType === 'password'">🙈</span>
-              <span v-else>👁️</span>
+              <span v-else>🙉</span>
             </span>
           </div>
           <div class="form-group password-group">
             <input :type="confirmPasswordFieldType" id="confirmPassword" v-model="confirmPassword" placeholder="Confirma Senha" required class="auth-input" />
             <span class="password-toggle" @click="toggleConfirmPasswordVisibility">
               <span v-if="confirmPasswordFieldType === 'password'">🙈</span>
-              <span v-else>👁️</span>
+              <span v-else>🙉</span>
             </span>
           </div>
           <button type="submit" class="auth-button">Concluir cadastro</button>
@@ -220,12 +220,6 @@ const handleRegister = async () => {
     color: #926EEB;
 }
 
-/* Removed, as we're using emojis directly now */
-/* .password-toggle svg {
-    width: 20px;
-    height: 20px;
-} */
-
 .auth-button {
   width: 100%;
   padding: 15px;
@@ -280,9 +274,8 @@ const handleRegister = async () => {
     padding: 20px;
   }
 
-  /* Adjust password toggle for smaller screens if needed */
   .password-group .password-toggle {
-    right: 20px; /* Keep it consistent with padding */
+    right: 20px; 
   }
 }
 </style>

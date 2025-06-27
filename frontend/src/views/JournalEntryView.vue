@@ -23,7 +23,7 @@
 
       <h3>Linhas do Lançamento:</h3>
       <div v-for="(line, index) in newEntryLines" :key="index" class="entry-line">
-        <select v-model="line.accountId" required>
+        <select v-model="line.accountId" @change="handleAccountChange(line)" required>
           <option value="" disabled>Selecione a Conta</option>
           <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
             <option v-for="account in accountStore.getAccountsByType(type)" :value="account.id" :key="account.id">
@@ -31,8 +31,18 @@
             </option>
           </optgroup>
         </select>
-        <input type="number" v-model.number="line.debit" placeholder="Débito" step="0.01" min="0" :disabled="line.credit > 0" />
-        <input type="number" v-model.number="line.credit" placeholder="Crédito" step="0.01" min="0" :disabled="line.debit > 0" />
+        <input type="number" v-model.number="line.debit" placeholder="Débito" step="0.01" min="0" :disabled="(line.credit || 0) > 0" />
+        <input type="number" v-model.number="line.credit" placeholder="Crédito" step="0.01" min="0" :disabled="(line.debit || 0) > 0" />
+        
+        <select v-model="line.productId" :disabled="!line.accountId" @change="handleProductChange(line)" class="product-select">
+            <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
+            <option v-for="product in productStore.products" :value="product.id" :key="product.id">
+                {{ product.name }}
+            </option>
+        </select>
+        <input type="number" v-model.number="line.quantity" placeholder="Quantidade" step="1" min="0" :disabled="!line.productId" />
+        <input type="number" v-model.number="line.unit_cost" placeholder="Custo Unitário" step="0.01" min="0" :disabled="!line.productId" />
+
         <button type="button" @click="removeLine(index)">Remover</button>
       </div>
       <button type="button" @click="addLine">Adicionar Linha</button>
@@ -49,13 +59,15 @@
         </p>
       </div>
 
-      <button type="submit" :disabled="totalDebits !== totalCredits">
+      <button type="submit" :disabled="totalDebits !== totalCredits || journalEntryStore.loading">
         {{ editingEntryId ? 'Atualizar Lançamento' : 'Registrar Lançamento' }}
       </button>
       <button type="button" @click="cancelEdit" v-if="editingEntryId">Cancelar</button>
     </form>
 
     <h2>Lançamentos Registrados</h2>
+    <p v-if="journalEntryStore.loading">Carregando lançamentos...</p>
+    <p v-else-if="journalEntryStore.error" class="error-message">{{ journalEntryStore.error }}</p>
     <table>
       <thead>
         <tr>
@@ -89,13 +101,19 @@
                     <th>Conta</th>
                     <th>Tipo</th>
                     <th>Valor</th>
+                    <th>Produto</th>
+                    <th>Qtd</th>
+                    <th>Custo Unit.</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
                     <td>{{ getAccountName(line.accountId) }}</td>
-                    <td>{{ line.debit > 0 ? 'Débito' : 'Crédito' }}</td>
+                    <td>{{ line.debit && line.debit > 0 ? 'Débito' : 'Crédito' }}</td>
                     <td>R$ {{ (line.debit || line.credit || 0).toFixed(2) }}</td>
+                    <td>{{ getProductName(line.productId) }}</td>
+                    <td>{{ line.quantity || '-' }}</td>
+                    <td>R$ {{ (line.unit_cost || 0).toFixed(2) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -109,28 +127,26 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { useJournalEntryStore } from '../stores/journalEntryStore';
-import { useAccountStore } from '../stores/accountStore';
-import { useProductStore } from '../stores/productStore';
-import { useStockControlStore } from '../stores/stockControlStore';
-import type { JournalEntry, EntryLine as JournalEntryLine } from '../types';
+import { useJournalEntryStore } from '@/stores/journalEntryStore';
+import { useAccountStore } from '@/stores/accountStore';
+import { useProductStore } from '@/stores/productStore';
+import { useStockControlStore } from '@/stores/stockControlStore';
+import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index';
 
 const journalEntryStore = useJournalEntryStore();
 const accountStore = useAccountStore();
 const productStore = useProductStore();
-const stockControlStore = useStockControlStore();
 
 const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
 const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', debit: 0, credit: 0, amount: 0 },
-  { accountId: '', debit: 0, credit: 0, amount: 0 },
+  { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+  { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
 ]);
 const editingEntryId = ref<string | null>(null);
 const showDetails = ref<{ [key: string]: boolean }>({});
 
-// Computed properties for totals
 const totalDebits = computed(() =>
   newEntryLines.value
     .reduce((sum, line) => sum + (line.debit || 0), 0)
@@ -145,29 +161,25 @@ const sortedJournalEntries = computed(() => {
   return [...journalEntryStore.journalEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 });
 
-// Watch for changes in journal entries to update stock control
-watch(() => journalEntryStore.journalEntries, (newEntries, oldEntries) => {
-  // Simple re-processing of all movements for demonstration.
-  // In a real app, you might want more granular updates (e.g., only for new/changed entries).
-  stockControlStore.movements = []; // Clear existing movements
-  stockControlStore.balances = []; // Clear existing balances
-  newEntries.forEach(entry => handleStockMovementFromJournalEntry(entry));
-}, { deep: true, immediate: true });
+onMounted(async () => {
+  resetForm();
+  await accountStore.fetchAccounts();
+  await productStore.fetchProducts();
+  await journalEntryStore.fetchJournalEntries();
+});
 
-// --- Helper Functions ---
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', debit: 0, credit: 0, amount: 0 },
-    { accountId: '', debit: 0, credit: 0, amount: 0 },
+    { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+    { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
   ];
   editingEntryId.value = null;
-  showAddEntryForm.value = false;
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', debit: 0, credit: 0, amount: 0 });
+  newEntryLines.value.push({ accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 });
 }
 
 function removeLine(index: number) {
@@ -188,81 +200,98 @@ function getAccountName(accountId: string): string {
   return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida';
 }
 
+function getProductName(productId: string | undefined): string {
+  if (!productId) return '-';
+  return productStore.getProductById(productId)?.name || 'Produto Desconhecido';
+}
+
 function toggleDetails(id: string) {
   showDetails.value[id] = !showDetails.value[id];
 }
 
-// --- Lógica de Integração com Controle de Estoque ---
-function handleStockMovementFromJournalEntry(entry: JournalEntry) {
-  // A lógica de controle de estoque agora é centralizada no stockControlStore
-  // que observa as mudanças em journalEntryStore.journalEntries.
-  // Esta função agora serve apenas para garantir que os dados de estoque
-  // (productId, quantity, unitCost) estejam presentes nas EntryLine's
-  // quando um lançamento é criado, se aplicável.
-  // A inferência de tipo de movimento ('in'/'out') e o cálculo do CMV
-  // são feitos dentro do stockControlStore.
-
-  // Exemplo de como você pode verificar se uma linha de lançamento
-  // contém informações de estoque relevantes para o stockControlStore
-  entry.lines.forEach(line => {
-    if (line.productId && (line.quantity !== undefined) && (line.unitCost !== undefined)) {
-      console.log(`Linha de lançamento com dados de estoque identificada para o produto ${line.productId}.`);
-    }
-  });
+function handleAccountChange(line: JournalEntryLine) {
+  line.productId = '';
+  line.quantity = 0;
+  line.unit_cost = 0;
 }
 
-// --- Funções de Exemplo (para simular dados) ---
+function handleProductChange(line: JournalEntryLine) {
+  if (line.productId) {
+    const product = productStore.getProductById(line.productId);
+    if (product) {
+      line.unit_cost = product.unit_cost;
+    }
+  } else {
+    line.quantity = 0;
+    line.unit_cost = 0;
+  }
+}
 
-
-// --- Main Action Functions (can call helpers above) ---
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
     alert('Débitos e Créditos devem ser iguais!');
     return;
   }
 
-  if (newEntryLines.value.some(line => line.amount <= 0)) {
-    alert('Todos os valores devem ser maiores que zero.');
+  const validLines = newEntryLines.value.filter(line => line.accountId);
+
+  if (validLines.length < 2) {
+    alert('Um lançamento deve ter pelo menos duas linhas válidas.');
     return;
+  }
+
+  for (const line of validLines) {
+    if (line.productId) {
+      if (line.quantity === undefined || line.quantity <= 0 || line.unit_cost === undefined || line.unit_cost <= 0) {
+        alert('Para linhas com produto, Quantidade e Custo Unitário são obrigatórios e devem ser maiores que zero.');
+        return;
+      }
+    }
   }
 
   const newEntry: JournalEntry = {
     id: editingEntryId.value || `JE-${Date.now()}`,
     date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: newEntryLines.value.map(line => ({
+    lines: validLines.map(line => ({
       accountId: line.accountId,
       debit: line.debit || 0,
       credit: line.credit || 0,
-      productId: line.productId,
-      quantity: line.quantity,
-      unitCost: line.unitCost,
-      amount: line.amount || line.debit || line.credit || 0,
+      productId: line.productId || undefined,
+      quantity: line.quantity || undefined,
+      unit_cost: line.unit_cost || undefined,
+      amount: line.debit || line.credit || 0,
     })),
-    user_id: "00000000-0000-0000-0000-000000000000", // Adicionado user_id
   };
 
-  if (editingEntryId.value) {
-    journalEntryStore.updateEntry(newEntry);
-    console.log('Lançamento atualizado:', newEntry);
-  } else {
-    journalEntryStore.addJournalEntry(newEntry); // Corrected action name
-    console.log('Novo lançamento adicionado:', newEntry);
+  try {
+    if (editingEntryId.value) {
+      await journalEntryStore.updateEntry(newEntry);
+      alert('Lançamento atualizado com sucesso!');
+      console.log('Lançamento atualizado:', newEntry);
+    } else {
+      await journalEntryStore.addJournalEntry(newEntry);
+      alert('Novo lançamento adicionado com sucesso!');
+      console.log('Novo lançamento adicionado:', newEntry);
+    }
+    resetForm();
+  } catch (error) {
+    alert(journalEntryStore.error || 'Erro ao registrar lançamento.');
   }
-  resetForm();
 }
 
 function editEntry(entry: JournalEntry) {
   showAddEntryForm.value = true;
   editingEntryId.value = entry.id;
   newEntryDate.value = entry.date;
+  newEntryDescription.value = entry.description;
   newEntryLines.value = entry.lines.map(line => ({
     accountId: line.accountId,
     debit: line.debit || 0,
     credit: line.credit || 0,
-    productId: line.productId,
-    quantity: line.quantity,
-    unitCost: line.unitCost,
+    productId: line.productId || '',
+    quantity: line.quantity || 0,
+    unit_cost: line.unit_cost || 0,
     amount: line.amount || line.debit || line.credit || 0,
   }));
 }
@@ -271,29 +300,27 @@ function cancelEdit() {
   resetForm();
 }
 
-function deleteEntry(id: string) {
+async function deleteEntry(id: string) {
   if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-    journalEntryStore.deleteEntry(id);
-    if (editingEntryId.value === id) {
-      resetForm();
+    try {
+      await journalEntryStore.deleteEntry(id);
+      if (editingEntryId.value === id) {
+        resetForm();
+      }
+      alert('Lançamento excluído com sucesso!');
+      console.log('Lançamento excluído:', id);
+    } catch (error) {
+      alert(journalEntryStore.error || 'Erro ao excluir lançamento.');
     }
-    console.log('Lançamento excluído:', id);
   }
 }
 
 const resetAllData = () => {
-  if (confirm('Tem certeza que deseja resetar todos os dados (lançamentos, contas, produtos, estoque)?')) {
-    // As stores agora interagem com a API, então $reset() não é mais aplicável para limpar o backend.
-    // Para limpar o backend, seria necessário um endpoint de API específico para isso.
-    // Por enquanto, apenas resetamos o formulário e logamos a intenção.
-    resetForm();
-    console.log('Todos os dados foram resetados. Para limpar o banco de dados, use as ferramentas do Supabase ou implemente um endpoint de API para isso.');
+  if (confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.')) {
+    alert('A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.');
+    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.');
   }
 };
-
-onMounted(() => {
-  resetForm();
-});
 </script>
 
 <style scoped>
@@ -370,13 +397,14 @@ h1, h2, h3 {
 }
 
 .entry-line select,
-.entry-line input[type="number"] {
+.entry-line input[type="number"],
+.entry-line input[type="text"] {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.entry-line select {
+.entry-line select:not(.product-select) {
   flex: 2;
   min-width: 150px;
 }
@@ -385,6 +413,12 @@ h1, h2, h3 {
   flex: 1;
   min-width: 100px;
 }
+
+.entry-line .product-select {
+  flex: 2;
+  min-width: 180px;
+}
+
 
 .entry-line button {
   padding: 8px 12px;
@@ -507,7 +541,7 @@ th {
   background-color: #5a6268;
 }
 
-.entry-summary button:nth-child(2) { /* Delete button */
+.entry-summary button:nth-child(2) {
   background-color: #dc3545;
 }
 

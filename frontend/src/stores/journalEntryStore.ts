@@ -1,32 +1,42 @@
 import { defineStore } from 'pinia';
-import type { JournalEntry, EntryLine } from '../types/index';
-
 import { ref, computed } from 'vue';
+import type { JournalEntry, EntryLine } from '../types/index';
+import { api } from '@/services/api';
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
   async function fetchJournalEntries() {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const entriesData: JournalEntry[] = await response.json();
+      const entriesData = await api.get<JournalEntry[]>('/journal-entries');
 
-      // Para cada lançamento, buscar suas linhas
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
-        const linesResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines?journal_entry_id=${entry.id}`);
-        if (!linesResponse.ok) {
-          throw new Error(`HTTP error! status: ${linesResponse.status}`);
+        try {
+          const linesData = await api.get<EntryLine[]>(`/entry-lines?journal_entry_id=${entry.id}`);
+          return { ...entry, lines: linesData };
+        } catch (lineError: unknown) { 
+          console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);
+          if (lineError instanceof Error) {
+            return { ...entry, lines: [], error: lineError.message }; 
+          }
+          return { ...entry, lines: [], error: 'Erro desconhecido ao carregar linhas.' };
         }
-        const linesData: EntryLine[] = await linesResponse.json();
-        return { ...entry, lines: linesData };
       }));
 
       journalEntries.value = entriesWithLines;
-    } catch (error) {
-      console.error("Erro ao buscar lançamentos:", error);
+    } catch (err: unknown) { 
+      console.error("Erro ao buscar lançamentos:", err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao buscar lançamentos.';
+      } else {
+        error.value = 'Falha ao buscar lançamentos.';
+      }
+    } finally {
+      loading.value = false;
     }
   }
 
@@ -37,78 +47,47 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   });
 
   async function addJournalEntry(entry: JournalEntry) {
+    loading.value = true;
+    error.value = null;
     try {
-      // 1. Criar o cabeçalho do lançamento
       const { lines, ...entryHeader } = entry;
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(entryHeader),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const newJournalEntry: JournalEntry = await response.json();
+      const newJournalEntry = await api.post<JournalEntry>('/journal-entries', entryHeader);
 
-      // 2. Criar as linhas do lançamento
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ...line, journal_entry_id: newJournalEntry.id }),
-        });
-        if (!lineResponse.ok) {
-          throw new Error(`HTTP error! status: ${lineResponse.status}`);
-        }
-        const newLine: EntryLine = await lineResponse.json();
+        const lineToSend = { ...line, journal_entry_id: newJournalEntry.id };
+        const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }
 
       journalEntries.value.push({ ...newJournalEntry, lines: newLines });
-    } catch (error) {
-      console.error("Erro ao adicionar lançamento:", error);
+      return newJournalEntry;
+    } catch (err: unknown) { 
+      console.error("Erro ao adicionar lançamento:", err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao adicionar lançamento.';
+      } else {
+        error.value = 'Falha ao adicionar lançamento.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
   async function updateEntry(updatedEntry: JournalEntry) {
+    loading.value = true;
+    error.value = null;
     try {
-      // 1. Atualizar o cabeçalho do lançamento
       const { lines, ...entryHeader } = updatedEntry;
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries?id=${updatedEntry.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(entryHeader),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await api.put<JournalEntry>(`/journal-entries?id=${updatedEntry.id}`, entryHeader);
 
-      // 2. Deletar linhas existentes e recriar
-      // (Abordagem simplificada: deleta todas e recria. Em produção, otimizar para comparar e atualizar/deletar/criar seletivamente)
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines?journal_entry_id=${updatedEntry.id}`, {
-        method: 'DELETE',
-      }); // Assumindo que a API de entry-lines pode deletar por journal_entry_id
+      await api.delete(`/entry-lines?journal_entry_id=${updatedEntry.id}`);
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/entry-lines`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ...line, journal_entry_id: updatedEntry.id }),
-        });
-        if (!lineResponse.ok) {
-          throw new Error(`HTTP error! status: ${lineResponse.status}`);
-        }
-        const newLine: EntryLine = await lineResponse.json();
+        const lineToSend = { ...line, journal_entry_id: updatedEntry.id };
+        const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }
 
@@ -116,22 +95,36 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       if (index !== -1) {
         journalEntries.value[index] = { ...updatedEntry, lines: newLines };
       }
-    } catch (error) {
-      console.error("Erro ao atualizar lançamento:", error);
+      return updatedEntry;
+    } catch (err: unknown) { 
+      console.error("Erro ao atualizar lançamento:", err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao atualizar lançamento.';
+      } else {
+        error.value = 'Falha ao atualizar lançamento.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
   async function deleteEntry(id: string) {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/journal-entries?id=${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await api.delete(`/journal-entries?id=${id}`);
       journalEntries.value = journalEntries.value.filter(entry => entry.id !== id);
-    } catch (error) {
-      console.error("Erro ao deletar lançamento:", error);
+    } catch (err: unknown) { 
+      console.error("Erro ao deletar lançamento:", err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao deletar lançamento.';
+      } else {
+        error.value = 'Falha ao deletar lançamento.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
@@ -143,5 +136,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     addJournalEntry,
     updateEntry,
     deleteEntry,
+    loading,
+    error,
   };
 });
