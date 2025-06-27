@@ -4,7 +4,7 @@ import { useJournalEntryStore } from './journalEntryStore';
 import { useAccountStore } from './accountStore';
 import { useStockControlStore } from './stockControlStore';
 import { useProductStore } from './productStore';
-import type { JournalEntry, EntryLine, Account, LedgerAccount, ProductBalance } from '@/types/index';
+import type { LedgerAccount } from '@/types/index';
 
 interface VariationEntry {
   description: string;
@@ -21,7 +21,7 @@ export const useReportStore = defineStore('report', () => {
   const journalEntryStore = useJournalEntryStore();
   const accountStore = useAccountStore();
   const stockControlStore = useStockControlStore();
-  const productStore = useProductStore();
+  useProductStore();
 
   const allJournalEntries = computed(() => journalEntryStore.getAllJournalEntries);
   const allAccounts = computed(() => accountStore.getAllAccounts);
@@ -188,7 +188,7 @@ export const useReportStore = defineStore('report', () => {
       const receitaVendasContaObj = accountsMap.get(accountStore.getAccountByName('Receita de Vendas')?.id || '');
       const netSalesRevenue = receitaVendasContaObj ? receitaVendasContaObj.finalBalance : 0;
 
-      let costOfGoodsSold = cmvAccount ? cmvAccount.finalBalance : 0;
+      const costOfGoodsSold = cmvAccount ? cmvAccount.finalBalance : 0;
 
       const calculatedGrossProfit = netSalesRevenue - costOfGoodsSold;
 

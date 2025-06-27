@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
-import type { StockMovement, Product } from '@/types/index';
+import { ref, computed } from 'vue';
 import { useProductStore } from './productStore';
 
 interface ProductBalance {

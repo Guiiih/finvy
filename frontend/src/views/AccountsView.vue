@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useAccountStore } from '@/stores/accountStore';
 import type { Account } from '@/types';
 import BaseTable from '@/components/BaseTable.vue';
@@ -81,7 +81,7 @@ async function handleAddAccount() {
     newAccountName.value = '';
     newAccountType.value = 'asset';
     newAccountNature.value = 'debit';
-  } catch (error) {
+  } catch {
     alert(accountStore.error || 'Erro ao adicionar conta.');
   }
 }
@@ -102,7 +102,7 @@ async function handleUpdateAccount() {
     });
     isEditing.value = false;
     editingAccount.value = null;
-  } catch (error) {
+  } catch {
     alert(accountStore.error || 'Erro ao atualizar conta.');
   }
 }
@@ -111,7 +111,7 @@ async function handleDeleteAccount(id: string) {
   if (confirm('Tem certeza de que deseja excluir esta conta?')) {
     try {
       await accountStore.deleteAccount(id);
-    } catch (error) {
+    } catch {
       alert(accountStore.error || 'Erro ao deletar conta.');
     }
   }
@@ -167,7 +167,7 @@ async function handleDeleteAccount(id: string) {
         empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
       >
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item)">Editar</button>
+          <button @click="startEdit(item as Account)">Editar</button>
           <button @click="handleDeleteAccount(item.id!)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>

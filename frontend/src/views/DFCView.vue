@@ -123,8 +123,6 @@ const lucroLiquidoExercicio = computed(() => {
 
 // Computed para estruturar os dados do Balanço Patrimonial (reutilizado para obter totais)
 const balanceSheetData = computed(() => {
-  const accounts = ledgerAccounts.value;
-
   const caixaCef = getAccountBalance('Caixa Econômica Federal');
   const caixa = getAccountBalance('Caixa');
   const bancoItau = getAccountBalance('Banco Itaú');
@@ -238,7 +236,7 @@ const dfcData = computed(() => {
   // Fluxo de Caixa das Atividades de Financiamento
   // Se Capital Social foi para Investimento, esta seção pode ficar vazia, ou conter outras variações de PL/Passivo Não Circulante.
   // No PDF, não há um "Atv. Financiamento" separado, apenas as linhas individuais somam para o Saldo Final.
-  let fluxoFinanciamento = 0;
+  const fluxoFinanciamento = 0;
   // O PDF não tem essa linha explícita em um grupo "Financiamento". Se tivesse, seria como varReservaDeLucro.
   // Para replicar o PDF, não vamos calcular fluxoFinanciamento separado a menos que haja mais itens.
 

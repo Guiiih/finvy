@@ -70,7 +70,7 @@ export const useAccountStore = defineStore('account', () => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await api.put<Account>(`/accounts?id=${id}`, updatedFields);
+      const response = await api.put<Account>(`/accounts/${id}`, updatedFields);
       const index = accounts.value.findIndex((acc) => acc.id === id);
       if (index !== -1) {
         accounts.value[index] = { ...accounts.value[index], ...response };
@@ -93,7 +93,7 @@ export const useAccountStore = defineStore('account', () => {
     loading.value = true;
     error.value = null;
     try {
-      await api.delete(`/accounts?id=${id}`);
+      await api.delete(`/accounts/${id}`);
       accounts.value = accounts.value.filter((acc) => acc.id !== id);
     } catch (err: unknown) { 
       console.error('Erro ao deletar conta:', err);

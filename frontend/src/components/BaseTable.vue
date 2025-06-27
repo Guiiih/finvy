@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 
 interface TableHeader {
   key: string;     
@@ -8,9 +7,9 @@ interface TableHeader {
   sortable?: boolean; 
 }
 
-const props = defineProps<{
+defineProps<{
   headers: TableHeader[]; 
-  items: any[];           
+  items: Record<string, any>[];
   emptyMessage?: string;  
 }>();
 

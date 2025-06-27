@@ -66,11 +66,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       if (dbError) throw dbError;
       return res.status(201).json(data[0]);
     } else if (req.method === 'PUT') {
-      const parsedQuery = idSchema.safeParse(req.query);
-      if (!parsedQuery.success) {
-        return handleErrorResponse(res, 400, parsedQuery.error.errors.map(err => err.message).join(', '));
-      }
-      const { id } = parsedQuery.data;
+      const id = req.query.id as string;
 
       const parsedBody = updateProductSchema.safeParse(req.body);
       if (!parsedBody.success) {
@@ -95,11 +91,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
       return res.status(200).json(data[0]);
     } else if (req.method === 'DELETE') {
-      const parsedQuery = idSchema.safeParse(req.query);
-      if (!parsedQuery.success) {
-        return handleErrorResponse(res, 400, parsedQuery.error.errors.map(err => err.message).join(', '));
-      }
-      const { id } = parsedQuery.data;
+      const id = req.query.id as string;
 
       const { error: dbError, count } = await supabase
         .from('products')

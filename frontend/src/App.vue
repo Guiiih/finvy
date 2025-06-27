@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router' // Adicione useRoute
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { supabase } from './supabase'
 
 const router = useRouter()
@@ -22,8 +22,10 @@ const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     router.push('/login')
-  } catch (error: any) {
-    alert(error.message)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message)
+    }
   }
 }
 

@@ -16,7 +16,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
         try {
-          const linesData = await api.get<EntryLine[]>(`/entry-lines?journal_entry_id=${entry.id}`);
+          const linesData = await api.get<EntryLine[]>(`/journal-entries/${entry.id}/lines`);
           return { ...entry, lines: linesData };
         } catch (lineError: unknown) { 
           console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);
@@ -80,9 +80,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null;
     try {
       const { lines, ...entryHeader } = updatedEntry;
-      await api.put<JournalEntry>(`/journal-entries?id=${updatedEntry.id}`, entryHeader);
+      await api.put<JournalEntry>(`/journal-entries/${updatedEntry.id}`, entryHeader);
 
-      await api.delete(`/entry-lines?journal_entry_id=${updatedEntry.id}`);
+      await api.delete(`/journal-entries/${updatedEntry.id}/lines`);
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
@@ -113,7 +113,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     loading.value = true;
     error.value = null;
     try {
-      await api.delete(`/journal-entries?id=${id}`);
+      await api.delete(`/journal-entries/${id}`);
       journalEntries.value = journalEntries.value.filter(entry => entry.id !== id);
     } catch (err: unknown) { 
       console.error("Erro ao deletar lançamento:", err);

@@ -1,5 +1,9 @@
 {
- "rewrites": [
+  "rewrites": [
+    { "source": "/api/accounts/:id", "destination": "/api/accounts" },
+    { "source": "/api/products/:id", "destination": "/api/products" },
+    { "source": "/api/journal-entries/:id", "destination": "/api/journal-entries" },
+    { "source": "/api/journal-entries/:id/lines", "destination": "/api/entry-lines" },
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

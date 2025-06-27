@@ -60,7 +60,7 @@ export const useProductStore = defineStore('products', () => {
     loading.value = true;
     error.value = null;
     try {
-      const updatedProduct = await api.put<Product>(`/products?id=${id}`, updatedFields);
+      const updatedProduct = await api.put<Product>(`/products/${id}`, updatedFields);
       const index = products.value.findIndex(prod => prod.id === id);
       if (index !== -1) {
         products.value[index] = updatedProduct;
@@ -83,7 +83,7 @@ export const useProductStore = defineStore('products', () => {
     loading.value = true;
     error.value = null;
     try {
-      await api.delete(`/products?id=${id}`);
+      await api.delete(`/products/${id}`);
       products.value = products.value.filter(prod => prod.id !== id);
     } catch (err: unknown) { 
       console.error("Erro ao deletar produto:", err);

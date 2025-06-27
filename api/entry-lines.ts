@@ -44,39 +44,27 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
-      const { journal_entry_id: query_journal_entry_id } = req.query;
+      const { journal_entry_id } = req.query;
 
-      let query = supabase.from('entry_lines').select('*');
+      if (journal_entry_id) {
+        // This is the new route: /api/journal-entries/:journal_entry_id/lines
+        const { data, error: dbError } = await supabase
+          .from('entry_lines')
+          .select('*')
+          .eq('journal_entry_id', journal_entry_id as string);
 
-      if (query_journal_entry_id) {
-        const parsedId = idSchema.safeParse({ id: query_journal_entry_id });
-        if (!parsedId.success) {
-          return handleErrorResponse(res, 400, `ID do lançamento diário inválido: ${parsedId.error.errors.map(err => err.message).join(', ')}`);
-        }
-        const { data: journalEntry, error: journalError } = await supabase
-          .from('journal_entries')
-          .select('id, user_id')
-          .eq('id', parsedId.data.id)
-          .eq('user_id', user_id)
-          .single();
-
-        if (journalError) throw journalError; 
-        if (!journalEntry) {
-          return handleErrorResponse(res, 403, 'Você não tem permissão para acessar este lançamento diário ou ele não existe.');
-        }
-
-        query = query.eq('journal_entry_id', parsedId.data.id);
+        if (dbError) throw dbError;
+        return res.status(200).json(data);
       } else {
-        query = supabase
+        // This is the old route: /api/entry-lines
+        const { data, error: dbError } = await supabase
           .from('entry_lines')
           .select('*, journal_entry_id(user_id)')
           .eq('journal_entry_id.user_id', user_id);
+
+        if (dbError) throw dbError;
+        return res.status(200).json(data);
       }
-
-      const { data, error: dbError } = await query.order('created_at', { ascending: true });
-
-      if (dbError) throw dbError;
-      return res.status(200).json(data);
     } else if (req.method === 'POST') {
       const parsedBody = createEntryLineSchema.safeParse(req.body);
       if (!parsedBody.success) {
@@ -187,7 +175,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       return res.status(200).json(data);
     } else if (req.method === 'DELETE') {
-      const { id, journal_entry_id: query_journal_entry_id } = req.query;
+      const { id, journal_entry_id } = req.query;
 
       let linesToDelete: { id: string, product_id?: string, quantity?: number, unit_cost?: number, debit?: number, credit?: number }[] = [];
 
@@ -220,8 +208,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           return handleErrorResponse(res, 403, 'Você não tem permissão para deletar esta linha de lançamento.');
         }
         linesToDelete.push(entryLine);
-      } else if (query_journal_entry_id) {
-        const parsedId = idSchema.safeParse({ id: query_journal_entry_id });
+      } else if (journal_entry_id) {
+        const parsedId = idSchema.safeParse({ id: journal_entry_id });
         if (!parsedId.success) {
           return handleErrorResponse(res, 400, parsedId.error.errors.map(err => err.message).join(', '));
         }
@@ -291,11 +279,11 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
         if (dbError) throw dbError;
         if (count === 0) return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada ou não autorizada para exclusão.');
-      } else if (query_journal_entry_id) {
+      } else if (journal_entry_id) {
         const { error: dbError, count } = await supabase
           .from('entry_lines')
           .delete()
-          .eq('journal_entry_id', query_journal_entry_id);
+          .eq('journal_entry_id', journal_entry_id);
 
         if (dbError) throw dbError;
       }
