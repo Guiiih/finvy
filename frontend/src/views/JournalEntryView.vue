@@ -230,8 +230,8 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', type: 'debit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
-    { accountId: '', type: 'credit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
+    { accountId: '', type: 'debit', amount: 0, productId: '' },
+    { accountId: '', type: 'credit', amount: 0, productId: '' },
   ];
   editingEntryId.value = null;
 }
