@@ -10,6 +10,15 @@ interface ProductBalance {
   totalValue: number;
 }
 
+interface StockMovement {
+  id: string;
+  productId: string;
+  type: 'in' | 'out';
+  quantity: number;
+  unit_cost: number;
+  date: string;
+}
+
 export const useStockControlStore = defineStore('stockControlStore', () => {
   const productStore = useProductStore();
 

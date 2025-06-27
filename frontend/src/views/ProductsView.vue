@@ -180,7 +180,7 @@ onMounted(() => {
           R$ {{ value.toFixed(2) }}
         </template>
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item)">Editar</button>
+          <button @click="startEdit(item as Product)">Editar</button>
           <button @click="handleDeleteProduct(item.id!)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>
