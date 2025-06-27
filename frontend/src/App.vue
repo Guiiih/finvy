@@ -1,67 +1,50 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue'; // Adicione watch
 import { supabase } from './supabase';
-import { useAuthStore } from './stores/authStore';
-import { useAccountStore } from './stores/accountStore';
-import { useProductStore } from './stores/productStore';
-import { useJournalEntryStore } from './stores/journalEntryStore';
+import { useAuthStore } from './stores/authStore'; // Importe a authStore
+import { useAccountStore } from './stores/accountStore'; // Importe accountStore
+import { useProductStore } from './stores/productStore'; // Importe productStore
+import { useJournalEntryStore } from './stores/journalEntryStore'; // Importe journalEntryStore
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
-const accountStore = useAccountStore();
-const productStore = useProductStore();
-const journalEntryStore = useJournalEntryStore();
+const authStore = useAuthStore(); // Instancie authStore
+const accountStore = useAccountStore(); // Instancie accountStore
+const productStore = useProductStore(); // Instancie productStore
+const journalEntryStore = useJournalEntryStore(); // Instancie journalEntryStore
 
+// A sessão agora é gerenciada pela authStore
 const session = computed(() => authStore.session);
-const isLoggedIn = computed(() => authStore.isLoggedIn);
-const shouldHideNavbar = computed(() => {
-  return route.meta.hideNavbar || false;
-});
 
-watch(isLoggedIn, (newValue) => {
-  console.log('DEBUG: authStore.isLoggedIn changed to:', newValue);
-});
-
-watch(shouldHideNavbar, (newValue) => {
-  console.log('DEBUG: shouldHideNavbar changed to:', newValue);
-  console.log('DEBUG: Current route meta.hideNavbar:', route.meta.hideNavbar);
-});
-
-watch(route, (newRoute) => {
-  console.log('DEBUG: Route changed to:', newRoute.path, 'meta:', newRoute.meta);
-}, { immediate: true });
-
-onMounted(() => {
-  console.log('DEBUG: App.vue mounted. Initial isLoggedIn:', isLoggedIn.value);
-  console.log('DEBUG: App.vue mounted. Initial shouldHideNavbar:', shouldHideNavbar.value);
-});
-
+// NOVO: Adicione um watcher para carregar dados quando o usuário logar
 watch(session, async (newSession) => {
   if (newSession && newSession.user) {
-    console.log('DEBUG: Sessão ativa detectada, carregando dados globais...');
+    console.log('Sessão ativa detectada, carregando dados globais...');
     await accountStore.fetchAccounts();
     await productStore.fetchProducts();
     await journalEntryStore.fetchJournalEntries();
-  } else {
-    console.log('DEBUG: Nenhuma sessão ativa detectada, limpando dados globais.');
-    accountStore.accounts = [];
-    productStore.products = [];
-    journalEntryStore.journalEntries = [];
+    // Você pode adicionar mais stores aqui que precisam de dados iniciais após o login
   }
-}, { immediate: true });
+}, { immediate: true }); // Executa imediatamente se a sessão já estiver ativa ao montar
 
+// Remova handleLogout daqui, pois agora está na authStore
 const handleLogout = async () => {
-  await authStore.signOut();
+  await authStore.signOut(); // Usa a ação signOut da authStore
   if (!authStore.isLoggedIn) {
     router.push('/login');
   }
 };
+
+const shouldHideNavbar = computed(() => {
+  return route.meta.hideNavbar || false;
+});
 </script>
 
 <template>
-  <div> <header v-if="!shouldHideNavbar"> <div class="wrapper">
+  <div v-if="authStore.isLoggedIn && !shouldHideNavbar">
+    <header>
+      <div class="wrapper">
         <h1 class="title">Finvy</h1>
         <nav>
           <RouterLink to="/">Dashboard</RouterLink>
@@ -84,7 +67,10 @@ const handleLogout = async () => {
       <RouterView />
     </main>
   </div>
-  </template>
+  <div v-else>
+    <RouterView />
+  </div>
+</template>
 
 <style scoped>
 header {
