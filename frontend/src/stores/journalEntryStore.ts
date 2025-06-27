@@ -63,6 +63,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
+        if (line.amount <= 0) {
+          throw new Error('O valor do lançamento deve ser maior que zero.');
+        }
+        if (!['debit', 'credit'].includes(line.type)) {
+          throw new Error('O tipo de lançamento (débito/crédito) é inválido.');
+        }
+
         const lineToSend = {
           journal_entry_id: newJournalEntry.id,
           account_id: line.accountId,
@@ -102,6 +109,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
+        if (line.amount <= 0) {
+          throw new Error('O valor do lançamento deve ser maior que zero.');
+        }
+        if (!['debit', 'credit'].includes(line.type)) {
+          throw new Error('O tipo de lançamento (débito/crédito) é inválido.');
+        }
+
         const lineToSend = {
           journal_entry_id: updatedEntry.id,
           account_id: line.accountId,
