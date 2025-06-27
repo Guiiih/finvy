@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { supabase } from '@/supabase';
 import type { User, Session } from '@supabase/supabase-js';
-import { AuthApiError } from '@supabase/supabase-js'; 
+import { AuthApiError } from '@supabase/supabase-js';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
@@ -17,19 +17,28 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     error.value = null;
     try {
+      console.log('DEBUG AUTH: (initAuthListener) Chamando supabase.auth.getSession()');
       const { data: { session: initialSession }, error: initialSessionError } = await supabase.auth.getSession();
-      if (initialSessionError) throw initialSessionError;
+
+      console.log('DEBUG AUTH: (initAuthListener) Retorno de getSession - session:', initialSession, 'error:', initialSessionError);
+
+      if (initialSessionError) {
+        console.error('DEBUG AUTH: Erro ao obter sessão inicial:', initialSessionError);
+        throw initialSessionError;
+      }
 
       session.value = initialSession;
       user.value = initialSession?.user || null;
+      console.log('DEBUG AUTH: (initAuthListener) Estado inicial da store - user:', user.value?.id, 'isLoggedIn:', !!user.value);
 
       supabase.auth.onAuthStateChange((event, newSession) => {
+        console.log('DEBUG AUTH: (onAuthStateChange) Evento:', event, 'Nova sessão:', newSession);
         session.value = newSession;
         user.value = newSession?.user || null;
-        console.log('Auth event:', event, 'New session:', newSession);
+        console.log('DEBUG AUTH: (onAuthStateChange) Estado atual da store - user:', user.value?.id, 'isLoggedIn:', !!user.value);
       });
-    } catch (err: unknown) { 
-      console.error('Erro ao inicializar listener de auth:', err);
+    } catch (err: unknown) {
+      console.error('DEBUG AUTH: (initAuthListener) Erro (capturado):', err);
       if (err instanceof Error) {
         error.value = err.message || 'Falha ao inicializar o listener de autenticação.';
       } else {
@@ -44,18 +53,21 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     error.value = null;
     try {
+      console.log('DEBUG AUTH: (signIn) Tentando fazer login para:', email);
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log('DEBUG AUTH: (signIn) Retorno do login - data:', data, 'error:', authError);
+
       if (authError) throw authError;
       user.value = data.user;
       session.value = data.session;
-      console.log('Login bem-sucedido:', data);
+      console.log('DEBUG AUTH: (signIn) Login bem-sucedido - user:', user.value?.id, 'session:', session.value);
       return true;
-    } catch (err: unknown) { 
-      console.error('Erro no login:', err);
-      if (err instanceof AuthApiError) { 
+    } catch (err: unknown) {
+      console.error('DEBUG AUTH: (signIn) Erro no login (capturado):', err);
+      if (err instanceof AuthApiError) {
         error.value = err.message;
       } else if (err instanceof Error) {
         error.value = err.message;

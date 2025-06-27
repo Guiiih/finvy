@@ -20,7 +20,6 @@ const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false;
 });
 
-// --- Logs de Depuração Adicionados ---
 watch(isLoggedIn, (newValue) => {
   console.log('DEBUG: authStore.isLoggedIn changed to:', newValue);
 });
@@ -38,7 +37,6 @@ onMounted(() => {
   console.log('DEBUG: App.vue mounted. Initial isLoggedIn:', isLoggedIn.value);
   console.log('DEBUG: App.vue mounted. Initial shouldHideNavbar:', shouldHideNavbar.value);
 });
-// --- Fim dos Logs de Depuração ---
 
 watch(session, async (newSession) => {
   if (newSession && newSession.user) {
@@ -48,7 +46,6 @@ watch(session, async (newSession) => {
     await journalEntryStore.fetchJournalEntries();
   } else {
     console.log('DEBUG: Nenhuma sessão ativa detectada, limpando dados globais.');
-    // Limpar os dados das stores caso a sessão seja perdida ou nula
     accountStore.accounts = [];
     productStore.products = [];
     journalEntryStore.journalEntries = [];
