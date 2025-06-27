@@ -79,6 +79,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           quantity: line.quantity,
           unit_cost: line.unit_cost,
         };
+        console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }
@@ -125,6 +126,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           quantity: line.quantity,
           unit_cost: line.unit_cost,
         };
+        console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }
