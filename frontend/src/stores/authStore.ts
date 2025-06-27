@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
       supabase.auth.onAuthStateChange((event, newSession) => {
         session.value = newSession;
         user.value = newSession?.user || null;
-        console.log('Auth event:', event, 'New session:', newSession);
+        
       });
     } catch (err: unknown) {
       console.error('Erro ao inicializar listener de auth:', err);
