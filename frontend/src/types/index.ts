@@ -25,12 +25,13 @@ export type EntryType = 'debit' | 'credit';
 
 export interface EntryLine {
   accountId: string;
-  debit?: number;
-  credit?: number;
+  type: EntryType; // 'debit' or 'credit'
+  amount: number;
   productId?: string;
   quantity?: number;
   unit_cost?: number; 
-  amount: number; 
+  debit?: number;
+  credit?: number;
 }
 
 export interface JournalEntry {

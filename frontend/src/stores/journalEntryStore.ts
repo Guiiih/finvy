@@ -16,8 +16,16 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
         try {
-          const linesData = await api.get<EntryLine[]>(`/journal-entries/${entry.id}/lines`);
-          return { ...entry, lines: linesData };
+          const linesData = await api.get<any[]>(`/journal-entries/${entry.id}/lines`); // Use any[] for now
+          const convertedLines: EntryLine[] = linesData.map(line => ({
+            accountId: line.account_id,
+            type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
+            amount: (line.debit && line.debit > 0) ? line.debit : line.credit,
+            productId: line.product_id || undefined,
+            quantity: line.quantity || undefined,
+            unit_cost: line.unit_cost || undefined,
+          }));
+          return { ...entry, lines: convertedLines };
         } catch (lineError: unknown) { 
           console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);
           if (lineError instanceof Error) {
@@ -55,7 +63,15 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineToSend = { ...line, journal_entry_id: newJournalEntry.id };
+        const lineToSend = {
+          journal_entry_id: newJournalEntry.id,
+          account_id: line.accountId,
+          debit: line.type === 'debit' ? line.amount : undefined,
+          credit: line.type === 'credit' ? line.amount : undefined,
+          product_id: line.productId,
+          quantity: line.quantity,
+          unit_cost: line.unit_cost,
+        };
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }
@@ -86,7 +102,15 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
-        const lineToSend = { ...line, journal_entry_id: updatedEntry.id };
+        const lineToSend = {
+          journal_entry_id: updatedEntry.id,
+          account_id: line.accountId,
+          debit: line.type === 'debit' ? line.amount : undefined,
+          credit: line.type === 'credit' ? line.amount : undefined,
+          product_id: line.productId,
+          quantity: line.quantity,
+          unit_cost: line.unit_cost,
+        };
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
         newLines.push(newLine);
       }

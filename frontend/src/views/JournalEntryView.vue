@@ -31,8 +31,12 @@
             </option>
           </optgroup>
         </select>
-        <input type="number" v-model.number="line.debit" placeholder="Débito" step="0.01" min="0" :disabled="(line.credit || 0) > 0" />
-        <input type="number" v-model.number="line.credit" placeholder="Crédito" step="0.01" min="0" :disabled="(line.debit || 0) > 0" />
+        <select v-model="line.type" required>
+          <option value="">Tipo</option>
+          <option value="debit">Débito</option>
+          <option value="credit">Crédito</option>
+        </select>
+        <input type="number" v-model.number="line.amount" placeholder="Valor" step="0.01" min="0" required />
         
         <select v-model="line.productId" :disabled="!line.accountId" @change="handleProductChange(line)" class="product-select">
             <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
@@ -109,8 +113,8 @@
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
                     <td>{{ getAccountName(line.accountId) }}</td>
-                    <td>{{ line.debit && line.debit > 0 ? 'Débito' : 'Crédito' }}</td>
-                    <td>R$ {{ (line.debit || line.credit || 0).toFixed(2) }}</td>
+                    <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
+                    <td>R$ {{ line.amount.toFixed(2) }}</td>
                     <td>{{ getProductName(line.productId) }}</td>
                     <td>{{ line.quantity || '-' }}</td>
                     <td>R$ {{ (line.unit_cost || 0).toFixed(2) }}</td>
@@ -141,20 +145,20 @@ const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
 const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
-  { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
 ]);
 const editingEntryId = ref<string | null>(null);
 const showDetails = ref<{ [key: string]: boolean }>({});
 
 const totalDebits = computed(() =>
   newEntryLines.value
-    .reduce((sum, line) => sum + (line.debit || 0), 0)
+    .reduce((sum, line) => sum + (line.type === 'debit' ? line.amount : 0), 0)
 );
 
 const totalCredits = computed(() =>
   newEntryLines.value
-    .reduce((sum, line) => sum + (line.credit || 0), 0)
+    .reduce((sum, line) => sum + (line.type === 'credit' ? line.amount : 0), 0)
 );
 
 const sortedJournalEntries = computed(() => {
@@ -172,14 +176,14 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
-    { accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+    { accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
+    { accountId: '', type: 'credit', amount: 0, productId: '', quantity: 0, unit_cost: 0 },
   ];
   editingEntryId.value = null;
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', debit: 0, credit: 0, amount: 0, productId: '', quantity: 0, unit_cost: 0 });
+  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '', quantity: 0, unit_cost: 0 });
 }
 
 function removeLine(index: number) {
@@ -188,11 +192,10 @@ function removeLine(index: number) {
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
   return lines.reduce((sum, line) => {
-    if (type === 'debit') {
-      return sum + (line.debit || 0);
-    } else {
-      return sum + (line.credit || 0);
+    if (line.type === type) {
+      return sum + line.amount;
     }
+    return sum;
   }, 0);
 }
 
@@ -255,12 +258,12 @@ async function submitEntry() {
     description: newEntryDescription.value,
     lines: validLines.map(line => ({
       accountId: line.accountId,
-      debit: line.debit || 0,
-      credit: line.credit || 0,
+      debit: line.type === 'debit' ? line.amount : 0,
+      credit: line.type === 'credit' ? line.amount : 0,
       productId: line.productId || undefined,
       quantity: line.quantity || undefined,
       unit_cost: line.unit_cost || undefined,
-      amount: line.debit || line.credit || 0,
+      amount: line.amount,
     })),
   };
 
@@ -287,12 +290,11 @@ function editEntry(entry: JournalEntry) {
   newEntryDescription.value = entry.description;
   newEntryLines.value = entry.lines.map(line => ({
     accountId: line.accountId,
-    debit: line.debit || 0,
-    credit: line.credit || 0,
+    type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
+    amount: (line.debit && line.debit > 0) ? line.debit : (line.credit || 0),
     productId: line.productId || '',
     quantity: line.quantity || 0,
     unit_cost: line.unit_cost || 0,
-    amount: line.amount || line.debit || line.credit || 0,
   }));
 }
 
