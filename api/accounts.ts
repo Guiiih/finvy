@@ -51,9 +51,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
-      const { name, type } = parsedBody.data;
+      const { name, type, nature } = parsedBody.data;
 
-      const { data, error: dbError } = await supabase.from('accounts').insert({ name, type, user_id }).select();
+      const { data, error: dbError } = await supabase.from('accounts').insert({ name, type, nature, user_id }).select();
       if (dbError) throw dbError;
       return res.status(201).json(data);
     } else if (req.method === 'PUT') {
