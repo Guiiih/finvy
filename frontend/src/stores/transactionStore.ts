@@ -36,7 +36,7 @@ export const useTransactionStore = defineStore('transactionStore', () => {
 
       const newJournalEntry: JournalEntry = {
         id: '',
-        date: date,
+        entry_date: date,
         description: description,
         lines: journalEntryLines,
       };
