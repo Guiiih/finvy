@@ -18,17 +18,6 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         try {
           const linesData = await api.get<any[]>(`/entry-lines?journal_entry_id=${entry.id}`); // Use any[] for now
           const convertedLines: EntryLine[] = linesData.map(line => ({
-            accountId: line.account_id,
-            type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
-            amount: (line.debit || 0) > 0 ? (line.debit || 0) : (line.credit || 0),
-            productId: line.product_id || undefined,
-            quantity: line.quantity || undefined,
-            unit_cost: line.unit_cost || undefined,
-            total_gross: line.total_gross || undefined,
-            icms_value: line.icms_value || undefined,
-            total_net: line.total_net || undefined,
-          }));
-          console.log('Converted Lines for entry', entry.id, ':', convertedLines);
           return { ...entry, lines: convertedLines };
         } catch (lineError: unknown) { 
           console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);

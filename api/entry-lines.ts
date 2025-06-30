@@ -50,7 +50,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         // This is the new route: /api/journal-entries/:journal_entry_id/lines
         const { data, error: dbError } = await supabase
           .from('entry_lines')
-          .select('*')
+          .select('*, product_id, quantity, unit_cost')
           .eq('journal_entry_id', journal_entry_id as string);
 
         if (dbError) throw dbError;

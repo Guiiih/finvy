@@ -39,7 +39,6 @@ export const useStockControlStore = defineStore('stockControlStore', () => {
     journalEntryStore.getAllJournalEntries.forEach(entry => {
       entry.lines.forEach(line => {
         if (line.productId && line.quantity && line.unit_cost) {
-          console.log('Processing line with product:', line.productId, 'Quantity:', line.quantity, 'Unit Cost:', line.unit_cost);
           const currentBalance = productBalancesMap.get(line.productId) || { quantity: 0, totalCost: 0 };
 
           if (line.debit && line.debit > 0) { // Purchase
