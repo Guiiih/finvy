@@ -88,7 +88,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         .from('entry_lines')
         .insert([{ journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, total_net }])
         .select()
-        .single();
+        .maybeSingle();
+
+      if (insertError) {
+        console.error(`Erro ao inserir nova linha de lançamento: ${insertError.message}`);
+        throw insertError;
+      }
+      if (!newLine) {
+        return handleErrorResponse(res, 500, 'Erro ao criar linha de lançamento: nenhum dado retornado.');
+      }
 
       if (insertError) throw insertError;
 
@@ -155,7 +163,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         .from('entry_lines')
         .select('journal_entry_id')
         .eq('id', id)
-        .single();
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error(`Erro ao buscar linha de lançamento para atualização: ${fetchError.message}`);
+        throw fetchError;
+      }
+      if (!entryLine) {
+        return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
+      }
 
       if (fetchError) throw fetchError;
       if (!entryLine) {
@@ -179,7 +195,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         .update(updateData)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
+
+      if (dbError) {
+        console.error(`Erro ao atualizar linha de lançamento: ${dbError.message}`);
+        throw dbError;
+      }
+      if (!data) {
+        return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada ou não autorizada para atualização.');
+      }
 
       if (dbError) throw dbError;
 
@@ -199,7 +223,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .from('entry_lines')
           .select('id, journal_entry_id, product_id, quantity, unit_cost, debit, credit')
           .eq('id', parsedId.data.id)
-          .single();
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error(`Erro ao buscar linha de lançamento para exclusão: ${fetchError.message}`);
+          throw fetchError;
+        }
+        if (!entryLine) {
+          return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
+        }
 
         if (fetchError) throw fetchError;
         if (!entryLine) {
@@ -211,7 +243,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .select('id, user_id')
           .eq('id', entryLine.journal_entry_id)
           .eq('user_id', user_id)
-          .single();
+          .maybeSingle();
+
+        if (journalError) {
+          console.error(`Erro ao buscar lançamento diário para exclusão (primeiro bloco): ${journalError.message}`);
+          throw journalError;
+        }
+        if (!journalEntry) {
+          return handleErrorResponse(res, 403, 'Você não tem permissão para deletar esta linha de lançamento.');
+        }
 
         if (journalError) throw journalError;
         if (!journalEntry) {
@@ -229,7 +269,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .select('id, user_id')
           .eq('id', parsedId.data.id)
           .eq('user_id', user_id)
-          .single();
+          .maybeSingle();
+
+        if (journalError) {
+          console.error(`Erro ao buscar lançamento diário para exclusão (segundo bloco): ${journalError.message}`);
+          throw journalError;
+        }
+        if (!journalEntry) {
+          return handleErrorResponse(res, 403, 'Você não tem permissão para deletar linhas deste lançamento diário.');
+        }
 
         if (journalError) throw journalError;
         if (!journalEntry) {
