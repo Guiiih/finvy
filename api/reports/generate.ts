@@ -134,6 +134,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // --- DRE Calculation ---
     const receitaBrutaVendas = getAccountBalance('Receita de Vendas');
     const icmsSobreVendas = getAccountBalance('ICMS sobre Vendas');
+    const icmsSobreCompras = getAccountBalance('ICMS sobre Compras');
     const cmv = getAccountBalance('CMV'); // Assuming CMV is calculated elsewhere or stored
     const receitaLiquidaVendas = receitaBrutaVendas - icmsSobreVendas;
     const lucroBruto = receitaLiquidaVendas - cmv;
