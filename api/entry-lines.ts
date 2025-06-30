@@ -217,6 +217,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       return res.status(200).json(data);
     } else if (req.method === 'DELETE') {
+      console.log('DELETE /api/entry-lines: req.query:', req.query);
       const { id, journal_entry_id } = req.query;
 
       let linesToDelete: { id: string, product_id?: string, quantity?: number, unit_cost?: number, debit?: number, credit?: number }[] = [];
@@ -261,6 +262,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }
         linesToDelete.push(entryLine);
       } else if (journal_entry_id) {
+        console.log(`DELETE /api/entry-lines: Excluindo linhas para journal_entry_id: ${journal_entry_id}`);
         const parsedId = idSchema.safeParse({ id: journal_entry_id });
         if (!parsedId.success) {
           return handleErrorResponse(res, 400, parsedId.error.errors.map(err => err.message).join(', '));
