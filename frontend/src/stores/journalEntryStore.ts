@@ -76,8 +76,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         const lineToSend = {
           journal_entry_id: newJournalEntry.id,
           account_id: line.accountId,
-          debit: line.type === 'debit' ? line.amount : undefined,
-          credit: line.type === 'credit' ? line.amount : undefined,
+          debit: line.type === 'debit' ? line.amount : 0,
+          credit: line.type === 'credit' ? line.amount : 0,
           product_id: line.productId,
           quantity: line.quantity,
           unit_cost: line.unit_cost,
@@ -126,8 +126,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         const lineToSend = {
           journal_entry_id: updatedEntry.id,
           account_id: line.accountId,
-          debit: line.type === 'debit' ? line.amount : undefined,
-          credit: line.type === 'credit' ? line.amount : undefined,
+          debit: line.type === 'debit' ? line.amount : 0,
+          credit: line.type === 'credit' ? line.amount : 0,
           product_id: line.productId,
           quantity: line.quantity,
           unit_cost: line.unit_cost,
