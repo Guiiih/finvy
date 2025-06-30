@@ -39,7 +39,7 @@ export interface EntryLine {
 
 export interface JournalEntry {
   id: string;
-  date: string;
+  entry_date: string;
   description: string;
   lines: EntryLine[];
   user_id?: string;

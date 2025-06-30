@@ -82,7 +82,7 @@
       <tbody>
         <template v-for="entry in sortedJournalEntries" :key="entry.id">
           <tr class="entry-summary">
-            <td>{{ entry.date }}</td>
+            <td>{{ entry.entry_date }}</td>
             <td>{{ entry.description }}</td>
             <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
             <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
@@ -216,7 +216,7 @@ const totalCredits = computed(() =>
 );
 
 const sortedJournalEntries = computed(() => {
-  return [...journalEntryStore.journalEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return [...journalEntryStore.journalEntries].sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime());
 });
 
 onMounted(async () => {
@@ -305,7 +305,7 @@ async function submitEntry() {
 
   const newEntry: JournalEntry = {
     id: editingEntryId.value || `JE-${Date.now()}`,
-    date: newEntryDate.value,
+    entry_date: newEntryDate.value,
     description: newEntryDescription.value,
     lines: validLines.map(line => ({
       accountId: line.accountId,
@@ -339,7 +339,7 @@ async function submitEntry() {
 function editEntry(entry: JournalEntry) {
   showAddEntryForm.value = true;
   editingEntryId.value = entry.id;
-  newEntryDate.value = entry.date;
+  newEntryDate.value = entry.entry_date;
   newEntryDescription.value = entry.description;
   newEntryLines.value = entry.lines.map(line => ({
     accountId: line.accountId,
