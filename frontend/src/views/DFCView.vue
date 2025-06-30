@@ -214,7 +214,6 @@ span:last-child {
   font-weight: bold; /* Valores dos subtotais e totais são negrito */
 }
 </style>
-</script>
 
 <template>
   <div class="dfc-container">
