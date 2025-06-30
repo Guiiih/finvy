@@ -119,7 +119,7 @@ export const useReportStore = defineStore('report', () => {
 
     const estoqueFinalAccount = accountsMap.get(accountStore.getAccountByName('Estoque Final')?.id || '');
     const totalEstoqueFinalValue = stockControlStore.balances.reduce((sum, pb) => sum + pb.totalValue, 0);
-
+    console.log('Total Estoque Final Value:', totalEstoqueFinalValue);
 
     if (estoqueFinalAccount) {
       estoqueFinalAccount.debitEntries = [];

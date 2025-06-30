@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useProductStore } from './productStore';
+import { useJournalEntryStore } from './journalEntryStore'; // Import journalEntryStore
 
 interface ProductBalance {
   productId: string;
@@ -21,16 +22,54 @@ interface StockMovement {
 
 export const useStockControlStore = defineStore('stockControlStore', () => {
   const productStore = useProductStore();
+  const journalEntryStore = useJournalEntryStore(); // Initialize journalEntryStore
 
   const movements = ref<StockMovement[]>([]); 
   const balances = computed<ProductBalance[]>(() => {
-    return productStore.products.map(product => ({
-      productId: product.id,
-      productName: product.name,
-      quantity: product.current_stock || 0,
-      unit_cost: product.unit_cost || 0,
-      totalValue: (product.current_stock || 0) * (product.unit_cost || 0)
-    }));
+    const productBalancesMap = new Map<string, { quantity: number; totalCost: number }>();
+
+    // Initialize with existing products, though entries will override/update
+    productStore.products.forEach(product => {
+      productBalancesMap.set(product.id, {
+        quantity: 0, // Start from 0, as we'll build from entries
+        totalCost: 0,
+      });
+    });
+
+    journalEntryStore.getAllJournalEntries.forEach(entry => {
+      entry.lines.forEach(line => {
+        if (line.productId && line.quantity && line.unit_cost) {
+          const currentBalance = productBalancesMap.get(line.productId) || { quantity: 0, totalCost: 0 };
+
+          if (line.debit && line.debit > 0) { // Purchase
+            currentBalance.quantity += line.quantity;
+            currentBalance.totalCost += line.quantity * line.unit_cost;
+          } else if (line.credit && line.credit > 0) { // Sale
+            // For sales, we need to use the average cost of goods sold
+            // This is a simplification; a proper inventory system would use FIFO/LIFO/Weighted Average
+            // For now, we'll just reduce quantity and total cost proportionally
+            if (currentBalance.quantity > 0) {
+              const averageUnitCost = currentBalance.totalCost / currentBalance.quantity;
+              currentBalance.quantity -= line.quantity;
+              currentBalance.totalCost -= line.quantity * averageUnitCost;
+            }
+          }
+          productBalancesMap.set(line.productId, currentBalance);
+        }
+      });
+    });
+
+    return Array.from(productBalancesMap.entries()).map(([productId, data]) => {
+      const product = productStore.getProductById(productId);
+      const unit_cost = data.quantity > 0 ? data.totalCost / data.quantity : 0;
+      return {
+        productId: productId,
+        productName: product?.name || 'Unknown Product',
+        quantity: data.quantity,
+        unit_cost: unit_cost,
+        totalValue: data.totalCost,
+      };
+    }).filter(balance => balance.quantity > 0 || balance.totalValue > 0); // Filter out products with no stock/value
   });
 
   const getAllMovements = computed(() => movements.value);
@@ -40,6 +79,8 @@ export const useStockControlStore = defineStore('stockControlStore', () => {
   });
 
   const totalCostOfGoodsSold = computed(() => {
+    // This would be more complex, tracking actual COGS from sales
+    // For now, it's simplified or can be calculated in reportStore
     return 0; 
   });
 
