@@ -21,7 +21,7 @@
     </div>
 
     <div class="auth-logo-column">
-
+      <img src="../assets/Finvy Logo.svg" alt="Logo" class="logo" />
     </div>
   </div>
 </template>
@@ -87,7 +87,7 @@ const handleForgotPassword = async () => {
 }
 
 .logo {
-  max-width: 80%;
+  max-width: 30%;
   height: auto;
 }
 

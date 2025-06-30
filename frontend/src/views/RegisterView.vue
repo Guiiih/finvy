@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page-container">
     <div class="auth-logo-column">
-
+      <img src="../assets/Finvy Logo.svg" alt="Logo" class="logo" />
     </div>
 
     <div class="auth-form-column">
@@ -111,7 +111,7 @@ const handleRegister = async () => {
 }
 
 .logo {
-  max-width: 80%;
+  max-width: 30%;
   height: auto;
 }
 
