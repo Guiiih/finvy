@@ -6,7 +6,7 @@ import { useJournalEntryStore } from '@/stores/journalEntryStore';
 const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
 
-const ledgerAccounts = computed(() => reportStore.ledgerAccounts);
+const ledgerAccounts = computed(() => reportStore.ledgerAccounts.filter(account => account.finalBalance !== 0));
 
 function getBalanceClass(account: any) {
   if (account.finalBalance === 0) {
