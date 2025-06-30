@@ -159,6 +159,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
+      console.log(`PUT: Buscando linha de lançamento com ID: ${id} para user_id: ${user_id}`);
       const { data: entryLine, error: fetchError } = await supabase
         .from('entry_lines')
         .select('journal_entry_id')
@@ -166,24 +167,31 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         .maybeSingle();
 
       if (fetchError) {
-        console.error(`Erro ao buscar linha de lançamento para atualização: ${fetchError.message}`);
+        console.error(`PUT: Erro ao buscar linha de lançamento para atualização: ${fetchError.message}`);
         throw fetchError;
       }
       if (!entryLine) {
+        console.warn(`PUT: Linha de lançamento com ID ${id} não encontrada.`);
         return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
       }
 
-      if (fetchError) throw fetchError;
-      if (!entryLine) {
-        return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
-      }
-
+      console.log(`PUT: Buscando lançamento diário com ID: ${entryLine.journal_entry_id} para user_id: ${user_id}`);
+      console.log(`PUT: Buscando lançamento diário com ID: ${entryLine.journal_entry_id} para user_id: ${user_id}`);
       const { data: journalEntry, error: journalError } = await supabase
         .from('journal_entries')
         .select('id, user_id')
         .eq('id', entryLine.journal_entry_id)
         .eq('user_id', user_id)
-        .single();
+        .maybeSingle();
+
+      if (journalError) {
+        console.error(`PUT: Erro ao buscar lançamento diário para atualização: ${journalError.message}`);
+        throw journalError;
+      }
+      if (!journalEntry) {
+        console.warn(`PUT: Lançamento diário com ID ${entryLine.journal_entry_id} não encontrado ou sem permissão.`);
+        return handleErrorResponse(res, 403, 'Você não tem permissão para atualizar esta linha de lançamento.');
+      }
 
       if (journalError) throw journalError;
       if (!journalEntry) {
@@ -219,6 +227,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           return handleErrorResponse(res, 400, parsedId.error.errors.map(err => err.message).join(', '));
         }
 
+        console.log(`DELETE: Buscando linha de lançamento com ID: ${parsedId.data.id} para user_id: ${user_id}`);
         const { data: entryLine, error: fetchError } = await supabase
           .from('entry_lines')
           .select('id, journal_entry_id, product_id, quantity, unit_cost, debit, credit')
@@ -226,18 +235,15 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .maybeSingle();
 
         if (fetchError) {
-          console.error(`Erro ao buscar linha de lançamento para exclusão: ${fetchError.message}`);
+          console.error(`DELETE: Erro ao buscar linha de lançamento para exclusão: ${fetchError.message}`);
           throw fetchError;
         }
         if (!entryLine) {
+          console.warn(`DELETE: Linha de lançamento com ID ${parsedId.data.id} não encontrada.`);
           return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
         }
 
-        if (fetchError) throw fetchError;
-        if (!entryLine) {
-          return handleErrorResponse(res, 404, 'Linha de lançamento não encontrada.');
-        }
-
+        console.log(`DELETE: Buscando lançamento diário com ID: ${entryLine.journal_entry_id} para user_id: ${user_id}`);
         const { data: journalEntry, error: journalError } = await supabase
           .from('journal_entries')
           .select('id, user_id')
@@ -246,15 +252,11 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .maybeSingle();
 
         if (journalError) {
-          console.error(`Erro ao buscar lançamento diário para exclusão (primeiro bloco): ${journalError.message}`);
+          console.error(`DELETE: Erro ao buscar lançamento diário para exclusão (primeiro bloco): ${journalError.message}`);
           throw journalError;
         }
         if (!journalEntry) {
-          return handleErrorResponse(res, 403, 'Você não tem permissão para deletar esta linha de lançamento.');
-        }
-
-        if (journalError) throw journalError;
-        if (!journalEntry) {
+          console.warn(`DELETE: Lançamento diário com ID ${entryLine.journal_entry_id} não encontrado ou sem permissão.`);
           return handleErrorResponse(res, 403, 'Você não tem permissão para deletar esta linha de lançamento.');
         }
         linesToDelete.push(entryLine);
@@ -264,6 +266,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           return handleErrorResponse(res, 400, parsedId.error.errors.map(err => err.message).join(', '));
         }
 
+        console.log(`DELETE: Buscando lançamento diário com ID: ${parsedId.data.id} para user_id: ${user_id}`);
         const { data: journalEntry, error: journalError } = await supabase
           .from('journal_entries')
           .select('id, user_id')
@@ -272,15 +275,11 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .maybeSingle();
 
         if (journalError) {
-          console.error(`Erro ao buscar lançamento diário para exclusão (segundo bloco): ${journalError.message}`);
+          console.error(`DELETE: Erro ao buscar lançamento diário para exclusão (segundo bloco): ${journalError.message}`);
           throw journalError;
         }
         if (!journalEntry) {
-          return handleErrorResponse(res, 403, 'Você não tem permissão para deletar linhas deste lançamento diário.');
-        }
-
-        if (journalError) throw journalError;
-        if (!journalEntry) {
+          console.warn(`DELETE: Lançamento diário com ID ${parsedId.data.id} não encontrado ou sem permissão.`);
           return handleErrorResponse(res, 403, 'Você não tem permissão para deletar linhas deste lançamento diário.');
         }
 
