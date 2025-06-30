@@ -2,18 +2,14 @@
 import { onMounted } from 'vue';
 import { useStockControlStore } from '@/stores/stockControlStore';
 import { useProductStore } from '@/stores/productStore';
-import { useJournalEntryStore } from '@/stores/journalEntryStore';
-import { useAccountStore } from '@/stores/accountStore'; 
+import { useReportStore } from '@/stores/reportStore';
 
 const stockControlStore = useStockControlStore();
 const productStore = useProductStore();
-const journalEntryStore = useJournalEntryStore();
-const accountStore = useAccountStore(); 
+const reportStore = useReportStore();
 
 onMounted(async () => {
-  await accountStore.fetchAccounts(); 
-  await productStore.fetchProducts(); 
-  await journalEntryStore.fetchJournalEntries(); 
+  await reportStore.fetchReports();
 });
 </script>
 
@@ -21,9 +17,9 @@ onMounted(async () => {
   <div class="stock-control-container">
     <h1>Controle de Estoque</h1>
 
-    <p v-if="productStore.loading || journalEntryStore.loading">Carregando dados de estoque...</p>
-    <p v-else-if="productStore.error || journalEntryStore.error" class="error-message">
-      Erro ao carregar dados: {{ productStore.error || journalEntryStore.error }}
+    <p v-if="reportStore.loading" class="loading-message">Carregando dados de estoque...</p>
+    <p v-else-if="reportStore.error" class="error-message">
+      Erro ao carregar dados: {{ reportStore.error }}
     </p>
     <p v-else-if="stockControlStore.balances.length === 0" class="no-stock-message">
       Nenhum balanço de estoque para exibir. Adicione produtos e lançamentos contábeis.

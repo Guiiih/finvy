@@ -9,7 +9,7 @@ const journalEntryStore = useJournalEntryStore();
 const dreData = computed(() => reportStore.dreData);
 
 onMounted(async () => {
-  await journalEntryStore.fetchJournalEntries();
+  await reportStore.fetchReports();
 });
 </script>
 

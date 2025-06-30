@@ -9,7 +9,7 @@ const journalEntryStore = useJournalEntryStore();
 const variationData = computed(() => reportStore.variationData);
 
 onMounted(async () => {
-  await journalEntryStore.fetchJournalEntries();
+  await reportStore.fetchReports();
 });
 </script>
 

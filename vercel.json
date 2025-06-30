@@ -4,6 +4,7 @@
     { "source": "/api/products/:id", "destination": "/api/products" },
     { "source": "/api/journal-entries/:id", "destination": "/api/journal-entries" },
     { "source": "/api/journal-entries/:id/lines", "destination": "/api/entry-lines" },
+    { "source": "/api/reports/generate", "destination": "/api/reports/generate" },
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

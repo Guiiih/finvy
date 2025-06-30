@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { onMounted, computed } from 'vue';
 import InfoCard from '@/components/InfoCard.vue'; 
 import { useReportStore } from '@/stores/reportStore';
 
@@ -7,9 +7,11 @@ const reportStore = useReportStore();
 
 const totalAtivo = computed(() => reportStore.balanceSheetData.totalDoAtivo);
 const lucroLiquido = computed(() => reportStore.dreData.lucroLiquido);
-const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo); 
+const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo);
 
-onMounted(() => {});
+onMounted(async () => {
+  await reportStore.fetchReports();
+});
 
 </script>
 
