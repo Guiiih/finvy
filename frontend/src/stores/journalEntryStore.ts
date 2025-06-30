@@ -28,16 +28,14 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             icms_value: line.icms_value || undefined,
             total_net: line.total_net || undefined,
           }));
-        } catch (lineError: unknown) { 
-          console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);
-          if (lineError instanceof Error) {
-            return { ...entry, lines: [], error: lineError.message }; 
-          }
-          return { ...entry, lines: [], error: 'Erro desconhecido ao carregar linhas.' };
+          return { ...entry, lines: convertedLines };
+        } catch (err) {
+          console.error("Erro ao buscar linhas do lançamento:", err);
+          return null;
         }
       }));
 
-      journalEntries.value = entriesWithLines;
+      journalEntries.value = entriesWithLines.filter((entry): entry is JournalEntry => entry !== null);
     } catch (err: unknown) { 
       console.error("Erro ao buscar lançamentos:", err);
       if (err instanceof Error) {
