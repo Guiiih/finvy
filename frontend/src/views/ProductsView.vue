@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import { useProductStore } from '@/stores/productStore';
-import { useAuthStore } from '@/stores/authStore'; // Importar o authStore
+import { useAuthStore } from '@/stores/authStore';
 import type { Product } from '@/types';
 import BaseTable from '@/components/BaseTable.vue';
 
 const productStore = useProductStore();
-const authStore = useAuthStore(); // Instanciar o authStore
+const authStore = useAuthStore();
+
+const newProductName = ref('');
+const newProductDescription = ref('');
+const newProductUnitCost = ref(0);
+const newProductIcmsRate = ref(0);
+const newProductCurrentStock = ref(0);
+
+const isEditing = ref(false);
+const editingProduct = ref<Product | null>(null);
 
 const filteredProducts = computed(() => {
   return productStore.products.map(product => {
@@ -35,8 +44,129 @@ const headers = [
   { key: 'actions', label: 'Ações', align: 'center' as const },
 ];
 
+const productNameModel = computed({
+  get() {
+    return isEditing.value && editingProduct.value ? editingProduct.value.name : newProductName.value;
+  },
+  set(newValue: string) {
+    if (isEditing.value && editingProduct.value) {
+      editingProduct.value.name = newValue;
+    } else {
+      newProductName.value = newValue;
+    }
+  }
+});
+
+const productDescriptionModel = computed({
+  get() {
+    return isEditing.value && editingProduct.value ? editingProduct.value.description || '' : newProductDescription.value;
+  },
+  set(newValue: string) {
+    if (isEditing.value && editingProduct.value) {
+      editingProduct.value.description = newValue;
+    } else {
+      newProductDescription.value = newValue;
+    }
+  }
+});
+
+const productUnitCostModel = computed({
+  get() {
+    return isEditing.value && editingProduct.value ? editingProduct.value.unit_cost : newProductUnitCost.value;
+  },
+  set(newValue: number) {
+    if (isEditing.value && editingProduct.value) {
+      editingProduct.value.unit_cost = newValue;
+    } else {
+      newProductUnitCost.value = newValue;
+    }
+  }
+});
+
+const productIcmsRateModel = computed({
+  get() {
+    return isEditing.value && editingProduct.value ? editingProduct.value.icms_rate || 0 : newProductIcmsRate.value;
+  },
+  set(newValue: number) {
+    if (isEditing.value && editingProduct.value) {
+      editingProduct.value.icms_rate = newValue;
+    } else {
+      newProductIcmsRate.value = newValue;
+    }
+  }
+});
+
+const productCurrentStockModel = computed({
+  get() {
+    return isEditing.value && editingProduct.value ? editingProduct.value.current_stock : newProductCurrentStock.value;
+  },
+  set(newValue: number) {
+    if (isEditing.value && editingProduct.value) {
+      editingProduct.value.current_stock = newValue;
+    } else {
+      newProductCurrentStock.value = newValue;
+    }
+  }
+});
+
 async function loadProducts() {
   await productStore.fetchProducts();
+}
+
+async function handleAddProduct() {
+  if (!newProductName.value || newProductUnitCost.value <= 0) {
+    alert('Por favor, preencha o nome e o custo unitário do produto.');
+    return;
+  }
+  try {
+    await productStore.addProduct({
+      name: newProductName.value,
+      description: newProductDescription.value,
+      unit_cost: newProductUnitCost.value,
+      icms_rate: newProductIcmsRate.value,
+      current_stock: newProductCurrentStock.value,
+    });
+    newProductName.value = '';
+    newProductDescription.value = '';
+    newProductUnitCost.value = 0;
+    newProductIcmsRate.value = 0;
+    newProductCurrentStock.value = 0;
+  } catch (err: unknown) {
+    console.error("Erro ao adicionar produto:", err);
+    if (err instanceof Error) {
+      alert(err.message || 'Erro ao adicionar produto.');
+    } else {
+      alert('Erro ao adicionar produto.');
+    }
+  }
+}
+
+function startEdit(product: Product) {
+  isEditing.value = true;
+  editingProduct.value = { ...product };
+}
+
+async function handleUpdateProduct() {
+  if (!editingProduct.value || !editingProduct.value.id) return;
+
+  try {
+    await productStore.updateProduct(editingProduct.value.id, {
+      name: editingProduct.value.name,
+      description: editingProduct.value.description,
+      unit_cost: editingProduct.value.unit_cost,
+      icms_rate: editingProduct.value.icms_rate,
+      current_stock: editingProduct.value.current_stock,
+    });
+    isEditing.value = false;
+    editingProduct.value = null;
+  } catch (err: unknown) {
+    console.error("Erro ao atualizar produto:", err);
+    if (err instanceof Error) {
+      alert(err.message || 'Erro ao atualizar produto.');
+    } else {
+      alert('Erro ao atualizar produto.');
+    }
+  }
 }
 
 async function handleDeleteProduct(id: string) {
@@ -67,7 +197,33 @@ watchEffect(() => {
   <div class="products-container">
     <h1>Gerenciar Produtos</h1>
 
-    
+    <div class="form-section">
+      <h2>{{ isEditing ? 'Editar Produto' : 'Adicionar Novo Produto' }}</h2>
+      <form @submit.prevent="isEditing ? handleUpdateProduct() : handleAddProduct()">
+        <div class="form-group">
+          <label for="productName">Nome do Produto:</label>
+          <input type="text" id="productName" v-model="productNameModel" required />
+        </div>
+        <div class="form-group">
+          <label for="productDescription">Descrição:</label>
+          <input type="text" id="productDescription" v-model="productDescriptionModel" />
+        </div>
+        <div class="form-group">
+          <label for="productUnitCost">Custo Unitário:</label>
+          <input type="number" id="productUnitCost" v-model.number="productUnitCostModel" required step="0.01" />
+        </div>
+        <div class="form-group">
+          <label for="productIcmsRate">Alíquota ICMS (%):</label>
+          <input type="number" id="productIcmsRate" v-model.number="productIcmsRateModel" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label for="productCurrentStock">Estoque Atual:</label>
+          <input type="number" id="productCurrentStock" v-model.number="productCurrentStockModel" required />
+        </div>
+        <button type="submit">{{ isEditing ? 'Atualizar Produto' : 'Adicionar Produto' }}</button>
+        <button v-if="isEditing" type="button" @click="isEditing = false; editingProduct = null">Cancelar</button>
+      </form>
+    </div>
 
     <div class="products-list-section">
       <h2>Produtos Existentes</h2>
@@ -95,6 +251,7 @@ watchEffect(() => {
           R$ {{ value.toFixed(2) }}
         </template>
         <template #cell(actions)="{ item }">
+          <button @click="startEdit(item as Product)">Editar</button>
           <button @click="handleDeleteProduct(item.id!)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>
