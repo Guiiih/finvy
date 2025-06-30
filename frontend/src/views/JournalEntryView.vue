@@ -141,7 +141,7 @@ watch(newEntryDescription, (newValue) => {
 });
 
 async function parseProductFromDescription(description: string) {
-  const regex = /^(\d+)\s+(.+)$/; // Regex para "QUANTIDADE NOME_DO_PRODUTO"
+  const regex = /(\d+)\s*unds\s*de\s*produto\s+([^,]+)/i; // Regex para "QUANTIDADE unds de produto NOME_DO_PRODUTO"
   const match = description.match(regex);
 
   if (match) {
