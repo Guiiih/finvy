@@ -41,7 +41,7 @@ const seedAccounts: SeedAccount[] = [
 
   // Contas de Apuração/Resultado (podem ser tratadas como expense/revenue para simplificar)
   { name: 'Resultado Bruto', type: 'revenue', code: 60101 }, // Ou um tipo especial se houver
-  { name: 'C/C ICMS', type: 'asset', code: 60102 }, // Conta de compensação para ICMS
+  
   { name: 'Estoque Final', type: 'asset', code: 60103 }, // Conta para ajuste de estoque
 ];
 

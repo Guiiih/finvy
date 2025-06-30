@@ -145,8 +145,23 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const clientes = getAccountBalance('Clientes');
     const fornecedores = getAccountBalance('Fornecedores');
     const capitalSocial = getAccountBalance('Capital Social Subscrito') - getAccountBalance('Capital Social a Integralizar');
-    const totalDoAtivo = caixa + clientes + totalEstoqueFinalValue;
-    const totalDoPassivo = fornecedores;
+
+    // Calculate ICMS a Recolher or ICMS a Recuperar
+    const icmsSobreVendas = getAccountBalance('ICMS sobre Vendas');
+    const icmsSobreCompras = getAccountBalance('ICMS sobre Compras');
+    const netICMS = icmsSobreVendas - icmsSobreCompras;
+
+    let icmsARecolher = 0;
+    let icmsARecuperar = 0;
+
+    if (netICMS > 0) {
+      icmsARecolher = netICMS;
+    } else {
+      icmsARecuperar = Math.abs(netICMS);
+    }
+
+    const totalDoAtivo = caixa + clientes + totalEstoqueFinalValue + icmsARecuperar;
+    const totalDoPassivo = fornecedores + icmsARecolher;
     const totalPatrimonioLiquido = capitalSocial + lucroLiquido;
     const totalPassivoEPatrimonioLiquido = totalDoPassivo + totalPatrimonioLiquido;
     const balanceSheetData = {
@@ -155,6 +170,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         totalPatrimonioLiquido,
         totalPassivoEPatrimonioLiquido,
         isBalanced: Math.abs(totalDoAtivo - totalPassivoEPatrimonioLiquido) < 0.01,
+        icmsARecolher,
+        icmsARecuperar,
         // Add more detailed fields if needed by the frontend view
     };
 
