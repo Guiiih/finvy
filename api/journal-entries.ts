@@ -43,6 +43,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
+      console.log('Fetching journal entries for user_id:', user_id);
       const { data, error: dbError } = await supabase
         .from('journal_entries')
         .select('*')
