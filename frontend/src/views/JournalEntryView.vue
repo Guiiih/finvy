@@ -36,7 +36,15 @@
           <option value="debit">Débito</option>
           <option value="credit">Crédito</option>
         </select>
-        <input type="number" :value="line.amount" @input="event => line.amount = parseFloat(event.target.value) || 0" placeholder="Valor" step="0.01" min="0" required />
+                <input
+                  type="number"
+                  :value="line.amount"
+                  @input="event => { const target = event.target as HTMLInputElement | null; line.amount = target && target.value ? parseFloat(target.value) || 0 : 0; }"
+                  placeholder="Valor"
+                  step="0.01"
+                  min="0"
+                  required
+                />
         
         <select v-model="line.productId" :disabled="!line.accountId" @change="handleProductChange(line)" class="product-select">
             <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
@@ -135,6 +143,32 @@ const productStore = useProductStore();
 const showAddEntryForm = ref(false);
 const newEntryDate = ref('');
 const newEntryDescription = ref('');
+const editingEntryId = ref<string | null>(null);
+
+// Add this line to declare newEntryLines as a ref
+type EntryLine = {
+  accountId: string;
+  type: 'debit' | 'credit';
+  amount: number;
+  productId?: string;
+  quantity?: number;
+  unit_cost?: number;
+  total_gross?: number;
+  icms_value?: number;
+  total_net?: number;
+};
+
+const newEntryLines = ref<EntryLine[]>([
+  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined }
+]);
+
+const totalDebits = computed(() =>
+  newEntryLines.value.reduce((sum, line) => line.type === 'debit' ? sum + (line.amount || 0) : sum, 0)
+);
+
+const totalCredits = computed(() =>
+  newEntryLines.value.reduce((sum, line) => line.type === 'credit' ? sum + (line.amount || 0) : sum, 0)
+);
 
 watch(newEntryDescription, (newValue) => {
   parseProductFromDescription(newValue);
@@ -196,24 +230,16 @@ async function parseProductFromDescription(description: string) {
   }
 }
 
-watch(newEntryLines.value, (newLines) => {
-  newLines.forEach(line => {
-    if (line.amount === null || line.amount === undefined) {
-      line.amount = 0;
-    }
-  });
-}, { deep: true });
-
 // ... (código existente)
 
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
-  newEntryLines.value = [
-    { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
-    { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
-]);
-  editingEntryId.value = null;
+newEntryLines.value = [
+  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
+  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined }
+];
+editingEntryId.value = null;
 }
 
 function addLine() {
@@ -241,6 +267,8 @@ function getProductName(productId: string | undefined): string {
   if (!productId) return '-';
   return productStore.getProductById(productId)?.name || 'Produto Desconhecido';
 }
+
+const showDetails = ref<{ [key: string]: boolean }>({});
 
 function toggleDetails(id: string) {
   showDetails.value[id] = !showDetails.value[id];
@@ -364,6 +392,16 @@ const resetAllData = () => {
     console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.');
   }
 };
+
+// Adiciona a propriedade computada para os lançamentos ordenados
+const sortedJournalEntries = computed(() => {
+  // Ordena por data decrescente, depois por id decrescente
+  return [...journalEntryStore.journalEntries].sort((a, b) => {
+    if (a.entry_date > b.entry_date) return -1;
+    if (a.entry_date < b.entry_date) return 1;
+    return b.id.localeCompare(a.id);
+  });
+});
 </script>
 
 <style scoped>
