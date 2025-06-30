@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { useReportStore } from '@/stores/reportStore'; 
+import { useReportStore } from '@/stores/reportStore';
+import { useJournalEntryStore } from '@/stores/journalEntryStore';
 
-const reportStore = useReportStore(); 
+const reportStore = useReportStore();
+const journalEntryStore = useJournalEntryStore();
 
 const ledgerAccounts = computed(() => reportStore.ledgerAccounts);
 
@@ -40,6 +42,7 @@ function getBalanceClass(account: any) {
 
 onMounted(async () => {
   await reportStore.fetchReports();
+  await journalEntryStore.fetchJournalEntries();
 });
 </script>
 
