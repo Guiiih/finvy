@@ -84,7 +84,12 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
-        newLines.push(newLine);
+        // Calcular e adicionar a propriedade 'amount' para a linha recém-criada
+        const processedNewLine: EntryLine = {
+          ...newLine,
+          amount: (newLine.debit || 0) > 0 ? (newLine.debit || 0) : (newLine.credit || 0),
+        };
+        newLines.push(processedNewLine);
       }
 
       journalEntries.value.push({ ...newJournalEntry, lines: newLines });
@@ -134,7 +139,12 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
         const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
-        newLines.push(newLine);
+        // Calcular e adicionar a propriedade 'amount' para a linha recém-criada
+        const processedNewLine: EntryLine = {
+          ...newLine,
+          amount: (newLine.debit || 0) > 0 ? (newLine.debit || 0) : (newLine.credit || 0),
+        };
+        newLines.push(processedNewLine);
       }
 
       const index = journalEntries.value.findIndex(entry => entry.id === updatedEntry.id);
