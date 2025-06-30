@@ -81,6 +81,7 @@
       </thead>
       <tbody>
         <template v-for="entry in sortedJournalEntries" :key="entry.id">
+          {{ console.log('Entry ID:', entry.id, 'Lines:', entry.lines) }}
           <tr class="entry-summary">
             <td>{{ entry.entry_date }}</td>
             <td>{{ entry.description }}</td>
