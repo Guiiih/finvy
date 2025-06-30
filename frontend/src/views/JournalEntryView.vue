@@ -196,33 +196,15 @@ async function parseProductFromDescription(description: string) {
   }
 }
 
-const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
-  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
-]);
-const editingEntryId = ref<string | null>(null);
-const showDetails = ref<{ [key: string]: boolean }>({});
+watch(newEntryLines.value, (newLines) => {
+  newLines.forEach(line => {
+    if (line.amount === null || line.amount === undefined) {
+      line.amount = 0;
+    }
+  });
+}, { deep: true });
 
-const totalDebits = computed(() =>
-  newEntryLines.value
-    .reduce((sum, line) => sum + (line.type === 'debit' ? line.amount : 0), 0)
-);
-
-const totalCredits = computed(() =>
-  newEntryLines.value
-    .reduce((sum, line) => sum + (line.type === 'credit' ? line.amount : 0), 0)
-);
-
-const sortedJournalEntries = computed(() => {
-  return [...journalEntryStore.journalEntries].sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime());
-});
-
-onMounted(async () => {
-  resetForm();
-  await accountStore.fetchAccounts();
-  await productStore.fetchProducts();
-  await journalEntryStore.fetchJournalEntries();
-});
+// ... (código existente)
 
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
@@ -230,6 +212,15 @@ function resetForm() {
   newEntryLines.value = [
     { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
     { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
+]);
+
+watch(newEntryLines, (newLines) => {
+  newLines.forEach(line => {
+    if (line.amount === null || line.amount === undefined) {
+      line.amount = 0;
+    }
+  });
+}, { deep: true });
   ];
   editingEntryId.value = null;
 }
@@ -245,7 +236,7 @@ function removeLine(index: number) {
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
   return lines.reduce((sum, line) => {
     if (line.type === type) {
-      return sum + line.amount;
+      return sum + (line.amount || 0);
     }
     return sum;
   }, 0);
