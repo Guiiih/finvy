@@ -51,13 +51,9 @@ const accountTypeModel = computed({
 
 
 
-onMounted(() => {
-  loadAccounts();
-});
-
-async function loadAccounts() {
+onMounted(async () => {
   await accountStore.fetchAccounts();
-}
+});
 
 async function handleAddAccount() {
   if (!newAccountName.value || !newAccountType.value) {

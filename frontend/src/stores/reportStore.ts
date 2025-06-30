@@ -35,6 +35,7 @@ interface ReportData {
     salariosAPagar: number;
     impostoAPagar: number;
     icmsARecolher: number;
+    icmsARecuperar: number;
     passivoNaoCirculante: number;
     capitalSocial: number;
     capitalSocialSubscrito: number;
