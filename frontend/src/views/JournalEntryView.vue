@@ -125,9 +125,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
 import { useProductStore } from '@/stores/productStore';
-// useStockControlStore é importado mas não usado diretamente neste arquivo.
-// Se não houver uso futuro, pode ser removido.
-// import { useStockControlStore } from '@/stores/stockControlStore';
+
 import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index';
 
 const journalEntryStore = useJournalEntryStore();
@@ -199,8 +197,8 @@ async function parseProductFromDescription(description: string) {
 }
 
 const newEntryLines = ref<JournalEntryLine[]>([
-  { accountId: '', type: 'debit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
-  { accountId: '', type: 'credit', amount: 0, productId: '' }, // REMOVIDOS: quantity e unit_cost
+  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
+  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
 ]);
 const editingEntryId = ref<string | null>(null);
 const showDetails = ref<{ [key: string]: boolean }>({});
@@ -230,14 +228,14 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
   newEntryLines.value = [
-    { accountId: '', type: 'debit', amount: 0, productId: '' },
-    { accountId: '', type: 'credit', amount: 0, productId: '' },
+    { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
+    { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
   ];
   editingEntryId.value = null;
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '' }); // REMOVIDOS: quantity e unit_cost
+  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined });
 }
 
 function removeLine(index: number) {
@@ -272,10 +270,15 @@ function handleAccountChange(line: JournalEntryLine) {
 }
 
 function handleProductChange(line: JournalEntryLine) {
-  // REMOVIDA: A lógica que definia line.quantity e line.unit_cost com base no produto.
-  // Se você precisa que o unit_cost seja puxado automaticamente para alguma lógica interna
-  // sem ser visível no UI, esta função ainda poderia ser usada para isso, mas o código atual
-  // já não o faz após a remoção dos campos vinculados no template.
+  const product = productStore.getProductById(line.productId || '');
+  if (product) {
+    line.unit_cost = product.unit_cost;
+    // Se você quiser preencher a quantidade automaticamente, adicione a lógica aqui.
+    // Por exemplo, line.quantity = 1; ou buscar de algum outro lugar.
+  } else {
+    line.unit_cost = undefined;
+    line.quantity = undefined;
+  }
 }
 
 async function submitEntry() {
