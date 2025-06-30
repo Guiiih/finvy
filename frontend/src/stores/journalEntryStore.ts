@@ -28,6 +28,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             icms_value: line.icms_value || undefined,
             total_net: line.total_net || undefined,
           }));
+          console.log('Converted Lines for entry', entry.id, ':', convertedLines);
           return { ...entry, lines: convertedLines };
         } catch (lineError: unknown) { 
           console.error(`Erro ao buscar linhas para o lançamento ${entry.id}:`, lineError);
