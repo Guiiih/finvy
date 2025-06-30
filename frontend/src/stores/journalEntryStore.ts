@@ -20,7 +20,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           const convertedLines: EntryLine[] = linesData.map(line => ({
             accountId: line.account_id,
             type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
-            amount: (line.debit && line.debit > 0) ? line.debit : line.credit,
+            amount: (line.debit || 0) > 0 ? (line.debit || 0) : (line.credit || 0),
             productId: line.product_id || undefined,
             quantity: line.quantity || undefined,
             unit_cost: line.unit_cost || undefined,
