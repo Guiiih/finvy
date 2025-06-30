@@ -221,6 +221,14 @@ watch(newEntryLines, (newLines) => {
     }
   });
 }, { deep: true });
+
+watch(newEntryLines, (newLines) => {
+  newLines.forEach(line => {
+    if (line.amount === null || line.amount === undefined) {
+      line.amount = 0;
+    }
+  });
+}, { deep: true });
   ];
   editingEntryId.value = null;
 }
