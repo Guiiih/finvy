@@ -98,7 +98,17 @@ export default async function (req: VercelRequest, res: VercelResponse) {
           .select('current_stock, user_id')
           .eq('id', newLine.product_id)
           .eq('user_id', user_id)
-          .single();
+          .maybeSingle();
+
+        console.log(`Attempting to fetch product with ID: ${newLine.product_id} for User ID: ${user_id}`);
+        if (productFetchError) {
+          console.error(`Error fetching product: ${productFetchError.message}`);
+          throw productFetchError;
+        }
+        if (!product) {
+          console.warn(`Produto ${newLine.product_id} não encontrado ou sem permissão para atualizar estoque.`);
+          return res.status(404).json({ error: `Produto ${newLine.product_id} não encontrado ou sem permissão para atualizar estoque.` });
+        }
 
         if (productFetchError) throw productFetchError;
         if (!product) {
@@ -244,7 +254,17 @@ export default async function (req: VercelRequest, res: VercelResponse) {
             .select('current_stock, user_id')
             .eq('id', line.product_id)
             .eq('user_id', user_id)
-            .single();
+            .maybeSingle();
+
+          console.log(`Attempting to fetch product for deletion with ID: ${line.product_id} for User ID: ${user_id}`);
+          if (productFetchError) {
+            console.error(`Error fetching product for deletion: ${productFetchError.message}`);
+            throw productFetchError;
+          }
+          if (!product) {
+            console.warn(`Produto ${line.product_id} não encontrado ou sem permissão para reverter estoque.`);
+            continue;
+          }
 
           if (productFetchError) throw productFetchError;
           if (!product) {
