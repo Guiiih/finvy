@@ -36,7 +36,7 @@
           <option value="debit">Débito</option>
           <option value="credit">Crédito</option>
         </select>
-        <input type="number" v-model.number="line.amount" placeholder="Valor" step="0.01" min="0" required />
+        <input type="number" :value="line.amount" @input="event => line.amount = parseFloat(event.target.value) || 0" placeholder="Valor" step="0.01" min="0" required />
         
         <select v-model="line.productId" :disabled="!line.accountId" @change="handleProductChange(line)" class="product-select">
             <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
@@ -213,23 +213,6 @@ function resetForm() {
     { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
     { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
 ]);
-
-watch(newEntryLines, (newLines) => {
-  newLines.forEach(line => {
-    if (line.amount === null || line.amount === undefined) {
-      line.amount = 0;
-    }
-  });
-}, { deep: true });
-
-watch(newEntryLines, (newLines) => {
-  newLines.forEach(line => {
-    if (line.amount === null || line.amount === undefined) {
-      line.amount = 0;
-    }
-  });
-}, { deep: true });
-  ];
   editingEntryId.value = null;
 }
 
