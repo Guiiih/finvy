@@ -40,7 +40,8 @@ function getBalanceClass(account: any) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await journalEntryStore.fetchJournalEntries();
 });
 </script>
 

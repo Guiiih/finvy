@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
 import { useStockControlStore } from '@/stores/stockControlStore';
@@ -200,7 +200,7 @@ const dfcData = computed(() => {
   // Variações das contas do Balanço (Calculadas como Saldo Final - Saldo Inicial)
   // Ajuste de sinal para DFC:
   // Ativos (exceto caixa): Aumento (-) ou Diminuição (+) no caixa
-  // Passivos/PL: Aumento (+) ou Diminuição (-) no caixa
+  // Passivos/PL: Aumento (+) ou Diminuição (+) no caixa
 
   const varFornecedores = getAccountBalance('Fornecedores'); // Passivo: Aumento (+) no caixa 
   const varImpostosAPagar = getAccountBalance('Impostos a Pagar') + getAccountBalance('ICMS a Recolher'); // Passivo: Aumento (+) no caixa 

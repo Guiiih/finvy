@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useReportStore } from '@/stores/reportStore'; 
 import { useJournalEntryStore } from '@/stores/journalEntryStore'; 
 
@@ -7,6 +7,10 @@ const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
 
 const variationData = computed(() => reportStore.variationData);
+
+onMounted(async () => {
+  await journalEntryStore.fetchJournalEntries();
+});
 </script>
 
 <template>
