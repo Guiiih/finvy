@@ -16,7 +16,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
         try {
-          const linesData = await api.get<any[]>(`/journal-entries/${entry.id}/lines`); // Use any[] for now
+          const linesData = await api.get<any[]>(`/entry-lines?journal_entry_id=${entry.id}`); // Use any[] for now
           const convertedLines: EntryLine[] = linesData.map(line => ({
             accountId: line.account_id,
             type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
