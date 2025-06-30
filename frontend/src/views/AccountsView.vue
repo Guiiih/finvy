@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAccountStore } from '@/stores/accountStore';
 import type { Account } from '@/types';
 import BaseTable from '@/components/BaseTable.vue';
@@ -47,12 +47,17 @@ const accountTypeModel = computed({
 });
 
 
-// Removido loadAccounts, pois o App.vue agora carrega os dados
-// async function loadAccounts() {
-//   await accountStore.fetchAccounts();
-// }
 
-async function handleAddAccount() {
+
+
+
+onMounted(() => {
+  loadAccounts();
+});
+
+async function loadAccounts() {
+  await accountStore.fetchAccounts();
+}
   if (!newAccountName.value || !newAccountType.value) {
     alert('Por favor, preencha todos os campos da conta.');
     return;
@@ -99,10 +104,56 @@ async function handleDeleteAccount(id: string) {
   }
 }
 
-// Removido onMounted, pois o App.vue agora carrega os dados
-// onMounted(() => {
-//   loadAccounts();
-// });
+
+</script>
+
+<template>
+  <div class="accounts-container">
+    <h1>Gerenciar Contas Contábeis</h1>
+
+    <div class="form-section">
+      <h2>{{ isEditing ? 'Editar Conta' : 'Adicionar Nova Conta' }}</h2>
+      <form @submit.prevent="isEditing ? handleUpdateAccount() : handleAddAccount()">
+        <div class="form-group">
+          <label for="accountName">Nome da Conta:</label>
+          <input type="text" id="accountName" v-model="accountNameModel" required />
+        </div>
+        <div class="form-group">
+          <label for="accountType">Tipo:</label>
+          <select id="accountType" v-model="accountTypeModel" required>
+            <option value="asset">Ativo</option>
+            <option value="liability">Passivo</option>
+            <option value="equity">Patrimônio Líquido</option>
+            <option value="revenue">Receita</option>
+            <option value="expense">Despesa</option>
+          </select>
+        </div>
+        <button type="submit">{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</button>
+        <button v-if="isEditing" type="button" @click="isEditing = false; editingAccount = null">Cancelar</button>
+      </form>
+    </div>
+
+    <div class="accounts-list-section">
+      <h2>Contas Existentes</h2>
+      <p v-if="accountStore.loading">Carregando contas...</p>
+      <p v-else-if="accountStore.error" class="error-message">{{ accountStore.error }}</p>
+      <BaseTable
+        v-else
+        :headers="headers"
+        :items="filteredAccounts"
+        empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
+      >
+        <template #cell(actions)="{ item }">
+          <button @click="startEdit(item as Account)">Editar</button>
+          <button @click="handleDeleteAccount(item.id!)" class="delete-button">Excluir</button>
+        </template>
+      </BaseTable>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+
 </script>
 
 <template>
