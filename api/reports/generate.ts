@@ -147,8 +147,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const capitalSocial = getAccountBalance('Capital Social Subscrito') - getAccountBalance('Capital Social a Integralizar');
 
     // Calculate ICMS a Recolher or ICMS a Recuperar
-    const icmsSobreVendas = getAccountBalance('ICMS sobre Vendas');
-    const icmsSobreCompras = getAccountBalance('ICMS sobre Compras');
     const netICMS = icmsSobreVendas - icmsSobreCompras;
 
     let icmsARecolher = 0;
