@@ -55,6 +55,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         product_id: line.product_id,
         quantity: line.quantity,
         unit_cost: line.unit_cost,
+        total_gross: line.total_gross,
+        icms_value: line.icms_value,
+        total_net: line.total_net,
         debit: line.debit,
         credit: line.credit,
       }))

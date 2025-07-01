@@ -204,11 +204,9 @@ const totalCredits = computed(() =>
 );
 
 function calculateLineTotals(line: EntryLine) {
-  const quantity = line.quantity || 0;
-  const unit_cost = line.unit_cost || 0;
   const icms_rate = line.icms_rate || 0;
 
-  line.total_gross = quantity * unit_cost;
+  line.total_gross = line.amount; // Use the amount entered by the user as the gross value
   line.icms_value = line.total_gross * (icms_rate / 100);
   line.total_net = line.total_gross - line.icms_value;
 }
