@@ -127,8 +127,10 @@
             <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
             <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
             <td>
-              <button @click="editEntry(entry)">Editar</button>
-              <button @click="deleteEntry(entry.id)">Excluir</button>
+              <!-- Edição e exclusão direta desabilitadas para manter a integridade contábil. 
+                   Correções devem ser feitas com lançamentos de estorno. -->
+              <button disabled title="Edição desabilitada para lançamentos registrados">Editar</button>
+              <button disabled title="Exclusão desabilitada para lançamentos registrados">Excluir</button>
               <button @click="toggleDetails(entry.id)">
                 {{ showDetails[entry.id] ? 'Ocultar Detalhes' : 'Mostrar Detalhes' }}
               </button>
@@ -142,14 +144,16 @@
                     <th>Conta</th>
                     <th>Tipo</th>
                     <th>Valor</th>
-                    <th>Produto</th> </tr>
+                    <th>Produto</th>
+                    <th>Cód. Conta</th> </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
                     <td>{{ getAccountName(line.account_id) }}</td>
                     <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
                     <td>R$ {{ line.amount.toFixed(2) }}</td>
-                    <td>{{ getProductName(line.product_id) }}</td> </tr>
+                    <td>{{ getProductName(line.product_id) }}</td>
+                    <td>{{ getAccountCode(line.account_id) }}</td> </tr>
                 </tbody>
               </table>
             </td>
@@ -240,6 +244,10 @@ function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): nu
 
 function getAccountName(accountId: string): string {
   return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida';
+}
+
+function getAccountCode(accountId: string): number | undefined {
+  return accountStore.getAccountById(accountId)?.code;
 }
 
 function getProductName(productId: string | undefined): string {

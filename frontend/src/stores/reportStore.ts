@@ -5,6 +5,7 @@ import type { LedgerAccount, ProductBalance } from '@/types/index';
 
 interface ReportData {
   ledgerAccounts: LedgerAccount[];
+  trialBalanceData: LedgerAccount[];
   dreData: {
     receitaBrutaVendas: number;
     deducoesReceitaBruta: number;
@@ -62,6 +63,7 @@ export type { LedgerAccount };
 
 export const useReportStore = defineStore('report', () => {
   const reports = ref<ReportData | null>(null);
+  const trialBalance = ref<LedgerAccount[]>([]); // New state for trial balance
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -83,7 +85,26 @@ export const useReportStore = defineStore('report', () => {
     }
   }
 
+  async function fetchTrialBalance() {
+    loading.value = true;
+    error.value = null;
+    try {
+      const data = await api.get<{ ledgerAccounts: LedgerAccount[] }>('/trial-balance');
+      trialBalance.value = data.ledgerAccounts;
+    } catch (err: unknown) {
+      console.error('Erro ao buscar balancete:', err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao buscar balancete.';
+      } else {
+        error.value = 'Falha ao buscar balancete.';
+      }
+    } finally {
+      loading.value = false;
+    }
+  }
+
   const ledgerAccounts = computed<LedgerAccount[]>(() => reports.value?.ledgerAccounts || []);
+  const trialBalanceData = computed<LedgerAccount[]>(() => trialBalance.value || []);
   const dreData = computed(() => reports.value?.dreData || {
     receitaBrutaVendas: 0,
     deducoesReceitaBruta: 0,
@@ -314,7 +335,9 @@ export const useReportStore = defineStore('report', () => {
     loading,
     error,
     fetchReports,
+    fetchTrialBalance, // Expose the new fetch function
     ledgerAccounts,
+    trialBalanceData, // Expose the new computed property
     dreData,
     balanceSheetData,
     stockBalances,

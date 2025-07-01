@@ -15,6 +15,7 @@ const editingAccount = ref<Account | null>(null);
 const filteredAccounts = computed(() => accountStore.accounts);
 
 const headers = [
+  { key: 'code', label: 'Código', align: 'left' as const },
   { key: 'name', label: 'Nome', align: 'left' as const },
   { key: 'type', label: 'Tipo', align: 'left' as const },
   { key: 'actions', label: 'Ações', align: 'center' as const },

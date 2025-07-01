@@ -17,6 +17,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import UpdatePasswordView from '../views/UpdatePasswordView.vue'
 import RegistrationSuccessView from '../views/RegistrationSuccessView.vue' 
 import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue' 
+import TrialBalanceView from '../views/TrialBalanceView.vue'
 import { supabase } from '../supabase'
 
 const router = createRouter({
@@ -86,6 +87,12 @@ const router = createRouter({
       path: '/variations',
       name: 'variations',
       component: VariationView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/trial-balance',
+      name: 'trial-balance',
+      component: TrialBalanceView,
       meta: { requiresAuth: true }
     },
     {
