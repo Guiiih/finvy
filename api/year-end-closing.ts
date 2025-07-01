@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabase, handleErrorResponse } from './utils/supabaseClient';
 import { handleCors } from './utils/corsHandler';
 import { AuthApiError } from '@supabase/supabase-js';
-import type { Account, JournalEntry, EntryLine } from '../../frontend/src/types';
+import type { Account, JournalEntry, EntryLine } from '../frontend/src/types';
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   if (handleCors(req, res)) {

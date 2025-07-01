@@ -13,7 +13,7 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export const api = {
-  get: async <T>(endpoint: string, options?: { params?: Record<string, any> }): Promise<T> => {
+  get: async <T>(endpoint: string, options?: { params?: Record<string, unknown> }): Promise<T> => {
     try {
       const response = await apiClient.get<T>(endpoint, options);
       return response.data;

@@ -122,8 +122,12 @@ async function handleAddAccountReceivable() {
   try {
     await accountsReceivableStore.addAccountReceivable(newAccount.value);
     resetForm();
-  } catch (error) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 }
 
@@ -138,8 +142,12 @@ async function handleUpdateAccountReceivable() {
   try {
     await accountsReceivableStore.updateAccountReceivable(editingAccountId.value, newAccount.value);
     resetForm();
-  } catch (error) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 }
 
@@ -147,9 +155,13 @@ async function handleDeleteAccountReceivable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a receber?')) {
     try {
       await accountsReceivableStore.deleteAccountReceivable(id);
-    } catch (error) {
+    } catch (error: unknown) {
+    if (error instanceof Error) {
       alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
     }
+  }
   }
 }
 
@@ -157,9 +169,13 @@ async function markAsReceived(id: string) {
   if (confirm('Marcar esta conta como recebida?')) {
     try {
       await accountsReceivableStore.updateAccountReceivable(id, { is_received: true, received_date: new Date().toISOString().split('T')[0] });
-    } catch (error) {
+    } catch (error: unknown) {
+    if (error instanceof Error) {
       alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
     }
+  }
   }
 }
 
