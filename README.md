@@ -1,8 +1,8 @@
-# Finvy: Seu Laboratório de Contabilidade Micro SaaS
+# Finvy
 
 ## Visão Geral
 
-O Finvy é um Micro SaaS (Software as a Service) em desenvolvimento, concebido para ser uma ferramenta poderosa e intuitiva para a resolução de exercícios práticos de contabilidade. A sua génese reside na necessidade de transcender as limitações das folhas de cálculo, que, embora flexíveis, são propensas a erros de fórmula, carecem de integridade de dados e não são escaláveis.
+O Finvy é um Micro SaaS em desenvolvimento, concebido para ser uma ferramenta poderosa e intuitiva para a resolução de exercícios práticos de contabilidade. A sua génese reside na necessidade de transcender as limitações das folhas de cálculo, que, embora flexíveis, são propensas a erros de fórmula, carecem de integridade de dados e não são escaláveis.
 
 O objetivo do Finvy é substituir essa complexidade, oferecendo uma plataforma web onde os utilizadores podem aplicar princípios contábeis fundamentais — como o controlo de stock por custo médio, o método das partidas dobradas e a apuração de resultados — de forma automatizada, visual e segura. A visão a longo prazo é solidificar o Finvy como uma ferramenta educacional de referência e, potencialmente, um serviço comercial para pequenos negócios que necessitem de um controlo financeiro e de inventário simplificado e robusto.
 
