@@ -65,3 +65,23 @@ export const updateProductSchema = z.object({
   unit_cost: z.number().nonnegative('Custo unitário deve ser um valor não negativo.').optional(),
   current_stock: z.number().int().nonnegative('Estoque atual deve ser um número inteiro não negativo.').optional(),
 }).partial();
+
+export const createAccountsPayableSchema = z.object({
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
+  paid_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de pagamento inválido. Use YYYY-MM-DD.').optional().nullable(),
+  is_paid: z.boolean().optional(),
+});
+
+export const updateAccountsPayableSchema = createAccountsPayableSchema.partial();
+
+export const createAccountsReceivableSchema = z.object({
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
+  received_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de recebimento inválido. Use YYYY-MM-DD.').optional().nullable(),
+  is_received: z.boolean().optional(),
+});
+
+export const updateAccountsReceivableSchema = createAccountsReceivableSchema.partial();

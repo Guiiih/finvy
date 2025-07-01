@@ -20,6 +20,8 @@ import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue'
 import TrialBalanceView from '../views/TrialBalanceView.vue'
 import ChartOfAccountsView from '../views/ChartOfAccountsView.vue'
 import YearEndClosingView from '../views/YearEndClosingView.vue'
+import AccountsPayableView from '../views/AccountsPayableView.vue'
+import AccountsReceivableView from '../views/AccountsReceivableView.vue'
 import { supabase } from '../supabase'
 
 const router = createRouter({
@@ -107,6 +109,18 @@ const router = createRouter({
       path: '/year-end-closing',
       name: 'year-end-closing',
       component: YearEndClosingView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/accounts-payable',
+      name: 'accounts-payable',
+      component: AccountsPayableView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/accounts-receivable',
+      name: 'accounts-receivable',
+      component: AccountsReceivableView,
       meta: { requiresAuth: true }
     },
     {

@@ -11,11 +11,13 @@ Até o momento, o Finvy conta com as seguintes funcionalidades e melhorias, visa
 ### 1. Gestão de Contas Contábeis
 *   **Criação e Visualização:** Permite criar e visualizar contas contábeis com nome, tipo (ativo, passivo, patrimônio líquido, receita, despesa) e código.
 *   **Exibição de Código da Conta:** O código da conta agora é exibido de forma proeminente na listagem de contas e nos detalhes das linhas de lançamento, facilitando a identificação e organização.
+*   **Plano de Contas:** Uma nova seção dedicada à visualização do plano de contas de forma organizada, exibindo o código e o nome de cada conta por tipo.
 
 ### 2. Lançamentos Contábeis (Partidas Dobradas)
 *   **Registro de Lançamentos:** Permite registrar lançamentos contábeis com data, descrição e múltiplas linhas de débito e crédito.
 *   **Validação Rigorosa:** O sistema agora exige que o total de débitos seja **exatamente igual** ao total de créditos para que um lançamento possa ser submetido, garantindo a integridade do método das partidas dobradas.
 *   **Imutabilidade de Lançamentos:** Para simular a prática contábil profissional e garantir a trilha de auditoria, lançamentos já registrados **não podem ser editados ou excluídos diretamente** através da interface. Futuras correções deverão ser realizadas por meio de lançamentos de estorno.
+*   **Funcionalidade de Estorno:** Permite estornar um lançamento existente, criando um novo lançamento que reverte o efeito do original, mantendo a trilha de auditoria.
 *   **Cálculo Automático de ICMS:** Ao selecionar um produto em uma linha de lançamento, o sistema calcula automaticamente o `valor bruto`, o `valor do ICMS` (com base na alíquota configurada para o produto) e o `valor líquido` da transação. O usuário insere o valor bruto, e o ICMS é deduzido automaticamente.
 
 ### 3. Relatórios Financeiros Essenciais
@@ -30,6 +32,9 @@ O Finvy oferece a geração de relatórios financeiros fundamentais para a anál
 
 ### 4. Controle de Estoque
 *   **Balanço de Estoque:** Exibe o balanço atual dos produtos em estoque, incluindo quantidade, custo unitário médio e valor total.
+
+### 5. Fechamento de Exercício
+*   **Processo de Fechamento:** Permite realizar o fechamento contábil de um período, zerando as contas de receita e despesa e transferindo o resultado (lucro ou prejuízo) para uma conta de Patrimônio Líquido. Esta funcionalidade é crucial para a preparação das demonstrações financeiras anuais.
 
 ## Tecnologias Utilizadas
 
@@ -94,10 +99,10 @@ O Finvy oferece a geração de relatórios financeiros fundamentais para a anál
 3.  **Lançamentos Contábeis:** Registre novas transações na seção "Lançamentos Contábeis". Lembre-se que débitos e créditos devem ser iguais.
 4.  **Produtos:** Cadastre e gerencie seus produtos, incluindo custo unitário e alíquota de ICMS.
 5.  **Relatórios:** Acesse a seção "Relatórios Financeiros" para gerar e visualizar o Razão, Balancete, DRE, Balanço Patrimonial, DFC e Variações. Utilize os filtros de data para analisar períodos específicos.
+6.  **Fechamento de Exercício:** Utilize a nova funcionalidade de "Fechamento de Exercício" para zerar as contas de resultado ao final de um período.
 
 ## Próximos Passos e Melhorias Futuras
 
-*   **Lançamentos de Estorno:** Implementar a funcionalidade de estorno para corrigir lançamentos, mantendo a trilha de auditoria.
 *   **Relatórios Mais Detalhados:** Adicionar opções de detalhamento e exportação para os relatórios.
 *   **Gestão de Usuários:** Expandir a gestão de usuários para incluir diferentes níveis de permissão.
 *   **Internacionalização (i18n):** Suporte a múltiplos idiomas.
