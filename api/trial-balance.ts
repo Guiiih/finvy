@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabase, handleErrorResponse } from './utils/supabaseClient';
 import { handleCors } from './utils/corsHandler';
 import { AuthApiError } from '@supabase/supabase-js';
-import type { Account, JournalEntry, EntryLine, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types';
+import type { Account, JournalEntry, EntryLine, LedgerAccount as FrontendLedgerAccount } from '../frontend/src/types';
 
 // Tipos locais para evitar dependência direta de arquivos do frontend no backend
 type LedgerAccount = FrontendLedgerAccount;
