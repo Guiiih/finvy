@@ -29,20 +29,16 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             total_net: line.total_net || undefined,
           }));
           return { ...entry, lines: convertedLines };
-        } catch (error: unknown) {
-          console.error("Erro ao buscar linhas do lançamento:", error);
+        } catch (err: unknown) {
+          console.error("Erro ao buscar linhas do lançamento:", err);
           return null;
         }
       }));
 
       journalEntries.value = entriesWithLines.filter((entry): entry is JournalEntry => entry !== null);
-    } catch (error: unknown) { 
-      console.error("Erro ao buscar lançamentos:", error);
-      if (error instanceof Error) {
-        error.value = error.message || 'Falha ao buscar lançamentos.';
-      } else {
-        error.value = 'Falha ao buscar lançamentos.';
-      }
+    } catch (err: unknown) { 
+      console.error("Erro ao buscar lançamentos:", err);
+      error.value = (err instanceof Error) ? err.message : 'Falha ao buscar lançamentos.';
     } finally {
       loading.value = false;
     }

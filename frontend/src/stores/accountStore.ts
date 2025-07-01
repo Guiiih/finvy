@@ -34,13 +34,9 @@ export const useAccountStore = defineStore('account', () => {
     try {
       const data = await api.get<Account[]>('/accounts');
       accounts.value = data;
-    } catch (error: unknown) { 
-      console.error('Erro ao buscar contas:', error);
-      if (error instanceof Error) {
-        error.value = error.message || 'Falha ao buscar contas.';
-      } else {
-        error.value = 'Falha ao buscar contas.';
-      }
+    } catch (err: unknown) { 
+      console.error('Erro ao buscar contas:', err);
+      error.value = (err instanceof Error) ? err.message : 'Falha ao buscar contas.';
     } finally {
       loading.value = false;
     }

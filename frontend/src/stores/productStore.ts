@@ -24,13 +24,9 @@ export const useProductStore = defineStore('products', () => {
     try {
       const data = await api.get<Product[]>('/products');
       products.value = data;
-    } catch (error: unknown) { 
-      console.error("Erro ao buscar produtos:", error);
-      if (error instanceof Error) {
-        error.value = error.message || 'Falha ao buscar produtos.';
-      } else {
-        error.value = 'Falha ao buscar produtos.';
-      }
+    } catch (err: unknown) { 
+      console.error("Erro ao buscar produtos:", err);
+      error.value = (err instanceof Error) ? err.message : 'Falha ao buscar produtos.';
     } finally {
       loading.value = false;
     }
