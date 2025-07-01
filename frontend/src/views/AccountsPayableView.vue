@@ -122,8 +122,8 @@ async function handleAddAccountPayable() {
   try {
     await accountsPayableStore.addAccountPayable(newAccount.value);
     resetForm();
-  } catch (error) {
-    alert(error.message);
+  } catch (err: unknown) {
+    alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
 }
 
@@ -138,8 +138,8 @@ async function handleUpdateAccountPayable() {
   try {
     await accountsPayableStore.updateAccountPayable(editingAccountId.value, newAccount.value);
     resetForm();
-  } catch (error) {
-    alert(error.message);
+  } catch (err: unknown) {
+    alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
 }
 
