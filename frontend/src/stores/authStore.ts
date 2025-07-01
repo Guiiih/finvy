@@ -193,5 +193,7 @@ export const useAuthStore = defineStore('auth', () => {
     resetPassword,
     updatePassword
   };
+}, {
+  persist: true,
 });
 
