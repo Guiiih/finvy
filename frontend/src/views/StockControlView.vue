@@ -25,8 +25,8 @@ onMounted(async () => {
       Nenhum balanço de estoque para exibir. Adicione produtos e lançamentos contábeis.
     </p>
     <div v-else class="stock-list">
-      <div v-for="balance in stockControlStore.balances" :key="balance.productId" class="stock-item">
-        <h3>{{ productStore.getProductById(balance.productId)?.name || 'Produto Desconhecido' }}</h3>
+      <div v-for="balance in stockControlStore.balances" :key="balance.product_id" class="stock-item">
+        <h3>{{ productStore.getProductById(balance.product_id)?.name || 'Produto Desconhecido' }}</h3>
         <p>Quantidade: {{ balance.quantity }}</p>
         <p>Custo Unitário Médio: R$ {{ balance.unit_cost.toFixed(2) }}</p>
         <p>Valor Total: R$ {{ balance.totalValue.toFixed(2) }}</p>
