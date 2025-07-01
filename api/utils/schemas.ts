@@ -64,6 +64,7 @@ export const updateProductSchema = z.object({
   description: z.string().max(255, 'Descrição muito longa.').optional(),
   unit_cost: z.number().nonnegative('Custo unitário deve ser um valor não negativo.').optional(),
   current_stock: z.number().int().nonnegative('Estoque atual deve ser um número inteiro não negativo.').optional(),
+  icms_rate: z.number().nonnegative('Alíquota de ICMS deve ser um valor não negativo.').optional(),
 }).partial();
 
 export const createAccountsPayableSchema = z.object({
