@@ -4,8 +4,8 @@ import { handleCors } from './utils/corsHandler';
 import { AuthApiError } from '@supabase/supabase-js';
 import {
   idSchema,
-  createAccountsReceivableSchema,
-  updateAccountsReceivableSchema
+  createFinancialTransactionSchema,
+  updateFinancialTransactionSchema
 } from './utils/schemas';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
@@ -42,24 +42,27 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const { type } = req.query; // 'payable' or 'receivable'
+    const tableName = type === 'payable' ? 'accounts_payable' : 'accounts_receivable';
+
     if (req.method === 'GET') {
       const { data, error: dbError } = await supabase
-        .from('accounts_receivable')
+        .from(tableName)
         .select('*')
         .eq('user_id', user_id);
 
       if (dbError) throw dbError;
       return res.status(200).json(data);
     } else if (req.method === 'POST') {
-      const parsedBody = createAccountsReceivableSchema.safeParse(req.body);
+      const parsedBody = createFinancialTransactionSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
-      const newAccountReceivable = { ...parsedBody.data, user_id };
+      const newTransaction = { ...parsedBody.data, user_id };
 
       const { data, error: dbError } = await supabase
-        .from('accounts_receivable')
-        .insert([newAccountReceivable])
+        .from(tableName)
+        .insert([newTransaction])
         .select()
         .single();
 
@@ -72,7 +75,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
       const { id } = parsedQuery.data;
 
-      const parsedBody = updateAccountsReceivableSchema.safeParse(req.body);
+      const parsedBody = updateFinancialTransactionSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(res, 400, parsedBody.error.errors.map(err => err.message).join(', '));
       }
@@ -83,7 +86,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       const { data, error: dbError } = await supabase
-        .from('accounts_receivable')
+        .from(tableName)
         .update(updateData)
         .eq('id', id)
         .eq('user_id', user_id) // Ensure user owns the record
@@ -92,7 +95,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
       if (dbError) throw dbError;
       if (!data) {
-        return handleErrorResponse(res, 404, 'Conta a receber não encontrada ou não autorizada.');
+        return handleErrorResponse(res, 404, `Transação ${type} não encontrada ou não autorizada.`);
       }
       return res.status(200).json(data);
     } else if (req.method === 'DELETE') {
@@ -103,14 +106,14 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       const { id } = parsedQuery.data;
 
       const { error: dbError, count } = await supabase
-        .from('accounts_receivable')
+        .from(tableName)
         .delete()
         .eq('id', id)
         .eq('user_id', user_id); // Ensure user owns the record
 
       if (dbError) throw dbError;
       if (count === 0) {
-        return handleErrorResponse(res, 404, 'Conta a receber não encontrada ou não autorizada para exclusão.');
+        return handleErrorResponse(res, 404, `Transação ${type} não encontrada ou não autorizada para exclusão.`);
       }
       return res.status(204).end();
     } else {
@@ -118,10 +121,12 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
     }
   } catch (error: unknown) {
-    console.error('Erro inesperado na API de contas a receber:', error);
+    console.error('Erro inesperado na API de transações financeiras:', error);
     let message = 'Erro interno do servidor.';
     if (error instanceof Error) {
         message = error.message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        message = (error as any).message; 
     }
     return handleErrorResponse(res, 500, message);
   }

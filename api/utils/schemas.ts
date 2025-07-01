@@ -86,3 +86,15 @@ export const createAccountsReceivableSchema = z.object({
 });
 
 export const updateAccountsReceivableSchema = createAccountsReceivableSchema.partial();
+
+export const createFinancialTransactionSchema = z.object({
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
+  paid_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de pagamento inválido. Use YYYY-MM-DD.').optional().nullable(),
+  received_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de recebimento inválido. Use YYYY-MM-DD.').optional().nullable(),
+  is_paid: z.boolean().optional(),
+  is_received: z.boolean().optional(),
+});
+
+export const updateFinancialTransactionSchema = createFinancialTransactionSchema.partial();
