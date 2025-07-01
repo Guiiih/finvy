@@ -36,7 +36,11 @@ export const useAccountStore = defineStore('account', () => {
       accounts.value = data;
     } catch (err: unknown) { 
       console.error('Erro ao buscar contas:', err);
-      error.value = (err instanceof Error) ? err.message : 'Falha ao buscar contas.';
+      if (err instanceof Error) {
+        error.value = err.message;
+      } else {
+        error.value = 'Ocorreu uma falha desconhecida ao buscar contas.';
+      }
     } finally {
       loading.value = false;
     }

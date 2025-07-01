@@ -1,15 +1,20 @@
 import apiClient from './apiClient';
 import { AxiosError } from 'axios';
 
-// Helper to extract error message
+// Helper para extrair a mensagem de erro de forma mais robusta
 const getErrorMessage = (error: unknown): string => {
-  if (error instanceof AxiosError) {
-    return error.response?.data?.error || error.message || 'Erro desconhecido na API';
+  if (error instanceof AxiosError && error.response) {
+    // Prioriza a mensagem de erro vinda do seu backend
+    if (error.response.data && typeof error.response.data.error === 'string') {
+      return error.response.data.error;
+    }
+    // Caso contrário, usa a mensagem de status ou a mensagem geral do erro
+    return error.response.statusText || error.message;
   }
   if (error instanceof Error) {
     return error.message;
   }
-  return 'Erro desconhecido na API';
+  return 'Ocorreu um erro desconhecido na API.';
 };
 
 export const api = {
@@ -18,6 +23,7 @@ export const api = {
       const response = await apiClient.get<T>(endpoint, options);
       return response.data;
     } catch (error) {
+      // Sempre lança um novo erro com uma mensagem clara
       throw new Error(getErrorMessage(error));
     }
   },
