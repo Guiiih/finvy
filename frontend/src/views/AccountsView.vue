@@ -123,8 +123,10 @@ onMounted(() => {
         empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
       >
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item)">Editar</button>
-          <button @click="handleDeleteAccount(item.id)" class="delete-button">Excluir</button>
+          <div class="action-buttons">
+            <button @click="startEdit(item)" class="edit-button">Editar</button>
+            <button @click="handleDeleteAccount(item.id)" class="delete-button">Excluir</button>
+          </div>
         </template>
       </BaseTable>
     </div>
@@ -132,7 +134,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Estilos originais mantidos para consistência */
+/* Estilos principais do container */
 .accounts-container {
   padding: 20px;
   max-width: 900px;
@@ -163,6 +165,8 @@ h2 {
   padding-bottom: 10px;
 }
 
+/* --- Início das Melhorias de Design --- */
+
 .form-group {
   margin-bottom: 15px;
 }
@@ -174,55 +178,57 @@ h2 {
   font-weight: bold;
 }
 
-/* Estilo para os inputs e selects (VeeValidate <Field> irá usar isto) */
 .form-group input,
 .form-group select {
-  width: calc(100% - 22px);
+  width: 100%; /* Ocupa a largura total */
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
+  box-sizing: border-box; /* Garante que o padding não aumente a largura */
 }
 
-button {
-  padding: 10px 15px;
-  border: none;
+/* Estilo para os botões de ação na tabela */
+.action-buttons button {
+  padding: 5px 10px; /* Botões menores */
+  font-size: 0.9em;  /* Texto menor */
+  margin-right: 5px; /* Espaçamento entre botões */
+  border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1em;
-  margin-right: 10px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-button[type="submit"] {
-  background-color: #007bff;
-  color: white;
+.action-buttons button:last-child {
+  margin-right: 0;
 }
 
-button[type="submit"]:hover {
-  background-color: #0056b3;
+/* Botão de Editar */
+.action-buttons .edit-button {
+  background-color: #e9ecef;
+  color: #495057;
+  border-color: #ced4da;
+}
+.action-buttons .edit-button:hover {
+  background-color: #dee2e6;
 }
 
-.delete-button {
-  background-color: #dc3545;
-  color: white;
+/* Botão de Excluir */
+.action-buttons .delete-button {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
 }
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-.error-message, .error-text {
-  color: #dc3545;
+.action-buttons .delete-button:hover {
+  background-color: #f1b0b7;
 }
 
 .error-text {
+  color: #dc3545;
   font-size: 0.875em;
   margin-top: 4px;
   display: block;
 }
 
-.error-message {
-  text-align: center;
-  margin-top: 10px;
-}
+/* --- Fim das Melhorias de Design --- */
 </style>
