@@ -2,11 +2,31 @@
 import { computed, watchEffect } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useAuthStore } from '@/stores/authStore';
-
 import BaseTable from '@/components/BaseTable.vue';
+import type { Product } from '@/types'; // Importe o tipo Product
 
 const productStore = useProductStore();
 const authStore = useAuthStore();
+
+// Crie um tipo para os cabeçalhos da tabela de produtos
+type ProductTableHeader = {
+  key: keyof Product | 'total_gross_stock' | 'icms_value_stock' | 'total_net_stock' | 'actions';
+  label: string;
+  align?: 'left' | 'center' | 'right';
+};
+
+// Use o novo tipo para o seu array de cabeçalhos
+const headers: ProductTableHeader[] = [
+  { key: 'name', label: 'Nome', align: 'left' },
+  { key: 'description', label: 'Descrição', align: 'left' },
+  { key: 'unit_cost', label: 'Custo Unitário', align: 'right' },
+  { key: 'icms_rate', label: 'Alíquota ICMS (%)', align: 'center' },
+  { key: 'current_stock', label: 'Estoque Atual', align: 'center' },
+  { key: 'total_gross_stock', label: 'Valor Bruto Total (Estoque)', align: 'right' },
+  { key: 'icms_value_stock', label: 'ICMS Total (Estoque)', align: 'right' },
+  { key: 'total_net_stock', label: 'Valor Líquido Total (Estoque)', align: 'right' },
+  { key: 'actions', label: 'Ações', align: 'center' },
+];
 
 const filteredProducts = computed(() => {
   return productStore.products.map(product => {
@@ -23,39 +43,17 @@ const filteredProducts = computed(() => {
   });
 });
 
-const headers = [
-  { key: 'name', label: 'Nome', align: 'left' as const },
-  { key: 'description', label: 'Descrição', align: 'left' as const },
-  { key: 'unit_cost', label: 'Custo Unitário', align: 'right' as const },
-  { key: 'icms_rate', label: 'Alíquota ICMS (%)', align: 'center' as const },
-  { key: 'current_stock', label: 'Estoque Atual', align: 'center' as const },
-  { key: 'total_gross_stock', label: 'Valor Bruto Total (Estoque)', align: 'right' as const },
-  { key: 'icms_value_stock', label: 'ICMS Total (Estoque)', align: 'right' as const },
-  { key: 'total_net_stock', label: 'Valor Líquido Total (Estoque)', align: 'right' as const },
-  { key: 'actions', label: 'Ações', align: 'center' as const },
-];
-
-async function loadProducts() {
-  await productStore.fetchProducts();
-}
-
 async function handleDeleteProduct(id: string) {
   if (confirm('Tem certeza de que deseja excluir este produto?')) {
-    try {
-      await productStore.deleteProduct(id);
-    } catch (err: unknown) { 
-      alert(err instanceof Error ? err.message : 'Erro ao deletar produto.');
-    }
+    await productStore.deleteProduct(id);
   }
 }
 
-// Usar watchEffect para carregar produtos apenas quando o authStore estiver pronto e logado
 watchEffect(() => {
   if (!authStore.loading && authStore.isLoggedIn) {
-    loadProducts();
+    productStore.fetchProducts();
   }
 });
-
 </script>
 
 <template>
