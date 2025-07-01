@@ -141,6 +141,7 @@ async function handleUpdateAccountPayable() {
   } catch (err: unknown) {
     alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
+}
 
 async function handleDeleteAccountPayable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a pagar?')) {
@@ -150,6 +151,7 @@ async function handleDeleteAccountPayable(id: string) {
       alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   }
+}
 
 async function markAsPaid(id: string) {
   if (confirm('Marcar esta conta como paga?')) {
@@ -159,6 +161,7 @@ async function markAsPaid(id: string) {
       alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   }
+}
 
 function resetForm() {
   isEditing.value = false;
