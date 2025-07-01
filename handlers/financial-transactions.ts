@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase, handleErrorResponse } from '../api/utils/supabaseClient';
+import { supabase, handleErrorResponse } from '../utils/supabaseClient';
 import type { EntryLine } from '../frontend/src/types';
 import {
   idSchema,
   createFinancialTransactionSchema,
   updateFinancialTransactionSchema
-} from '../api/utils/schemas';
+} from '../utils/schemas';
 
 export default async function handler(req: VercelRequest, res: VercelResponse, user_id: string) {
   try {
