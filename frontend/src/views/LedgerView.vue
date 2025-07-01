@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { useReportStore } from '@/stores/reportStore';
+import { useReportStore, type LedgerAccount } from '@/stores/reportStore';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 
 const reportStore = useReportStore();
@@ -8,7 +8,7 @@ const journalEntryStore = useJournalEntryStore();
 
 const ledgerAccounts = computed(() => reportStore.ledgerAccounts.filter(account => account.finalBalance !== 0));
 
-function getBalanceClass(account: any) {
+function getBalanceClass(account: LedgerAccount) {
   if (account.finalBalance === 0) {
     return '';
   }
@@ -55,7 +55,7 @@ onMounted(async () => {
     </p>
 
     <div v-else class="ledger-accounts-grid">
-      <div v-for="account in ledgerAccounts" :key="account.accountId" class="ledger-card">
+      <div v-for="account in ledgerAccounts" :key="account.account_id" class="ledger-card">
         <h3>{{ account.accountName }}</h3>
         <div class="ledger-content">
             <div class="t-account-wrapper">

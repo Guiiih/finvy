@@ -24,14 +24,15 @@ export interface Product {
 export type EntryType = 'debit' | 'credit'; 
 
 export interface EntryLine {
-  accountId: string;
+  account_id: string;
   type: EntryType; // 'debit' or 'credit'
   amount: number;
-  productId?: string;
+  product_id?: string;
   quantity?: number;
   unit_cost?: number; // Custo unitário do produto na linha
   total_gross?: number; // Valor total bruto da linha (quantidade * unit_cost)
   icms_value?: number; // Valor do ICMS calculado para a linha
+  icms_rate?: number; // Alíquota de ICMS para a linha
   total_net?: number; // Valor total líquido da linha (total_gross - icms_value)
   debit?: number;
   credit?: number;
@@ -57,7 +58,7 @@ export interface StockMovement {
 }
 
 export interface ProductBalance {
-  productId: string;
+  product_id: string;
   productName: string;
   quantity: number;
   unit_cost: number; 
@@ -65,7 +66,7 @@ export interface ProductBalance {
 }
 
 export interface LedgerAccount {
-  accountId: string;
+  account_id: string;
   accountName: string;
   type: AccountType;
   debitEntries: number[];

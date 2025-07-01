@@ -49,10 +49,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       ...entry,
       entry_date: entry.entry_date,
       lines: entry.entry_lines.map((line: any) => ({
-        accountId: line.account_id,
+        account_id: line.account_id,
         type: line.debit > 0 ? 'debit' : 'credit',
         amount: line.debit > 0 ? line.debit : line.credit,
-        productId: line.product_id,
+        product_id: line.product_id,
         quantity: line.quantity,
         unit_cost: line.unit_cost,
         debit: line.debit,
@@ -66,8 +66,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const productBalancesMap = new Map<string, { quantity: number; totalCost: number }>();
     journalEntries.forEach(entry => {
         entry.lines.forEach(line => {
-            if (line.productId && line.quantity && line.unit_cost) {
-                const currentBalance = productBalancesMap.get(line.productId) || { quantity: 0, totalCost: 0 };
+            if (line.product_id && line.quantity && line.unit_cost) {
+                const currentBalance = productBalancesMap.get(line.product_id) || { quantity: 0, totalCost: 0 };
                 if (line.debit && line.debit > 0) { // Purchase
                     currentBalance.quantity += line.quantity;
                     currentBalance.totalCost += line.quantity * line.unit_cost;
@@ -78,12 +78,12 @@ export default async (req: VercelRequest, res: VercelResponse) => {
                         currentBalance.totalCost -= line.quantity * averageUnitCost;
                     }
                 }
-                productBalancesMap.set(line.productId, currentBalance);
+                productBalancesMap.set(line.product_id, currentBalance);
             }
         });
     });
-    const stockBalances = Array.from(productBalancesMap.entries()).map(([productId, data]) => ({
-        productId,
+    const stockBalances = Array.from(productBalancesMap.entries()).map(([product_id, data]) => ({
+        product_id,
         quantity: data.quantity,
         unitCost: data.quantity > 0 ? data.totalCost / data.quantity : 0,
         totalValue: data.totalCost,
@@ -95,7 +95,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const accountsMap = new Map<string, LedgerAccount>();
     accounts.forEach(account => {
       accountsMap.set(account.id, {
-        accountId: account.id, accountName: account.name, type: account.type,
+        account_id: account.id, accountName: account.name, type: account.type,
         debitEntries: [], creditEntries: [], totalDebits: 0, totalCredits: 0,
         debits: 0, credits: 0, finalBalance: 0,
       });
@@ -103,7 +103,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     journalEntries.forEach(entry => {
       entry.lines.forEach(line => {
-        const accountData = accountsMap.get(line.accountId);
+        const accountData = accountsMap.get(line.account_id);
         if (accountData) {
           if (line.debit) {
             accountData.debitEntries.push(line.debit);
@@ -120,7 +120,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     });
 
     accountsMap.forEach(accountData => {
-        const accountDetails = accounts.find(acc => acc.id === accountData.accountId);
+        const accountDetails = accounts.find(acc => acc.id === accountData.account_id);
         if (accountDetails) {
             const isDebitNature = ['asset', 'expense'].includes(accountDetails.type);
             accountData.finalBalance = isDebitNature ? (accountData.totalDebits - accountData.totalCredits) : (accountData.totalCredits - accountData.totalDebits);

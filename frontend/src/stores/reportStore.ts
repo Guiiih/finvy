@@ -58,6 +58,8 @@ interface VariationEntry {
   isSubtotal?: boolean;
 }
 
+export type { LedgerAccount };
+
 export const useReportStore = defineStore('report', () => {
   const reports = ref<ReportData | null>(null);
   const loading = ref(false);

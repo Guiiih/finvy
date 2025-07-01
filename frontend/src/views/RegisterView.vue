@@ -82,8 +82,12 @@ const handleRegister = async () => {
     }
 
     router.push('/registration-success');
-  } catch (error: any) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 };
 </script>

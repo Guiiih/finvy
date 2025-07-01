@@ -9,7 +9,7 @@ interface TableHeader {
 
 defineProps<{
   headers: TableHeader[]; 
-  items: Record<string, any>[];
+  items: Record<string, unknown>[]; // Use unknown instead of any for better type safety
   emptyMessage?: string;  
 }>();
 

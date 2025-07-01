@@ -42,8 +42,12 @@ const handleForgotPassword = async () => {
 
     if (error) throw error;
     router.push('/password-reset-success');
-  } catch (error: any) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 };
 </script>

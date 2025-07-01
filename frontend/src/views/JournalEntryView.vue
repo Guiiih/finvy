@@ -23,7 +23,7 @@
 
       <h3>Linhas do Lançamento:</h3>
       <div v-for="(line, index) in newEntryLines" :key="index" class="entry-line">
-        <select v-model="line.accountId" @change="handleAccountChange(line)" required>
+        <select v-model="line.account_id" @change="handleAccountChange(line)" required>
           <option value="" disabled>Selecione a Conta</option>
           <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
             <option v-for="account in accountStore.getAccountsByType(type)" :value="account.id" :key="account.id">
@@ -46,12 +46,44 @@
                   required
                 />
         
-        <select v-model="line.productId" :disabled="!line.accountId" @change="handleProductChange(line)" class="product-select">
+        <select v-model="line.product_id" @change="handleProductChange(line)" class="product-select">
             <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
             <option v-for="product in productStore.products" :value="product.id" :key="product.id">
                 {{ product.name }}
             </option>
         </select>
+        <input
+          v-if="line.product_id"
+          type="number"
+          v-model.number="line.quantity"
+          placeholder="Qtd."
+          step="1"
+          min="0"
+          :required="!!line.product_id"
+          @input="calculateLineTotals(line)"
+        />
+        <input
+          v-if="line.product_id"
+          type="number"
+          v-model.number="line.unit_cost"
+          placeholder="Custo Unit."
+          step="0.01"
+          min="0"
+          :required="!!line.product_id"
+          @input="calculateLineTotals(line)"
+        />
+        <input
+          v-if="line.product_id"
+          type="number"
+          v-model.number="line.icms_rate"
+          placeholder="ICMS %"
+          step="0.01"
+          min="0"
+          @input="calculateLineTotals(line)"
+        />
+        <span v-if="line.product_id">Bruto: R$ {{ (line.total_gross || 0).toFixed(2) }}</span>
+        <span v-if="line.product_id">ICMS: R$ {{ (line.icms_value || 0).toFixed(2) }}</span>
+        <span v-if="line.product_id">Líquido: R$ {{ (line.total_net || 0).toFixed(2) }}</span>
         <button type="button" @click="removeLine(index)">Remover</button>
       </div>
       <button type="button" @click="addLine">Adicionar Linha</button>
@@ -114,10 +146,10 @@
                 </thead>
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
-                    <td>{{ getAccountName(line.accountId) }}</td>
+                    <td>{{ getAccountName(line.account_id) }}</td>
                     <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
                     <td>R$ {{ line.amount.toFixed(2) }}</td>
-                    <td>{{ getProductName(line.productId) }}</td> </tr>
+                    <td>{{ getProductName(line.product_id) }}</td> </tr>
                 </tbody>
               </table>
             </td>
@@ -129,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 import { useAccountStore } from '@/stores/accountStore';
 import { useProductStore } from '@/stores/productStore';
@@ -147,19 +179,20 @@ const editingEntryId = ref<string | null>(null);
 
 // Add this line to declare newEntryLines as a ref
 type EntryLine = {
-  accountId: string;
+  account_id: string;
   type: 'debit' | 'credit';
   amount: number;
-  productId?: string;
+  product_id?: string;
   quantity?: number;
   unit_cost?: number;
+  icms_rate?: number; // Adicionado icms_rate
   total_gross?: number;
   icms_value?: number;
   total_net?: number;
 };
 
 const newEntryLines = ref<EntryLine[]>([
-  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined }
+  { account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined }
 ]);
 
 const totalDebits = computed(() =>
@@ -170,80 +203,28 @@ const totalCredits = computed(() =>
   newEntryLines.value.reduce((sum, line) => line.type === 'credit' ? sum + (line.amount || 0) : sum, 0)
 );
 
-watch(newEntryDescription, (newValue) => {
-  parseProductFromDescription(newValue);
-});
+function calculateLineTotals(line: EntryLine) {
+  const quantity = line.quantity || 0;
+  const unit_cost = line.unit_cost || 0;
+  const icms_rate = line.icms_rate || 0;
 
-async function parseProductFromDescription(description: string) {
-  const regex = /(\d+)\s*unds\s*de\s*produto\s+([^,]+)/i; // Regex para "QUANTIDADE unds de produto NOME_DO_PRODUTO"
-  const match = description.match(regex);
-
-  if (match) {
-    const quantity = parseFloat(match[1]);
-    const productName = match[2].trim();
-
-    const product = productStore.products.find(p => p.name.toLowerCase() === productName.toLowerCase()) as Product;
-
-    if (product) {
-      const unit_cost = product.unit_cost;
-      const icms_rate = product.icms_rate || 0; // Assume 0 se não definido
-
-      const total_gross = quantity * unit_cost;
-      const icms_value = total_gross * (icms_rate / 100);
-      const total_net = total_gross - icms_value;
-
-      // Atualiza a primeira linha do lançamento com os dados do produto
-      // Assumimos que a descrição do produto se refere à primeira linha
-      if (newEntryLines.value.length > 0) {
-        newEntryLines.value[0].productId = product.id;
-        newEntryLines.value[0].quantity = quantity;
-        newEntryLines.value[0].unit_cost = unit_cost;
-        newEntryLines.value[0].total_gross = total_gross;
-        newEntryLines.value[0].icms_value = icms_value;
-        newEntryLines.value[0].total_net = total_net;
-        // O amount da linha pode ser o total_gross ou total_net dependendo da conta
-        // Por enquanto, vamos manter o amount como o valor que o usuário digita,
-        // mas os campos calculados estarão disponíveis.
-        // Se a intenção é que o amount seja preenchido automaticamente, precisaremos de mais lógica.
-      }
-    } else {
-      // Se o produto não for encontrado, limpa os campos relacionados ao produto na primeira linha
-      if (newEntryLines.value.length > 0) {
-        newEntryLines.value[0].productId = undefined;
-        newEntryLines.value[0].quantity = undefined;
-        newEntryLines.value[0].unit_cost = undefined;
-        newEntryLines.value[0].total_gross = undefined;
-        newEntryLines.value[0].icms_value = undefined;
-        newEntryLines.value[0].total_net = undefined;
-      }
-    }
-  } else {
-    // Se a descrição não corresponder ao padrão, limpa os campos relacionados ao produto na primeira linha
-    if (newEntryLines.value.length > 0) {
-      newEntryLines.value[0].productId = undefined;
-      newEntryLines.value[0].quantity = undefined;
-      newEntryLines.value[0].unit_cost = undefined;
-      newEntryLines.value[0].total_gross = undefined;
-      newEntryLines.value[0].icms_value = undefined;
-      newEntryLines.value[0].total_net = undefined;
-    }
-  }
+  line.total_gross = quantity * unit_cost;
+  line.icms_value = line.total_gross * (icms_rate / 100);
+  line.total_net = line.total_gross - line.icms_value;
 }
-
-// ... (código existente)
 
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0];
   newEntryDescription.value = '';
-newEntryLines.value = [
-  { accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined },
-  { accountId: '', type: 'credit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined }
-];
-editingEntryId.value = null;
+  newEntryLines.value = [
+    { account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined },
+    { account_id: '', type: 'credit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined }
+  ];
+  editingEntryId.value = null;
 }
 
 function addLine() {
-  newEntryLines.value.push({ accountId: '', type: 'debit', amount: 0, productId: '', quantity: undefined, unit_cost: undefined });
+  newEntryLines.value.push({ account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined });
 }
 
 function removeLine(index: number) {
@@ -274,20 +255,30 @@ function toggleDetails(id: string) {
   showDetails.value[id] = !showDetails.value[id];
 }
 
-function handleAccountChange(line: JournalEntryLine) {
-  line.productId = '';
-  // REMOVIDOS: line.quantity = 0; e line.unit_cost = 0;
+function handleAccountChange(line: EntryLine) {
+  line.product_id = '';
+  line.quantity = undefined;
+  line.unit_cost = undefined;
+  line.icms_rate = undefined;
+  line.total_gross = undefined;
+  line.icms_value = undefined;
+  line.total_net = undefined;
 }
 
-function handleProductChange(line: JournalEntryLine) {
-  const product = productStore.getProductById(line.productId || '');
+function handleProductChange(line: EntryLine) {
+  const product: Product | undefined = productStore.getProductById(line.product_id || '');
   if (product) {
     line.unit_cost = product.unit_cost;
-    // Se você quiser preencher a quantidade automaticamente, adicione a lógica aqui.
-    // Por exemplo, line.quantity = 1; ou buscar de algum outro lugar.
+    line.icms_rate = product.icms_rate || 0;
+    line.quantity = 1;
+    calculateLineTotals(line);
   } else {
     line.unit_cost = undefined;
+    line.icms_rate = undefined;
     line.quantity = undefined;
+    line.total_gross = undefined;
+    line.icms_value = undefined;
+    line.total_net = undefined;
   }
 }
 
@@ -297,54 +288,55 @@ async function submitEntry() {
     return;
   }
 
-  const validLines = newEntryLines.value.filter(line => line.accountId);
+  const validLines = newEntryLines.value.filter(line => line.account_id);
 
   if (validLines.length < 2) {
     alert('Um lançamento deve ter pelo menos duas linhas válidas.');
     return;
   }
 
-  // REMOVIDA: A validação que verificava quantity e unit_cost para linhas com produto.
-  /*
   for (const line of validLines) {
-    if (line.productId) {
+    if (line.product_id) {
       if (line.quantity === undefined || line.quantity <= 0 || line.unit_cost === undefined || line.unit_cost <= 0) {
         alert('Para linhas com produto, Quantidade e Custo Unitário são obrigatórios e devem ser maiores que zero.');
         return;
       }
     }
   }
-  */
 
-  const newEntry: JournalEntry = {
-    id: editingEntryId.value || `JE-${Date.now()}`,
+  const newEntry: Omit<JournalEntry, 'lines' | 'id'> & { id?: string, lines: Omit<JournalEntryLine, 'id'>[] } = {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
     lines: validLines.map(line => ({
-      accountId: line.accountId,
+      account_id: line.account_id,
       type: line.type,
       amount: line.amount,
-      productId: line.productId || undefined,
+      product_id: line.product_id || undefined,
       quantity: line.quantity || undefined,
       unit_cost: line.unit_cost || undefined,
+      icms_rate: line.icms_rate || undefined,
       total_gross: line.total_gross || undefined,
       icms_value: line.icms_value || undefined,
       total_net: line.total_net || undefined,
     })),
   };
+  if (editingEntryId.value) {
+    newEntry.id = editingEntryId.value;
+  }
 
   try {
     if (editingEntryId.value) {
-      await journalEntryStore.updateEntry(newEntry);
+      await journalEntryStore.updateEntry(newEntry as JournalEntry);
       alert('Lançamento atualizado com sucesso!');
       console.log('Lançamento atualizado:', newEntry);
     } else {
-      await journalEntryStore.addJournalEntry(newEntry);
+      await journalEntryStore.addJournalEntry(newEntry as JournalEntry);
       alert('Novo lançamento adicionado com sucesso!');
       console.log('Novo lançamento adicionado:', newEntry);
     }
     resetForm();
-  } catch (error) {
+  } catch (_error: unknown) {
+    console.error("Erro ao registrar lançamento:", _error);
     alert(journalEntryStore.error || 'Erro ao registrar lançamento.');
   }
 }
@@ -355,12 +347,13 @@ function editEntry(entry: JournalEntry) {
   newEntryDate.value = entry.entry_date;
   newEntryDescription.value = entry.description;
   newEntryLines.value = entry.lines.map(line => ({
-    accountId: line.accountId,
-    type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
-    amount: (line.debit && line.debit > 0) ? line.debit : (line.credit || 0),
-    productId: line.productId || '',
+    account_id: line.account_id,
+    type: line.type,
+    amount: line.amount,
+    product_id: line.product_id || '',
     quantity: line.quantity || undefined,
     unit_cost: line.unit_cost || undefined,
+    icms_rate: line.icms_rate || undefined,
     total_gross: line.total_gross || undefined,
     icms_value: line.icms_value || undefined,
     total_net: line.total_net || undefined,
@@ -380,9 +373,10 @@ async function deleteEntry(id: string) {
       }
       alert('Lançamento excluído com sucesso!');
       console.log('Lançamento excluído:', id);
-    } catch (error) {
-      alert(journalEntryStore.error || 'Erro ao excluir lançamento.');
-    }
+    } catch (_error: unknown) {
+    console.error("Erro ao excluir lançamento:", _error);
+    alert(journalEntryStore.error || 'Erro ao excluir lançamento.');
+  }
   }
 }
 

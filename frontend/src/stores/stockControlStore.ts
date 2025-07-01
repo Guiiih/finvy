@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { useProductStore } from './productStore';
+import { computed } from 'vue';
 import { useReportStore } from './reportStore';
 
 interface ProductBalance {
@@ -12,7 +11,6 @@ interface ProductBalance {
 }
 
 export const useStockControlStore = defineStore('stockControlStore', () => {
-  const productStore = useProductStore();
   const reportStore = useReportStore();
 
   const balances = computed<ProductBalance[]>(() => reportStore.stockBalances);

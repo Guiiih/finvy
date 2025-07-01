@@ -142,8 +142,8 @@ async function handleDeleteAccount(id: string) {
         empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
       >
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item as Account)">Editar</button>
-          <button @click="handleDeleteAccount(item.id!)" class="delete-button">Excluir</button>
+          <button @click="startEdit(item as unknown as Account)">Editar</button>
+          <button @click="handleDeleteAccount(item.id as string)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>
     </div>

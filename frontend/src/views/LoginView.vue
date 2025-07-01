@@ -56,8 +56,12 @@ const handleLogin = async () => {
 
     if (error) throw error;
     router.push('/'); // Redireciona para a página inicial após o login
-  } catch (error: any) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 };
 </script>

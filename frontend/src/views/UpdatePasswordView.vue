@@ -28,8 +28,12 @@ const handleUpdatePassword = async () => {
     if (error) throw error;
     alert('Sua senha foi atualizada com sucesso!');
     router.push('/login');
-  } catch (error: any) {
-    alert(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(error.message);
+    } else {
+      alert('Ocorreu um erro desconhecido.');
+    }
   }
 };
 </script>
