@@ -68,8 +68,8 @@ async function handleAddAccount() {
     });
     newAccountName.value = '';
     newAccountType.value = 'asset';
-  } catch {
-    alert(accountStore.error || 'Erro ao adicionar conta.');
+  } catch (err: unknown) {
+    alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
 }
 

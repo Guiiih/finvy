@@ -32,9 +32,9 @@
 
     <div class="accounts-list-section">
       <h2>Contas Pendentes</h2>
-      <p v-if="accountsReceivableStore.loading">Carregando contas...</p>
-      <p v-else-if="accountsReceivableStore.error" class="error-message">{{ accountsReceivableStore.error }}</p>
-      <table v-else-if="accountsReceivableStore.getUnreceivedAccounts.length > 0">
+      <p v-if="financialTransactionsStore.loading">Carregando contas...</p>
+      <p v-else-if="financialTransactionsStore.error" class="error-message">{{ financialTransactionsStore.error }}</p>
+      <table v-else-if="financialTransactionsStore.getUnreceivedAccounts.length > 0">
         <thead>
           <tr>
             <th>Descrição</th>
@@ -44,7 +44,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in accountsReceivableStore.getUnreceivedAccounts" :key="account.id">
+          <tr v-for="account in financialTransactionsStore.getUnreceivedAccounts" :key="account.id">
             <td>{{ account.description }}</td>
             <td>R$ {{ account.amount.toFixed(2) }}</td>
             <td>{{ account.due_date }}</td>
@@ -59,7 +59,7 @@
       <p v-else>Nenhuma conta a receber pendente.</p>
 
       <h2>Contas Recebidas</h2>
-      <table v-if="accountsReceivableStore.getReceivedAccounts.length > 0">
+      <table v-if="financialTransactionsStore.getReceivedAccounts.length > 0">
         <thead>
           <tr>
             <th>Descrição</th>
@@ -70,7 +70,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in accountsReceivableStore.getReceivedAccounts" :key="account.id">
+          <tr v-for="account in financialTransactionsStore.getReceivedAccounts" :key="account.id">
             <td>{{ account.description }}</td>
             <td>R$ {{ account.amount.toFixed(2) }}</td>
             <td>{{ account.due_date }}</td>
@@ -89,21 +89,23 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useAccountsReceivableStore } from '@/stores/accountsReceivableStore';
+import { useFinancialTransactionsStore } from '@/stores/financialTransactionsStore';
 
-interface AccountsReceivable {
+interface FinancialTransaction {
   id: string;
   description: string;
   amount: number;
   due_date: string;
+  paid_date?: string | null;
   received_date?: string | null;
-  is_received: boolean;
+  is_paid?: boolean;
+  is_received?: boolean;
   created_at: string;
 }
 
-const accountsReceivableStore = useAccountsReceivableStore();
+const financialTransactionsStore = useFinancialTransactionsStore();
 
-const newAccount = ref<Omit<AccountsReceivable, 'id' | 'created_at'>>({
+const newAccount = ref<Omit<FinancialTransaction, 'id' | 'created_at' | 'is_paid' | 'paid_date'>>({
   description: '',
   amount: 0,
   due_date: '',
@@ -115,12 +117,12 @@ const isEditing = ref(false);
 const editingAccountId = ref<string | null>(null);
 
 onMounted(() => {
-  accountsReceivableStore.fetchAccountsReceivable();
+  financialTransactionsStore.fetchFinancialTransactions();
 });
 
 async function handleAddAccountReceivable() {
   try {
-    await accountsReceivableStore.addAccountReceivable(newAccount.value);
+    await financialTransactionsStore.addFinancialTransaction('receivable', newAccount.value);
     resetForm();
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -131,7 +133,7 @@ async function handleAddAccountReceivable() {
   }
 }
 
-function startEdit(account: AccountsReceivable) {
+function startEdit(account: FinancialTransaction) {
   isEditing.value = true;
   editingAccountId.value = account.id;
   newAccount.value = { ...account };
@@ -140,7 +142,7 @@ function startEdit(account: AccountsReceivable) {
 async function handleUpdateAccountReceivable() {
   if (!editingAccountId.value) return;
   try {
-    await accountsReceivableStore.updateAccountReceivable(editingAccountId.value, newAccount.value);
+    await financialTransactionsStore.updateFinancialTransaction('receivable', editingAccountId.value, newAccount.value);
     resetForm();
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -154,7 +156,7 @@ async function handleUpdateAccountReceivable() {
 async function handleDeleteAccountReceivable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a receber?')) {
     try {
-      await accountsReceivableStore.deleteAccountReceivable(id);
+      await financialTransactionsStore.deleteFinancialTransaction('receivable', id);
     } catch (error: unknown) {
     if (error instanceof Error) {
       alert(error.message);
@@ -168,7 +170,7 @@ async function handleDeleteAccountReceivable(id: string) {
 async function markAsReceived(id: string) {
   if (confirm('Marcar esta conta como recebida?')) {
     try {
-      await accountsReceivableStore.updateAccountReceivable(id, { is_received: true, received_date: new Date().toISOString().split('T')[0] });
+      await financialTransactionsStore.updateFinancialTransaction('receivable', id, { is_received: true, received_date: new Date().toISOString().split('T')[0] });
     } catch (error: unknown) {
     if (error instanceof Error) {
       alert(error.message);

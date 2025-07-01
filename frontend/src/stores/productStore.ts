@@ -24,10 +24,10 @@ export const useProductStore = defineStore('products', () => {
     try {
       const data = await api.get<Product[]>('/products');
       products.value = data;
-    } catch (err: unknown) { 
-      console.error("Erro ao buscar produtos:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao buscar produtos.';
+    } catch (error: unknown) { 
+      console.error("Erro ao buscar produtos:", error);
+      if (error instanceof Error) {
+        error.value = error.message || 'Falha ao buscar produtos.';
       } else {
         error.value = 'Falha ao buscar produtos.';
       }
@@ -87,11 +87,7 @@ export const useProductStore = defineStore('products', () => {
       products.value = products.value.filter(prod => prod.id !== id);
     } catch (err: unknown) { 
       console.error("Erro ao deletar produto:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao deletar produto.';
-      } else {
-        error.value = 'Falha ao deletar produto.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao deletar produto.';
       throw err;
     } finally {
       loading.value = false;

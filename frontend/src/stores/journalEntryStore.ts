@@ -29,17 +29,17 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             total_net: line.total_net || undefined,
           }));
           return { ...entry, lines: convertedLines };
-        } catch (err) {
-          console.error("Erro ao buscar linhas do lançamento:", err);
+        } catch (error: unknown) {
+          console.error("Erro ao buscar linhas do lançamento:", error);
           return null;
         }
       }));
 
       journalEntries.value = entriesWithLines.filter((entry): entry is JournalEntry => entry !== null);
-    } catch (err: unknown) { 
-      console.error("Erro ao buscar lançamentos:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao buscar lançamentos.';
+    } catch (error: unknown) { 
+      console.error("Erro ao buscar lançamentos:", error);
+      if (error instanceof Error) {
+        error.value = error.message || 'Falha ao buscar lançamentos.';
       } else {
         error.value = 'Falha ao buscar lançamentos.';
       }
@@ -96,11 +96,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       return newJournalEntry;
     } catch (err: unknown) { 
       console.error("Erro ao adicionar lançamento:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao adicionar lançamento.';
-      } else {
-        error.value = 'Falha ao adicionar lançamento.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao adicionar lançamento.';
       throw err;
     } finally {
       loading.value = false;
@@ -216,11 +212,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       alert('Lançamento estornado com sucesso!');
     } catch (err: unknown) {
       console.error("Erro ao estornar lançamento:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao estornar lançamento.';
-      } else {
-        error.value = 'Falha ao estornar lançamento.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao estornar lançamento.';
       throw err;
     } finally {
       loading.value = false;

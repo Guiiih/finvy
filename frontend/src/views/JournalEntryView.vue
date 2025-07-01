@@ -342,15 +342,32 @@ async function submitEntry() {
       console.log('Novo lançamento adicionado:', newEntry);
     }
     resetForm();
-  } catch (_error: unknown) {
-    console.error("Erro ao registrar lançamento:", _error);
-    alert(journalEntryStore.error || 'Erro ao registrar lançamento.');
+  } catch (err: unknown) {
+    console.error("Erro ao registrar lançamento:", err);
+    alert(err instanceof Error ? err.message : 'Erro ao registrar lançamento.');
   }
 }
 
 function cancelEdit() {
   resetForm();
 }
+
+const resetAllData = () => {
+  if (confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.')) {
+    alert('A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.');
+    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.');
+  }
+};
+
+// Adiciona a propriedade computada para os lançamentos ordenados
+const sortedJournalEntries = computed(() => {
+  // Ordena por data decrescente, depois por id decrescente
+  return [...journalEntryStore.journalEntries].sort((a, b) => {
+    if (a.entry_date > b.entry_date) return -1;
+    if (a.entry_date < b.entry_date) return 1;
+    return b.id.localeCompare(a.id);
+  });
+});
 </script>
 
 <style scoped>

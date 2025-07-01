@@ -44,12 +44,7 @@ async function handleDeleteProduct(id: string) {
     try {
       await productStore.deleteProduct(id);
     } catch (err: unknown) { 
-      console.error("Erro ao deletar produto:", err);
-      if (err instanceof Error) {
-        alert(err.message || 'Erro ao deletar produto.');
-      } else {
-        alert('Erro ao deletar produto.');
-      }
+      alert(err instanceof Error ? err.message : 'Erro ao deletar produto.');
     }
   }
 }

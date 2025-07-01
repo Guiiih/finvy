@@ -32,9 +32,9 @@
 
     <div class="accounts-list-section">
       <h2>Contas Pendentes</h2>
-      <p v-if="accountsPayableStore.loading">Carregando contas...</p>
-      <p v-else-if="accountsPayableStore.error" class="error-message">{{ accountsPayableStore.error }}</p>
-      <table v-else-if="accountsPayableStore.getUnpaidAccounts.length > 0">
+      <p v-if="financialTransactionsStore.loading">Carregando contas...</p>
+      <p v-else-if="financialTransactionsStore.error" class="error-message">{{ financialTransactionsStore.error }}</p>
+      <table v-else-if="financialTransactionsStore.getUnpaidAccounts.length > 0">
         <thead>
           <tr>
             <th>Descrição</th>
@@ -44,7 +44,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in accountsPayableStore.getUnpaidAccounts" :key="account.id">
+          <tr v-for="account in financialTransactionsStore.getUnpaidAccounts" :key="account.id">
             <td>{{ account.description }}</td>
             <td>R$ {{ account.amount.toFixed(2) }}</td>
             <td>{{ account.due_date }}</td>
@@ -59,7 +59,7 @@
       <p v-else>Nenhuma conta a pagar pendente.</p>
 
       <h2>Contas Pagas</h2>
-      <table v-if="accountsPayableStore.getPaidAccounts.length > 0">
+      <table v-if="financialTransactionsStore.getPaidAccounts.length > 0">
         <thead>
           <tr>
             <th>Descrição</th>
@@ -70,7 +70,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in accountsPayableStore.getPaidAccounts" :key="account.id">
+          <tr v-for="account in financialTransactionsStore.getPaidAccounts" :key="account.id">
             <td>{{ account.description }}</td>
             <td>R$ {{ account.amount.toFixed(2) }}</td>
             <td>{{ account.due_date }}</td>
@@ -89,21 +89,23 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useAccountsPayableStore } from '@/stores/accountsPayableStore';
+import { useFinancialTransactionsStore } from '@/stores/financialTransactionsStore';
 
-interface AccountsPayable {
+interface FinancialTransaction {
   id: string;
   description: string;
   amount: number;
   due_date: string;
   paid_date?: string | null;
-  is_paid: boolean;
+  received_date?: string | null;
+  is_paid?: boolean;
+  is_received?: boolean;
   created_at: string;
 }
 
-const accountsPayableStore = useAccountsPayableStore();
+const financialTransactionsStore = useFinancialTransactionsStore();
 
-const newAccount = ref<Omit<AccountsPayable, 'id' | 'created_at'>>({
+const newAccount = ref<Omit<FinancialTransaction, 'id' | 'created_at' | 'is_received' | 'received_date'>>({
   description: '',
   amount: 0,
   due_date: '',
@@ -115,19 +117,19 @@ const isEditing = ref(false);
 const editingAccountId = ref<string | null>(null);
 
 onMounted(() => {
-  accountsPayableStore.fetchAccountsPayable();
+  financialTransactionsStore.fetchFinancialTransactions();
 });
 
 async function handleAddAccountPayable() {
   try {
-    await accountsPayableStore.addAccountPayable(newAccount.value);
+    await financialTransactionsStore.addFinancialTransaction('payable', newAccount.value);
     resetForm();
   } catch (err: unknown) {
     alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
 }
 
-function startEdit(account: AccountsPayable) {
+function startEdit(account: FinancialTransaction) {
   isEditing.value = true;
   editingAccountId.value = account.id;
   newAccount.value = { ...account };
@@ -136,7 +138,7 @@ function startEdit(account: AccountsPayable) {
 async function handleUpdateAccountPayable() {
   if (!editingAccountId.value) return;
   try {
-    await accountsPayableStore.updateAccountPayable(editingAccountId.value, newAccount.value);
+    await financialTransactionsStore.updateFinancialTransaction('payable', editingAccountId.value, newAccount.value);
     resetForm();
   } catch (err: unknown) {
     alert(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -146,7 +148,7 @@ async function handleUpdateAccountPayable() {
 async function handleDeleteAccountPayable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a pagar?')) {
     try {
-      await accountsPayableStore.deleteAccountPayable(id);
+      await financialTransactionsStore.deleteFinancialTransaction('payable', id);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }
@@ -156,7 +158,7 @@ async function handleDeleteAccountPayable(id: string) {
 async function markAsPaid(id: string) {
   if (confirm('Marcar esta conta como paga?')) {
     try {
-      await accountsPayableStore.updateAccountPayable(id, { is_paid: true, paid_date: new Date().toISOString().split('T')[0] });
+      await financialTransactionsStore.updateFinancialTransaction('payable', id, { is_paid: true, paid_date: new Date().toISOString().split('T')[0] });
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }

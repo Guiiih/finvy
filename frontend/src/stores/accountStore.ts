@@ -34,10 +34,10 @@ export const useAccountStore = defineStore('account', () => {
     try {
       const data = await api.get<Account[]>('/accounts');
       accounts.value = data;
-    } catch (err: unknown) { 
-      console.error('Erro ao buscar contas:', err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao buscar contas.';
+    } catch (error: unknown) { 
+      console.error('Erro ao buscar contas:', error);
+      if (error instanceof Error) {
+        error.value = error.message || 'Falha ao buscar contas.';
       } else {
         error.value = 'Falha ao buscar contas.';
       }
@@ -53,14 +53,14 @@ export const useAccountStore = defineStore('account', () => {
       const addedAccount = await api.post<Account>('/accounts', newAccount);
       accounts.value.push(addedAccount);
       return addedAccount;
-    } catch (err: unknown) { 
-      console.error('Erro ao adicionar conta:', err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao adicionar conta.';
+    } catch (error: unknown) { 
+      console.error('Erro ao adicionar conta:', error);
+      if (error instanceof Error) {
+        error.value = error.message || 'Falha ao adicionar conta.';
       } else {
         error.value = 'Falha ao adicionar conta.';
       }
-      throw err;
+      throw error;
     } finally {
       loading.value = false;
     }
@@ -76,14 +76,14 @@ export const useAccountStore = defineStore('account', () => {
         accounts.value[index] = { ...accounts.value[index], ...response };
       }
       return response;
-    } catch (err: unknown) { 
-      console.error('Erro ao atualizar conta:', err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao atualizar conta.';
+    } catch (error: unknown) { 
+      console.error('Erro ao atualizar conta:', error);
+      if (error instanceof Error) {
+        error.value = error.message || 'Falha ao atualizar conta.';
       } else {
         error.value = 'Falha ao atualizar conta.';
       }
-      throw err;
+      throw error;
     } finally {
       loading.value = false;
     }
@@ -97,11 +97,7 @@ export const useAccountStore = defineStore('account', () => {
       accounts.value = accounts.value.filter((acc) => acc.id !== id);
     } catch (err: unknown) { 
       console.error('Erro ao deletar conta:', err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao deletar conta.';
-      } else {
-        error.value = 'Falha ao deletar conta.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao deletar conta.';
       throw err;
     } finally {
       loading.value = false;
