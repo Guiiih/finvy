@@ -134,63 +134,101 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.base-table-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.base-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0;
-  font-size: 0.95em;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-  table-layout: fixed; /* Adicione esta linha */
-}
-
-.base-table thead {
-  background-color: #f0f0f0;
-}
-
-/* O resto do seu CSS permanece o mesmo... */
-.base-table th {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-  color: #333;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.base-table td {
-  padding: 10px 15px;
-  border-bottom: 1px solid #eee;
-  color: #555;
-}
-
-.base-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.base-table tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-.text-left { text-align: left; }
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-
-.empty-table-message {
-  text-align: center;
+/* Estilos principais do container */
+.accounts-container {
   padding: 20px;
-  color: #888;
-  font-style: italic;
-  background-color: #f9f9f9;
-  border: 1px dashed #ddd;
-  border-radius: 8px;
-  margin-top: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
 }
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.form-section, .accounts-list-section {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: #555;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* --- Início das Melhorias de Design --- */
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #666;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%; /* Ocupa a largura total */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box; /* Garante que o padding não aumente a largura */
+}
+
+/* Estilo para os botões de ação na tabela */
+.action-buttons button {
+  padding: 5px 10px; /* Botões menores */
+  font-size: 0.9em;  /* Texto menor */
+  margin-right: 5px; /* Espaçamento entre botões */
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-buttons button:last-child {
+  margin-right: 0;
+}
+
+/* Botão de Editar */
+.action-buttons .edit-button {
+  background-color: #e9ecef;
+  color: #495057;
+  border-color: #ced4da;
+}
+.action-buttons .edit-button:hover {
+  background-color: #dee2e6;
+}
+
+/* Botão de Excluir */
+.action-buttons .delete-button {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+.action-buttons .delete-button:hover {
+  background-color: #f1b0b7;
+}
+
+.error-text {
+  color: #dc3545;
+  font-size: 0.875em;
+  margin-top: 4px;
+  display: block;
+}
+
+/* --- Fim das Melhorias de Design --- */
 </style>
