@@ -169,11 +169,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       journalEntries.value = journalEntries.value.filter(entry => entry.id !== id);
     } catch (err: unknown) { 
       console.error("Erro ao deletar lançamento:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao deletar lançamento.';
-      } else {
-        error.value = 'Falha ao deletar lançamento.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao deletar lançamento.';
       throw err;
     } finally {
       loading.value = false;
@@ -210,7 +206,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       await addJournalEntry(reversalEntry as JournalEntry);
       alert('Lançamento estornado com sucesso!');
-    } catch (err: unknown) {
+    } catch (err: unknown) { 
       console.error("Erro ao estornar lançamento:", err);
       error.value = (err instanceof Error) ? err.message : 'Falha ao estornar lançamento.';
       throw err;

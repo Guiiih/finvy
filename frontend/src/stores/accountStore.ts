@@ -53,14 +53,10 @@ export const useAccountStore = defineStore('account', () => {
       const addedAccount = await api.post<Account>('/accounts', newAccount);
       accounts.value.push(addedAccount);
       return addedAccount;
-    } catch (error: unknown) { 
-      console.error('Erro ao adicionar conta:', error);
-      if (error instanceof Error) {
-        error.value = error.message || 'Falha ao adicionar conta.';
-      } else {
-        error.value = 'Falha ao adicionar conta.';
-      }
-      throw error;
+    } catch (err: unknown) { 
+      console.error('Erro ao adicionar conta:', err);
+      error.value = (err instanceof Error) ? err.message : 'Falha ao adicionar conta.';
+      throw err;
     } finally {
       loading.value = false;
     }
@@ -76,14 +72,10 @@ export const useAccountStore = defineStore('account', () => {
         accounts.value[index] = { ...accounts.value[index], ...response };
       }
       return response;
-    } catch (error: unknown) { 
-      console.error('Erro ao atualizar conta:', error);
-      if (error instanceof Error) {
-        error.value = error.message || 'Falha ao atualizar conta.';
-      } else {
-        error.value = 'Falha ao atualizar conta.';
-      }
-      throw error;
+    } catch (err: unknown) { 
+      console.error('Erro ao atualizar conta:', err);
+      error.value = (err instanceof Error) ? err.message : 'Falha ao atualizar conta.';
+      throw err;
     } finally {
       loading.value = false;
     }

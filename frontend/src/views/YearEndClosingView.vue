@@ -36,15 +36,15 @@ async function handleYearEndClosing() {
 
   loading.value = true;
   message.value = null;
-  error.value = false;
+      error.value = null;
 
   try {
     const response: { message?: string } = await api.post('/year-end-closing', { closingDate: closingDate.value });
     message.value = response.message || 'Fechamento de exercício realizado com sucesso!';
-    error.value = 'false';
+    error.value = null;
   } catch (error: unknown) {
     message.value = error instanceof Error ? error.message : 'Erro ao realizar fechamento de exercício.';
-    error.value = true;
+    error.value = 'error';
   } finally {
     loading.value = false;
   }

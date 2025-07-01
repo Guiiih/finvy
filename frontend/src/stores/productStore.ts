@@ -45,11 +45,7 @@ export const useProductStore = defineStore('products', () => {
       return newProduct;
     } catch (err: unknown) { 
       console.error("Erro ao adicionar produto:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao adicionar produto.';
-      } else {
-        error.value = 'Falha ao adicionar produto.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao adicionar produto.';
       throw err;
     } finally {
       loading.value = false;
@@ -68,11 +64,7 @@ export const useProductStore = defineStore('products', () => {
       return updatedProduct;
     } catch (err: unknown) { 
       console.error("Erro ao atualizar produto:", err);
-      if (err instanceof Error) {
-        error.value = err.message || 'Falha ao atualizar produto.';
-      } else {
-        error.value = 'Falha ao atualizar produto.';
-      }
+      error.value = (err instanceof Error) ? err.message : 'Falha ao atualizar produto.';
       throw err;
     } finally {
       loading.value = false;
