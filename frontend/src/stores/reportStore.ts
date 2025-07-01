@@ -67,11 +67,15 @@ export const useReportStore = defineStore('report', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchReports() {
+  async function fetchReports(startDate?: string, endDate?: string) {
     loading.value = true;
     error.value = null;
     try {
-      const data = await api.get<ReportData>('/reports/generate');
+      const params: { startDate?: string; endDate?: string } = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const data = await api.get<ReportData>('/reports/generate', { params });
       reports.value = data;
     } catch (err: unknown) {
       console.error('Erro ao buscar relatórios:', err);
@@ -85,11 +89,15 @@ export const useReportStore = defineStore('report', () => {
     }
   }
 
-  async function fetchTrialBalance() {
+  async function fetchTrialBalance(startDate?: string, endDate?: string) {
     loading.value = true;
     error.value = null;
     try {
-      const data = await api.get<{ ledgerAccounts: LedgerAccount[] }>('/trial-balance');
+      const params: { startDate?: string; endDate?: string } = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const data = await api.get<{ ledgerAccounts: LedgerAccount[] }>('/trial-balance', { params });
       trialBalance.value = data.ledgerAccounts;
     } catch (err: unknown) {
       console.error('Erro ao buscar balancete:', err);

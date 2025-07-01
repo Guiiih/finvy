@@ -38,7 +38,18 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const { data: accounts, error: accountsError } = await supabase.from('accounts').select('*').eq('user_id', user_id);
     if (accountsError) throw accountsError;
 
-    const { data: journalEntriesData, error: journalEntriesError } = await supabase.from('journal_entries').select('*, entry_lines(*)').eq('user_id', user_id);
+    const { startDate, endDate } = req.query;
+
+    let journalEntriesQuery = supabase.from('journal_entries').select('*, entry_lines(*)').eq('user_id', user_id);
+
+    if (startDate) {
+      journalEntriesQuery = journalEntriesQuery.gte('entry_date', startDate as string);
+    }
+    if (endDate) {
+      journalEntriesQuery = journalEntriesQuery.lte('entry_date', endDate as string);
+    }
+
+    const { data: journalEntriesData, error: journalEntriesError } = await journalEntriesQuery;
     if (journalEntriesError) throw journalEntriesError;
 
     const { data: products, error: productsError } = await supabase.from('products').select('*').eq('user_id', user_id);

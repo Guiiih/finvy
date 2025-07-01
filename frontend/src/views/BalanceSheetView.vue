@@ -1,22 +1,39 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useReportStore } from '@/stores/reportStore';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 
 const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
 
-const balanceSheetData = computed(() => reportStore.balanceSheetData);
+const startDate = ref('');
+const endDate = ref('');
+
+async function fetchBalanceSheetData() {
+  await reportStore.fetchReports(startDate.value, endDate.value);
+  await journalEntryStore.fetchJournalEntries(); // This might need date filters too, but for now, keep as is.
+}
 
 onMounted(async () => {
-  await reportStore.fetchReports();
-  await journalEntryStore.fetchJournalEntries();
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await fetchBalanceSheetData();
 });
+
+const balanceSheetData = computed(() => reportStore.balanceSheetData);
 </script>
 
 <template>
   <div class="balance-sheet-container">
     <h1>Balanço Patrimonial</h1>
+
+    <div class="date-filter-section">
+      <label for="startDate">Data Inicial:</label>
+      <input type="date" id="startDate" v-model="startDate" @change="fetchBalanceSheetData" />
+      <label for="endDate">Data Final:</label>
+      <input type="date" id="endDate" v-model="endDate" @change="fetchBalanceSheetData" />
+    </div>
 
     <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar o Balanço Patrimonial.

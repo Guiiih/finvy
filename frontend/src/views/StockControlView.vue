@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useStockControlStore } from '@/stores/stockControlStore';
 import { useProductStore } from '@/stores/productStore';
 import { useReportStore } from '@/stores/reportStore';
@@ -8,14 +8,31 @@ const stockControlStore = useStockControlStore();
 const productStore = useProductStore();
 const reportStore = useReportStore();
 
+const startDate = ref('');
+const endDate = ref('');
+
+async function fetchStockData() {
+  await reportStore.fetchReports(startDate.value, endDate.value);
+}
+
 onMounted(async () => {
-  await reportStore.fetchReports();
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await fetchStockData();
 });
 </script>
 
 <template>
   <div class="stock-control-container">
     <h1>Controle de Estoque</h1>
+
+    <div class="date-filter-section">
+      <label for="startDate">Data Inicial:</label>
+      <input type="date" id="startDate" v-model="startDate" @change="fetchStockData" />
+      <label for="endDate">Data Final:</label>
+      <input type="date" id="endDate" v-model="endDate" @change="fetchStockData" />
+    </div>
 
     <p v-if="reportStore.loading" class="loading-message">Carregando dados de estoque...</p>
     <p v-else-if="reportStore.error" class="error-message">

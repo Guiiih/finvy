@@ -1,21 +1,38 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useReportStore } from '@/stores/reportStore'; 
 import { useJournalEntryStore } from '@/stores/journalEntryStore'; 
 
 const reportStore = useReportStore(); 
 const journalEntryStore = useJournalEntryStore();
 
-const variationData = computed(() => reportStore.variationData);
+const startDate = ref('');
+const endDate = ref('');
+
+async function fetchVariationData() {
+  await reportStore.fetchReports(startDate.value, endDate.value);
+}
 
 onMounted(async () => {
-  await reportStore.fetchReports();
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await fetchVariationData();
 });
+
+const variationData = computed(() => reportStore.variationData);
 </script>
 
 <template>
   <div class="variation-container">
     <h1>Demonstrativo de Variações</h1>
+
+    <div class="date-filter-section">
+      <label for="startDate">Data Inicial:</label>
+      <input type="date" id="startDate" v-model="startDate" @change="fetchVariationData" />
+      <label for="endDate">Data Final:</label>
+      <input type="date" id="endDate" v-model="endDate" @change="fetchVariationData" />
+    </div>
 
     <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DFC.

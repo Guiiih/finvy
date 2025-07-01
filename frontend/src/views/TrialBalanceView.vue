@@ -6,7 +6,7 @@
     <p v-else-if="reportStore.error" class="error-message">
       Erro ao carregar balancete: {{ reportStore.error }}
     </p>
-    <p v-else-if="reportStore.ledgerAccounts.length === 0" class="no-data-message">
+    <p v-else-if="reportStore.trialBalanceData.length === 0" class="no-data-message">
       Nenhum dado de balancete para exibir. Adicione lançamentos contábeis.
     </p>
     <div v-else class="trial-balance-table">
@@ -21,7 +21,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in reportStore.ledgerAccounts" :key="account.account_id">
+          <tr v-for="account in reportStore.trialBalanceData" :key="account.account_id">
             <td>{{ account.accountName }}</td>
             <td>{{ account.type }}</td>
             <td>R$ {{ account.totalDebits.toFixed(2) }}</td>
@@ -45,21 +45,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useReportStore } from '@/stores/reportStore';
 
 const reportStore = useReportStore();
 
+const startDate = ref('');
+const endDate = ref('');
+
+async function fetchTrialBalanceData() {
+  await reportStore.fetchTrialBalance(startDate.value, endDate.value);
+}
+
 onMounted(async () => {
-  await reportStore.fetchReports();
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await fetchTrialBalanceData();
 });
 
 const totalDebitsBalance = computed(() => {
-  return reportStore.ledgerAccounts.reduce((sum, account) => sum + account.totalDebits, 0);
+  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalDebits, 0);
 });
 
 const totalCreditsBalance = computed(() => {
-  return reportStore.ledgerAccounts.reduce((sum, account) => sum + account.totalCredits, 0);
+  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalCredits, 0);
 });
 </script>
 

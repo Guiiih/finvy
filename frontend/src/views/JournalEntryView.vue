@@ -131,6 +131,7 @@
                    Correções devem ser feitas com lançamentos de estorno. -->
               <button disabled title="Edição desabilitada para lançamentos registrados">Editar</button>
               <button disabled title="Exclusão desabilitada para lançamentos registrados">Excluir</button>
+              <button @click="journalEntryStore.reverseJournalEntry(entry.id)" title="Estornar este lançamento">Estornar</button>
               <button @click="toggleDetails(entry.id)">
                 {{ showDetails[entry.id] ? 'Ocultar Detalhes' : 'Mostrar Detalhes' }}
               </button>

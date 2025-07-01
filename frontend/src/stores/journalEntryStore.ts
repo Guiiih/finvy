@@ -184,6 +184,49 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
   }
 
+  async function reverseJournalEntry(originalEntryId: string) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const originalEntry = journalEntries.value.find(entry => entry.id === originalEntryId);
+      if (!originalEntry) {
+        throw new Error('Lançamento original não encontrado para estorno.');
+      }
+
+      const reversedLines: Omit<EntryLine, 'id'>[] = originalEntry.lines.map(line => ({
+        account_id: line.account_id,
+        type: line.type === 'debit' ? 'credit' : 'debit',
+        amount: line.amount,
+        product_id: line.product_id,
+        quantity: line.quantity,
+        unit_cost: line.unit_cost,
+        icms_rate: line.icms_rate,
+        total_gross: line.total_gross,
+        icms_value: line.icms_value,
+        total_net: line.total_net,
+      }));
+
+      const reversalEntry: Omit<JournalEntry, 'lines' | 'id'> & { id?: string, lines: Omit<EntryLine, 'id'>[] } = {
+        entry_date: new Date().toISOString().split('T')[0],
+        description: `Estorno do Lançamento ${originalEntry.id} - ${originalEntry.description}`,
+        lines: reversedLines,
+      };
+
+      await addJournalEntry(reversalEntry as JournalEntry);
+      alert('Lançamento estornado com sucesso!');
+    } catch (err: unknown) {
+      console.error("Erro ao estornar lançamento:", err);
+      if (err instanceof Error) {
+        error.value = err.message || 'Falha ao estornar lançamento.';
+      } else {
+        error.value = 'Falha ao estornar lançamento.';
+      }
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     journalEntries,
     getAllJournalEntries,
@@ -192,6 +235,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     addJournalEntry,
     updateEntry,
     deleteEntry,
+    reverseJournalEntry,
     loading,
     error,
   };

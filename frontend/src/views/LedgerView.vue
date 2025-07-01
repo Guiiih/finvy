@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useReportStore, type LedgerAccount } from '@/stores/reportStore';
 import { useJournalEntryStore } from '@/stores/journalEntryStore';
 
 const reportStore = useReportStore();
 const journalEntryStore = useJournalEntryStore();
+
+const startDate = ref('');
+const endDate = ref('');
+
+async function fetchLedgerData() {
+  await reportStore.fetchReports(startDate.value, endDate.value);
+  await journalEntryStore.fetchJournalEntries(); // This might need date filters too, but for now, keep as is.
+}
+
+onMounted(async () => {
+  // Set default dates (e.g., beginning of current year to today)
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await fetchLedgerData();
+});
 
 const ledgerAccounts = computed(() => reportStore.ledgerAccounts.filter(account => account.finalBalance !== 0));
 
@@ -39,16 +55,18 @@ function getBalanceClass(account: LedgerAccount) {
     return account.finalBalance >= 0 ? 'positive' : 'negative';
   }
 }
-
-onMounted(async () => {
-  await reportStore.fetchReports();
-  await journalEntryStore.fetchJournalEntries();
-});
 </script>
 
 <template>
   <div class="ledger-container">
     <h1>Razão (Ledger)</h1>
+
+    <div class="date-filter-section">
+      <label for="startDate">Data Inicial:</label>
+      <input type="date" id="startDate" v-model="startDate" @change="fetchLedgerData" />
+      <label for="endDate">Data Final:</label>
+      <input type="date" id="endDate" v-model="endDate" @change="fetchLedgerData" />
+    </div>
 
     <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
       Nenhum lançamento contábil registrado ainda. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para ver o Razão.

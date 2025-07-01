@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import InfoCard from '@/components/InfoCard.vue'; 
 import { useReportStore } from '@/stores/reportStore';
 
 const reportStore = useReportStore();
+
+const startDate = ref('');
+const endDate = ref('');
 
 const totalAtivo = computed(() => reportStore.balanceSheetData.totalDoAtivo);
 const lucroLiquido = computed(() => reportStore.dreData.lucroLiquido);
 const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo);
 
 onMounted(async () => {
-  await reportStore.fetchReports();
+  const today = new Date();
+  endDate.value = today.toISOString().split('T')[0];
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  await reportStore.fetchReports(startDate.value, endDate.value);
 });
 
 </script>

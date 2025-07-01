@@ -18,6 +18,8 @@ import UpdatePasswordView from '../views/UpdatePasswordView.vue'
 import RegistrationSuccessView from '../views/RegistrationSuccessView.vue' 
 import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue' 
 import TrialBalanceView from '../views/TrialBalanceView.vue'
+import ChartOfAccountsView from '../views/ChartOfAccountsView.vue'
+import YearEndClosingView from '../views/YearEndClosingView.vue'
 import { supabase } from '../supabase'
 
 const router = createRouter({
@@ -93,6 +95,18 @@ const router = createRouter({
       path: '/trial-balance',
       name: 'trial-balance',
       component: TrialBalanceView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/chart-of-accounts',
+      name: 'chart-of-accounts',
+      component: ChartOfAccountsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/year-end-closing',
+      name: 'year-end-closing',
+      component: YearEndClosingView,
       meta: { requiresAuth: true }
     },
     {
