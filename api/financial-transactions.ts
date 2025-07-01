@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabase, handleErrorResponse } from './utils/supabaseClient';
 import { handleCors } from './utils/corsHandler';
 import { AuthApiError } from '@supabase/supabase-js';
+import type { EntryLine } from '../frontend/src/types';
 import {
   idSchema,
   createFinancialTransactionSchema,
@@ -81,7 +82,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
 
       const journalEntryDescription = `Registro de ${type === 'payable' ? 'Conta a Pagar' : 'Conta a Receber'}: ${newTransaction.description}`;
-      const journalEntryLines = [];
+      const journalEntryLines: EntryLine[] = [];
 
       if (type === 'payable') {
         // When a payable is created: Debit Expense/Asset, Credit Accounts Payable
@@ -187,7 +188,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }
 
         const journalEntryDescription = `Pagamento de Conta a Pagar: ${existingTransaction.description}`;
-        const journalEntryLines = [
+        const journalEntryLines: EntryLine[] = [
           { account_id: accountsPayableAccount.id, type: 'debit', amount: existingTransaction.amount },
           { account_id: cashAccount.id, type: 'credit', amount: existingTransaction.amount },
         ];
@@ -226,7 +227,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }
 
         const journalEntryDescription = `Recebimento de Conta a Receber: ${existingTransaction.description}`;
-        const journalEntryLines = [
+        const journalEntryLines: EntryLine[] = [
           { account_id: cashAccount.id, type: 'debit', amount: existingTransaction.amount },
           { account_id: accountsReceivableAccount.id, type: 'credit', amount: existingTransaction.amount },
         ];

@@ -118,7 +118,6 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         }
 
         const lineToSend = {
-          journal_entry_id: updatedEntry.id,
           account_id: line.account_id,
           debit: line.type === 'debit' ? line.amount : 0,
           credit: line.type === 'credit' ? line.amount : 0,
