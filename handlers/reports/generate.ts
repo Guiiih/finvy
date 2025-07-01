@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase, handleErrorResponse } from '../../utils/supabaseClient';
-import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../../frontend/src/types';
+import { supabase, handleErrorResponse } from '../../api/utils/supabaseClient';
+import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types';
 
 type LedgerAccount = FrontendLedgerAccount;
 

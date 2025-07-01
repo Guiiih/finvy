@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase, handleErrorResponse } from '../utils/supabaseClient';
+import { supabase, handleErrorResponse } from '../api/utils/supabaseClient';
 import {
   createAccountSchema,
   updateAccountSchema
-} from '../utils/schemas';
+} from '../api/utils/schemas';
 
 export default async function handler(req: VercelRequest, res: VercelResponse, user_id: string) {
   try {
