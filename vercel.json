@@ -1,11 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/accounts/:id", "destination": "/api/accounts" },
-    { "source": "/api/products/:id", "destination": "/api/products" },
-    { "source": "/api/journal-entries/:id", "destination": "/api/journal-entries" },
-    { "source": "/api/journal-entries/(.*)/lines", "destination": "/api/entry-lines?journal_entry_id=$1" },
-    { "source": "/api/reports/generate", "destination": "/api/reports/generate" },
-    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
