@@ -191,6 +191,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // 4. Return all calculated reports
     res.status(200).json({
       ledgerAccounts: ledgerAccountsList,
+      trialBalanceData: ledgerAccountsList, // Incluindo dados do balancete
       dreData,
       balanceSheetData,
       stockBalances,

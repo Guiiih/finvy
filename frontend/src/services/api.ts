@@ -39,7 +39,7 @@ export const api = {
   },
   delete: async <T>(endpoint: string, options?: { params?: Record<string, unknown> }): Promise<T> => {
     try {
-      const response = await apiClient.delete<T>(endpoint);
+      const response = await apiClient.delete<T>(endpoint, options);
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));

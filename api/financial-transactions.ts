@@ -60,14 +60,76 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       }
       const newTransaction = { ...parsedBody.data, user_id };
 
-      const { data, error: dbError } = await supabase
+      const { data: newFinancialTransaction, error: dbError } = await supabase
         .from(tableName)
         .insert([newTransaction])
         .select()
         .single();
 
       if (dbError) throw dbError;
-      return res.status(201).json(data);
+
+      // Generate initial journal entry
+      const accountsData = await supabase.from('accounts').select('*').eq('user_id', user_id);
+      if (accountsData.error) throw accountsData.error;
+      const accounts = accountsData.data;
+
+      const accountsPayableAccount = accounts.find(acc => acc.name === 'Contas a Pagar');
+      const accountsReceivableAccount = accounts.find(acc => acc.name === 'Contas a Receber');
+
+      if (!accountsPayableAccount || !accountsReceivableAccount) {
+        return handleErrorResponse(res, 500, 'Contas contábeis "Contas a Pagar" ou "Contas a Receber" não encontradas.');
+      }
+
+      const journalEntryDescription = `Registro de ${type === 'payable' ? 'Conta a Pagar' : 'Conta a Receber'}: ${newTransaction.description}`;
+      const journalEntryLines = [];
+
+      if (type === 'payable') {
+        // When a payable is created: Debit Expense/Asset, Credit Accounts Payable
+        // For simplicity, we'll assume a generic expense account for now.
+        // In a real system, this would be linked to a specific expense/asset account.
+        const expenseAccount = accounts.find(acc => acc.type === 'expense'); // Find any expense account
+        if (!expenseAccount) {
+          return handleErrorResponse(res, 500, 'Nenhuma conta de despesa encontrada para o lançamento.');
+        }
+        journalEntryLines.push(
+          { account_id: expenseAccount.id, type: 'debit', amount: newTransaction.amount },
+          { account_id: accountsPayableAccount.id, type: 'credit', amount: newTransaction.amount }
+        );
+      } else {
+        // When a receivable is created: Debit Accounts Receivable, Credit Revenue
+        const revenueAccount = accounts.find(acc => acc.type === 'revenue'); // Find any revenue account
+        if (!revenueAccount) {
+          return handleErrorResponse(res, 500, 'Nenhuma conta de receita encontrada para o lançamento.');
+        }
+        journalEntryLines.push(
+          { account_id: accountsReceivableAccount.id, type: 'debit', amount: newTransaction.amount },
+          { account_id: revenueAccount.id, type: 'credit', amount: newTransaction.amount }
+        );
+      }
+
+      const { data: newJournalEntry, error: journalEntryError } = await supabase
+        .from('journal_entries')
+        .insert({
+          entry_date: newFinancialTransaction.created_at.split('T')[0], // Use creation date of the financial transaction
+          description: journalEntryDescription,
+          user_id: user_id,
+        })
+        .select()
+        .single();
+
+      if (journalEntryError) throw journalEntryError;
+
+      for (const line of journalEntryLines) {
+        const { error: lineError } = await supabase.from('entry_lines').insert({
+          journal_entry_id: newJournalEntry.id,
+          account_id: line.account_id,
+          debit: line.type === 'debit' ? line.amount : 0,
+          credit: line.type === 'credit' ? line.amount : 0,
+        });
+        if (lineError) throw lineError;
+      }
+
+      return res.status(201).json(newFinancialTransaction);
     } else if (req.method === 'PUT') {
       const parsedQuery = idSchema.safeParse(req.query);
       if (!parsedQuery.success) {
@@ -85,6 +147,19 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.');
       }
 
+      // Fetch the existing transaction to check its status
+      const { data: existingTransaction, error: fetchError } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!existingTransaction) {
+        return handleErrorResponse(res, 404, `Transação ${type} não encontrada ou não autorizada.`);
+      }
+
       const { data, error: dbError } = await supabase
         .from(tableName)
         .update(updateData)
@@ -96,6 +171,87 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       if (dbError) throw dbError;
       if (!data) {
         return handleErrorResponse(res, 404, `Transação ${type} não encontrada ou não autorizada.`);
+      }
+
+      // Generate journal entry if status changed to paid/received
+      if (type === 'payable' && updateData.is_paid && !existingTransaction.is_paid) {
+        const accountsData = await supabase.from('accounts').select('*').eq('user_id', user_id);
+        if (accountsData.error) throw accountsData.error;
+        const accounts = accountsData.data;
+
+        const accountsPayableAccount = accounts.find(acc => acc.name === 'Contas a Pagar');
+        const cashAccount = accounts.find(acc => acc.name === 'Caixa'); // Assuming a Cash account
+
+        if (!accountsPayableAccount || !cashAccount) {
+          return handleErrorResponse(res, 500, 'Contas contábeis "Contas a Pagar" ou "Caixa" não encontradas.');
+        }
+
+        const journalEntryDescription = `Pagamento de Conta a Pagar: ${existingTransaction.description}`;
+        const journalEntryLines = [
+          { account_id: accountsPayableAccount.id, type: 'debit', amount: existingTransaction.amount },
+          { account_id: cashAccount.id, type: 'credit', amount: existingTransaction.amount },
+        ];
+
+        const { data: newJournalEntry, error: journalEntryError } = await supabase
+          .from('journal_entries')
+          .insert({
+            entry_date: updateData.paid_date || new Date().toISOString().split('T')[0],
+            description: journalEntryDescription,
+            user_id: user_id,
+          })
+          .select()
+          .single();
+
+        if (journalEntryError) throw journalEntryError;
+
+        for (const line of journalEntryLines) {
+          const { error: lineError } = await supabase.from('entry_lines').insert({
+            journal_entry_id: newJournalEntry.id,
+            account_id: line.account_id,
+            debit: line.type === 'debit' ? line.amount : 0,
+            credit: line.type === 'credit' ? line.amount : 0,
+          });
+          if (lineError) throw lineError;
+        }
+      } else if (type === 'receivable' && updateData.is_received && !existingTransaction.is_received) {
+        const accountsData = await supabase.from('accounts').select('*').eq('user_id', user_id);
+        if (accountsData.error) throw accountsData.error;
+        const accounts = accountsData.data;
+
+        const accountsReceivableAccount = accounts.find(acc => acc.name === 'Contas a Receber');
+        const cashAccount = accounts.find(acc => acc.name === 'Caixa'); // Assuming a Cash account
+
+        if (!accountsReceivableAccount || !cashAccount) {
+          return handleErrorResponse(res, 500, 'Contas contábeis "Contas a Receber" ou "Caixa" não encontradas.');
+        }
+
+        const journalEntryDescription = `Recebimento de Conta a Receber: ${existingTransaction.description}`;
+        const journalEntryLines = [
+          { account_id: cashAccount.id, type: 'debit', amount: existingTransaction.amount },
+          { account_id: accountsReceivableAccount.id, type: 'credit', amount: existingTransaction.amount },
+        ];
+
+        const { data: newJournalEntry, error: journalEntryError } = await supabase
+          .from('journal_entries')
+          .insert({
+            entry_date: updateData.received_date || new Date().toISOString().split('T')[0],
+            description: journalEntryDescription,
+            user_id: user_id,
+          })
+          .select()
+          .single();
+
+        if (journalEntryError) throw journalEntryError;
+
+        for (const line of journalEntryLines) {
+          const { error: lineError } = await supabase.from('entry_lines').insert({
+            journal_entry_id: newJournalEntry.id,
+            account_id: line.account_id,
+            debit: line.type === 'debit' ? line.amount : 0,
+            credit: line.type === 'credit' ? line.amount : 0,
+          });
+          if (lineError) throw lineError;
+        }
       }
       return res.status(200).json(data);
     } else if (req.method === 'DELETE') {

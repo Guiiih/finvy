@@ -24,7 +24,7 @@ Até o momento, o Finvy conta com as seguintes funcionalidades e melhorias, visa
 O Finvy oferece a geração de relatórios financeiros fundamentais para a análise da saúde contábil e financeira, todos com a capacidade de filtragem por período:
 
 *   **Razão (Ledger):** Apresenta o movimento individual de cada conta contábil, mostrando débitos, créditos e o saldo final.
-*   **Balancete de Verificação (Trial Balance):** Um relatório crucial que lista todas as contas do razão com seus saldos finais (débito ou crédito), permitindo verificar a igualdade entre o total de débitos e créditos.
+*   **Balancete de Verificação (Trial Balance):** Um relatório crucial que lista todas as contas do razão com seus saldos finais (débito ou crédito), permitindo verificar a igualdade entre o total de débitos e créditos. (Funcionalidade agora integrada ao endpoint de relatórios gerais).
 *   **Demonstração de Resultado do Exercício (DRE):** Apresenta o desempenho financeiro da empresa em um período, detalhando receitas, custos e despesas para chegar ao lucro ou prejuízo líquido.
 *   **Balanço Patrimonial:** Uma fotografia da posição financeira da empresa em uma data específica, mostrando ativos, passivos e patrimônio líquido.
 *   **Demonstração do Fluxo de Caixa (DFC):** Detalha as entradas e saídas de caixa, classificadas por atividades operacionais, de investimento e de financiamento.
@@ -35,6 +35,9 @@ O Finvy oferece a geração de relatórios financeiros fundamentais para a anál
 
 ### 5. Fechamento de Exercício
 *   **Processo de Fechamento:** Permite realizar o fechamento contábil de um período, zerando as contas de receita e despesa e transferindo o resultado (lucro ou prejuízo) para uma conta de Patrimônio Líquido. Esta funcionalidade é crucial para a preparação das demonstrações financeiras anuais.
+
+### 6. Gestão de Contas a Pagar e a Receber (Consolidado)
+*   **Registro e Acompanhamento:** Permite registrar e acompanhar contas a pagar e a receber, incluindo descrição, valor, data de vencimento e status de pagamento/recebimento. Esta funcionalidade foi consolidada em um único endpoint de API para otimização.
 
 ## Tecnologias Utilizadas
 
@@ -47,7 +50,7 @@ O Finvy oferece a geração de relatórios financeiros fundamentais para a anál
 ### Pré-requisitos
 
 *   Node.js e npm (ou yarn) instalados.
-*   Uma conta Supabase e um projeto configurado com as tabelas `accounts`, `journal_entries`, `entry_lines`, `products`.
+*   Uma conta Supabase e um projeto configurado com as tabelas `accounts`, `journal_entries`, `entry_lines`, `products`, `accounts_payable`, `accounts_receivable`.
 *   As variáveis de ambiente do Supabase configuradas (API URL e Anon Key).
 
 ### Passos
@@ -100,6 +103,7 @@ O Finvy oferece a geração de relatórios financeiros fundamentais para a anál
 4.  **Produtos:** Cadastre e gerencie seus produtos, incluindo custo unitário e alíquota de ICMS.
 5.  **Relatórios:** Acesse a seção "Relatórios Financeiros" para gerar e visualizar o Razão, Balancete, DRE, Balanço Patrimonial, DFC e Variações. Utilize os filtros de data para analisar períodos específicos.
 6.  **Fechamento de Exercício:** Utilize a nova funcionalidade de "Fechamento de Exercício" para zerar as contas de resultado ao final de um período.
+7.  **Contas a Pagar/Receber:** Gerencie suas obrigações e direitos financeiros nas seções de Contas a Pagar e Contas a Receber.
 
 ## Próximos Passos e Melhorias Futuras
 

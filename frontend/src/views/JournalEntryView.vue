@@ -348,61 +348,9 @@ async function submitEntry() {
   }
 }
 
-function editEntry(entry: JournalEntry) {
-  showAddEntryForm.value = true;
-  editingEntryId.value = entry.id;
-  newEntryDate.value = entry.entry_date;
-  newEntryDescription.value = entry.description;
-  newEntryLines.value = entry.lines.map(line => ({
-    account_id: line.account_id,
-    type: line.type,
-    amount: line.amount,
-    product_id: line.product_id || '',
-    quantity: line.quantity || undefined,
-    unit_cost: line.unit_cost || undefined,
-    icms_rate: line.icms_rate || undefined,
-    total_gross: line.total_gross || undefined,
-    icms_value: line.icms_value || undefined,
-    total_net: line.total_net || undefined,
-  }));
-}
-
 function cancelEdit() {
   resetForm();
 }
-
-async function deleteEntry(id: string) {
-  if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-    try {
-      await journalEntryStore.deleteEntry(id);
-      if (editingEntryId.value === id) {
-        resetForm();
-      }
-      alert('Lançamento excluído com sucesso!');
-      console.log('Lançamento excluído:', id);
-    } catch (_error: unknown) {
-    console.error("Erro ao excluir lançamento:", _error);
-    alert(journalEntryStore.error || 'Erro ao excluir lançamento.');
-  }
-  }
-}
-
-const resetAllData = () => {
-  if (confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.')) {
-    alert('A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.');
-    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.');
-  }
-};
-
-// Adiciona a propriedade computada para os lançamentos ordenados
-const sortedJournalEntries = computed(() => {
-  // Ordena por data decrescente, depois por id decrescente
-  return [...journalEntryStore.journalEntries].sort((a, b) => {
-    if (a.entry_date > b.entry_date) return -1;
-    if (a.entry_date < b.entry_date) return 1;
-    return b.id.localeCompare(a.id);
-  });
-});
 </script>
 
 <style scoped>
