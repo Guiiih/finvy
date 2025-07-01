@@ -28,11 +28,16 @@ const accountSchema = toTypedSchema(
 const filteredAccounts = computed(() => accountStore.accounts);
 
 // Define os cabeçalhos para a BaseTable
-const headers = [
-  { key: 'code', label: 'Código', align: 'left' as const },
-  { key: 'name', label: 'Nome', align: 'left' as const },
-  { key: 'type', label: 'Tipo', align: 'left' as const },
-  { key: 'actions', label: 'Ações', align: 'center' as const },
+type AccountTableHeader = {
+  key: keyof Account | 'actions';
+  label: string;
+  align: 'left' | 'center';
+};
+const headers: AccountTableHeader[] = [
+  { key: 'code', label: 'Código', align: 'left' },
+  { key: 'name', label: 'Nome', align: 'left' },
+  { key: 'type', label: 'Tipo', align: 'left' },
+  { key: 'actions', label: 'Ações', align: 'center' },
 ];
 
 // Função para lidar com o envio do formulário (adição ou edição)
@@ -118,8 +123,8 @@ onMounted(() => {
         empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
       >
         <template #cell(actions)="{ item }">
-          <button @click="startEdit(item as Account)">Editar</button>
-          <button @click="handleDeleteAccount(item.id as string)" class="delete-button">Excluir</button>
+          <button @click="startEdit(item)">Editar</button>
+          <button @click="handleDeleteAccount(item.id)" class="delete-button">Excluir</button>
         </template>
       </BaseTable>
     </div>

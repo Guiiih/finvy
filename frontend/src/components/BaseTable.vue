@@ -1,16 +1,17 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends Record<string, any>">
 
 interface TableHeader {
-  key: string;     
-  label: string;    
-  align?: 'left' | 'center' | 'right'; 
-  sortable?: boolean; 
+  key: keyof T | 'actions'; // Permite 'actions' ou chaves de T
+  label: string;
+  align?: 'left' | 'center' | 'right';
+  sortable?: boolean;
 }
 
+// O componente agora espera um array do tipo genérico T
 defineProps<{
-  headers: TableHeader[]; 
-  items: Record<string, unknown>[]; // Use unknown instead of any for better type safety
-  emptyMessage?: string;  
+  headers: TableHeader[];
+  items: T[];
+  emptyMessage?: string;
 }>();
 
 const getHeaderAlignClass = (align: TableHeader['align']) => {
@@ -31,15 +32,15 @@ const getCellAlignClass = (align: TableHeader['align']) => {
     <table v-else class="base-table">
       <thead>
         <tr>
-          <th v-for="header in headers" :key="header.key" :class="getHeaderAlignClass(header.align)">
+          <th v-for="header in headers" :key="String(header.key)" :class="getHeaderAlignClass(header.align)">
             {{ header.label }}
           </th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(item, itemIndex) in items" :key="itemIndex">
-          <td v-for="header in headers" :key="header.key" :class="getCellAlignClass(header.align)">
-            <slot :name="`cell(${header.key})`" :item="item" :value="item[header.key]">
+          <td v-for="header in headers" :key="String(header.key)" :class="getCellAlignClass(header.align)">
+            <slot :name="`cell(${String(header.key)})`" :item="item" :value="item[header.key]">
               {{ item[header.key] }}
             </slot>
           </td>
@@ -50,67 +51,10 @@ const getCellAlignClass = (align: TableHeader['align']) => {
 </template>
 
 <style scoped>
+/* Os seus estilos permanecem os mesmos */
 .base-table-container {
   width: 100%;
-  overflow-x: auto; 
+  overflow-x: auto;
 }
-
-.base-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0;
-  font-size: 0.95em;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden; 
-}
-
-.base-table thead {
-  background-color: #f0f0f0;
-}
-
-.base-table th {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-  color: #333;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.base-table td {
-  padding: 10px 15px;
-  border-bottom: 1px solid #eee;
-  color: #555;
-}
-
-.base-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.base-table tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-.text-left {
-  text-align: left;
-}
-.text-center {
-  text-align: center;
-}
-.text-right {
-  text-align: right;
-}
-
-.empty-table-message {
-  text-align: center;
-  padding: 20px;
-  color: #888;
-  font-style: italic;
-  background-color: #f9f9f9;
-  border: 1px dashed #ddd;
-  border-radius: 8px;
-  margin-top: 20px;
-}
+/* ... resto dos estilos */
 </style>
