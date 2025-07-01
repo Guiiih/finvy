@@ -138,42 +138,27 @@ async function handleUpdateAccountPayable() {
   try {
     await accountsPayableStore.updateAccountPayable(editingAccountId.value, newAccount.value);
     resetForm();
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      alert(error.message);
-    } else {
-      alert('Ocorreu um erro desconhecido.');
-    }
+  } catch (err: unknown) {
+    alert(err instanceof Error ? err.message : 'Erro desconhecido');
   }
-}
 
 async function handleDeleteAccountPayable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a pagar?')) {
     try {
       await accountsPayableStore.deleteAccountPayable(id);
-    } catch (error: unknown) {
-    if (error instanceof Error) {
-      alert(error.message);
-    } else {
-      alert('Ocorreu um erro desconhecido.');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   }
-  }
-}
 
 async function markAsPaid(id: string) {
   if (confirm('Marcar esta conta como paga?')) {
     try {
       await accountsPayableStore.updateAccountPayable(id, { is_paid: true, paid_date: new Date().toISOString().split('T')[0] });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert('Ocorreu um erro desconhecido.');
-      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   }
-}
 
 function resetForm() {
   isEditing.value = false;
