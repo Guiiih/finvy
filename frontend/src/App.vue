@@ -2,6 +2,7 @@
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router' // Adicione useRoute
 import { ref, computed } from 'vue'
 import { supabase } from './supabase'
+import Toast from 'primevue/toast'; // Importa o componente Toast
 
 const router = useRouter()
 const route = useRoute() // NOVO: Obtenha a rota atual
@@ -36,6 +37,7 @@ const shouldHideNavbar = computed(() => {
 </script>
 
 <template>
+  <Toast />
   <div v-if="session && !shouldHideNavbar">
     <header>
       <div class="wrapper">
@@ -47,10 +49,6 @@ const shouldHideNavbar = computed(() => {
           <RouterLink to="/products">Produtos</RouterLink>
           <RouterLink to="/stock-control">Controle de Estoque</RouterLink>
           <RouterLink to="/ledger">Razão</RouterLink>
-          <RouterLink to="/dre">DRE</RouterLink>
-          <RouterLink to="/balance-sheet">Balanço Patrimonial</RouterLink>
-          <RouterLink to="/dfc">DFC</RouterLink>
-          <RouterLink to="/variations">Variações</RouterLink>
           <RouterLink to="/reports">Relatórios</RouterLink>
           <button @click="handleLogout" class="logout-button">Sair</button>
         </nav>

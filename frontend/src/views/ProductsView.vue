@@ -3,10 +3,13 @@ import { computed, watchEffect } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useAuthStore } from '@/stores/authStore';
 import BaseTable from '@/components/BaseTable.vue';
-import type { Product } from '@/types'; // Importe o tipo Product
+import type { Product } from '@/types';
+import { useToast } from 'primevue/usetoast';
+import Skeleton from 'primevue/skeleton';
 
 const productStore = useProductStore();
 const authStore = useAuthStore();
+const toast = useToast();
 
 // Crie um tipo para os cabeçalhos da tabela de produtos
 type ProductTableHeader = {
@@ -45,7 +48,13 @@ const filteredProducts = computed(() => {
 
 async function handleDeleteProduct(id: string) {
   if (confirm('Tem certeza de que deseja excluir este produto?')) {
-    await productStore.deleteProduct(id);
+    try {
+      await productStore.deleteProduct(id);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto excluído com sucesso!', life: 3000 });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao excluir o produto.';
+      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+    }
   }
 }
 
@@ -62,7 +71,11 @@ watchEffect(() => {
 
     <div class="products-list-section">
       <h2>Produtos Existentes</h2>
-      <p v-if="productStore.loading">Carregando produtos...</p>
+      <div v-if="productStore.loading">
+        <Skeleton height="2rem" class="mb-2"></Skeleton>
+        <Skeleton height="2rem" class="mb-2"></Skeleton>
+        <Skeleton height="2rem"></Skeleton>
+      </div>
       <p v-else-if="productStore.error" class="error-message">{{ productStore.error }}</p>
       <BaseTable
         v-else

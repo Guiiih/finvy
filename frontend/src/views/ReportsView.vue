@@ -1,21 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useReportStore } from '@/stores/reportStore';
+import { RouterView, useRouter } from 'vue-router';
 
 const reportStore = useReportStore();
+const router = useRouter();
 
 const startDate = ref('');
 const endDate = ref('');
 
-async function generateReports() {
-  await reportStore.fetchReports(startDate.value, endDate.value);
-}
-
+// Inicializa as datas com o ano corrente
 onMounted(() => {
   const today = new Date();
   endDate.value = today.toISOString().split('T')[0];
   startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
 });
+
+// Observa as mudanças nas datas e atualiza a rota com query params
+watch([startDate, endDate], ([newStartDate, newEndDate]) => {
+  router.replace({
+    query: {
+      startDate: newStartDate,
+      endDate: newEndDate,
+    },
+  });
+});
+
+// Função para navegar para um relatório específico
+const navigateToReport = (reportName: string) => {
+  router.push({
+    path: `/reports/${reportName}`,
+    query: {
+      startDate: startDate.value,
+      endDate: endDate.value,
+    },
+  });
+};
 </script>
 
 <template>
@@ -27,24 +47,16 @@ onMounted(() => {
       <input type="date" id="startDate" v-model="startDate" />
       <label for="endDate">Data Final:</label>
       <input type="date" id="endDate" v-model="endDate" />
-      <button @click="generateReports">Gerar Relatórios</button>
+      <button @click="navigateToReport('dre')">Ver DRE</button>
+      <button @click="navigateToReport('balance-sheet')">Ver Balanço</button>
+      <button @click="navigateToReport('dfc')">Ver DFC</button>
     </div>
 
     <p v-if="reportStore.loading" class="loading-message">Gerando relatórios...</p>
     <p v-else-if="reportStore.error" class="error-message">Erro ao gerar relatórios: {{ reportStore.error }}</p>
-    <p v-else class="info-message">Selecione um período e clique em "Gerar Relatórios" para visualizar os dados.</p>
+    <p v-else class="info-message">Selecione um período e o tipo de relatório para visualizar os dados.</p>
 
-    <!-- Aqui você pode adicionar links ou componentes para exibir os relatórios gerados -->
-    <div v-if="reportStore.reports">
-      <h2>Relatórios Gerados:</h2>
-      <ul>
-        <li><router-link to="/ledger">Razão</router-link></li>
-        <li><router-link to="/trial-balance">Balancete de Verificação</router-link></li>
-        <li><router-link to="/dre">Demonstração de Resultado do Exercício (DRE)</router-link></li>
-        <li><router-link to="/balance-sheet">Balanço Patrimonial</router-link></li>
-        <li><router-link to="/dfc">Demonstração do Fluxo de Caixa (DFC)</router-link></li>
-      </ul>
-    </div>
+    <RouterView :startDate="startDate" :endDate="endDate" />
   </div>
 </template>
 

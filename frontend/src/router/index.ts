@@ -6,10 +6,11 @@ import JournalEntryView from '../views/JournalEntryView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import StockControlView from '../views/StockControlView.vue'
 import LedgerView from '../views/LedgerView.vue'
-import DREView from '../views/DREView.vue'
-import BalanceSheetView from '../views/BalanceSheetView.vue'
-import DFCView from '../views/DFCView.vue'
+
 import ReportsView from '../views/ReportsView.vue'
+import DREReport from '../components/reports/DREReport.vue'
+import BalanceSheetReport from '../components/reports/BalanceSheetReport.vue'
+import DFCReport from '../components/reports/DFCReport.vue'
 import VariationView from '../views/VariationView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -64,28 +65,38 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/dre',
-      name: 'dre',
-      component: DREView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/balance-sheet',
-      name: 'balance-sheet',
-      component: BalanceSheetView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/dfc',
-      name: 'dfc',
-      component: DFCView,
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/reports',
       name: 'reports',
       component: ReportsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
+      children: [
+        {
+      path: '/reports',
+      name: 'reports',
+      component: ReportsView,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'dre',
+          name: 'dre-report',
+          component: DREReport,
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'balance-sheet',
+          name: 'balance-sheet-report',
+          component: BalanceSheetReport,
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'dfc',
+          name: 'dfc-report',
+          component: DFCReport,
+          meta: { requiresAuth: true }
+        },
+      ]
+    },
+      ]
     },
     {
       path: '/variations',

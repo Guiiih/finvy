@@ -2,6 +2,7 @@ import apiClient from './apiClient';
 import { AxiosError } from 'axios';
 
 // Helper para extrair a mensagem de erro de forma mais robusta
+// Trata erros de Axios (respostas de API com dados de erro específicos) e erros genéricos.
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AxiosError && error.response) {
     // Prioriza a mensagem de erro vinda do seu backend
@@ -27,7 +28,7 @@ export const api = {
       throw new Error(getErrorMessage(error));
     }
   },
-  post: async <T>(endpoint: string, data: unknown): Promise<T> => {
+  post: async <T, U>(endpoint: string, data: U): Promise<T> => {
     try {
       const response = await apiClient.post<T>(endpoint, data);
       return response.data;
@@ -35,7 +36,7 @@ export const api = {
       throw new Error(getErrorMessage(error));
     }
   },
-  put: async <T>(endpoint: string, data: unknown): Promise<T> => {
+  put: async <T, U>(endpoint: string, data: U): Promise<T> => {
     try {
       const response = await apiClient.put<T>(endpoint, data);
       return response.data;

@@ -9,11 +9,23 @@ const props = defineProps<{
 }>();
 
 const valueClass = computed(() => {
+  // A prop `isPositive` tem prioridade para forçar uma cor
   if (props.isPositive === true) {
     return 'positive-value';
-  } else if (props.isPositive === false) {
+  }
+  if (props.isPositive === false) {
     return 'negative-value';
   }
+
+  // Se `isPositive` não for definida, infere a cor pelo valor
+  if (props.value < 0) {
+    return 'negative-value';
+  }
+  if (props.value > 0) {
+    return 'positive-value';
+  }
+
+  // Por defeito, o valor 0 é neutro
   return 'neutral-value';
 });
 

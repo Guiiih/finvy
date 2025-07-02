@@ -4,12 +4,18 @@ import { useAccountStore } from '@/stores/accountStore';
 import type { Account } from '@/types';
 import BaseTable from '@/components/BaseTable.vue';
 
+import ProgressSpinner from 'primevue/progressspinner';
+import Skeleton from 'primevue/skeleton';
+
 // Importações do VeeValidate e Zod
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { z } from 'zod';
 
+import { useToast } from 'primevue/usetoast';
+
 const accountStore = useAccountStore();
+const toast = useToast(); // Inicializa o serviço de toast
 
 const isEditing = ref(false);
 const editingAccount = ref<Account | null>(null);
@@ -46,17 +52,18 @@ async function handleSubmit(values: any, { resetForm }: any) {
     if (isEditing.value && editingAccount.value) {
       // Modo de edição
       await accountStore.updateAccount(editingAccount.value.id, values);
-      alert('Conta atualizada com sucesso!');
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta atualizada com sucesso!', life: 3000 });
       isEditing.value = false;
       editingAccount.value = null;
     } else {
       // Modo de adição
       await accountStore.addAccount(values);
-      alert('Conta adicionada com sucesso!');
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta adicionada com sucesso!', life: 3000 });
     }
     resetForm(); // Limpa o formulário após o sucesso
   } catch (err: unknown) {
-    alert(err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.');
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
   }
 }
 
@@ -106,14 +113,21 @@ onMounted(() => {
           </Field>
           <ErrorMessage name="type" class="error-text" />
         </div>
-        <button type="submit" :disabled="isSubmitting">{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</button>
+                <button type="submit" :disabled="isSubmitting">
+          <ProgressSpinner v-if="isSubmitting" style="width: 20px; height: 20px;" strokeWidth="8" />
+          <span v-else>{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</span>
+        </button>
         <button v-if="isEditing" type="button" @click="cancelEdit">Cancelar</button>
       </Form>
     </div>
 
     <div class="accounts-list-section">
       <h2>Contas Existentes</h2>
-      <p v-if="accountStore.loading">Carregando contas...</p>
+      <div v-if="accountStore.loading">
+        <Skeleton height="2rem" class="mb-2"></Skeleton>
+        <Skeleton height="2rem" class="mb-2"></Skeleton>
+        <Skeleton height="2rem"></Skeleton>
+      </div>
       <p v-else-if="accountStore.error" class="error-message">{{ accountStore.error }}</p>
       
       <BaseTable

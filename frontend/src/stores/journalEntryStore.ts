@@ -2,11 +2,13 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { JournalEntry, EntryLine } from '../types/index';
 import { api } from '@/services/api';
+import { useToast } from 'primevue/usetoast';
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const toast = useToast();
 
   async function fetchJournalEntries() {
     loading.value = true;
@@ -16,7 +18,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const entriesWithLines = await Promise.all(entriesData.map(async (entry) => {
         try {
-          const linesData = await api.get<EntryLine[]>(`/entry-lines?journal_entry_id=${entry.id}`); // Use any[] for now
+          const linesData = await api.get<EntryLine[]>(`/entry-lines?journal_entry_id=${entry.id}`);
           const convertedLines: EntryLine[] = linesData.map(line => ({
             account_id: line.account_id,
             type: (line.debit && line.debit > 0) ? 'debit' : 'credit',
@@ -200,7 +202,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       };
 
       await addJournalEntry(reversalEntry as JournalEntry);
-      alert('Lançamento estornado com sucesso!');
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Lançamento estornado com sucesso!', life: 3000 });
     } catch (err: unknown) { 
       console.error("Erro ao estornar lançamento:", err);
       error.value = (err instanceof Error) ? err.message : 'Falha ao estornar lançamento.';
