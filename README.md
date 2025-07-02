@@ -50,25 +50,35 @@ O Finvy oferece a geração de relatórios financeiros fundamentais, todos com a
 ## **Estrutura do Projeto**
 ```
 finvy/
-├── api/                  # Funções Serverless da Vercel (Backend API)
-│   ├── accounts.ts
-│   ├── entry-lines.ts
-│   ├── financial-transactions.ts
-│   ├── journal-entries.ts
-│   ├── products.ts
-│   ├── reports/
-│   │   └── generate.ts
-│   └── year-end-closing.ts
-├── frontend/             # Aplicação Frontend em Vue.js
-│   ├── src/
-│   │   ├── components/   # Componentes reutilizáveis
-│   │   ├── router/       # Configuração de rotas
-│   │   ├── services/     # Configuração do cliente API
-│   │   ├── stores/       # Stores do Pinia para gestão de estado
-│   │   ├── types/        # Definições de tipos TypeScript
-│   │   └── views/        # Componentes de página
-│   └── ...
-└── ...
+|
+|-- 📂 api/                  
+|   |-- index.ts           
+|
+|-- 📂 frontend/             
+|   |-- src/                
+|   |   |-- assets/        
+|   |   |-- components/   
+|   |   |-- router/       
+|   |   |-- services/     
+|   |   |-- stores/       
+|   |   |-- types/        
+|   |   |-- views/        
+|   |-- ...
+|
+|-- 📂 handlers/             
+|
+|-- 📂 supabase/            
+|   |-- migrations/        
+|   |-- config.toml         
+|   |-- .gitignore          
+|
+|-- 📂 utils/               
+|
+|-- 📄 .gitignore         
+|-- 📄 package.json         
+|-- 📄 README.md            
+|-- 📄 vercel.json        
+
 ```
 
 ## **Como Começar**
