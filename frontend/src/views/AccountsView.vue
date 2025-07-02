@@ -47,7 +47,7 @@ const headers: AccountTableHeader[] = [
 ];
 
 // Função para lidar com o envio do formulário (adição ou edição)
-async function handleSubmit(values: any, { resetForm }: any) {
+async function handleSubmit(values: Omit<Account, 'id'> | Partial<Account>, { resetForm }: { resetForm: () => void }) {
   try {
     if (isEditing.value && editingAccount.value) {
       // Modo de edição

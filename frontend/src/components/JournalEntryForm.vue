@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAccountStore } from '@/stores/accountStore';
 import { useProductStore } from '@/stores/productStore';
-import type { JournalEntry, EntryLine } from '@/types';
+import type { EntryLine } from '@/types';
 
 // O componente emite um evento 'submit' quando o formulário está pronto
 const emit = defineEmits(['submit']);

@@ -1,8 +1,8 @@
-import type { Account, AccountType } from '@/types';
 import { type Mock, vi, describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useAccountStore } from './accountStore';
-import  { api } from '@/services/api';
+import { api } from '@/services/api';
+import type { Account } from '@/types';
 
 vi.mock('@/services/api', () => ({
   default: {

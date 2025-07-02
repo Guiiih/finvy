@@ -1,5 +1,4 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { ref } from 'vue';
 
 // CORREÇÃO: A interface agora é genérica e a chave é restrita a strings de T.
 export interface TableHeader<T> {
@@ -11,7 +10,7 @@ export interface TableHeader<T> {
 const props = defineProps<{
   headers: TableHeader<T>[];
   items: T[];
-}>();
+}>();  
 
 const emit = defineEmits<{
   (e: 'edit', item: T): void;

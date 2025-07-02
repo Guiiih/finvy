@@ -53,8 +53,9 @@ function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
         </tr>
       </thead>
       <tbody>
-        <template v-if="sortedEntries.length > 0" v-for="entry in sortedEntries" :key="entry.id">
-          <tr class="entry-summary">
+        <template v-if="sortedEntries.length > 0">
+          <template v-for="entry in sortedEntries" :key="entry.id">
+            <tr class="entry-summary">
             <td>{{ entry.entry_date }}</td>
             <td>{{ entry.description }}</td>
             <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
@@ -89,7 +90,7 @@ function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
             </td>
           </tr>
         </template>
-        <tr v-else>
+        <tr v-else-if="sortedEntries.length === 0">
           <td colspan="5" class="no-entries">Nenhum lançamento encontrado.</td>
         </tr>
       </tbody>
