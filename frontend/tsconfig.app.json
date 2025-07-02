@@ -7,9 +7,6 @@
 
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "types": ["vitest/globals"],
-    "target": "ESNext",
-    "moduleResolution": "bundler"
+    }
   }
 }
