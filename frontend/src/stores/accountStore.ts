@@ -50,7 +50,7 @@ export const useAccountStore = defineStore('account', () => {
     loading.value = true;
     error.value = null;
     try {
-      const addedAccount = await api.post<Account>('/accounts', newAccount);
+      const addedAccount = await api.post<Account, Omit<Account, 'id'> >('/accounts', newAccount);
       accounts.value.push(addedAccount);
       return addedAccount;
     } catch (err: unknown) { 
@@ -66,7 +66,7 @@ export const useAccountStore = defineStore('account', () => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await api.put<Account>(`/accounts/${id}`, updatedFields);
+      const response = await api.put<Account, Partial<Account>>(`/accounts/${id}`, updatedFields);
       const index = accounts.value.findIndex((acc) => acc.id === id);
       if (index !== -1) {
         accounts.value[index] = { ...accounts.value[index], ...response };

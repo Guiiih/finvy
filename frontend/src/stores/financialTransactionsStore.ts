@@ -46,7 +46,7 @@ export const useFinancialTransactionsStore = defineStore('financialTransactions'
     loading.value = true;
     error.value = null;
     try {
-      const data = await api.post<FinancialTransaction>('/financial-transactions', { ...newTransaction, type });
+      const data = await api.post<FinancialTransaction, typeof newTransaction & { type: string }>('/financial-transactions', { ...newTransaction, type });
       if (type === 'payable') {
         payables.value.push(data);
       } else {
@@ -70,7 +70,7 @@ export const useFinancialTransactionsStore = defineStore('financialTransactions'
     loading.value = true;
     error.value = null;
     try {
-      const data = await api.put<FinancialTransaction>(`/financial-transactions/${id}`, { ...updatedFields, type });
+      const data = await api.put<FinancialTransaction, Partial<Omit<FinancialTransaction, 'id' | 'created_at'>> & { type: string }>(`/financial-transactions/${id}`, { ...updatedFields, type });
       if (type === 'payable') {
         const index = payables.value.findIndex(t => t.id === id);
         if (index !== -1) {

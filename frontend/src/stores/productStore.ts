@@ -36,7 +36,7 @@ export const useProductStore = defineStore('products', () => {
     loading.value = true;
     error.value = null;
     try {
-      const newProduct = await api.post<Product>('/products', product);
+      const newProduct = await api.post<Product, Omit<Product, 'id'> >('/products', product);
       products.value.push(newProduct);
       return newProduct;
     } catch (err: unknown) { 
@@ -52,7 +52,7 @@ export const useProductStore = defineStore('products', () => {
     loading.value = true;
     error.value = null;
     try {
-      const updatedProduct = await api.put<Product>(`/products/${id}`, updatedFields);
+      const updatedProduct = await api.put<Product, Partial<Product>>(`/products/${id}`, updatedFields);
       const index = products.value.findIndex(prod => prod.id === id);
       if (index !== -1) {
         products.value[index] = updatedProduct;

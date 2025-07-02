@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useAccountStore } from './accountStore';
 import { api } from '@/services/api'; // Importa o serviço real para mockar
-import type { Account } from '@/types';
+import type { Account, AccountType } from '@/types';
 
 // Mock do serviço de API
 vi.mock('@/services/api', () => ({
@@ -26,8 +26,8 @@ describe('accountStore', () => {
 
   it('deve buscar contas com sucesso', async () => {
     const mockAccounts: Account[] = [
-      { id: '1', name: 'Conta Teste 1', type: 'asset', code: 1 },
-      { id: '2', name: 'Conta Teste 2', type: 'liability', code: 2 },
+      { id: '1', name: 'Conta Teste 1', type: 'asset' as AccountType, code: 1 },
+      { id: '2', name: 'Conta Teste 2', type: 'liability' as AccountType, code: 2 },
     ];
     (api.get as vi.Mock).mockResolvedValue(mockAccounts);
 
@@ -51,7 +51,7 @@ describe('accountStore', () => {
   });
 
   it('deve adicionar uma nova conta com sucesso', async () => {
-    const newAccountData = { name: 'Nova Conta', type: 'revenue' };
+    const newAccountData = { name: 'Nova Conta', type: 'revenue' as AccountType };
     const addedAccount: Account = { id: '3', code: 3, ...newAccountData };
     (api.post as vi.Mock).mockResolvedValue(addedAccount);
 
@@ -68,14 +68,14 @@ describe('accountStore', () => {
     const errorMessage = 'Falha ao criar';
     (api.post as vi.Mock).mockRejectedValue(new Error(errorMessage));
 
-    await expect(store.addAccount({ name: 'Conta Falha', type: 'expense' })).rejects.toThrow(errorMessage);
+    await expect(store.addAccount({ name: 'Conta Falha', type: 'expense' as AccountType })).rejects.toThrow(errorMessage);
     expect(store.accounts).toEqual([]);
     expect(store.loading).toBe(false);
     expect(store.error).toBe(errorMessage);
   });
 
   it('deve atualizar uma conta existente com sucesso', async () => {
-    const initialAccount: Account = { id: '1', name: 'Conta Antiga', type: 'asset', code: 1 };
+    const initialAccount: Account = { id: '1', name: 'Conta Antiga', type: 'asset' as AccountType, code: 1 };
     store.accounts = [initialAccount];
 
     const updatedFields = { name: 'Conta Atualizada' };
@@ -92,7 +92,7 @@ describe('accountStore', () => {
   });
 
   it('deve lidar com erro ao atualizar conta', async () => {
-    const initialAccount: Account = { id: '1', name: 'Conta Antiga', type: 'asset', code: 1 };
+    const initialAccount: Account = { id: '1', name: 'Conta Antiga', type: 'asset' as AccountType, code: 1 };
     store.accounts = [initialAccount];
 
     const errorMessage = 'Falha ao atualizar';
@@ -105,7 +105,7 @@ describe('accountStore', () => {
   });
 
   it('deve deletar uma conta com sucesso', async () => {
-    const accountToDelete: Account = { id: '1', name: 'Conta a Deletar', type: 'asset', code: 1 };
+    const accountToDelete: Account = { id: '1', name: 'Conta a Deletar', type: 'asset' as AccountType, code: 1 };
     store.accounts = [accountToDelete];
 
     (api.delete as vi.Mock).mockResolvedValue(null);
@@ -120,7 +120,7 @@ describe('accountStore', () => {
   });
 
   it('deve lidar com erro ao deletar conta', async () => {
-    const accountToDelete: Account = { id: '1', name: 'Conta a Deletar', type: 'asset', code: 1 };
+    const accountToDelete: Account = { id: '1', name: 'Conta a Deletar', type: 'asset' as AccountType, code: 1 };
     store.accounts = [accountToDelete];
 
     const errorMessage = 'Falha ao deletar';

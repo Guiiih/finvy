@@ -57,7 +57,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null;
     try {
       const { lines, ...entryHeader } = entry;
-      const newJournalEntry = await api.post<JournalEntry>('/journal-entries', entryHeader);
+      const newJournalEntry = await api.post<JournalEntry, Omit<JournalEntry, 'lines' | 'id'> >('/journal-entries', entryHeader);
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
@@ -81,7 +81,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           total_net: line.total_net,
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
-        const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
+        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
         // Calcular e adicionar a propriedade 'amount' para a linha recém-criada
         const processedNewLine: EntryLine = {
           ...newLine,
@@ -106,7 +106,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null;
     try {
       const { lines, ...entryHeader } = updatedEntry;
-      await api.put<JournalEntry>(`/journal-entries/${updatedEntry.id}`, entryHeader);
+      await api.put<JournalEntry, Omit<JournalEntry, 'lines'> >(`/journal-entries/${updatedEntry.id}`, entryHeader);
 
       await api.delete(`/journal-entries/${updatedEntry.id}/lines`);
 
@@ -131,7 +131,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           total_net: line.total_net,
         };
         console.log('Sending line to API:', lineToSend); // Adicionado para depuração
-        const newLine = await api.post<EntryLine>('/entry-lines', lineToSend);
+        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
         // Calcular e adicionar a propriedade 'amount' para a linha recém-criada
         const processedNewLine: EntryLine = {
           ...newLine,
