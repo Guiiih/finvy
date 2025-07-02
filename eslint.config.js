@@ -5,29 +5,33 @@ import prettierPlugin from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
 
 export default [
+  // Configuração para ignorar ficheiros e diretórios
   {
     ignores: [
       "node_modules/",
       "dist/",
-      "frontend/dist/",
-      "frontend/node_modules/",
+      "frontend/", // Ignorar o diretório frontend, pois ele tem sua própria configuração
       "supabase/",
       "*.js",
       "*.cjs",
       "*.mjs",
     ],
   },
+  // Configurações recomendadas do ESLint e TypeScript
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
+  // Configuração para integração com Prettier
   prettierConfig,
+  // Configuração específica para ficheiros TypeScript do backend
   {
-    files: ["**/*.{js,mjs,cjs,ts}"],
+    files: ["api/**/*.ts", "handlers/**/*.ts", "utils/**/*.ts"],
     languageOptions: {
       globals: globals.node,
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: 12,
+        ecmaVersion: 2021,
         sourceType: "module",
+        project: ["./tsconfig.json"], // Certifique-se de que tsconfig.json existe e está configurado
       },
     },
     plugins: {

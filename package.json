@@ -21,8 +21,12 @@
   },
   "scripts": {
     "test": "vitest",
-    "lint": "eslint . --ext .ts --fix",
-    "format": "prettier --write ."
+    "lint:frontend": "npm run lint --workspace frontend",
+    "format:frontend": "npm run format --workspace frontend",
+    "lint:backend": "eslint api/ handlers/ utils/ --fix",
+    "format:backend": "prettier --write api/ handlers/ utils/",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "format": "npm run format:frontend && npm run format:backend"
   },
   "workspaces": [
     "frontend"
