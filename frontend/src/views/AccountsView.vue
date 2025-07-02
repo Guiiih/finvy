@@ -51,13 +51,13 @@ async function handleSubmit(values: Omit<Account, 'id'> | Partial<Account>, { re
   try {
     if (isEditing.value && editingAccount.value) {
       // Modo de edição
-      await accountStore.updateAccount(editingAccount.value.id, values);
+      await accountStore.updateAccount(editingAccount.value.id, values as Omit<Account, 'id'>);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta atualizada com sucesso!', life: 3000 });
       isEditing.value = false;
       editingAccount.value = null;
     } else {
       // Modo de adição
-      await accountStore.addAccount(values);
+      await accountStore.addAccount(values as Omit<Account, 'id'>);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta adicionada com sucesso!', life: 3000 });
     }
     resetForm(); // Limpa o formulário após o sucesso
