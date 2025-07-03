@@ -17,7 +17,9 @@ export function withAuth(handler: ApiHandler) {
     }
 
     const authHeader = req.headers.authorization;
+    console.log('Middleware: Authorization Header:', authHeader);
     const token = authHeader?.split(" ")[1];
+    console.log('Middleware: Extracted Token:', token);
 
     if (!token) {
       return handleErrorResponse(

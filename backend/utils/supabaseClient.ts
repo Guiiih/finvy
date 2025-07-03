@@ -16,6 +16,7 @@ export const anonSupabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
 // Função para obter um cliente Supabase autenticado com o JWT do usuário
 export function getSupabaseClient(token: string): SupabaseClient {
+  console.log('SupabaseClient: Token used for client creation:', token);
   return createClient(supabaseUrl!, supabaseAnonKey!, {
     global: {
       headers: { Authorization: `Bearer ${token}` },
