@@ -71,12 +71,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         {
-      path: '/reports',
-      name: 'reports',
-      component: ReportsView,
-      meta: { requiresAuth: true },
-      children: [
-        {
           path: 'dre',
           name: 'dre-report',
           component: DREReport,
@@ -94,8 +88,6 @@ const router = createRouter({
           component: DFCReport,
           meta: { requiresAuth: true }
         },
-      ]
-    },
       ]
     },
     {
