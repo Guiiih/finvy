@@ -16,10 +16,9 @@ export default async function handler(
   const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
-      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
+      const { data, error: dbError } = await serviceRoleSupabase
         .from("accounts")
-        .select("*")
-        .eq("user_id", user_id);
+        .select("*");
       if (dbError) {
         console.error("Erro do Supabase ao buscar contas:", dbError);
         throw dbError;
