@@ -1,18 +1,21 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import type { JournalEntry } from "../../frontend/src/types/index.js";
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
+  const supabase = getSupabaseClient(token);
+  const { closingDate } = req.body;
+
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   }
 
-  const { closingDate } = req.body;
   if (!closingDate) {
     return handleErrorResponse(res, 400, "Data de fechamento é obrigatória.");
   }

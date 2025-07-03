@@ -1,12 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import { createAccountSchema, updateAccountSchema } from "../utils/schemas.js";
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
+  const supabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
       const { data, error: dbError } = await supabase

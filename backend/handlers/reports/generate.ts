@@ -1,12 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleErrorResponse } from "../../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../../utils/supabaseClient.js";
 import { generateReports } from "../../services/reportService.js";
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
+  const supabase = getSupabaseClient(token);
   try {
     const { startDate, endDate } = req.query;
 

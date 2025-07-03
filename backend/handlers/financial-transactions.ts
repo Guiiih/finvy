@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import type { EntryLine } from "../../frontend/src/types/index.js";
 import {
   idSchema,
@@ -11,7 +11,9 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
+  const supabase = getSupabaseClient(token);
   try {
     const { type } = req.query; // 'payable' or 'receivable'
     const tableName =

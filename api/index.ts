@@ -20,6 +20,7 @@ async function mainHandler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
   // A Vercel coloca o caminho do URL (ex: "products" ou "accounts/123") no parâmetro de consulta "path"
   // devido à regra de reescrita { "source": "/api/:path*", "destination": "/api/index" }
@@ -30,31 +31,31 @@ async function mainHandler(
 
   // Roteamento baseado no início do caminho do URL
   if (urlPath.startsWith("/accounts")) {
-    return accountsHandler(req, res, user_id);
+    return accountsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/products")) {
-    return productsHandler(req, res, user_id);
+    return productsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/journal-entries")) {
-    return journalEntriesHandler(req, res, user_id);
+    return journalEntriesHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/entry-lines")) {
-    return entryLinesHandler(req, res, user_id);
+    return entryLinesHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/financial-transactions")) {
-    return financialTransactionsHandler(req, res, user_id);
+    return financialTransactionsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/reports/generate")) {
-    return generateReportsHandler(req, res, user_id);
+    return generateReportsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/year-end-closing")) {
-    return yearEndClosingHandler(req, res, user_id);
+    return yearEndClosingHandler(req, res, user_id, token);
   }
 
   // Se nenhuma rota corresponder, retorna um erro 404

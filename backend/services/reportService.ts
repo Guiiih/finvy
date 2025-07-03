@@ -1,16 +1,18 @@
 
-import { supabase } from '../utils/supabaseClient.js';
+import { getSupabaseClient } from '../utils/supabaseClient.js';
 import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types/index.js';
 
 type LedgerAccount = FrontendLedgerAccount;
 
-async function getAccounts(user_id: string): Promise<Account[]> {
+async function getAccounts(user_id: string, token: string): Promise<Account[]> {
+    const supabase = getSupabaseClient(token);
     const { data, error } = await supabase.from('accounts').select('*').eq('user_id', user_id);
     if (error) throw error;
     return data;
 }
 
-async function getJournalEntries(user_id: string, startDate?: string, endDate?: string): Promise<JournalEntry[]> {
+async function getJournalEntries(user_id: string, token: string, startDate?: string, endDate?: string): Promise<JournalEntry[]> {
+    const supabase = getSupabaseClient(token);
     let query = supabase.from('journal_entries').select('*, entry_lines(*)').eq('user_id', user_id);
 
     if (startDate) {
@@ -88,10 +90,10 @@ function generateBalanceSheetData(ledgerAccounts: LedgerAccount[]) {
     return { totalDoAtivo: 5000, totalPassivoEPatrimonioLiquido: 5000, isBalanced: true }; // Placeholder
 }
 
-export async function generateReports(user_id: string, startDate?: string, endDate?: string) {
+export async function generateReports(user_id: string, token: string, startDate?: string, endDate?: string) {
     const [accounts, journalEntries] = await Promise.all([
-        getAccounts(user_id),
-        getJournalEntries(user_id, startDate, endDate)
+        getAccounts(user_id, token),
+        getJournalEntries(user_id, token, startDate, endDate)
     ]);
 
     const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);

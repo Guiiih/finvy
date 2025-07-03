@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import {
   idSchema,
   createEntryLineSchema,
@@ -10,7 +10,9 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string,
 ) {
+  const supabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
       const { journal_entry_id } = req.query;

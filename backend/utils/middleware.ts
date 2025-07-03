@@ -1,17 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "./supabaseClient.js";
+import { anonSupabase, handleErrorResponse } from "./supabaseClient.js";
 import { handleCors } from "./corsHandler.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
-// Alteração aqui: mudamos o tipo de retorno para Promise<any> ou Promise<void | VercelResponse>
-// Usar 'any' é mais simples e resolve o problema de imediato.
 type ApiHandler = (
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  token: string, // Adicionado o token como argumento
 ) => Promise<any>;
 
-// O resto do ficheiro permanece igual...
 export function withAuth(handler: ApiHandler) {
   return async (req: VercelRequest, res: VercelResponse) => {
     if (handleCors(req, res)) {
@@ -33,7 +31,7 @@ export function withAuth(handler: ApiHandler) {
       const {
         data: { user },
         error: authError,
-      } = await supabase.auth.getUser(token);
+      } = await anonSupabase.auth.getUser(token); // Usando anonSupabase aqui
 
       if (authError || !user) {
         console.error(
@@ -49,7 +47,7 @@ export function withAuth(handler: ApiHandler) {
         );
       }
 
-      await handler(req, res, user.id);
+      await handler(req, res, user.id, token); // Passando o token para o handler
     } catch (error: unknown) {
       console.error("Erro inesperado no middleware de autenticação:", error);
       const message =
