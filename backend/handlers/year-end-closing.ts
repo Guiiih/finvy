@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient";
-import type { JournalEntry } from "../../frontend/src/types";
+import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import type { JournalEntry } from "../../frontend/src/types/index.js";
 
 export default async function handler(
   req: VercelRequest,

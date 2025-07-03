@@ -1,6 +1,6 @@
 
-import { supabase } from '../utils/supabaseClient';
-import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types';
+import { supabase } from '../utils/supabaseClient.js';
+import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types/index.js';
 
 type LedgerAccount = FrontendLedgerAccount;
 

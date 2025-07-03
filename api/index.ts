@@ -1,15 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { withAuth } from "../backend/utils/middleware";
-import { handleErrorResponse } from "../backend/utils/supabaseClient";
+import { withAuth } from "../backend/utils/middleware.js";
+import { handleErrorResponse } from "../backend/utils/supabaseClient.js";
 
 // Importe todos os seus handlers da pasta /handlers
-import accountsHandler from "../backend/handlers/accounts";
-import productsHandler from "../backend/handlers/products";
-import journalEntriesHandler from "../backend/handlers/journal-entries";
-import entryLinesHandler from "../backend/handlers/entry-lines";
-import financialTransactionsHandler from "../backend/handlers/financial-transactions";
-import generateReportsHandler from "../backend/handlers/reports/generate";
-import yearEndClosingHandler from "../backend/handlers/year-end-closing";
+import accountsHandler from "../backend/handlers/accounts.js";
+import productsHandler from "../backend/handlers/products.js";
+import journalEntriesHandler from "../backend/handlers/journal-entries.js";
+import entryLinesHandler from "../backend/handlers/entry-lines.js";
+import financialTransactionsHandler from "../backend/handlers/financial-transactions.js";
+import generateReportsHandler from "../backend/handlers/reports/generate.js";
+import yearEndClosingHandler from "../backend/handlers/year-end-closing.js";
 
 /**
  * O handler principal que atua como um router.

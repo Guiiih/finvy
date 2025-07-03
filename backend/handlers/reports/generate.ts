@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleErrorResponse } from "../../utils/supabaseClient";
-import { generateReports } from "../../services/reportService";
+import { handleErrorResponse } from "../../utils/supabaseClient.js";
+import { generateReports } from "../../services/reportService.js";
 
 export default async function handler(
   req: VercelRequest,

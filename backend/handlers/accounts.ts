@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "../utils/supabaseClient";
-import { createAccountSchema, updateAccountSchema } from "../utils/schemas";
+import { supabase, handleErrorResponse } from "../utils/supabaseClient.js";
+import { createAccountSchema, updateAccountSchema } from "../utils/schemas.js";
 
 export default async function handler(
   req: VercelRequest,

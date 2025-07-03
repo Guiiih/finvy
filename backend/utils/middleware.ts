@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase, handleErrorResponse } from "./supabaseClient";
-import { handleCors } from "./corsHandler";
+import { supabase, handleErrorResponse } from "./supabaseClient.js";
+import { handleCors } from "./corsHandler.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
 // Alteração aqui: mudamos o tipo de retorno para Promise<any> ou Promise<void | VercelResponse>
