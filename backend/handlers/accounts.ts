@@ -15,7 +15,10 @@ export default async function handler(
         .from("accounts")
         .select("*")
         .eq("user_id", user_id);
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error("Erro do Supabase ao buscar contas:", dbError);
+        throw dbError;
+      }
       return res.status(200).json(data);
     }
 
