@@ -23,8 +23,7 @@ export default async function handler(
   try {
     const { data: accounts, error: accountsError } = await supabase
       .from("accounts")
-      .select("*")
-      .eq("user_id", user_id);
+      .select("*");
     if (accountsError) throw accountsError;
 
     const { data: journalEntriesData, error: journalEntriesError } =

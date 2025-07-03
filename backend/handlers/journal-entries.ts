@@ -17,7 +17,6 @@ export default async function handler(
       const { data, error: dbError } = await supabase
         .from("journal_entries")
         .select("*")
-        .eq("user_id", user_id)
         .order("entry_date", { ascending: false });
 
       if (dbError) throw dbError;

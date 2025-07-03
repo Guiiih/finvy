@@ -22,8 +22,7 @@ export default async function handler(
     if (req.method === "GET") {
       const { data, error: dbError } = await supabase
         .from(tableName)
-        .select("*")
-        .eq("user_id", user_id);
+        .select("*");
 
       if (dbError) throw dbError;
       return res.status(200).json(data);

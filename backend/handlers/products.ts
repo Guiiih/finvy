@@ -14,7 +14,6 @@ export default async function handler(
       const { data, error: dbError } = await supabase
         .from("products")
         .select("*")
-        .eq("user_id", user_id)
         .order("name", { ascending: true });
 
       if (dbError) throw dbError;

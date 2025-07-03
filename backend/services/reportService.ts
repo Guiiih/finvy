@@ -6,14 +6,14 @@ type LedgerAccount = FrontendLedgerAccount;
 
 async function getAccounts(user_id: string, token: string): Promise<Account[]> {
     const supabase = getSupabaseClient(token);
-    const { data, error } = await supabase.from('accounts').select('*').eq('user_id', user_id);
+    const { data, error } = await supabase.from('accounts').select('*');
     if (error) throw error;
     return data;
 }
 
 async function getJournalEntries(user_id: string, token: string, startDate?: string, endDate?: string): Promise<JournalEntry[]> {
     const supabase = getSupabaseClient(token);
-    let query = supabase.from('journal_entries').select('*, entry_lines(*)').eq('user_id', user_id);
+    let query = supabase.from('journal_entries').select('*, entry_lines(*)');
 
     if (startDate) {
         query = query.gte('entry_date', startDate);
