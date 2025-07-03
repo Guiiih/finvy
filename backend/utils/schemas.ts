@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const uuidSchema = z.string().uuid({ message: "ID inválido. Deve ser um UUID válido." });
+
 export const idSchema = z.object({
   id: z.string().uuid({ message: "ID inválido. Deve ser um UUID válido." }),
 });

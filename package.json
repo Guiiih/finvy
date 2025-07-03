@@ -7,7 +7,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
-    "@vercel/node": "^5.3.0",
+    "@vercel/node": "^2.3.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vitest/ui": "^3.2.4",
     "@vue/test-utils": "^2.4.6",
@@ -20,13 +20,13 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "test": "vitest",
-    "lint:frontend": "npm run lint --workspace frontend",
-    "format:frontend": "npm run format --workspace frontend",
-    "lint:backend": "eslint api/index.ts backend/handlers/ backend/services/ backend/utils/ --fix",
-    "format:backend": "prettier --write api/index.ts backend/handlers/ backend/services/ backend/utils/",
-    "lint": "npm run lint:frontend && npm run lint:backend",
-    "format": "npm run format:frontend && npm run format:backend"
+  "test": "vitest",
+  "lint:frontend": "npm run lint --workspace frontend",
+  "format:frontend": "npm run format --workspace frontend",
+  "lint:backend": "eslint \"api/**/*.ts\" \"backend/**/*.ts\" --fix",
+  "format:backend": "prettier --write \"api/**/*.ts\" \"backend/**/*.ts\"",
+  "lint": "npm run lint:frontend && npm run lint:backend",
+  "format": "npm run format:frontend && npm run format:backend"
   },
   "workspaces": [
     "frontend"

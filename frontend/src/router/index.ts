@@ -1,29 +1,30 @@
 // frontend/src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
+
+import { supabase } from '../supabase'
+
+// Import all view components used in routes
 import DashboardView from '../views/DashboardView.vue'
 import AccountsView from '../views/AccountsView.vue'
 import JournalEntryView from '../views/JournalEntryView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import StockControlView from '../views/StockControlView.vue'
 import LedgerView from '../views/LedgerView.vue'
-
 import ReportsView from '../views/ReportsView.vue'
-import DREReport from '../components/reports/DREReport.vue'
-import BalanceSheetReport from '../components/reports/BalanceSheetReport.vue'
-import DFCReport from '../components/reports/DFCReport.vue'
+import DREReport from '../views/DREView.vue'
+import BalanceSheetReport from '../views/BalanceSheetView.vue'
+import DFCReport from '../views/DFCView.vue'
 import VariationView from '../views/VariationView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import ForgotPasswordView from '../views/ForgotPasswordView.vue'
-import UpdatePasswordView from '../views/UpdatePasswordView.vue'
-import RegistrationSuccessView from '../views/RegistrationSuccessView.vue'
-import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue'
 import TrialBalanceView from '../views/TrialBalanceView.vue'
 import ChartOfAccountsView from '../views/ChartOfAccountsView.vue'
 import YearEndClosingView from '../views/YearEndClosingView.vue'
 import AccountsPayableView from '../views/AccountsPayableView.vue'
 import AccountsReceivableView from '../views/AccountsReceivableView.vue'
-import { supabase } from '../supabase'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import UpdatePasswordView from '../views/UpdatePasswordView.vue'
+import RegistrationSuccessView from '../views/RegistrationSuccessView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -155,7 +156,7 @@ const router = createRouter({
     {
       path: '/password-reset-success',
       name: 'password-reset-success',
-      component: PasswordResetSuccessView,
+      component: () => import('../views/PasswordResetSuccessView.vue'),
       meta: { hideNavbar: true },
     },
   ],

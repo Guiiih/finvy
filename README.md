@@ -81,14 +81,14 @@ finvy/
 
 ```
 
-## **Como Começar**
+## **Configuração do Ambiente de Desenvolvimento**
 
-Siga os passos abaixo para configurar e executar o Finvy localmente.
+Para configurar e executar o Finvy localmente, siga os passos abaixo:
 
 ### **Pré-requisitos**
-* Node.js e npm (ou yarn) instalados.
-* Uma conta gratuita no [Supabase](https://supabase.com).
-* **Docker Desktop** instalado e em execução.
+*   Node.js e npm (ou yarn) instalados.
+*   Uma conta gratuita no [Supabase](https://supabase.com).
+*   **Docker Desktop** instalado e em execução.
 
 ### **Passos para Configuração**
 
@@ -104,24 +104,24 @@ Siga os passos abaixo para configurar e executar o Finvy localmente.
     ```
 
 3.  **Configure o Ambiente Local da Supabase:**
-    * Este projeto usa a **Supabase CLI** para gerir o banco de dados localmente. Se não a tiver instalada, instale-a como uma dependência de desenvolvimento:
+    *   Este projeto usa a **Supabase CLI** para gerir o banco de dados localmente. Se não a tiver instalada, instale-a como uma dependência de desenvolvimento:
         ```bash
         npm install supabase --save-dev
         ```
-    * Faça o login na sua conta Supabase através da CLI:
+    *   Faça o login na sua conta Supabase através da CLI:
         ```bash
         npx supabase login
         ```
-    * Vincule o seu projeto local ao seu projeto remoto na Supabase:
+    *   Vincule o seu projeto local ao seu projeto remoto na Supabase:
         ```bash
         # Substitua <project-id> pelo ID do seu projeto no Supabase
         npx supabase link --project-ref <project-id>
         ```
-    * Inicie os serviços locais da Supabase (requer Docker):
+    *   Inicie os serviços locais da Supabase (requer Docker):
         ```bash
         npx supabase start
         ```
-    * Aplique as migrações para criar a estrutura do banco de dados no seu ambiente local:
+    *   Aplique as migrações para criar a estrutura do banco de dados no seu ambiente local:
         ```bash
         # Este comando irá apagar e recriar a base de dados local, aplicando todas as migrações
         npx supabase db reset
@@ -129,23 +129,37 @@ Siga os passos abaixo para configurar e executar o Finvy localmente.
     *Isto irá configurar a sua base de dados local com o esquema mais recente do projeto.*
 
 4.  **Configure as Variáveis de Ambiente:**
-    * No diretório `frontend/`, crie um ficheiro chamado `.env`.
-    * Adicione as credenciais locais da Supabase (fornecidas no terminal após o `npx supabase start`):
+    *   **Frontend:** No diretório `frontend/`, crie um ficheiro chamado `.env` e adicione as credenciais locais da Supabase (fornecidas no terminal após o `npx supabase start`):
         ```
         VITE_SUPABASE_URL="A_SUA_URL_LOCAL_API"
         VITE_SUPABASE_ANON_KEY="A_SUA_CHAVE_ANON_LOCAL"
         ```
+    *   **Backend (Vercel Functions):** Para o backend, as variáveis de ambiente (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) devem ser configuradas diretamente no painel da Vercel do seu projeto.
 
 5.  **Rode a Aplicação:**
-    * **Para o Frontend:** No diretório `frontend/`, inicie o servidor de desenvolvimento:
+    *   **Para o Frontend:** No diretório `frontend/`, inicie o servidor de desenvolvimento:
         ```bash
         npm run dev
         ```
-    * **Para o Backend (local):** Na raiz do projeto (`finvy/`), use a Vercel CLI:
+    *   **Para o Backend (local):** Na raiz do projeto (`finvy/`), use a Vercel CLI:
         ```bash
         vercel dev
         ```
-    * A aplicação estará disponível em `http://localhost:5173` (ou outra porta indicada).
+    *   A aplicação estará disponível em `http://localhost:5173` (ou outra porta indicada).
+
+## **Executando Testes**
+
+Para executar os testes do projeto, utilize os seguintes comandos:
+
+*   **Testes do Backend:**
+    ```bash
+    npm test
+    ```
+*   **Testes do Frontend:**
+    ```bash
+    cd frontend
+    npm test
+    ```
 
 ## **Fluxo de Trabalho de Migrações**
 

@@ -85,6 +85,14 @@ export default async function handler(
 
     if (req.method === "DELETE") {
       const id = req.query.id as string;
+      const parsedId = uuidSchema.safeParse(id);
+      if (!parsedId.success) {
+        return handleErrorResponse(
+          res,
+          400,
+          parsedId.error.errors.map((err) => err.message).join(", "),
+        );
+      }
       const { error: dbError, count } = await userSupabase // Usando o cliente com token do usuário
         .from("accounts")
         .delete()

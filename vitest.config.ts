@@ -14,5 +14,6 @@ export default defineConfig({
     environment: 'jsdom', // Usa JSDOM para testes de frontend
     include: ['**/*.test.ts'], // Padrão para encontrar ficheiros de teste
     reporters: ['default', 'html'], // Gera um relatório HTML
+    setupFiles: ['./vitest.setup.ts'], // Arquivo de setup global para mocks
   },
 });
