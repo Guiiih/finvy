@@ -20,6 +20,8 @@ export const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
 
 // Função para obter um cliente Supabase autenticado com o JWT do usuário (para RLS)
 export function getSupabaseClient(token: string): SupabaseClient {
+  console.log("getSupabaseClient: Usando SUPABASE_URL:", supabaseUrl);
+  console.log("getSupabaseClient: Usando SUPABASE_ANON_KEY:", supabaseAnonKey);
   return createClient(supabaseUrl!, supabaseAnonKey!, {
     global: {
       headers: { Authorization: `Bearer ${token}` },
