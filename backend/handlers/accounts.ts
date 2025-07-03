@@ -90,7 +90,7 @@ export default async function handler(
         return handleErrorResponse(
           res,
           400,
-          parsedId.error.errors.map((err) => err.message).join(", "),
+          parsedId.error.errors.map((err: any) => err.message).join(", "),
         );
       }
       const { error: dbError, count } = await userSupabase // Usando o cliente com token do usuário
