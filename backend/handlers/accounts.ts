@@ -4,7 +4,8 @@ import {
   handleErrorResponse,
   supabase as serviceRoleSupabase,
 } from "../utils/supabaseClient.js";
-import { createAccountSchema, updateAccountSchema } from "../utils/schemas.js";
+import { z } from "zod";
+import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";
 
 export default async function handler(
   req: VercelRequest,
@@ -90,7 +91,7 @@ export default async function handler(
         return handleErrorResponse(
           res,
           400,
-          parsedId.error.errors.map((err: any) => err.message).join(", "),
+          parsedId.error.errors.map((err: z.ZodIssue) => err.message).join(", "),
         );
       }
       const { error: dbError, count } = await userSupabase // Usando o cliente com token do usuário
