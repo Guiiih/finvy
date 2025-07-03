@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { supabase, handleErrorResponse } from "../utils/supabaseClient";
-import type { EntryLine } from "../frontend/src/types";
+import type { EntryLine } from "../../frontend/src/types";
 import {
   idSchema,
   createFinancialTransactionSchema,

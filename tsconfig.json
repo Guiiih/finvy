@@ -23,7 +23,7 @@
   "include": [
     "api/**/*.ts",
     "handlers/**/*.ts",
-    "utils/**/*.ts"
+    "backend/utils/**/*.ts"
   ],
   "exclude": [
     "node_modules",

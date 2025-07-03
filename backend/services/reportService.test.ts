@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateTrialBalance } from './reportService'; // Assumindo que a função está exportada
-import type { Account, JournalEntry } from '../frontend/src/types';
+import type { Account, JournalEntry } from '../../frontend/src/types';
 
 describe('reportService', () => {
   describe('calculateTrialBalance', () => {
