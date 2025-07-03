@@ -56,47 +56,48 @@ function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
       </thead>
       <tbody>
         <template v-if="sortedEntries.length > 0">
-          <tr v-for="entry in sortedEntries" :key="entry.id" class="entry-summary">
-            <td>{{ entry.entry_date }}</td>
-            <td>{{ entry.description }}</td>
-            <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
-            <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
-            <td>
-              <button
-                @click="emit('reverse', entry.id)"
-                class="action-btn reverse-btn"
-                title="Estornar este lançamento"
-              >
-                Estornar
-              </button>
-              <button @click="toggleDetails(entry.id)" class="action-btn details-btn">
-                {{ showDetails[entry.id] ? 'Ocultar' : 'Detalhes' }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="showDetails[entry.id]" class="entry-details">
-            <td colspan="5">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Conta</th>
-                    <th>Cód. Conta</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
-                    <td>{{ getAccountName(line.account_id) }}</td>
-                    <td>{{ getAccountCode(line.account_id) }}</td>
-                    <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
-                    <td>R$ {{ line.amount.toFixed(2) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </template>
+          <template v-for="entry in sortedEntries" :key="entry.id">
+            <tr class="entry-summary">
+              <td>{{ entry.entry_date }}</td>
+              <td>{{ entry.description }}</td>
+              <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
+              <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
+              <td>
+                <button
+                  @click="emit('reverse', entry.id)"
+                  class="action-btn reverse-btn"
+                  title="Estornar este lançamento"
+                >
+                  Estornar
+                </button>
+                <button @click="toggleDetails(entry.id)" class="action-btn details-btn">
+                  {{ showDetails[entry.id] ? 'Ocultar' : 'Detalhes' }}
+                </button>
+              </td>
+            </tr>
+            <tr v-if="showDetails[entry.id]" class="entry-details">
+              <td colspan="5">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Conta</th>
+                      <th>Cód. Conta</th>
+                      <th>Tipo</th>
+                      <th>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
+                      <td>{{ getAccountName(line.account_id) }}</td>
+                      <td>{{ getAccountCode(line.account_id) }}</td>
+                      <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
+                      <td>R$ {{ line.amount.toFixed(2) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </template>
         <template v-else>
           <tr>
             <td colspan="5" class="no-entries">Nenhum lançamento encontrado.</td>
