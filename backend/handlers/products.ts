@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
 
 export default async function handler(
@@ -8,10 +8,10 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await serviceRoleSupabase
         .from("products")
         .select("*")
         .order("name", { ascending: true });
@@ -31,7 +31,7 @@ export default async function handler(
       }
       const { name, description, unit_cost, current_stock } = parsedBody.data;
 
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await userSupabase
         .from("products")
         .insert([{ name, description, unit_cost, current_stock, user_id }])
         .select();
@@ -60,7 +60,7 @@ export default async function handler(
         );
       }
 
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await userSupabase
         .from("products")
         .update(updateData)
         .eq("id", id)
@@ -80,7 +80,7 @@ export default async function handler(
 
     if (req.method === "DELETE") {
       const id = req.query.id as string;
-      const { error: dbError, count } = await supabase
+      const { error: dbError, count } = await userSupabase
         .from("products")
         .delete()
         .eq("id", id)
@@ -108,3 +108,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import type { EntryLine } from "../../frontend/src/types/index.js";
 import {
   idSchema,
@@ -13,14 +13,14 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   try {
     const { type } = req.query; // 'payable' or 'receivable'
     const tableName =
       type === "payable" ? "accounts_payable" : "accounts_receivable";
 
     if (req.method === "GET") {
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await serviceRoleSupabase
         .from(tableName)
         .select("*");
 
@@ -39,7 +39,7 @@ export default async function handler(
       }
       const newTransaction = { ...parsedBody.data, user_id };
 
-      const { data: newFinancialTransaction, error: dbError } = await supabase
+      const { data: newFinancialTransaction, error: dbError } = await userSupabase
         .from(tableName)
         .insert([newTransaction])
         .select()
@@ -64,3 +64,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

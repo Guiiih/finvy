@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import {
   idSchema,
   createEntryLineSchema,
@@ -12,14 +12,14 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
       const { journal_entry_id } = req.query;
 
       if (journal_entry_id) {
         // Rota para buscar linhas de um lançamento específico
-        const { data, error: dbError } = await supabase
+        const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select("*, product_id, quantity, unit_cost")
           .eq("journal_entry_id", journal_entry_id as string);
@@ -28,7 +28,7 @@ export default async function handler(
         return res.status(200).json(data);
       } else {
         // Rota antiga para buscar todas as linhas do utilizador (pode ser mantida ou removida)
-        const { data, error: dbError } = await supabase
+        const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select("*, journal_entry_id(user_id)")
           .eq("journal_entry_id.user_id", user_id);
@@ -61,7 +61,7 @@ export default async function handler(
       } = parsedBody.data;
 
       // Verifica se o utilizador tem permissão para o lançamento principal
-      const { data: journalEntry } = await supabase
+      const { data: journalEntry } = await userSupabase
         .from("journal_entries")
         .select("id")
         .eq("id", journal_entry_id)
@@ -76,7 +76,7 @@ export default async function handler(
         );
       }
 
-      const { data: newLine, error: insertError } = await supabase
+      const { data: newLine, error: insertError } = await userSupabase
         .from("entry_lines")
         .insert([
           {
@@ -99,7 +99,7 @@ export default async function handler(
 
       // Lógica para atualizar o stock
       if (newLine.product_id && newLine.quantity) {
-        const { data: product } = await supabase
+        const { data: product } = await userSupabase
           .from("products")
           .select("current_stock")
           .eq("id", newLine.product_id)
@@ -113,7 +113,7 @@ export default async function handler(
             ? newStock + newLine.quantity
             : newStock - newLine.quantity;
 
-          await supabase
+          await userSupabase
             .from("products")
             .update({ current_stock: newStock })
             .eq("id", newLine.product_id);
@@ -135,3 +135,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

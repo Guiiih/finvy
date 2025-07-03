@@ -1,19 +1,17 @@
 
-import { getSupabaseClient } from '../utils/supabaseClient.js';
+import { getSupabaseClient, supabase as serviceRoleSupabase } from '../utils/supabaseClient.js';
 import type { Account, JournalEntry, LedgerAccount as FrontendLedgerAccount } from '../../frontend/src/types/index.js';
 
 type LedgerAccount = FrontendLedgerAccount;
 
 async function getAccounts(user_id: string, token: string): Promise<Account[]> {
-    const supabase = getSupabaseClient(token);
-    const { data, error } = await supabase.from('accounts').select('*');
+    const { data, error } = await serviceRoleSupabase.from('accounts').select('*');
     if (error) throw error;
     return data;
 }
 
 async function getJournalEntries(user_id: string, token: string, startDate?: string, endDate?: string): Promise<JournalEntry[]> {
-    const supabase = getSupabaseClient(token);
-    let query = supabase.from('journal_entries').select('*, entry_lines(*)');
+    let query = serviceRoleSupabase.from('journal_entries').select('*, entry_lines(*)');
 
     if (startDate) {
         query = query.gte('entry_date', startDate);

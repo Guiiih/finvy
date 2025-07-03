@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../../utils/supabaseClient.js";
 import { generateReports } from "../../services/reportService.js";
 
 export default async function handler(
@@ -8,12 +8,13 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   try {
     const { startDate, endDate } = req.query;
 
     const reports = await generateReports(
       user_id,
+      token,
       startDate as string,
       endDate as string,
     );

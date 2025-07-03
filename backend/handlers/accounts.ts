@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createAccountSchema, updateAccountSchema } from "../utils/schemas.js";
 
 export default async function handler(
@@ -9,10 +9,10 @@ export default async function handler(
   token: string,
 ) {
   console.log('Accounts Handler: user_id recebido:', user_id);
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await serviceRoleSupabase // Usando o cliente global (service_role_key)
         .from("accounts")
         .select("*");
       if (dbError) {
@@ -33,7 +33,7 @@ export default async function handler(
       }
       const { name, type } = parsedBody.data;
 
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
         .from("accounts")
         .insert({ name, type, user_id })
         .select();
@@ -61,7 +61,7 @@ export default async function handler(
         );
       }
 
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
         .from("accounts")
         .update(updateData)
         .eq("id", id)
@@ -80,7 +80,7 @@ export default async function handler(
 
     if (req.method === "DELETE") {
       const id = req.query.id as string;
-      const { error: dbError, count } = await supabase
+      const { error: dbError, count } = await userSupabase // Usando o cliente com token do usuário
         .from("accounts")
         .delete()
         .eq("id", id)
@@ -106,3 +106,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

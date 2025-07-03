@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import type { JournalEntry } from "../../frontend/src/types/index.js";
 
 export default async function handler(
@@ -8,7 +8,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const supabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token);
   const { closingDate } = req.body;
 
   if (req.method !== "POST") {
@@ -21,7 +21,7 @@ export default async function handler(
   }
 
   try {
-    const { data: accounts, error: accountsError } = await supabase
+    const { data: accounts, error: accountsError } = await serviceRoleSupabase
       .from("accounts")
       .select("*");
     if (accountsError) throw accountsError;
