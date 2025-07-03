@@ -8,6 +8,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
+  console.log('Accounts Handler: user_id recebido:', user_id);
   const supabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
