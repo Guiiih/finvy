@@ -1,91 +1,106 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useAccountStore } from '@/stores/accountStore';
-import type { Account } from '@/types';
-import BaseTable from '@/components/BaseTable.vue';
+import { ref, onMounted, computed } from 'vue'
+import { useAccountStore } from '@/stores/accountStore'
+import type { Account } from '@/types'
+import BaseTable from '@/components/BaseTable.vue'
 
-import ProgressSpinner from 'primevue/progressspinner';
-import Skeleton from 'primevue/skeleton';
+import ProgressSpinner from 'primevue/progressspinner'
+import Skeleton from 'primevue/skeleton'
 
 // Importações do VeeValidate e Zod
-import { Form, Field, ErrorMessage } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import { z } from 'zod';
+import { Form, Field, ErrorMessage } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { z } from 'zod'
 
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'primevue/usetoast'
 
-const accountStore = useAccountStore();
-const toast = useToast(); // Inicializa o serviço de toast
+const accountStore = useAccountStore()
+const toast = useToast() // Inicializa o serviço de toast
 
-const isEditing = ref(false);
-const editingAccount = ref<Account | null>(null);
+const isEditing = ref(false)
+const editingAccount = ref<Account | null>(null)
 
 // O schema Zod para validação
 const accountSchema = toTypedSchema(
   z.object({
-    name: z.string({ required_error: 'O nome é obrigatório' }).min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+    name: z
+      .string({ required_error: 'O nome é obrigatório' })
+      .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
     type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense'], {
       required_error: 'Por favor, selecione um tipo.',
     }),
-  })
-);
+  }),
+)
 
 // Pega as contas da store para a tabela
-const filteredAccounts = computed(() => accountStore.accounts);
+const filteredAccounts = computed(() => accountStore.accounts)
 
 // Define os cabeçalhos para a BaseTable
 type AccountTableHeader = {
-  key: keyof Account | 'actions';
-  label: string;
-  align: 'left' | 'center';
-};
+  key: keyof Account | 'actions'
+  label: string
+  align: 'left' | 'center'
+}
 const headers: AccountTableHeader[] = [
   { key: 'code', label: 'Código', align: 'left' },
   { key: 'name', label: 'Nome', align: 'left' },
   { key: 'type', label: 'Tipo', align: 'left' },
   { key: 'actions', label: 'Ações', align: 'center' },
-];
+]
 
 // Função para lidar com o envio do formulário (adição ou edição)
-async function handleSubmit(values: Omit<Account, 'id'> | Partial<Account>, { resetForm }: { resetForm: () => void }) {
+async function handleSubmit(
+  values: Omit<Account, 'id'> | Partial<Account>,
+  { resetForm }: { resetForm: () => void },
+) {
   try {
     if (isEditing.value && editingAccount.value) {
       // Modo de edição
-      await accountStore.updateAccount(editingAccount.value.id, values as Omit<Account, 'id'>);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta atualizada com sucesso!', life: 3000 });
-      isEditing.value = false;
-      editingAccount.value = null;
+      await accountStore.updateAccount(editingAccount.value.id, values as Omit<Account, 'id'>)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Conta atualizada com sucesso!',
+        life: 3000,
+      })
+      isEditing.value = false
+      editingAccount.value = null
     } else {
       // Modo de adição
-      await accountStore.addAccount(values as Omit<Account, 'id'>);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta adicionada com sucesso!', life: 3000 });
+      await accountStore.addAccount(values as Omit<Account, 'id'>)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Conta adicionada com sucesso!',
+        life: 3000,
+      })
     }
-    resetForm(); // Limpa o formulário após o sucesso
+    resetForm() // Limpa o formulário após o sucesso
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
-    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
   }
 }
 
 function startEdit(account: Account) {
-  isEditing.value = true;
-  editingAccount.value = { ...account }; // Clona o objeto para edição
+  isEditing.value = true
+  editingAccount.value = { ...account } // Clona o objeto para edição
 }
 
 function cancelEdit() {
-  isEditing.value = false;
-  editingAccount.value = null;
+  isEditing.value = false
+  editingAccount.value = null
 }
 
 async function handleDeleteAccount(id: string) {
   if (confirm('Tem certeza de que deseja excluir esta conta?')) {
-    await accountStore.deleteAccount(id);
+    await accountStore.deleteAccount(id)
   }
 }
 
 onMounted(() => {
-  accountStore.fetchAccounts();
-});
+  accountStore.fetchAccounts()
+})
 </script>
 
 <template>
@@ -94,8 +109,13 @@ onMounted(() => {
 
     <div class="form-section">
       <h2>{{ isEditing ? 'Editar Conta' : 'Adicionar Nova Conta' }}</h2>
-      
-      <Form @submit="handleSubmit" :validation-schema="accountSchema" :initial-values="editingAccount || {}" v-slot="{ isSubmitting }">
+
+      <Form
+        @submit="handleSubmit"
+        :validation-schema="accountSchema"
+        :initial-values="editingAccount || {}"
+        v-slot="{ isSubmitting }"
+      >
         <div class="form-group">
           <label for="accountName">Nome da Conta:</label>
           <Field name="name" type="text" id="accountName" />
@@ -113,8 +133,8 @@ onMounted(() => {
           </Field>
           <ErrorMessage name="type" class="error-text" />
         </div>
-                <button type="submit" :disabled="isSubmitting">
-          <ProgressSpinner v-if="isSubmitting" style="width: 20px; height: 20px;" strokeWidth="8" />
+        <button type="submit" :disabled="isSubmitting">
+          <ProgressSpinner v-if="isSubmitting" style="width: 20px; height: 20px" strokeWidth="8" />
           <span v-else>{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</span>
         </button>
         <button v-if="isEditing" type="button" @click="cancelEdit">Cancelar</button>
@@ -129,7 +149,7 @@ onMounted(() => {
         <Skeleton height="2rem"></Skeleton>
       </div>
       <p v-else-if="accountStore.error" class="error-message">{{ accountStore.error }}</p>
-      
+
       <BaseTable
         v-else
         :headers="headers"
@@ -162,7 +182,8 @@ h1 {
   margin-bottom: 30px;
 }
 
-.form-section, .accounts-list-section {
+.form-section,
+.accounts-list-section {
   background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -205,12 +226,14 @@ h2 {
 /* Estilo para os botões de ação na tabela */
 .action-buttons button {
   padding: 5px 10px; /* Botões menores */
-  font-size: 0.9em;  /* Texto menor */
+  font-size: 0.9em; /* Texto menor */
   margin-right: 5px; /* Espaçamento entre botões */
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .action-buttons button:last-child {

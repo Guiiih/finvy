@@ -1,40 +1,40 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{
-  title: string;
-  value: number;
-  currency?: string; 
-  isPositive?: boolean | null; 
-}>();
+  title: string
+  value: number
+  currency?: string
+  isPositive?: boolean | null
+}>()
 
 const valueClass = computed(() => {
   // A prop `isPositive` tem prioridade para forçar uma cor
   if (props.isPositive === true) {
-    return 'positive-value';
+    return 'positive-value'
   }
   if (props.isPositive === false) {
-    return 'negative-value';
+    return 'negative-value'
   }
 
   // Se `isPositive` não for definida, infere a cor pelo valor
   if (props.value < 0) {
-    return 'negative-value';
+    return 'negative-value'
   }
   if (props.value > 0) {
-    return 'positive-value';
+    return 'positive-value'
   }
 
   // Por defeito, o valor 0 é neutro
-  return 'neutral-value';
-});
+  return 'neutral-value'
+})
 
 const formattedValue = computed(() => {
-  const absValue = Math.abs(props.value);
-  const sign = props.value < 0 ? '-' : '';
-  const currencySymbol = props.currency || ''; 
-  return `${sign}${currencySymbol} ${absValue.toFixed(2)}`;
-});
+  const absValue = Math.abs(props.value)
+  const sign = props.value < 0 ? '-' : ''
+  const currencySymbol = props.currency || ''
+  return `${sign}${currencySymbol} ${absValue.toFixed(2)}`
+})
 </script>
 
 <template>
@@ -81,10 +81,10 @@ const formattedValue = computed(() => {
 }
 
 .positive-value {
-  color: #28a745; 
+  color: #28a745;
 }
 
 .negative-value {
-  color: #dc3545; 
+  color: #dc3545;
 }
 </style>

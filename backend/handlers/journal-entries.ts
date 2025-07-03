@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 import {
   createJournalEntrySchema,
   updateJournalEntrySchema,
@@ -112,4 +116,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

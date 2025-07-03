@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useReportStore } from '@/stores/reportStore'; 
-import { useJournalEntryStore } from '@/stores/journalEntryStore'; 
+import { ref, computed, onMounted } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
+import { useJournalEntryStore } from '@/stores/journalEntryStore'
 
-const reportStore = useReportStore(); 
-const journalEntryStore = useJournalEntryStore();
+const reportStore = useReportStore()
+const journalEntryStore = useJournalEntryStore()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
 async function fetchVariationData() {
-  await reportStore.fetchReports(startDate.value, endDate.value);
+  await reportStore.fetchReports(startDate.value, endDate.value)
 }
 
 onMounted(async () => {
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-  await fetchVariationData();
-});
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+  await fetchVariationData()
+})
 
-const variationData = computed(() => reportStore.variationData);
+const variationData = computed(() => reportStore.variationData)
 </script>
 
 <template>
@@ -34,8 +34,12 @@ const variationData = computed(() => reportStore.variationData);
       <input type="date" id="endDate" v-model="endDate" @change="fetchVariationData" />
     </div>
 
-    <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
-      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DFC.
+    <p
+      v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
+      class="no-entries-message"
+    >
+      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos
+      Contábeis" para gerar a DFC.
     </p>
 
     <div v-else class="variation-table">
@@ -46,25 +50,64 @@ const variationData = computed(() => reportStore.variationData);
         <span>Variação</span>
         <span>Atividade</span>
       </div>
-      
+
       <template v-for="(entry, index) in variationData" :key="index">
         <div
-          v-if="entry.value !== 0 || entry.isMainCategory || entry.isSubtotal || entry.description === 'Passivo Não Circulante' || entry.description === 'Lucro Líquido do Exercício'"
+          v-if="
+            entry.value !== 0 ||
+            entry.isMainCategory ||
+            entry.isSubtotal ||
+            entry.description === 'Passivo Não Circulante' ||
+            entry.description === 'Lucro Líquido do Exercício'
+          "
           :class="{
             'variation-row': true,
             'main-category': entry.isMainCategory,
             'sub-total': entry.isSubtotal,
-            'positive-var': entry.signedVariationValue >= 0, 
-            'negative-var': entry.signedVariationValue < 0,  
+            'positive-var': entry.signedVariationValue >= 0,
+            'negative-var': entry.signedVariationValue < 0,
             'no-border-bottom': entry.isMainCategory,
-            'indented': !entry.isMainCategory && !entry.isSubtotal && (entry.description === 'Disponibilidades' || entry.description === 'Clientes' || entry.description === 'Estoque de Mercadorias' || entry.description === 'Imobilizado' || entry.description === 'Fornecedores' || entry.description === 'Despesas com Pessoal' || entry.description === 'Imposto a Pagar' || entry.description === 'Capital Social' || entry.description === 'Reservas' || entry.description === 'Passivo Não Circulante' || entry.description === 'Lucro Líquido do Exercício' || entry.description === 'BCM - CEF' || entry.description === 'BCM - Itau' || entry.description === 'BCM - Bradesco' || entry.description === 'Caixa' || entry.description === 'Imobilizado'),
-            'double-indented': ['Caixa', 'BCM - CEF', 'BCM - Itau', 'BCM - Bradesco', 'Estoque Final', 'Moveis e utensílios', 'Salários a Pagar', 'ICMS a Recolher', 'Capital Social Subscrito', '(-) Capital Social a Integralizar', 'Reserva de Lucro'].includes(entry.description)
+            indented:
+              !entry.isMainCategory &&
+              !entry.isSubtotal &&
+              (entry.description === 'Disponibilidades' ||
+                entry.description === 'Clientes' ||
+                entry.description === 'Estoque de Mercadorias' ||
+                entry.description === 'Imobilizado' ||
+                entry.description === 'Fornecedores' ||
+                entry.description === 'Despesas com Pessoal' ||
+                entry.description === 'Imposto a Pagar' ||
+                entry.description === 'Capital Social' ||
+                entry.description === 'Reservas' ||
+                entry.description === 'Passivo Não Circulante' ||
+                entry.description === 'Lucro Líquido do Exercício' ||
+                entry.description === 'BCM - CEF' ||
+                entry.description === 'BCM - Itau' ||
+                entry.description === 'BCM - Bradesco' ||
+                entry.description === 'Caixa' ||
+                entry.description === 'Imobilizado'),
+            'double-indented': [
+              'Caixa',
+              'BCM - CEF',
+              'BCM - Itau',
+              'BCM - Bradesco',
+              'Estoque Final',
+              'Moveis e utensílios',
+              'Salários a Pagar',
+              'ICMS a Recolher',
+              'Capital Social Subscrito',
+              '(-) Capital Social a Integralizar',
+              'Reserva de Lucro',
+            ].includes(entry.description),
           }"
         >
           <span>{{ entry.description }}</span>
           <span>R$ {{ entry.value.toFixed(2) }}</span>
           <span>{{ entry.type }}</span>
-          <span>{{ entry.signedVariationValue >= 0 ? 'R$' : '-R$' }} {{ Math.abs(entry.signedVariationValue).toFixed(2) }}</span>
+          <span
+            >{{ entry.signedVariationValue >= 0 ? 'R$' : '-R$' }}
+            {{ Math.abs(entry.signedVariationValue).toFixed(2) }}</span
+          >
           <span>{{ entry.activity }}</span>
         </div>
       </template>
@@ -97,7 +140,8 @@ h1 {
   overflow: hidden;
 }
 
-.header-row, .variation-row {
+.header-row,
+.variation-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.2fr 1.5fr;
   padding: 10px 15px;

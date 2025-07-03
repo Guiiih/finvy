@@ -3,7 +3,16 @@
     <div class="auth-form-column">
       <div class="back-button-wrapper">
         <router-link to="/login" class="back-button">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M15 18L9 12L15 6"></path>
           </svg>
         </router-link>
@@ -13,7 +22,14 @@
         <p class="auth-subtitle">Não esquenta, vamos dar um jeito nisso.</p>
         <form @submit.prevent="handleForgotPassword" class="auth-form">
           <div class="form-group">
-            <input type="email" id="email" v-model="email" placeholder="E-mail" required class="auth-input" />
+            <input
+              type="email"
+              id="email"
+              v-model="email"
+              placeholder="E-mail"
+              required
+              class="auth-input"
+            />
           </div>
           <button type="submit" class="auth-button" :disabled="!email">Enviar</button>
         </form>
@@ -27,29 +43,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { supabase } from '../supabase';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { supabase } from '../supabase'
+import { useRouter } from 'vue-router'
 
-const email = ref('');
-const router = useRouter();
+const email = ref('')
+const router = useRouter()
 
 const handleForgotPassword = async () => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
       redirectTo: window.location.origin + '/update-password',
-    });
+    })
 
-    if (error) throw error;
-    router.push('/password-reset-success');
+    if (error) throw error
+    router.push('/password-reset-success')
   } catch (error: unknown) {
     if (error instanceof Error) {
-      alert(error.message);
+      alert(error.message)
     } else {
-      alert('Ocorreu um erro desconhecido.');
+      alert('Ocorreu um erro desconhecido.')
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -63,7 +79,7 @@ const handleForgotPassword = async () => {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #F8F8F8; /* Fundo claro para a coluna do formulário */
+  background-color: #f8f8f8; /* Fundo claro para a coluna do formulário */
   flex-direction: row;
 }
 
@@ -75,7 +91,7 @@ const handleForgotPassword = async () => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background-color: #F8F8F8;
+  background-color: #f8f8f8;
   order: 1;
   position: relative; /* Adicionado para posicionar o back-button-wrapper */
 }
@@ -83,7 +99,7 @@ const handleForgotPassword = async () => {
 /* Coluna do logo (escura) à direita */
 .auth-logo-column {
   flex: 1;
-  background-color: #1A1A1A;
+  background-color: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,7 +127,7 @@ const handleForgotPassword = async () => {
   height: 40px;
   border-radius: 50%;
   background-color: transparent;
-  border: 1px solid #E0E0E0; /* Borda cinza clara, como na imagem */
+  border: 1px solid #e0e0e0; /* Borda cinza clara, como na imagem */
   cursor: pointer;
   color: #888888; /* Cor da seta */
   transition: background-color 0.2s ease;
@@ -119,7 +135,7 @@ const handleForgotPassword = async () => {
 }
 
 .back-button:hover {
-  background-color: #EFEFEF; /* Pequeno destaque no hover */
+  background-color: #efefef; /* Pequeno destaque no hover */
 }
 
 .auth-form-wrapper {
@@ -141,7 +157,7 @@ const handleForgotPassword = async () => {
 }
 
 .auth-subtitle {
-  color: #A0A0A0;
+  color: #a0a0a0;
   font-size: 0.9em;
   margin-bottom: 30px;
   text-align: left;
@@ -152,7 +168,7 @@ const handleForgotPassword = async () => {
   position: relative;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 0;
   overflow: hidden;
 }
@@ -164,13 +180,13 @@ const handleForgotPassword = async () => {
   border-radius: 8px;
   background-color: transparent;
   font-size: 1em;
-  color: #4A4A4A;
+  color: #4a4a4a;
   outline: none;
   box-sizing: border-box;
 }
 
 .auth-input::placeholder {
-  color: #A0A0A0;
+  color: #a0a0a0;
 }
 
 /* Estilos para Inputs Autofill */
@@ -178,15 +194,15 @@ const handleForgotPassword = async () => {
 .auth-input:-webkit-autofill:hover,
 .auth-input:-webkit-autofill:focus,
 .auth-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-    -webkit-text-fill-color: #4A4A4A !important;
-    transition: background-color 50000s ease-in-out 0s !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #4a4a4a !important;
+  transition: background-color 50000s ease-in-out 0s !important;
 }
 
 .auth-button {
   width: 100%;
   padding: 15px;
-  background-color: #00E676; /* VERDE por padrão */
+  background-color: #00e676; /* VERDE por padrão */
   color: white;
   border: none;
   border-radius: 8px;
@@ -197,17 +213,17 @@ const handleForgotPassword = async () => {
 }
 
 .auth-button:hover {
-  background-color: #00C853; /* Verde um pouco mais escuro no hover */
+  background-color: #00c853; /* Verde um pouco mais escuro no hover */
 }
 
 .auth-button:disabled {
-  background-color: #E0E0E0; /* Cinza claro quando desabilitado */
-  color: #A0A0A0; /* Texto cinza */
+  background-color: #e0e0e0; /* Cinza claro quando desabilitado */
+  color: #a0a0a0; /* Texto cinza */
   cursor: not-allowed;
 }
 
 .auth-button:hover:disabled {
-  background-color: #E0E0E0; /* Mantém a cor desabilitada no hover */
+  background-color: #e0e0e0; /* Mantém a cor desabilitada no hover */
 }
 
 /* Responsividade básica */

@@ -1,11 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
-import type { EntryLine } from "../../frontend/src/types/index.js";
 import {
-  idSchema,
-  createFinancialTransactionSchema,
-  updateFinancialTransactionSchema,
-} from "../utils/schemas.js";
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
+import { createFinancialTransactionSchema } from "../utils/schemas.js";
 
 export default async function handler(
   req: VercelRequest,
@@ -39,11 +38,12 @@ export default async function handler(
       }
       const newTransaction = { ...parsedBody.data, user_id };
 
-      const { data: newFinancialTransaction, error: dbError } = await userSupabase
-        .from(tableName)
-        .insert([newTransaction])
-        .select()
-        .single();
+      const { data: newFinancialTransaction, error: dbError } =
+        await userSupabase
+          .from(tableName)
+          .insert([newTransaction])
+          .select()
+          .single();
 
       if (dbError) throw dbError;
 
@@ -64,4 +64,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

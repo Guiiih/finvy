@@ -1,24 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import InfoCard from '@/components/InfoCard.vue'; 
-import { useReportStore } from '@/stores/reportStore';
+import { ref, onMounted, computed } from 'vue'
+import InfoCard from '@/components/InfoCard.vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const reportStore = useReportStore();
+const reportStore = useReportStore()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
-const totalAtivo = computed(() => reportStore.balanceSheetData.totalDoAtivo);
-const lucroLiquido = computed(() => reportStore.dreData.lucroLiquido);
-const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo);
+const totalAtivo = computed(() => reportStore.balanceSheetData.totalDoAtivo)
+const lucroLiquido = computed(() => reportStore.dreData.lucroLiquido)
+const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo)
 
 onMounted(async () => {
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-  await reportStore.fetchReports(startDate.value, endDate.value);
-});
-
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+  await reportStore.fetchReports(startDate.value, endDate.value)
+})
 </script>
 
 <template>
@@ -27,11 +26,15 @@ onMounted(async () => {
 
     <div class="info-cards-grid">
       <InfoCard title="Total do Ativo" :value="totalAtivo" currency="R$" :is-positive="true" />
-      <InfoCard title="Lucro Líquido" :value="lucroLiquido" currency="R$" :is-positive="lucroLiquido >= 0" />
+      <InfoCard
+        title="Lucro Líquido"
+        :value="lucroLiquido"
+        currency="R$"
+        :is-positive="lucroLiquido >= 0"
+      />
       <InfoCard title="Total do Passivo" :value="totalPassivo" currency="R$" :is-positive="null" />
-      </div>
-
     </div>
+  </div>
 </template>
 
 <style scoped>

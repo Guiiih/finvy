@@ -26,7 +26,9 @@
             <td>{{ account.type }}</td>
             <td>R$ {{ account.totalDebits.toFixed(2) }}</td>
             <td>R$ {{ account.totalCredits.toFixed(2) }}</td>
-            <td :class="{ 'positive': account.finalBalance >= 0, 'negative': account.finalBalance < 0 }">
+            <td
+              :class="{ positive: account.finalBalance >= 0, negative: account.finalBalance < 0 }"
+            >
               R$ {{ account.finalBalance.toFixed(2) }}
             </td>
           </tr>
@@ -45,32 +47,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useReportStore } from '@/stores/reportStore';
+import { ref, computed, onMounted } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const reportStore = useReportStore();
+const reportStore = useReportStore()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
 async function fetchTrialBalanceData() {
-  await reportStore.fetchTrialBalance(startDate.value, endDate.value);
+  await reportStore.fetchTrialBalance(startDate.value, endDate.value)
 }
 
 onMounted(async () => {
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-  await fetchTrialBalanceData();
-});
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+  await fetchTrialBalanceData()
+})
 
 const totalDebitsBalance = computed(() => {
-  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalDebits, 0);
-});
+  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalDebits, 0)
+})
 
 const totalCreditsBalance = computed(() => {
-  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalCredits, 0);
-});
+  return reportStore.trialBalanceData.reduce((sum, account) => sum + account.totalCredits, 0)
+})
 </script>
 
 <style scoped>
@@ -87,7 +89,9 @@ h1 {
   margin-bottom: 30px;
 }
 
-.loading-message, .error-message, .no-data-message {
+.loading-message,
+.error-message,
+.no-data-message {
   text-align: center;
   padding: 20px;
   background-color: #f9f9f9;

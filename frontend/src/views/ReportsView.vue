@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useReportStore } from '@/stores/reportStore';
-import { RouterView, useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
+import { RouterView, useRouter } from 'vue-router'
 
-const reportStore = useReportStore();
-const router = useRouter();
+const reportStore = useReportStore()
+const router = useRouter()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
 // Inicializa as datas com o ano corrente
 onMounted(() => {
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-});
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+})
 
 // Observa as mudanças nas datas e atualiza a rota com query params
 watch([startDate, endDate], ([newStartDate, newEndDate]) => {
@@ -23,8 +23,8 @@ watch([startDate, endDate], ([newStartDate, newEndDate]) => {
       startDate: newStartDate,
       endDate: newEndDate,
     },
-  });
-});
+  })
+})
 
 // Função para navegar para um relatório específico
 const navigateToReport = (reportName: string) => {
@@ -34,8 +34,8 @@ const navigateToReport = (reportName: string) => {
       startDate: startDate.value,
       endDate: endDate.value,
     },
-  });
-};
+  })
+}
 </script>
 
 <template>
@@ -53,8 +53,12 @@ const navigateToReport = (reportName: string) => {
     </div>
 
     <p v-if="reportStore.loading" class="loading-message">Gerando relatórios...</p>
-    <p v-else-if="reportStore.error" class="error-message">Erro ao gerar relatórios: {{ reportStore.error }}</p>
-    <p v-else class="info-message">Selecione um período e o tipo de relatório para visualizar os dados.</p>
+    <p v-else-if="reportStore.error" class="error-message">
+      Erro ao gerar relatórios: {{ reportStore.error }}
+    </p>
+    <p v-else class="info-message">
+      Selecione um período e o tipo de relatório para visualizar os dados.
+    </p>
 
     <RouterView :startDate="startDate" :endDate="endDate" />
   </div>
@@ -90,7 +94,7 @@ h1 {
   color: #555;
 }
 
-.date-filter-section input[type="date"] {
+.date-filter-section input[type='date'] {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -112,7 +116,9 @@ h1 {
   background-color: #0056b3;
 }
 
-.loading-message, .error-message, .info-message {
+.loading-message,
+.error-message,
+.info-message {
   text-align: center;
   padding: 20px;
   background-color: #f9f9f9;

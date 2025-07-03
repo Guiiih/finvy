@@ -3,7 +3,10 @@
     <h1>Fechamento de Exercício</h1>
 
     <div class="closing-form-section">
-      <p>O fechamento de exercício zera as contas de receita e despesa, transferindo o resultado para o Patrimônio Líquido.</p>
+      <p>
+        O fechamento de exercício zera as contas de receita e despesa, transferindo o resultado para
+        o Patrimônio Líquido.
+      </p>
       <p>Selecione a data de fechamento. Todos os lançamentos até esta data serão considerados.</p>
 
       <div class="form-group">
@@ -11,42 +14,48 @@
         <input type="date" id="closingDate" v-model="closingDate" required />
       </div>
 
-      <button @click="handleYearEndClosing" :disabled="loading">{{ loading ? 'Processando...' : 'Realizar Fechamento' }}</button>
+      <button @click="handleYearEndClosing" :disabled="loading">
+        {{ loading ? 'Processando...' : 'Realizar Fechamento' }}
+      </button>
 
-      <p v-if="message" :class="{ 'success-message': !error, 'error-message': error }">{{ message }}</p>
+      <p v-if="message" :class="{ 'success-message': !error, 'error-message': error }">
+        {{ message }}
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { api } from '@/services/api';
+import { ref } from 'vue'
+import { api } from '@/services/api'
 
-const closingDate = ref('');
-const loading = ref(false);
-const message = ref<string | null>(null);
-const error = ref<string | null>(null);
+const closingDate = ref('')
+const loading = ref(false)
+const message = ref<string | null>(null)
+const error = ref<string | null>(null)
 
 async function handleYearEndClosing() {
   if (!closingDate.value) {
-    message.value = 'Por favor, selecione uma data de fechamento.';
-    error.value = 'error';
-    return;
+    message.value = 'Por favor, selecione uma data de fechamento.'
+    error.value = 'error'
+    return
   }
 
-  loading.value = true;
-  message.value = null;
-      error.value = null;
+  loading.value = true
+  message.value = null
+  error.value = null
 
   try {
-    const response: { message?: string } = await api.post('/year-end-closing', { closingDate: closingDate.value });
-    message.value = response.message || 'Fechamento de exercício realizado com sucesso!';
-    error.value = null;
+    const response: { message?: string } = await api.post('/year-end-closing', {
+      closingDate: closingDate.value,
+    })
+    message.value = response.message || 'Fechamento de exercício realizado com sucesso!'
+    error.value = null
   } catch (err: unknown) {
-    message.value = (err instanceof Error) ? err.message : 'Erro ao realizar fechamento de exercício.';
-    error.value = 'error';
+    message.value = err instanceof Error ? err.message : 'Erro ao realizar fechamento de exercício.'
+    error.value = 'error'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 </script>
@@ -91,7 +100,7 @@ h1 {
   color: #333;
 }
 
-.form-group input[type="date"] {
+.form-group input[type='date'] {
   width: calc(100% - 22px);
   padding: 10px;
   border: 1px solid #ccc;

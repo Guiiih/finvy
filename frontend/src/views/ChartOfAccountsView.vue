@@ -25,25 +25,31 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useAccountStore } from '@/stores/accountStore';
+import { onMounted } from 'vue'
+import { useAccountStore } from '@/stores/accountStore'
 
-const accountStore = useAccountStore();
+const accountStore = useAccountStore()
 
 onMounted(async () => {
-  await accountStore.fetchAccounts();
-});
+  await accountStore.fetchAccounts()
+})
 
 const formatAccountType = (type: string) => {
   switch (type) {
-    case 'asset': return 'Ativo';
-    case 'liability': return 'Passivo';
-    case 'equity': return 'Patrimônio Líquido';
-    case 'revenue': return 'Receita';
-    case 'expense': return 'Despesa';
-    default: return type;
+    case 'asset':
+      return 'Ativo'
+    case 'liability':
+      return 'Passivo'
+    case 'equity':
+      return 'Patrimônio Líquido'
+    case 'revenue':
+      return 'Receita'
+    case 'expense':
+      return 'Despesa'
+    default:
+      return type
   }
-};
+}
 </script>
 
 <style scoped>
@@ -60,7 +66,9 @@ h1 {
   margin-bottom: 30px;
 }
 
-.loading-message, .error-message, .no-accounts-message {
+.loading-message,
+.error-message,
+.no-accounts-message {
   text-align: center;
   padding: 20px;
   background-color: #f9f9f9;

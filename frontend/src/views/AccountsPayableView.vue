@@ -11,7 +11,14 @@
         </div>
         <div class="form-group">
           <label for="amount">Valor:</label>
-          <input type="number" id="amount" v-model.number="newAccount.amount" step="0.01" min="0" required />
+          <input
+            type="number"
+            id="amount"
+            v-model.number="newAccount.amount"
+            step="0.01"
+            min="0"
+            required
+          />
         </div>
         <div class="form-group">
           <label for="dueDate">Data de Vencimento:</label>
@@ -23,7 +30,12 @@
         </div>
         <div class="form-group" v-if="newAccount.is_paid">
           <label for="paidDate">Data de Pagamento:</label>
-          <input type="date" id="paidDate" v-model="newAccount.paid_date" :required="newAccount.is_paid" />
+          <input
+            type="date"
+            id="paidDate"
+            v-model="newAccount.paid_date"
+            :required="newAccount.is_paid"
+          />
         </div>
         <button type="submit">{{ isEditing ? 'Atualizar' : 'Adicionar' }}</button>
         <button type="button" @click="resetForm" v-if="isEditing">Cancelar</button>
@@ -33,7 +45,9 @@
     <div class="accounts-list-section">
       <h2>Contas Pendentes</h2>
       <p v-if="financialTransactionsStore.loading">Carregando contas...</p>
-      <p v-else-if="financialTransactionsStore.error" class="error-message">{{ financialTransactionsStore.error }}</p>
+      <p v-else-if="financialTransactionsStore.error" class="error-message">
+        {{ financialTransactionsStore.error }}
+      </p>
       <table v-else-if="financialTransactionsStore.getUnpaidAccounts.length > 0">
         <thead>
           <tr>
@@ -50,8 +64,12 @@
             <td>{{ account.due_date }}</td>
             <td>
               <button @click="startEdit(account)">Editar</button>
-              <button @click="markAsPaid(account.id)" v-if="!account.is_paid">Marcar como Paga</button>
-              <button @click="handleDeleteAccountPayable(account.id)" class="delete-button">Excluir</button>
+              <button @click="markAsPaid(account.id)" v-if="!account.is_paid">
+                Marcar como Paga
+              </button>
+              <button @click="handleDeleteAccountPayable(account.id)" class="delete-button">
+                Excluir
+              </button>
             </td>
           </tr>
         </tbody>
@@ -77,7 +95,9 @@
             <td>{{ account.paid_date }}</td>
             <td>
               <button @click="startEdit(account)">Editar</button>
-              <button @click="handleDeleteAccountPayable(account.id)" class="delete-button">Excluir</button>
+              <button @click="handleDeleteAccountPayable(account.id)" class="delete-button">
+                Excluir
+              </button>
             </td>
           </tr>
         </tbody>
@@ -88,69 +108,75 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useFinancialTransactionsStore } from '@/stores/financialTransactionsStore';
+import { ref, onMounted } from 'vue'
+import { useFinancialTransactionsStore } from '@/stores/financialTransactionsStore'
 
 interface FinancialTransaction {
-  id: string;
-  description: string;
-  amount: number;
-  due_date: string;
-  paid_date?: string | null;
-  received_date?: string | null;
-  is_paid?: boolean;
-  is_received?: boolean;
-  created_at: string;
+  id: string
+  description: string
+  amount: number
+  due_date: string
+  paid_date?: string | null
+  received_date?: string | null
+  is_paid?: boolean
+  is_received?: boolean
+  created_at: string
 }
 
-const financialTransactionsStore = useFinancialTransactionsStore();
+const financialTransactionsStore = useFinancialTransactionsStore()
 
-const newAccount = ref<Omit<FinancialTransaction, 'id' | 'created_at' | 'is_received' | 'received_date'>>({
+const newAccount = ref<
+  Omit<FinancialTransaction, 'id' | 'created_at' | 'is_received' | 'received_date'>
+>({
   description: '',
   amount: 0,
   due_date: '',
   is_paid: false,
   paid_date: null,
-});
+})
 
-const isEditing = ref(false);
-const editingAccountId = ref<string | null>(null);
+const isEditing = ref(false)
+const editingAccountId = ref<string | null>(null)
 
 onMounted(() => {
-  financialTransactionsStore.fetchFinancialTransactions();
-});
+  financialTransactionsStore.fetchFinancialTransactions()
+})
 
 async function handleAddAccountPayable() {
   try {
-    await financialTransactionsStore.addFinancialTransaction('payable', newAccount.value);
-    resetForm();
+    await financialTransactionsStore.addFinancialTransaction('payable', newAccount.value)
+    resetForm()
   } catch (err: unknown) {
-    alert(err instanceof Error ? err.message : 'Erro desconhecido');
+    alert(err instanceof Error ? err.message : 'Erro desconhecido')
   }
 }
 
 function startEdit(account: FinancialTransaction) {
-  isEditing.value = true;
-  editingAccountId.value = account.id;
-  newAccount.value = { ...account };
+  isEditing.value = true
+  editingAccountId.value = account.id
+  newAccount.value = { ...account }
 }
 
 async function handleUpdateAccountPayable() {
-  if (!editingAccountId.value) return;
+  if (!editingAccountId.value) return
   try {
-    await financialTransactionsStore.updateFinancialTransaction('payable', editingAccountId.value, newAccount.value);
-    resetForm();
+    await financialTransactionsStore.updateFinancialTransaction(
+      'payable',
+      editingAccountId.value,
+      newAccount.value,
+    )
+    resetForm()
   } catch (err: unknown) {
-    alert(err instanceof Error ? err.message : 'Erro desconhecido');
+    alert(err instanceof Error ? err.message : 'Erro desconhecido')
   }
 }
 
 async function handleDeleteAccountPayable(id: string) {
   if (confirm('Tem certeza que deseja excluir esta conta a pagar?')) {
     try {
-      await financialTransactionsStore.deleteFinancialTransaction('payable', id);
+      await financialTransactionsStore.deleteFinancialTransaction('payable', id)
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Erro desconhecido');
+      alert(err instanceof Error ? err.message : 'Erro desconhecido')
     }
   }
 }
@@ -158,25 +184,27 @@ async function handleDeleteAccountPayable(id: string) {
 async function markAsPaid(id: string) {
   if (confirm('Marcar esta conta como paga?')) {
     try {
-      await financialTransactionsStore.updateFinancialTransaction('payable', id, { is_paid: true, paid_date: new Date().toISOString().split('T')[0] });
+      await financialTransactionsStore.updateFinancialTransaction('payable', id, {
+        is_paid: true,
+        paid_date: new Date().toISOString().split('T')[0],
+      })
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Erro desconhecido');
+      alert(err instanceof Error ? err.message : 'Erro desconhecido')
     }
   }
 }
 
 function resetForm() {
-  isEditing.value = false;
-  editingAccountId.value = null;
+  isEditing.value = false
+  editingAccountId.value = null
   newAccount.value = {
     description: '',
     amount: 0,
     due_date: '',
     is_paid: false,
     paid_date: null,
-  };
+  }
 }
-
 </script>
 
 <style scoped>
@@ -193,7 +221,8 @@ h1 {
   margin-bottom: 30px;
 }
 
-.form-section, .accounts-list-section {
+.form-section,
+.accounts-list-section {
   background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -221,9 +250,9 @@ h2 {
   font-weight: bold;
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group input[type="date"] {
+.form-group input[type='text'],
+.form-group input[type='number'],
+.form-group input[type='date'] {
   width: calc(100% - 22px);
   padding: 10px;
   border: 1px solid #ccc;
@@ -231,7 +260,7 @@ h2 {
   font-size: 1em;
 }
 
-.form-group input[type="checkbox"] {
+.form-group input[type='checkbox'] {
   margin-top: 8px;
 }
 
@@ -244,12 +273,12 @@ button {
   margin-right: 10px;
 }
 
-button[type="submit"] {
+button[type='submit'] {
   background-color: #007bff;
   color: white;
 }
 
-button[type="submit"]:hover {
+button[type='submit']:hover {
   background-color: #0056b3;
 }
 
@@ -268,7 +297,8 @@ table {
   margin-top: 20px;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: left;

@@ -1,53 +1,57 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useReportStore } from '@/stores/reportStore';
+import { computed, watch } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
 const props = defineProps<{
-  startDate: string;
-  endDate: string;
-}>();
+  startDate: string
+  endDate: string
+}>()
 
-const reportStore = useReportStore();
+const reportStore = useReportStore()
 
 async function fetchDFCData() {
-  await reportStore.fetchReports(props.startDate, props.endDate);
+  await reportStore.fetchReports(props.startDate, props.endDate)
 }
 
 // Observa as mudanças nas props de data e busca os dados
-watch([() => props.startDate, () => props.endDate], () => {
-  fetchDFCData();
-}, { immediate: true }); // Executa imediatamente na montagem
+watch(
+  [() => props.startDate, () => props.endDate],
+  () => {
+    fetchDFCData()
+  },
+  { immediate: true },
+) // Executa imediatamente na montagem
 
 const dfcData = computed(() => {
-  const lle = reportStore.dreData.lucroLiquido;
-  const bsd = reportStore.balanceSheetData;
+  const lle = reportStore.dreData.lucroLiquido
+  const bsd = reportStore.balanceSheetData
 
   // Variações das contas do Balanço (Calculadas como Saldo Final - Saldo Inicial)
   // Ajuste de sinal para DFC:
   // Ativos (exceto caixa): Aumento (-) ou Diminuição (+) no caixa
   // Passivos/PL: Aumento (+) ou Diminuição (+) no caixa
 
-  const varFornecedores = bsd.fornecedores; // Passivo: Aumento (+) no caixa 
-  const varImpostosAPagar = bsd.impostoAPagar; // Passivo: Aumento (+) no caixa 
-  const varClientes = bsd.clientes; // Ativo: Aumento (-) no caixa 
-  const varEstoque = bsd.estoqueDeMercadorias; // Ativo: Aumento (-) no caixa 
-  const varImobilizado = bsd.moveisEUtensilios; // Ativo Não Circulante: Aumento (-) no caixa 
-  const varCapitalSocial = bsd.capitalSocial; // PL: Aumento (+) no caixa 
+  const varFornecedores = bsd.fornecedores // Passivo: Aumento (+) no caixa
+  const varImpostosAPagar = bsd.impostoAPagar // Passivo: Aumento (+) no caixa
+  const varClientes = bsd.clientes // Ativo: Aumento (-) no caixa
+  const varEstoque = bsd.estoqueDeMercadorias // Ativo: Aumento (-) no caixa
+  const varImobilizado = bsd.moveisEUtensilios // Ativo Não Circulante: Aumento (-) no caixa
+  const varCapitalSocial = bsd.capitalSocial // PL: Aumento (+) no caixa
 
   // Fluxo de Caixa das Atividades Operacionais
-  let fluxoOperacional = lle; // Começa com o Lucro Líquido
-  fluxoOperacional += varFornecedores; // + Var. Fornecedores
-  fluxoOperacional += varImpostosAPagar; // + Var. Impostos
-  fluxoOperacional -= varClientes; // - Var. Clientes
-  fluxoOperacional -= varEstoque; // - Var. Estoque
+  let fluxoOperacional = lle // Começa com o Lucro Líquido
+  fluxoOperacional += varFornecedores // + Var. Fornecedores
+  fluxoOperacional += varImpostosAPagar // + Var. Impostos
+  fluxoOperacional -= varClientes // - Var. Clientes
+  fluxoOperacional -= varEstoque // - Var. Estoque
 
   // Fluxo de Caixa das Atividades de Investimento
-  let fluxoInvestimento = 0;
-  fluxoInvestimento -= varImobilizado; // - Var. Imobilizado
-  fluxoInvestimento += varCapitalSocial; // + Var. Capital Social 
+  let fluxoInvestimento = 0
+  fluxoInvestimento -= varImobilizado // - Var. Imobilizado
+  fluxoInvestimento += varCapitalSocial // + Var. Capital Social
 
   // Saldo Final de Caixa
-  const sldFinalCaixa = fluxoOperacional + fluxoInvestimento;
+  const sldFinalCaixa = fluxoOperacional + fluxoInvestimento
 
   return {
     lucroLiquidoExercicio: lle,
@@ -60,16 +64,20 @@ const dfcData = computed(() => {
     varCapitalSocial,
     fluxoInvestimento,
     sldFinalCaixa,
-  };
-});
+  }
+})
 </script>
 
 <template>
   <div class="dfc-container">
     <h1>Demonstração do Fluxo de Caixa</h1>
 
-    <p v-if="!reportStore.reports || reportStore.reports.ledgerAccounts.length === 0" class="no-entries-message">
-      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DFC.
+    <p
+      v-if="!reportStore.reports || reportStore.reports.ledgerAccounts.length === 0"
+      class="no-entries-message"
+    >
+      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos
+      Contábeis" para gerar a DFC.
     </p>
 
     <div v-else class="dfc-report">

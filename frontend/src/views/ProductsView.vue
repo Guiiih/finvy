@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
-import { useProductStore } from '@/stores/productStore';
-import { useAuthStore } from '@/stores/authStore';
-import BaseTable from '@/components/BaseTable.vue';
-import type { Product } from '@/types';
-import { useToast } from 'primevue/usetoast';
-import Skeleton from 'primevue/skeleton';
+import { computed, watchEffect } from 'vue'
+import { useProductStore } from '@/stores/productStore'
+import { useAuthStore } from '@/stores/authStore'
+import BaseTable from '@/components/BaseTable.vue'
+import type { Product } from '@/types'
+import { useToast } from 'primevue/usetoast'
+import Skeleton from 'primevue/skeleton'
 
-const productStore = useProductStore();
-const authStore = useAuthStore();
-const toast = useToast();
+const productStore = useProductStore()
+const authStore = useAuthStore()
+const toast = useToast()
 
 // Crie um tipo para os cabeçalhos da tabela de produtos
 type ProductTableHeader = {
-  key: keyof Product | 'total_gross_stock' | 'icms_value_stock' | 'total_net_stock' | 'actions';
-  label: string;
-  align?: 'left' | 'center' | 'right';
-};
+  key: keyof Product | 'total_gross_stock' | 'icms_value_stock' | 'total_net_stock' | 'actions'
+  label: string
+  align?: 'left' | 'center' | 'right'
+}
 
 // Use o novo tipo para o seu array de cabeçalhos
 const headers: ProductTableHeader[] = [
@@ -29,40 +29,46 @@ const headers: ProductTableHeader[] = [
   { key: 'icms_value_stock', label: 'ICMS Total (Estoque)', align: 'right' },
   { key: 'total_net_stock', label: 'Valor Líquido Total (Estoque)', align: 'right' },
   { key: 'actions', label: 'Ações', align: 'center' },
-];
+]
 
 const filteredProducts = computed(() => {
-  return productStore.products.map(product => {
-    const total_gross_stock = product.unit_cost * product.current_stock;
-    const icms_rate = product.icms_rate || 0;
-    const icms_value_stock = total_gross_stock * (icms_rate / 100);
-    const total_net_stock = total_gross_stock - icms_value_stock;
+  return productStore.products.map((product) => {
+    const total_gross_stock = product.unit_cost * product.current_stock
+    const icms_rate = product.icms_rate || 0
+    const icms_value_stock = total_gross_stock * (icms_rate / 100)
+    const total_net_stock = total_gross_stock - icms_value_stock
     return {
       ...product,
       total_gross_stock,
       icms_value_stock,
       total_net_stock,
-    };
-  });
-});
+    }
+  })
+})
 
 async function handleDeleteProduct(id: string) {
   if (confirm('Tem certeza de que deseja excluir este produto?')) {
     try {
-      await productStore.deleteProduct(id);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto excluído com sucesso!', life: 3000 });
+      await productStore.deleteProduct(id)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Produto excluído com sucesso!',
+        life: 3000,
+      })
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao excluir o produto.';
-      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+      const message =
+        err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao excluir o produto.'
+      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
     }
   }
 }
 
 watchEffect(() => {
   if (!authStore.loading && authStore.isLoggedIn) {
-    productStore.fetchProducts();
+    productStore.fetchProducts()
   }
-});
+})
 </script>
 
 <template>
@@ -83,12 +89,8 @@ watchEffect(() => {
         :items="filteredProducts"
         empty-message="Nenhum produto encontrado. Adicione um novo produto acima."
       >
-        <template #cell(unit_cost)="{ value }">
-          R$ {{ (value as number).toFixed(2) }}
-        </template>
-        <template #cell(icms_rate)="{ value }">
-          {{ (value as number).toFixed(2) }}%
-        </template>
+        <template #cell(unit_cost)="{ value }"> R$ {{ (value as number).toFixed(2) }} </template>
+        <template #cell(icms_rate)="{ value }"> {{ (value as number).toFixed(2) }}% </template>
         <template #cell(total_gross_stock)="{ value }">
           R$ {{ (value as number).toFixed(2) }}
         </template>
@@ -99,7 +101,9 @@ watchEffect(() => {
           R$ {{ (value as number).toFixed(2) }}
         </template>
         <template #cell(actions)="{ item }">
-          <button @click="handleDeleteProduct(item.id as string)" class="delete-button">Excluir</button>
+          <button @click="handleDeleteProduct(item.id as string)" class="delete-button">
+            Excluir
+          </button>
         </template>
       </BaseTable>
     </div>
@@ -120,7 +124,8 @@ h1 {
   margin-bottom: 30px;
 }
 
-.form-section, .products-list-section {
+.form-section,
+.products-list-section {
   background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -148,8 +153,8 @@ h2 {
   font-weight: bold;
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"] {
+.form-group input[type='text'],
+.form-group input[type='number'] {
   width: calc(100% - 22px);
   padding: 10px;
   border: 1px solid #ccc;
@@ -166,12 +171,12 @@ button {
   margin-right: 10px;
 }
 
-button[type="submit"] {
+button[type='submit'] {
   background-color: #007bff;
   color: white;
 }
 
-button[type="submit"]:hover {
+button[type='submit']:hover {
   background-color: #0056b3;
 }
 

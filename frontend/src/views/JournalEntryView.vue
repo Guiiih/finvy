@@ -6,7 +6,7 @@
       <button @click="showAddEntryForm = !showAddEntryForm">
         {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
       </button>
-      
+
       <button @click="resetAllData">Resetar Todos os Dados</button>
     </div>
 
@@ -18,7 +18,13 @@
       </div>
       <div class="form-group">
         <label for="entry-description">Descrição:</label>
-        <input type="text" id="entry-description" v-model="newEntryDescription" placeholder="Descrição do lançamento" required />
+        <input
+          type="text"
+          id="entry-description"
+          v-model="newEntryDescription"
+          placeholder="Descrição do lançamento"
+          required
+        />
       </div>
 
       <h3>Linhas do Lançamento:</h3>
@@ -26,7 +32,11 @@
         <select v-model="line.account_id" @change="handleAccountChange(line)" required>
           <option value="" disabled>Selecione a Conta</option>
           <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
-            <option v-for="account in accountStore.getAccountsByType(type)" :value="account.id" :key="account.id">
+            <option
+              v-for="account in accountStore.getAccountsByType(type)"
+              :value="account.id"
+              :key="account.id"
+            >
               {{ account.name }}
             </option>
           </optgroup>
@@ -36,21 +46,30 @@
           <option value="debit">Débito</option>
           <option value="credit">Crédito</option>
         </select>
-                <input
-                  type="number"
-                  :value="line.amount"
-                  @input="event => { const target = event.target as HTMLInputElement | null; line.amount = target && target.value ? parseFloat(target.value) || 0 : 0; }"
-                  placeholder="Valor"
-                  step="0.01"
-                  min="0"
-                  required
-                />
-        
-        <select v-model="line.product_id" @change="handleProductChange(line)" class="product-select">
-            <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
-            <option v-for="product in productStore.products" :value="product.id" :key="product.id">
-                {{ product.name }}
-            </option>
+        <input
+          type="number"
+          :value="line.amount"
+          @input="
+            (event) => {
+              const target = event.target as HTMLInputElement | null
+              line.amount = target && target.value ? parseFloat(target.value) || 0 : 0
+            }
+          "
+          placeholder="Valor"
+          step="0.01"
+          min="0"
+          required
+        />
+
+        <select
+          v-model="line.product_id"
+          @change="handleProductChange(line)"
+          class="product-select"
+        >
+          <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
+          <option v-for="product in productStore.products" :value="product.id" :key="product.id">
+            {{ product.name }}
+          </option>
         </select>
         <input
           v-if="line.product_id"
@@ -89,13 +108,28 @@
       <button type="button" @click="addLine">Adicionar Linha</button>
 
       <div class="balance-info">
-        <p :class="{ 'positive': totalDebits === totalCredits, 'negative': totalDebits !== totalCredits }">
+        <p
+          :class="{
+            positive: totalDebits === totalCredits,
+            negative: totalDebits !== totalCredits,
+          }"
+        >
           Total Débitos: R$ {{ totalDebits.toFixed(2) }}
         </p>
-        <p :class="{ 'positive': totalDebits === totalCredits, 'negative': totalDebits !== totalCredits }">
+        <p
+          :class="{
+            positive: totalDebits === totalCredits,
+            negative: totalDebits !== totalCredits,
+          }"
+        >
           Total Créditos: R$ {{ totalCredits.toFixed(2) }}
         </p>
-        <p :class="{ 'positive': totalDebits === totalCredits, 'negative': totalDebits !== totalCredits }">
+        <p
+          :class="{
+            positive: totalDebits === totalCredits,
+            negative: totalDebits !== totalCredits,
+          }"
+        >
           Diferença: R$ {{ (totalDebits - totalCredits).toFixed(2) }}
         </p>
       </div>
@@ -129,9 +163,18 @@
             <td>
               <!-- Edição e exclusão direta desabilitadas para manter a integridade contábil. 
                    Correções devem ser feitas com lançamentos de estorno. -->
-              <button disabled title="Edição desabilitada para lançamentos registrados">Editar</button>
-              <button disabled title="Exclusão desabilitada para lançamentos registrados">Excluir</button>
-              <button @click="journalEntryStore.reverseJournalEntry(entry.id)" title="Estornar este lançamento">Estornar</button>
+              <button disabled title="Edição desabilitada para lançamentos registrados">
+                Editar
+              </button>
+              <button disabled title="Exclusão desabilitada para lançamentos registrados">
+                Excluir
+              </button>
+              <button
+                @click="journalEntryStore.reverseJournalEntry(entry.id)"
+                title="Estornar este lançamento"
+              >
+                Estornar
+              </button>
               <button @click="toggleDetails(entry.id)">
                 {{ showDetails[entry.id] ? 'Ocultar Detalhes' : 'Mostrar Detalhes' }}
               </button>
@@ -146,7 +189,8 @@
                     <th>Tipo</th>
                     <th>Valor</th>
                     <th>Produto</th>
-                    <th>Cód. Conta</th> </tr>
+                    <th>Cód. Conta</th>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
@@ -154,7 +198,8 @@
                     <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
                     <td>R$ {{ line.amount.toFixed(2) }}</td>
                     <td>{{ getProductName(line.product_id) }}</td>
-                    <td>{{ getAccountCode(line.account_id) }}</td> </tr>
+                    <td>{{ getAccountCode(line.account_id) }}</td>
+                  </tr>
                 </tbody>
               </table>
             </td>
@@ -166,155 +211,215 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useJournalEntryStore } from '@/stores/journalEntryStore';
-import { useAccountStore } from '@/stores/accountStore';
-import { useProductStore } from '@/stores/productStore';
+import { ref, computed } from 'vue'
+import { useJournalEntryStore } from '@/stores/journalEntryStore'
+import { useAccountStore } from '@/stores/accountStore'
+import { useProductStore } from '@/stores/productStore'
 
-import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index';
+import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index'
 
-const journalEntryStore = useJournalEntryStore();
-const accountStore = useAccountStore();
-const productStore = useProductStore();
+const journalEntryStore = useJournalEntryStore()
+const accountStore = useAccountStore()
+const productStore = useProductStore()
 
-const showAddEntryForm = ref(false);
-const newEntryDate = ref('');
-const newEntryDescription = ref('');
-const editingEntryId = ref<string | null>(null);
+const showAddEntryForm = ref(false)
+const newEntryDate = ref('')
+const newEntryDescription = ref('')
+const editingEntryId = ref<string | null>(null)
 
 // Add this line to declare newEntryLines as a ref
 type EntryLine = {
-  account_id: string;
-  type: 'debit' | 'credit';
-  amount: number;
-  product_id?: string;
-  quantity?: number;
-  unit_cost?: number;
-  icms_rate?: number; // Adicionado icms_rate
-  total_gross?: number;
-  icms_value?: number;
-  total_net?: number;
-};
+  account_id: string
+  type: 'debit' | 'credit'
+  amount: number
+  product_id?: string
+  quantity?: number
+  unit_cost?: number
+  icms_rate?: number // Adicionado icms_rate
+  total_gross?: number
+  icms_value?: number
+  total_net?: number
+}
 
 const newEntryLines = ref<EntryLine[]>([
-  { account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined }
-]);
+  {
+    account_id: '',
+    type: 'debit',
+    amount: 0,
+    product_id: '',
+    quantity: undefined,
+    unit_cost: undefined,
+    icms_rate: undefined,
+    total_gross: undefined,
+    icms_value: undefined,
+    total_net: undefined,
+  },
+])
 
 const totalDebits = computed(() =>
-  newEntryLines.value.reduce((sum, line) => line.type === 'debit' ? sum + (line.amount || 0) : sum, 0)
-);
+  newEntryLines.value.reduce(
+    (sum, line) => (line.type === 'debit' ? sum + (line.amount || 0) : sum),
+    0,
+  ),
+)
 
 const totalCredits = computed(() =>
-  newEntryLines.value.reduce((sum, line) => line.type === 'credit' ? sum + (line.amount || 0) : sum, 0)
-);
+  newEntryLines.value.reduce(
+    (sum, line) => (line.type === 'credit' ? sum + (line.amount || 0) : sum),
+    0,
+  ),
+)
 
 function calculateLineTotals(line: EntryLine) {
-  const icms_rate = line.icms_rate || 0;
+  const icms_rate = line.icms_rate || 0
 
-  line.total_gross = line.amount; // Use the amount entered by the user as the gross value
-  line.icms_value = line.total_gross * (icms_rate / 100);
-  line.total_net = line.total_gross - line.icms_value;
+  line.total_gross = line.amount // Use the amount entered by the user as the gross value
+  line.icms_value = line.total_gross * (icms_rate / 100)
+  line.total_net = line.total_gross - line.icms_value
 }
 
 function resetForm() {
-  newEntryDate.value = new Date().toISOString().split('T')[0];
-  newEntryDescription.value = '';
+  newEntryDate.value = new Date().toISOString().split('T')[0]
+  newEntryDescription.value = ''
   newEntryLines.value = [
-    { account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined },
-    { account_id: '', type: 'credit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined }
-  ];
-  editingEntryId.value = null;
+    {
+      account_id: '',
+      type: 'debit',
+      amount: 0,
+      product_id: '',
+      quantity: undefined,
+      unit_cost: undefined,
+      icms_rate: undefined,
+      total_gross: undefined,
+      icms_value: undefined,
+      total_net: undefined,
+    },
+    {
+      account_id: '',
+      type: 'credit',
+      amount: 0,
+      product_id: '',
+      quantity: undefined,
+      unit_cost: undefined,
+      icms_rate: undefined,
+      total_gross: undefined,
+      icms_value: undefined,
+      total_net: undefined,
+    },
+  ]
+  editingEntryId.value = null
 }
 
 function addLine() {
-  newEntryLines.value.push({ account_id: '', type: 'debit', amount: 0, product_id: '', quantity: undefined, unit_cost: undefined, icms_rate: undefined, total_gross: undefined, icms_value: undefined, total_net: undefined });
+  newEntryLines.value.push({
+    account_id: '',
+    type: 'debit',
+    amount: 0,
+    product_id: '',
+    quantity: undefined,
+    unit_cost: undefined,
+    icms_rate: undefined,
+    total_gross: undefined,
+    icms_value: undefined,
+    total_net: undefined,
+  })
 }
 
 function removeLine(index: number) {
-  newEntryLines.value.splice(index, 1);
+  newEntryLines.value.splice(index, 1)
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
   return lines.reduce((sum, line) => {
     if (line.type === type) {
-      return sum + (line.amount || 0);
+      return sum + (line.amount || 0)
     }
-    return sum;
-  }, 0);
+    return sum
+  }, 0)
 }
 
 function getAccountName(accountId: string): string {
-  return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida';
+  return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida'
 }
 
 function getAccountCode(accountId: string): number | undefined {
-  return accountStore.getAccountById(accountId)?.code;
+  return accountStore.getAccountById(accountId)?.code
 }
 
 function getProductName(productId: string | undefined): string {
-  if (!productId) return '-';
-  return productStore.getProductById(productId)?.name || 'Produto Desconhecido';
+  if (!productId) return '-'
+  return productStore.getProductById(productId)?.name || 'Produto Desconhecido'
 }
 
-const showDetails = ref<{ [key: string]: boolean }>({});
+const showDetails = ref<{ [key: string]: boolean }>({})
 
 function toggleDetails(id: string) {
-  showDetails.value[id] = !showDetails.value[id];
+  showDetails.value[id] = !showDetails.value[id]
 }
 
 function handleAccountChange(line: EntryLine) {
-  line.product_id = '';
-  line.quantity = undefined;
-  line.unit_cost = undefined;
-  line.icms_rate = undefined;
-  line.total_gross = undefined;
-  line.icms_value = undefined;
-  line.total_net = undefined;
+  line.product_id = ''
+  line.quantity = undefined
+  line.unit_cost = undefined
+  line.icms_rate = undefined
+  line.total_gross = undefined
+  line.icms_value = undefined
+  line.total_net = undefined
 }
 
 function handleProductChange(line: EntryLine) {
-  const product: Product | undefined = productStore.getProductById(line.product_id || '');
+  const product: Product | undefined = productStore.getProductById(line.product_id || '')
   if (product) {
-    line.unit_cost = product.unit_cost;
-    line.icms_rate = product.icms_rate || 0;
-    line.quantity = 1;
-    calculateLineTotals(line);
+    line.unit_cost = product.unit_cost
+    line.icms_rate = product.icms_rate || 0
+    line.quantity = 1
+    calculateLineTotals(line)
   } else {
-    line.unit_cost = undefined;
-    line.icms_rate = undefined;
-    line.quantity = undefined;
-    line.total_gross = undefined;
-    line.icms_value = undefined;
-    line.total_net = undefined;
+    line.unit_cost = undefined
+    line.icms_rate = undefined
+    line.quantity = undefined
+    line.total_gross = undefined
+    line.icms_value = undefined
+    line.total_net = undefined
   }
 }
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
-    alert('Débitos e Créditos devem ser iguais!');
-    return;
+    alert('Débitos e Créditos devem ser iguais!')
+    return
   }
 
-  const validLines = newEntryLines.value.filter(line => line.account_id);
+  const validLines = newEntryLines.value.filter((line) => line.account_id)
 
   if (validLines.length < 2) {
-    alert('Um lançamento deve ter pelo menos duas linhas válidas.');
-    return;
+    alert('Um lançamento deve ter pelo menos duas linhas válidas.')
+    return
   }
 
   for (const line of validLines) {
     if (line.product_id) {
-      if (line.quantity === undefined || line.quantity <= 0 || line.unit_cost === undefined || line.unit_cost <= 0) {
-        alert('Para linhas com produto, Quantidade e Custo Unitário são obrigatórios e devem ser maiores que zero.');
-        return;
+      if (
+        line.quantity === undefined ||
+        line.quantity <= 0 ||
+        line.unit_cost === undefined ||
+        line.unit_cost <= 0
+      ) {
+        alert(
+          'Para linhas com produto, Quantidade e Custo Unitário são obrigatórios e devem ser maiores que zero.',
+        )
+        return
       }
     }
   }
 
-  const newEntry: Omit<JournalEntry, 'lines' | 'id'> & { id?: string, lines: Omit<JournalEntryLine, 'id'>[] } = {
+  const newEntry: Omit<JournalEntry, 'lines' | 'id'> & {
+    id?: string
+    lines: Omit<JournalEntryLine, 'id'>[]
+  } = {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: validLines.map(line => ({
+    lines: validLines.map((line) => ({
       account_id: line.account_id,
       type: line.type,
       amount: line.amount,
@@ -326,48 +431,54 @@ async function submitEntry() {
       icms_value: line.icms_value || undefined,
       total_net: line.total_net || undefined,
     })),
-  };
+  }
   if (editingEntryId.value) {
-    newEntry.id = editingEntryId.value;
+    newEntry.id = editingEntryId.value
   }
 
   try {
     if (editingEntryId.value) {
-      await journalEntryStore.updateEntry(newEntry as JournalEntry);
-      alert('Lançamento atualizado com sucesso!');
-      console.log('Lançamento atualizado:', newEntry);
+      await journalEntryStore.updateEntry(newEntry as JournalEntry)
+      alert('Lançamento atualizado com sucesso!')
+      console.log('Lançamento atualizado:', newEntry)
     } else {
-      await journalEntryStore.addJournalEntry(newEntry as JournalEntry);
-      alert('Novo lançamento adicionado com sucesso!');
-      console.log('Novo lançamento adicionado:', newEntry);
+      await journalEntryStore.addJournalEntry(newEntry as JournalEntry)
+      alert('Novo lançamento adicionado com sucesso!')
+      console.log('Novo lançamento adicionado:', newEntry)
     }
-    resetForm();
+    resetForm()
   } catch (err: unknown) {
-    console.error("Erro ao registrar lançamento:", err);
-    alert(err instanceof Error ? err.message : 'Erro ao registrar lançamento.');
+    console.error('Erro ao registrar lançamento:', err)
+    alert(err instanceof Error ? err.message : 'Erro ao registrar lançamento.')
   }
 }
 
 function cancelEdit() {
-  resetForm();
+  resetForm()
 }
 
 const resetAllData = () => {
-  if (confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.')) {
-    alert('A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.');
-    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.');
+  if (
+    confirm(
+      'Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.',
+    )
+  ) {
+    alert(
+      'A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.',
+    )
+    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.')
   }
-};
+}
 
 // Adiciona a propriedade computada para os lançamentos ordenados
 const sortedJournalEntries = computed(() => {
   // Ordena por data decrescente, depois por id decrescente
   return [...journalEntryStore.journalEntries].sort((a, b) => {
-    if (a.entry_date > b.entry_date) return -1;
-    if (a.entry_date < b.entry_date) return 1;
-    return b.id.localeCompare(a.id);
-  });
-});
+    if (a.entry_date > b.entry_date) return -1
+    if (a.entry_date < b.entry_date) return 1
+    return b.id.localeCompare(a.id)
+  })
+})
 </script>
 
 <style scoped>
@@ -382,7 +493,9 @@ const sortedJournalEntries = computed(() => {
   font-family: Arial, sans-serif;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: #333;
 }
 
@@ -431,8 +544,8 @@ h1, h2, h3 {
   font-weight: bold;
 }
 
-.form-group input[type="date"],
-.form-group input[type="text"] {
+.form-group input[type='date'],
+.form-group input[type='text'] {
   width: calc(100% - 20px);
   padding: 10px;
   border: 1px solid #ccc;
@@ -448,8 +561,8 @@ h1, h2, h3 {
 }
 
 .entry-line select,
-.entry-line input[type="number"],
-.entry-line input[type="text"] {
+.entry-line input[type='number'],
+.entry-line input[type='text'] {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -461,7 +574,7 @@ h1, h2, h3 {
   min-width: 150px;
 }
 
-.entry-line input[type="number"] {
+.entry-line input[type='number'] {
   flex: 1;
   min-width: 100px;
 }
@@ -506,8 +619,8 @@ h1, h2, h3 {
   color: red;
 }
 
-.journal-entry-form button[type="submit"],
-.journal-entry-form button[type="button"]:not(.entry-line button) {
+.journal-entry-form button[type='submit'],
+.journal-entry-form button[type='button']:not(.entry-line button) {
   padding: 10px 20px;
   background-color: #28a745;
   color: white;
@@ -520,12 +633,12 @@ h1, h2, h3 {
   transition: background-color 0.2s;
 }
 
-.journal-entry-form button[type="submit"]:hover,
-.journal-entry-form button[type="button"]:not(.entry-line button):hover {
+.journal-entry-form button[type='submit']:hover,
+.journal-entry-form button[type='button']:not(.entry-line button):hover {
   background-color: #218838;
 }
 
-.journal-entry-form button[type="submit"]:disabled {
+.journal-entry-form button[type='submit']:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
@@ -537,7 +650,8 @@ table {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
   padding: 12px;
   text-align: left;
@@ -564,7 +678,8 @@ th {
   box-shadow: none;
 }
 
-.entry-details th, .entry-details td {
+.entry-details th,
+.entry-details td {
   padding: 8px;
   font-size: 0.9em;
 }

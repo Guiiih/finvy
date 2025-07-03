@@ -23,8 +23,8 @@
     "test": "vitest",
     "lint:frontend": "npm run lint --workspace frontend",
     "format:frontend": "npm run format --workspace frontend",
-    "lint:backend": "eslint api/ handlers/ utils/ --fix",
-    "format:backend": "prettier --write api/ handlers/ utils/",
+    "lint:backend": "eslint api/index.ts backend/handlers/ backend/services/ backend/utils/ --fix",
+    "format:backend": "prettier --write api/index.ts backend/handlers/ backend/services/ backend/utils/",
     "lint": "npm run lint:frontend && npm run lint:backend",
     "format": "npm run format:frontend && npm run format:backend"
   },

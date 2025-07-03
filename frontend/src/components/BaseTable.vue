@@ -1,30 +1,30 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-
 // CORREÇÃO: A interface agora é genérica e a chave é restrita a strings de T.
 export interface TableHeader<T> {
-  label: string;
-  key: Extract<keyof T, string> | 'actions'; // Garante que a chave é uma string
+  label: string
+  key: Extract<keyof T, string> | 'actions' // Garante que a chave é uma string
 }
 
 // O componente agora usa a interface genérica para a prop 'headers'.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
-  headers: TableHeader<T>[];
-  items: T[];
-}>();  
+  headers: TableHeader<T>[]
+  items: T[]
+}>()
 
 const emit = defineEmits<{
-  (e: 'edit', item: T): void;
-  (e: 'delete', item: T): void;
-}>();
+  (e: 'edit', item: T): void
+  (e: 'delete', item: T): void
+}>()
 
 // Não são necessárias mais alterações no resto do script
 const handleEdit = (item: T) => {
-  emit('edit', item);
-};
+  emit('edit', item)
+}
 
 const handleDelete = (item: T) => {
-  emit('delete', item);
-};
+  emit('delete', item)
+}
 </script>
 
 <template>
@@ -43,11 +43,7 @@ const handleDelete = (item: T) => {
       </thead>
       <tbody class="divide-y divide-gray-200">
         <tr v-for="(item, index) in items" :key="index">
-          <td
-            v-for="header in headers"
-            :key="header.key"
-            class="px-6 py-4 whitespace-nowrap"
-          >
+          <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap">
             <slot :name="`cell(${String(header.key)})`" :item="item" :value="item[header.key]">
               <span v-if="header.key !== 'actions'">
                 {{ item[header.key] }}

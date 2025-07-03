@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useStockControlStore } from '@/stores/stockControlStore';
-import { useProductStore } from '@/stores/productStore';
-import { useReportStore } from '@/stores/reportStore';
+import { ref, onMounted } from 'vue'
+import { useStockControlStore } from '@/stores/stockControlStore'
+import { useProductStore } from '@/stores/productStore'
+import { useReportStore } from '@/stores/reportStore'
 
-const stockControlStore = useStockControlStore();
-const productStore = useProductStore();
-const reportStore = useReportStore();
+const stockControlStore = useStockControlStore()
+const productStore = useProductStore()
+const reportStore = useReportStore()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
 async function fetchStockData() {
-  await reportStore.fetchReports(startDate.value, endDate.value);
+  await reportStore.fetchReports(startDate.value, endDate.value)
 }
 
 onMounted(async () => {
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-  await fetchStockData();
-});
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+  await fetchStockData()
+})
 </script>
 
 <template>
@@ -42,8 +42,14 @@ onMounted(async () => {
       Nenhum balanço de estoque para exibir. Adicione produtos e lançamentos contábeis.
     </p>
     <div v-else class="stock-list">
-      <div v-for="balance in stockControlStore.balances" :key="balance.product_id" class="stock-item">
-        <h3>{{ productStore.getProductById(balance.product_id)?.name || 'Produto Desconhecido' }}</h3>
+      <div
+        v-for="balance in stockControlStore.balances"
+        :key="balance.product_id"
+        class="stock-item"
+      >
+        <h3>
+          {{ productStore.getProductById(balance.product_id)?.name || 'Produto Desconhecido' }}
+        </h3>
         <p>Quantidade: {{ balance.quantity }}</p>
         <p>Custo Unitário Médio: R$ {{ balance.unit_cost.toFixed(2) }}</p>
         <p>Valor Total: R$ {{ balance.totalValue.toFixed(2) }}</p>
@@ -100,7 +106,8 @@ h1 {
   font-size: 1.1em;
 }
 
-.no-stock-message, .error-message {
+.no-stock-message,
+.error-message {
   text-align: center;
   padding: 20px;
   background-color: #f9f9f9;

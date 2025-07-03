@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
 
 export default async function handler(
@@ -108,4 +112,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

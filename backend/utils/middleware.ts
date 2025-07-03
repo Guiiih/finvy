@@ -8,7 +8,7 @@ type ApiHandler = (
   res: VercelResponse,
   user_id: string,
   token: string, // Adicionado o token como argumento
-) => Promise<any>;
+) => Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export function withAuth(handler: ApiHandler) {
   return async (req: VercelRequest, res: VercelResponse) => {
@@ -17,9 +17,9 @@ export function withAuth(handler: ApiHandler) {
     }
 
     const authHeader = req.headers.authorization;
-    console.log('Middleware: Authorization Header:', authHeader);
+    console.log("Middleware: Authorization Header:", authHeader);
     const token = authHeader?.split(" ")[1];
-    console.log('Middleware: Extracted Token:', token);
+    console.log("Middleware: Extracted Token:", token);
 
     if (!token) {
       return handleErrorResponse(

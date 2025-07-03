@@ -1,58 +1,61 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useReportStore, type LedgerAccount } from '@/stores/reportStore';
-import { useJournalEntryStore } from '@/stores/journalEntryStore';
+import { ref, computed, onMounted } from 'vue'
+import { useReportStore, type LedgerAccount } from '@/stores/reportStore'
+import { useJournalEntryStore } from '@/stores/journalEntryStore'
 
-const reportStore = useReportStore();
-const journalEntryStore = useJournalEntryStore();
+const reportStore = useReportStore()
+const journalEntryStore = useJournalEntryStore()
 
-const startDate = ref('');
-const endDate = ref('');
+const startDate = ref('')
+const endDate = ref('')
 
 async function fetchLedgerData() {
-  await reportStore.fetchReports(startDate.value, endDate.value);
-  await journalEntryStore.fetchJournalEntries(); // This might need date filters too, but for now, keep as is.
+  await reportStore.fetchReports(startDate.value, endDate.value)
+  await journalEntryStore.fetchJournalEntries() // This might need date filters too, but for now, keep as is.
 }
 
 onMounted(async () => {
   // Set default dates (e.g., beginning of current year to today)
-  const today = new Date();
-  endDate.value = today.toISOString().split('T')[0];
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-  await fetchLedgerData();
-});
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+  await fetchLedgerData()
+})
 
-const ledgerAccounts = computed(() => reportStore.ledgerAccounts.filter(account => account.finalBalance !== 0));
+const ledgerAccounts = computed(() =>
+  reportStore.ledgerAccounts.filter((account) => account.finalBalance !== 0),
+)
 
 function getBalanceClass(account: LedgerAccount) {
   if (account.finalBalance === 0) {
-    return '';
+    return ''
   }
 
   // Special cases for specific accounts that might not follow standard nature rules
   if (account.accountName === 'Resultado Bruto') {
-    return account.finalBalance >= 0 ? 'positive' : 'negative';
+    return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
 
   if (account.accountName === 'Estoque Final') {
-    return account.finalBalance >= 0 ? 'positive' : 'negative';
+    return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
-  
+
   if (account.accountName === 'CMV') {
-      return account.finalBalance > 0 ? 'positive' : '';
+    return account.finalBalance > 0 ? 'positive' : ''
   }
 
   if (account.accountName === 'Reserva de Lucro') {
-      return account.finalBalance >= 0 ? 'positive' : 'negative';
+    return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
 
   // Determine normal balance nature based on account type
-  const isDebitNature = ['asset', 'expense'].includes(account.type);
+  const isDebitNature = ['asset', 'expense'].includes(account.type)
 
   if (isDebitNature) {
-    return account.finalBalance >= 0 ? 'positive' : 'negative';
-  } else { // Credit nature (liability, equity, revenue)
-    return account.finalBalance >= 0 ? 'positive' : 'negative';
+    return account.finalBalance >= 0 ? 'positive' : 'negative'
+  } else {
+    // Credit nature (liability, equity, revenue)
+    return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
 }
 </script>
@@ -68,65 +71,79 @@ function getBalanceClass(account: LedgerAccount) {
       <input type="date" id="endDate" v-model="endDate" @change="fetchLedgerData" />
     </div>
 
-    <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
-      Nenhum lançamento contábil registrado ainda. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para ver o Razão.
+    <p
+      v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
+      class="no-entries-message"
+    >
+      Nenhum lançamento contábil registrado ainda. Por favor, adicione lançamentos na tela
+      "Lançamentos Contábeis" para ver o Razão.
     </p>
 
     <div v-else class="ledger-accounts-grid">
       <div v-for="account in ledgerAccounts" :key="account.account_id" class="ledger-card">
         <h3>{{ account.accountName }}</h3>
         <div class="ledger-content">
-            <div class="t-account-wrapper">
-                <div class="t-side debit-side">
-                    <ul>
-                        <li v-for="(amount, index) in account.debitEntries" :key="index">
-                            <span v-if="account.accountName === 'CMV' && index === 0"></span>
-                            <span v-else></span>
-                            R$ {{ amount.toFixed(2) }}
-                        </li>
-                    </ul>
-                </div>
-                <div class="t-side credit-side">
-                    <ul>
-                        <li v-for="(amount, index) in account.creditEntries" :key="index">
-                            <span v-if="account.accountName === 'CMV' && index === 0"></span>
-                            <span v-else></span>
-                            R$ {{ amount.toFixed(2) }}
-                        </li>
-                    </ul>
-                </div>
+          <div class="t-account-wrapper">
+            <div class="t-side debit-side">
+              <ul>
+                <li v-for="(amount, index) in account.debitEntries" :key="index">
+                  <span v-if="account.accountName === 'CMV' && index === 0"></span>
+                  <span v-else></span>
+                  R$ {{ amount.toFixed(2) }}
+                </li>
+              </ul>
             </div>
-            
-            <div class="totals-row">
-                <div class="total-debits-sum">R$ {{ account.totalDebits.toFixed(2) }}</div>
-                <div class="total-credits-sum">R$ {{ account.totalCredits.toFixed(2) }}</div>
+            <div class="t-side credit-side">
+              <ul>
+                <li v-for="(amount, index) in account.creditEntries" :key="index">
+                  <span v-if="account.accountName === 'CMV' && index === 0"></span>
+                  <span v-else></span>
+                  R$ {{ amount.toFixed(2) }}
+                </li>
+              </ul>
             </div>
+          </div>
 
-            <div class="final-balance-row">
-                <div class="final-balance-left"
-                     :class="getBalanceClass(account)"
-                     v-if="(account.finalBalance !== 0) &&
-                           ((['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
-                            (!['asset', 'expense'].includes(account.type) && account.finalBalance < 0)) ||
-                           (account.accountName === 'Resultado Bruto' && account.finalBalance < 0) ||
-                           (account.accountName === 'Estoque Final' && account.finalBalance >= 0) ||
-                           (account.accountName === 'CMV' && account.finalBalance >= 0) ||
-                           (account.accountName === 'Reserva de Lucro' && account.finalBalance < 0)"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
-                </div>
-                <div class="final-balance-left" v-else></div>
+          <div class="totals-row">
+            <div class="total-debits-sum">R$ {{ account.totalDebits.toFixed(2) }}</div>
+            <div class="total-credits-sum">R$ {{ account.totalCredits.toFixed(2) }}</div>
+          </div>
 
-                <div class="final-balance-right"
-                     :class="getBalanceClass(account)"
-                     v-if="(account.finalBalance !== 0) &&
-                           ((!['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
-                            (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0) ||
-                            (account.accountName === 'Estoque Final' && account.finalBalance < 0) ||
-                            (account.accountName === 'CMV' && account.finalBalance < 0) ||
-                            (account.accountName === 'Reserva de Lucro' && account.finalBalance >= 0) ||
-                            (['asset', 'expense'].includes(account.type) && account.finalBalance < 0))"> R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
-                </div>
-                <div class="final-balance-right" v-else></div>
+          <div class="final-balance-row">
+            <div
+              class="final-balance-left"
+              :class="getBalanceClass(account)"
+              v-if="
+                (account.finalBalance !== 0 &&
+                  ((['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
+                    (!['asset', 'expense'].includes(account.type) && account.finalBalance < 0))) ||
+                (account.accountName === 'Resultado Bruto' && account.finalBalance < 0) ||
+                (account.accountName === 'Estoque Final' && account.finalBalance >= 0) ||
+                (account.accountName === 'CMV' && account.finalBalance >= 0) ||
+                (account.accountName === 'Reserva de Lucro' && account.finalBalance < 0)
+              "
+            >
+              R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
             </div>
+            <div class="final-balance-left" v-else></div>
+
+            <div
+              class="final-balance-right"
+              :class="getBalanceClass(account)"
+              v-if="
+                account.finalBalance !== 0 &&
+                ((!['asset', 'expense'].includes(account.type) && account.finalBalance >= 0) ||
+                  (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0) ||
+                  (account.accountName === 'Estoque Final' && account.finalBalance < 0) ||
+                  (account.accountName === 'CMV' && account.finalBalance < 0) ||
+                  (account.accountName === 'Reserva de Lucro' && account.finalBalance >= 0) ||
+                  (['asset', 'expense'].includes(account.type) && account.finalBalance < 0))
+              "
+            >
+              R$ {{ Math.abs(account.finalBalance).toFixed(2) }}
+            </div>
+            <div class="final-balance-right" v-else></div>
+          </div>
         </div>
       </div>
     </div>
@@ -182,29 +199,29 @@ h1 {
 }
 
 .ledger-content {
-    position: relative;
-    flex-grow: 1;
-    padding-bottom: 10px;
+  position: relative;
+  flex-grow: 1;
+  padding-bottom: 10px;
 }
 
 .ledger-content::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background-color: #e0e0e0;
-    transform: translateX(-50%);
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e0e0e0;
+  transform: translateX(-50%);
 }
 
 .t-account-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 5px;
-    margin-bottom: 5px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
 }
 
 .t-side {
@@ -231,11 +248,11 @@ h1 {
   align-items: center;
 }
 .t-side li span:first-child {
-    font-size: 0.85em;
-    color: #666;
-    margin-right: 5px;
-    text-align: left;
-    flex-grow: 1;
+  font-size: 0.85em;
+  color: #666;
+  margin-right: 5px;
+  text-align: left;
+  flex-grow: 1;
 }
 
 .t-side h4 {
@@ -251,7 +268,8 @@ h1 {
   background-color: #f0f0f0;
 }
 
-.total-debits-sum, .total-credits-sum {
+.total-debits-sum,
+.total-credits-sum {
   flex: 1;
   text-align: left;
 }
@@ -260,8 +278,12 @@ h1 {
   text-align: right;
 }
 
-.total-debits-sum { color: #28a745; }
-.total-credits-sum { color: #007bff; }
+.total-debits-sum {
+  color: #28a745;
+}
+.total-credits-sum {
+  color: #007bff;
+}
 
 .final-balance-row {
   display: flex;
@@ -272,13 +294,13 @@ h1 {
 }
 
 .final-balance-left {
-    flex: 1;
-    text-align: left;
+  flex: 1;
+  text-align: left;
 }
 
 .final-balance-right {
-    flex: 1;
-    text-align: right;
+  flex: 1;
+  text-align: right;
 }
 
 .final-balance-row .positive {

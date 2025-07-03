@@ -10,20 +10,48 @@
         <p class="auth-subtitle">Preencha os dados abaixo para começar.</p>
         <form @submit.prevent="handleRegister" class="auth-form">
           <div class="form-group">
-            <input type="text" id="name" v-model="firstName" placeholder="Nome" required class="auth-input" />
+            <input
+              type="text"
+              id="name"
+              v-model="firstName"
+              placeholder="Nome"
+              required
+              class="auth-input"
+            />
           </div>
           <div class="form-group">
-            <input type="email" id="email" v-model="email" placeholder="E-mail" required class="auth-input" />
+            <input
+              type="email"
+              id="email"
+              v-model="email"
+              placeholder="E-mail"
+              required
+              class="auth-input"
+            />
           </div>
           <div class="form-group password-group">
-            <input :type="passwordFieldType" id="password" v-model="password" placeholder="Senha" required class="auth-input" />
+            <input
+              :type="passwordFieldType"
+              id="password"
+              v-model="password"
+              placeholder="Senha"
+              required
+              class="auth-input"
+            />
             <span class="password-toggle" @click="togglePasswordVisibility">
               <span v-if="passwordFieldType === 'password'">🙈</span>
               <span v-else>🙉</span>
             </span>
           </div>
           <div class="form-group password-group">
-            <input :type="confirmPasswordFieldType" id="confirmPassword" v-model="confirmPassword" placeholder="Confirma Senha" required class="auth-input" />
+            <input
+              :type="confirmPasswordFieldType"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              placeholder="Confirma Senha"
+              required
+              class="auth-input"
+            />
             <span class="password-toggle" @click="toggleConfirmPasswordVisibility">
               <span v-if="confirmPasswordFieldType === 'password'">🙈</span>
               <span v-else>🙉</span>
@@ -31,41 +59,44 @@
           </div>
           <button type="submit" class="auth-button">Concluir cadastro</button>
         </form>
-        <p class="auth-footer-text">Já tem uma conta? <router-link to="/login" class="auth-link">Faça login</router-link></p>
+        <p class="auth-footer-text">
+          Já tem uma conta? <router-link to="/login" class="auth-link">Faça login</router-link>
+        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { supabase } from '../supabase';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { supabase } from '../supabase'
+import { useRouter } from 'vue-router'
 
-const firstName = ref('');
-const email = ref('');
-const password = ref('');
-const confirmPassword = ref('');
-const router = useRouter();
-const passwordFieldType = ref('password');
-const confirmPasswordFieldType = ref('password');
+const firstName = ref('')
+const email = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+const router = useRouter()
+const passwordFieldType = ref('password')
+const confirmPasswordFieldType = ref('password')
 
 const togglePasswordVisibility = () => {
-  passwordFieldType.value = passwordFieldType.value === 'password' ? 'text' : 'password';
-};
+  passwordFieldType.value = passwordFieldType.value === 'password' ? 'text' : 'password'
+}
 
 const toggleConfirmPasswordVisibility = () => {
-  confirmPasswordFieldType.value = confirmPasswordFieldType.value === 'password' ? 'text' : 'password';
-};
+  confirmPasswordFieldType.value =
+    confirmPasswordFieldType.value === 'password' ? 'text' : 'password'
+}
 
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
-    alert('As senhas não coincidem!');
-    return;
+    alert('As senhas não coincidem!')
+    return
   }
 
   try {
-    const { data, error } = await supabase.auth.signUp({ 
+    const { data, error } = await supabase.auth.signUp({
       email: email.value,
       password: password.value,
       options: {
@@ -73,23 +104,23 @@ const handleRegister = async () => {
           first_name: firstName.value,
         },
       },
-    });
+    })
 
-    if (error) throw error;
+    if (error) throw error
 
-    if (data.user) { 
-      await supabase.auth.signOut();
+    if (data.user) {
+      await supabase.auth.signOut()
     }
 
-    router.push('/registration-success');
+    router.push('/registration-success')
   } catch (error: unknown) {
     if (error instanceof Error) {
-      alert(error.message);
+      alert(error.message)
     } else {
-      alert('Ocorreu um erro desconhecido.');
+      alert('Ocorreu um erro desconhecido.')
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -101,13 +132,13 @@ const handleRegister = async () => {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #F8F8F8; /* Fundo claro para a coluna do formulário */
+  background-color: #f8f8f8; /* Fundo claro para a coluna do formulário */
 }
 
 /* Coluna do logo (visualmente à esquerda) */
 .auth-logo-column {
   flex: 1;
-  background-color: #1A1A1A; /* Fundo escuro */
+  background-color: #1a1a1a; /* Fundo escuro */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +158,7 @@ const handleRegister = async () => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background-color: #F8F8F8;
+  background-color: #f8f8f8;
   order: 2; /* Força esta coluna a ser a segunda (direita) */
 }
 
@@ -148,7 +179,7 @@ const handleRegister = async () => {
 }
 
 .auth-subtitle {
-  color: #A0A0A0;
+  color: #a0a0a0;
   font-size: 0.9em;
   margin-top: 0;
   margin-bottom: 25px;
@@ -167,18 +198,18 @@ const handleRegister = async () => {
   border-radius: 8px;
   background-color: white; /* Fundo BRANCO para inputs */
   font-size: 1em;
-  color: #4A4A4A; /* Cor do texto padrão */
+  color: #4a4a4a; /* Cor do texto padrão */
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
 .auth-input:focus {
-    border-color: #926EEB; /* Borda roxa ao focar */
+  border-color: #926eeb; /* Borda roxa ao focar */
 }
 
 .auth-input::placeholder {
-  color: #A0A0A0;
+  color: #a0a0a0;
 }
 
 /* ESTILOS PARA INPUTS PREENCHIDOS / AUTOFILL (MANTIDOS E APLICADOS A TODOS OS INPUTS) */
@@ -186,18 +217,18 @@ const handleRegister = async () => {
 .auth-input:-webkit-autofill:hover,
 .auth-input:-webkit-autofill:focus,
 .auth-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* Fundo branco */
-    -webkit-text-fill-color: #4A4A4A !important; /* Texto cinza escuro */
-    transition: background-color 50000s ease-in-out 0s !important; /* Transição imediata */
-    border: 1px solid transparent !important; /* Remove borda extra */
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* Fundo branco */
+  -webkit-text-fill-color: #4a4a4a !important; /* Texto cinza escuro */
+  transition: background-color 50000s ease-in-out 0s !important; /* Transição imediata */
+  border: 1px solid transparent !important; /* Remove borda extra */
 }
 
 /* Estilo específico para inputs de SENHA com borda roxa lateral no focus */
-.password-group input[type="password"]:focus,
-.password-group input[type="password"]:-webkit-autofill:focus {
-    border-left: 3px solid #926EEB !important;
-    padding-left: 17px !important;
-    border-color: transparent !important; /* Ensure other borders are transparent */
+.password-group input[type='password']:focus,
+.password-group input[type='password']:-webkit-autofill:focus {
+  border-left: 3px solid #926eeb !important;
+  padding-left: 17px !important;
+  border-color: transparent !important; /* Ensure other borders are transparent */
 }
 
 .password-group .auth-input {
@@ -210,7 +241,7 @@ const handleRegister = async () => {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #A0A0A0;
+  color: #a0a0a0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,13 +252,13 @@ const handleRegister = async () => {
 /* Cor do ícone de olho quando o input está preenchido/focado */
 .password-group .auth-input:not(:placeholder-shown) + .password-toggle,
 .password-group .auth-input:focus + .password-toggle {
-    color: #926EEB;
+  color: #926eeb;
 }
 
 .auth-button {
   width: 100%;
   padding: 15px;
-  background-color: #00E676;
+  background-color: #00e676;
   color: white;
   border: none;
   border-radius: 8px;
@@ -238,18 +269,18 @@ const handleRegister = async () => {
 }
 
 .auth-button:hover {
-  background-color: #00C853;
+  background-color: #00c853;
 }
 
 .auth-footer-text {
   margin-top: 30px;
   text-align: center;
-  color: #A0A0A0;
+  color: #a0a0a0;
   font-size: 0.9em;
 }
 
 .auth-link {
-  color: #926EEB;
+  color: #926eeb;
   text-decoration: none;
   font-weight: bold;
   transition: color 0.2s ease;
@@ -279,7 +310,7 @@ const handleRegister = async () => {
   }
 
   .password-group .password-toggle {
-    right: 20px; 
+    right: 20px;
   }
 }
 </style>

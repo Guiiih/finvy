@@ -16,8 +16,8 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import UpdatePasswordView from '../views/UpdatePasswordView.vue'
-import RegistrationSuccessView from '../views/RegistrationSuccessView.vue' 
-import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue' 
+import RegistrationSuccessView from '../views/RegistrationSuccessView.vue'
+import PasswordResetSuccessView from '../views/PasswordResetSuccessView.vue'
 import TrialBalanceView from '../views/TrialBalanceView.vue'
 import ChartOfAccountsView from '../views/ChartOfAccountsView.vue'
 import YearEndClosingView from '../views/YearEndClosingView.vue'
@@ -32,37 +32,37 @@ const router = createRouter({
       path: '/',
       name: 'dashboard',
       component: DashboardView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/accounts',
       name: 'accounts',
       component: AccountsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/journal-entries',
       name: 'journal-entries',
       component: JournalEntryView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/products',
       name: 'products',
       component: ProductsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/stock-control',
       name: 'stock-control',
       component: StockControlView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/ledger',
       name: 'ledger',
       component: LedgerView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/reports',
@@ -74,104 +74,109 @@ const router = createRouter({
           path: 'dre',
           name: 'dre-report',
           component: DREReport,
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true },
         },
         {
           path: 'balance-sheet',
           name: 'balance-sheet-report',
           component: BalanceSheetReport,
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true },
         },
         {
           path: 'dfc',
           name: 'dfc-report',
           component: DFCReport,
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true },
         },
-      ]
+      ],
     },
     {
       path: '/variations',
       name: 'variations',
       component: VariationView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/trial-balance',
       name: 'trial-balance',
       component: TrialBalanceView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/chart-of-accounts',
       name: 'chart-of-accounts',
       component: ChartOfAccountsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/year-end-closing',
       name: 'year-end-closing',
       component: YearEndClosingView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/accounts-payable',
       name: 'accounts-payable',
       component: AccountsPayableView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/accounts-receivable',
       name: 'accounts-receivable',
       component: AccountsReceivableView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: LoginView,
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView
+      component: RegisterView,
     },
     {
       path: '/forgot-password',
       name: 'forgot-password',
-      component: ForgotPasswordView
+      component: ForgotPasswordView,
     },
     {
       path: '/update-password',
       name: 'update-password',
-      component: UpdatePasswordView
+      component: UpdatePasswordView,
     },
     {
       path: '/registration-success',
       name: 'registration-success',
       component: RegistrationSuccessView,
-      meta: { hideNavbar: true }
+      meta: { hideNavbar: true },
     },
     {
-      path: '/password-reset-success', 
+      path: '/password-reset-success',
       name: 'password-reset-success',
       component: PasswordResetSuccessView,
-      meta: { hideNavbar: true } 
+      meta: { hideNavbar: true },
     },
-  ]
+  ],
 })
 
 router.beforeEach(async (to, from, next) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
   if (requiresAuth && !session) {
-    next('/login');
-  } else if ((to.path === '/login' || to.path === '/register' || to.path === '/forgot-password') && session) {
-    next('/');
+    next('/login')
+  } else if (
+    (to.path === '/login' || to.path === '/register' || to.path === '/forgot-password') &&
+    session
+  ) {
+    next('/')
   } else {
-    next();
+    next()
   }
-});
+})
 
 export default router

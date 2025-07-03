@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 import { createAccountSchema, updateAccountSchema } from "../utils/schemas.js";
 
 export default async function handler(
@@ -8,7 +12,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  console.log('Accounts Handler: user_id recebido:', user_id);
+  console.log("Accounts Handler: user_id recebido:", user_id);
   const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
@@ -106,4 +110,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

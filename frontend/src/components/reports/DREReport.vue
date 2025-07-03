@@ -1,34 +1,42 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useReportStore } from '@/stores/reportStore';
-import { useJournalEntryStore } from '@/stores/journalEntryStore';
+import { computed, watch } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
+import { useJournalEntryStore } from '@/stores/journalEntryStore'
 
 const props = defineProps<{
-  startDate: string;
-  endDate: string;
-}>();
+  startDate: string
+  endDate: string
+}>()
 
-const reportStore = useReportStore();
-const journalEntryStore = useJournalEntryStore();
+const reportStore = useReportStore()
+const journalEntryStore = useJournalEntryStore()
 
 async function fetchDREData() {
-  await reportStore.fetchReports(props.startDate, props.endDate);
+  await reportStore.fetchReports(props.startDate, props.endDate)
 }
 
 // Observa as mudanças nas props de data e busca os dados
-watch([() => props.startDate, () => props.endDate], () => {
-  fetchDREData();
-}, { immediate: true }); // Executa imediatamente na montagem
+watch(
+  [() => props.startDate, () => props.endDate],
+  () => {
+    fetchDREData()
+  },
+  { immediate: true },
+) // Executa imediatamente na montagem
 
-const dreData = computed(() => reportStore.dreData);
+const dreData = computed(() => reportStore.dreData)
 </script>
 
 <template>
   <div class="dre-container">
     <h1>Demonstração de Resultado do Exercício (DRE)</h1>
 
-    <p v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0" class="no-entries-message">
-      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos Contábeis" para gerar a DRE.
+    <p
+      v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
+      class="no-entries-message"
+    >
+      Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos
+      Contábeis" para gerar a DRE.
     </p>
 
     <div v-else class="dre-report">
@@ -131,11 +139,14 @@ h1 {
   font-weight: 500;
 }
 
-.deduction .value, .cost .value {
+.deduction .value,
+.cost .value {
   color: #dc3545;
 }
 
-.subtotal, .total, .final-result {
+.subtotal,
+.total,
+.final-result {
   font-weight: bold;
   border-top: 1px solid #ccc;
   margin-top: 10px;

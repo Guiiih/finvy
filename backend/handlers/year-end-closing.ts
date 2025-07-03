@@ -1,14 +1,16 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
-import type { JournalEntry } from "../../frontend/src/types/index.js";
+import {
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   token: string,
 ) {
-  const userSupabase = getSupabaseClient(token);
   const { closingDate } = req.body;
 
   if (req.method !== "POST") {
@@ -21,13 +23,15 @@ export default async function handler(
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: accounts, error: accountsError } = await serviceRoleSupabase
       .from("accounts")
       .select("*");
     if (accountsError) throw accountsError;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: journalEntriesData, error: journalEntriesError } =
-      await supabase
+      await serviceRoleSupabase
         .from("journal_entries")
         .select("*, entry_lines(*)")
         .eq("user_id", user_id)

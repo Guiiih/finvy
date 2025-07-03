@@ -12,30 +12,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { supabase } from '../supabase';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { supabase } from '../supabase'
+import { useRouter } from 'vue-router'
 
-const password = ref('');
-const router = useRouter();
+const password = ref('')
+const router = useRouter()
 
 const handleUpdatePassword = async () => {
   try {
     const { error } = await supabase.auth.updateUser({
       password: password.value,
-    });
+    })
 
-    if (error) throw error;
-    alert('Sua senha foi atualizada com sucesso!');
-    router.push('/login');
+    if (error) throw error
+    alert('Sua senha foi atualizada com sucesso!')
+    router.push('/login')
   } catch (error: unknown) {
     if (error instanceof Error) {
-      alert(error.message);
+      alert(error.message)
     } else {
-      alert('Ocorreu um erro desconhecido.');
+      alert('Ocorreu um erro desconhecido.')
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -73,7 +73,7 @@ label {
   color: #555;
 }
 
-input[type="password"] {
+input[type='password'] {
   width: calc(100% - 20px);
   padding: 10px;
   border: 1px solid #ddd;
