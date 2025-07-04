@@ -30,6 +30,7 @@
     "format": "npm run format:frontend && npm run format:backend"
   },
   "workspaces": [
-    "frontend"
+    "frontend",
+    "backend"
   ]
 }
