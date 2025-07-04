@@ -44,7 +44,7 @@ export default async function handler(
         .insert({ name, type, user_id })
         .select();
       if (dbError) throw dbError;
-      return res.status(201).json(data);
+      return res.status(201).json(data[0]);
     }
 
     if (req.method === "PUT") {
@@ -81,7 +81,7 @@ export default async function handler(
           "Conta não encontrada ou você não tem permissão para atualizar esta conta.",
         );
       }
-      return res.status(200).json(data);
+      return res.status(200).json(data[0]);
     }
 
     if (req.method === "DELETE") {

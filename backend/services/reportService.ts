@@ -5,6 +5,18 @@ import type {
   LedgerAccount as FrontendLedgerAccount,
 } from "../../frontend/src/types/index.js";
 
+interface EntryLine {
+  account_id: string;
+  debit: number;
+  credit: number;
+}
+
+interface StockBalance {
+  product_id: string;
+  product_name: string;
+  balance: number;
+}
+
 type LedgerAccount = FrontendLedgerAccount;
 
 async function getAccounts(user_id: string, token: string): Promise<Account[]> {
@@ -41,7 +53,7 @@ async function getJournalEntries(
 
   return data.map((entry) => ({
     ...entry,
-    lines: entry.entry_lines.map((line: any) => {
+    lines: entry.entry_lines.map((line: EntryLine) => {
        
       return {
         account_id: line.account_id,
@@ -103,14 +115,14 @@ export function calculateTrialBalance(
 }
 
 // Placeholder for DRE calculation
-function generateDreData(ledgerAccounts: LedgerAccount[]) {
+function generateDreData() {
    
   // TODO: Implement actual DRE calculation logic
   return { lucroLiquido: 1000 }; // Placeholder
 }
 
 // Placeholder for Balance Sheet calculation
-function generateBalanceSheetData(ledgerAccounts: LedgerAccount[]) {
+function generateBalanceSheetData() {
    
   // TODO: Implement actual Balance Sheet calculation logic
   return {
@@ -133,9 +145,9 @@ export async function generateReports(
 
   const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
 
-  const dreData = generateDreData(ledgerAccountsList);
-  const balanceSheetData = generateBalanceSheetData(ledgerAccountsList);
-  const stockBalances: any[] = []; // TODO: Properly type when stock control is implemented
+  const dreData = generateDreData();
+  const balanceSheetData = generateBalanceSheetData();
+  const stockBalances: StockBalance[] = []; // TODO: Properly type when stock control is implemented
 
   return {
     trialBalanceData: ledgerAccountsList,
