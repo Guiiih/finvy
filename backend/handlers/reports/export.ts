@@ -39,7 +39,7 @@ interface LedgerDetailsData {
 }
 
 // Helper function to convert data to XLSX
-async function convertToXlsx(data: [TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData], reportType: string): Promise<Buffer> {
+async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(reportType);
 
@@ -48,20 +48,23 @@ async function convertToXlsx(data: [TrialBalanceData[] | DreData | BalanceSheetD
 
   if (reportType === 'trialBalance') {
     headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
-    rows = (data[0] as TrialBalanceData[]).map(row => [
+    rows = (data as TrialBalanceData[]).map(row => [
       row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
     ]);
   } else if (reportType === 'dre') {
     headers = ["Total Revenue", "Total Expenses", "Net Income"];
-    rows = [[(data[0] as DreData).totalRevenue, (data[0] as DreData).totalExpenses, (data[0] as DreData).netIncome]];
+    const dreData = data as DreData;
+    rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
   } else if (reportType === 'balanceSheet') {
     headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
-    rows = [[(data[0] as BalanceSheetData).totalAssets, (data[0] as BalanceSheetData).totalLiabilities, (data[0] as BalanceSheetData).totalEquity, (data[0] as BalanceSheetData).isBalanced]];
+    const balanceSheetData = data as BalanceSheetData;
+    rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
   } else if (reportType === 'ledgerDetails') {
     headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
     const flattenedData: LedgerDetailsEntry[] = [];
-    for (const accountId in (data[0] as LedgerDetailsData)) {
-      (data[0] as { [key: string]: { journalEntryId: string; entryDate: string; description: string; debit: number; credit: number; }[] })[accountId].forEach((entry: LedgerDetailsEntry) => {
+    const ledgerData = data as LedgerDetailsData;
+    for (const accountId in ledgerData) {
+      ledgerData[accountId].forEach((entry: LedgerDetailsEntry) => {
         flattenedData.push(entry);
       });
     }
@@ -79,7 +82,7 @@ async function convertToXlsx(data: [TrialBalanceData[] | DreData | BalanceSheetD
 }
 
 // Helper function to convert data to PDF
-async function convertToPdf(data: [TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData], reportType: string): Promise<Buffer> {
+async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
     const buffers: Buffer[] = [];
@@ -98,20 +101,23 @@ async function convertToPdf(data: [TrialBalanceData[] | DreData | BalanceSheetDa
 
     if (reportType === 'trialBalance') {
       headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
-      rows = (data[0] as TrialBalanceData[]).map(row => [
+      rows = (data as TrialBalanceData[]).map(row => [
       row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
     ]);
     } else if (reportType === 'dre') {
       headers = ["Total Revenue", "Total Expenses", "Net Income"];
-      rows = [[(data[0] as DreData).totalRevenue, (data[0] as DreData).totalExpenses, (data[0] as DreData).netIncome]];
+      const dreData = data as DreData;
+      rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
     } else if (reportType === 'balanceSheet') {
       headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
-      rows = [[(data[0] as BalanceSheetData).totalAssets, (data[0] as BalanceSheetData).totalLiabilities, (data[0] as BalanceSheetData).totalEquity, (data[0] as BalanceSheetData).isBalanced]];
+      const balanceSheetData = data as BalanceSheetData;
+      rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
     } else if (reportType === 'ledgerDetails') {
       headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
       const flattenedData: LedgerDetailsEntry[] = [];
-      for (const accountId in (data[0] as LedgerDetailsData)) {
-        (data[0] as { [key: string]: { journalEntryId: string; entryDate: string; description: string; debit: number; credit: number; }[] })[accountId].forEach((entry: LedgerDetailsEntry) => {
+      const ledgerData = data as LedgerDetailsData;
+      for (const accountId in ledgerData) {
+        ledgerData[accountId].forEach((entry: LedgerDetailsEntry) => {
           flattenedData.push(entry);
         });
       }
@@ -166,26 +172,26 @@ export default async function handler(
   try {
     const { accounts, journalEntries } = await generateReports(user_id, token, startDate, endDate);
 
-    let reportData: [TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData];
+    let reportData: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData;
     let filename = "report";
     let contentType = "";
     let fileBuffer: Buffer | string;
 
     switch (reportType) {
       case 'trialBalance':
-        reportData = [calculateTrialBalance(accounts, journalEntries)];
+        reportData = calculateTrialBalance(accounts, journalEntries);
         filename = "balancete_de_verificacao";
         break;
       case 'dre':
-        reportData = [calculateDreData(accounts, journalEntries)];
+        reportData = calculateDreData(accounts, journalEntries);
         filename = "demonstrativo_de_resultado";
         break;
       case 'balanceSheet':
-        reportData = [calculateBalanceSheetData(accounts, journalEntries)];
+        reportData = calculateBalanceSheetData(accounts, journalEntries);
         filename = "balanco_patrimonial";
         break;
       case 'ledgerDetails':
-        reportData = [calculateLedgerDetails(accounts, journalEntries)];
+        reportData = calculateLedgerDetails(accounts, journalEntries);
         filename = "razao_detalhado";
         break;
       default:
