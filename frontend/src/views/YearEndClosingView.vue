@@ -46,9 +46,12 @@ async function handleYearEndClosing() {
   error.value = null
 
   try {
-    const response: { message?: string } = await api.post('/year-end-closing', {
-      closingDate: closingDate.value,
-    })
+    const response = await api.post<{ message?: string }, { closingDate: string }>(
+      '/year-end-closing',
+      {
+        closingDate: closingDate.value,
+      },
+    )
     message.value = response.message || 'Fechamento de exercício realizado com sucesso!'
     error.value = null
   } catch (err: unknown) {

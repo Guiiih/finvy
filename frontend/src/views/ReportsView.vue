@@ -57,7 +57,7 @@ const exportReport = async (reportType: string) => {
       }
     );
 
-    const url = window.URL.createObjectURL(new Blob([response.data as Blob]));
+    const url = window.URL.createObjectURL(new Blob([response as Blob]));
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `${reportType}_report.${selectedFormat.value}`); // Use selected format for filename
