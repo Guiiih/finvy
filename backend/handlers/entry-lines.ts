@@ -1,9 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import {
-  getSupabaseClient,
-  handleErrorResponse,
-  supabase as serviceRoleSupabase,
-} from "../utils/supabaseClient.js";
+const { getSupabaseClient, handleErrorResponse, supabase: serviceRoleSupabase } = require("../utils/supabaseClient.js");
 import { createEntryLineSchema } from "../utils/schemas.js";
 
 export default async function handler(

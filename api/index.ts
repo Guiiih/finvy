@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { withAuth } from "../backend/utils/middleware.js";
-import { handleErrorResponse } from "../backend/utils/supabaseClient.js";
+const { withAuth } = require("../backend/utils/middleware.js");
+const { handleErrorResponse } = require("../backend/utils/supabaseClient.js");
 
 // Importe todos os seus handlers da pasta /handlers
 import accountsHandler from "../backend/handlers/accounts.js";

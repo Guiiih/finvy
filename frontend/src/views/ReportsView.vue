@@ -2,13 +2,14 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import { RouterView, useRouter } from 'vue-router'
-import apiClient from '@/services/api' // Import apiClient
+import { api } from '@/services/api' // Import api
 
 const reportStore = useReportStore()
 const router = useRouter()
 
 const startDate = ref('')
 const endDate = ref('')
+const selectedFormat = ref('csv') // Default to CSV
 
 // Inicializa as datas com o ano corrente
 onMounted(() => {
@@ -40,25 +41,26 @@ const navigateToReport = (reportName: string) => {
 
 const exportReport = async (reportType: string) => {
   try {
-    reportStore.setLoading(true);
-    reportStore.setError(null);
+    reportStore.loading = true;
+    reportStore.error = null;
 
-    const response = await apiClient.post(
+    const response = await api.post(
       '/reports/export',
       {
         reportType,
         startDate: startDate.value,
         endDate: endDate.value,
+        format: selectedFormat.value, // Pass the selected format
       },
       {
         responseType: 'blob', // Important for downloading files
       }
     );
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const url = window.URL.createObjectURL(new Blob([response.data as Blob]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${reportType}_report.csv`); // Or get filename from response headers
+    link.setAttribute('download', `${reportType}_report.${selectedFormat.value}`); // Use selected format for filename
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -66,9 +68,9 @@ const exportReport = async (reportType: string) => {
 
   } catch (error: any) {
     console.error('Erro ao exportar relatório:', error);
-    reportStore.setError(error.message || 'Erro ao exportar relatório.');
+    reportStore.error = error.message || 'Erro ao exportar relatório.';
   } finally {
-    reportStore.setLoading(false);
+    reportStore.loading = false;
   }
 };
 </script>
@@ -85,6 +87,12 @@ const exportReport = async (reportType: string) => {
       <button @click="navigateToReport('dre')">Ver DRE</button>
       <button @click="navigateToReport('balance-sheet')">Ver Balanço</button>
       <button @click="navigateToReport('dfc')">Ver DFC</button>
+      <label for="exportFormat">Formato:</label>
+      <select id="exportFormat" v-model="selectedFormat">
+        <option value="csv">CSV</option>
+        <option value="xlsx">XLSX</option>
+        <option value="pdf">PDF</option>
+      </select>
       <button @click="exportReport('trialBalance')">Exportar Balancete</button>
       <button @click="exportReport('dre')">Exportar DRE</button>
       <button @click="exportReport('balanceSheet')">Exportar Balanço</button>

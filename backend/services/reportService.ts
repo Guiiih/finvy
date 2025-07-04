@@ -1,6 +1,6 @@
 // backend/services/reportService.ts
 
-import { getSupabaseClient } from "../utils/supabaseClient.js";
+const { getSupabaseClient } = require("../utils/supabaseClient.js");
 import type {
   Account,
   JournalEntry,
@@ -171,7 +171,7 @@ export function calculateLedgerDetails(
 
 
 // Actual DRE calculation
-function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
+export function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
   let totalRevenue = 0;
   let totalExpenses = 0;
 
@@ -196,7 +196,7 @@ function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
 }
 
 // Actual Balance Sheet calculation
-function calculateBalanceSheetData(accounts: Account[], journalEntries: JournalEntry[]) {
+export function calculateBalanceSheetData(accounts: Account[], journalEntries: JournalEntry[]) {
   let totalAssets = 0;
   let totalLiabilities = 0;
   let totalEquity = 0;
@@ -244,6 +244,8 @@ export async function generateReports(
   const stockBalances: StockBalance[] = []; // TODO: Properly type when stock control is implemented
 
   return {
+    accounts,
+    journalEntries,
     trialBalanceData: ledgerAccountsList,
     dreData,
     balanceSheetData,

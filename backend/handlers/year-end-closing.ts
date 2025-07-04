@@ -1,8 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import {
-  handleErrorResponse,
-  supabase as serviceRoleSupabase,
-} from "../utils/supabaseClient.js";
+const { handleErrorResponse, supabase: serviceRoleSupabase } = require("../utils/supabaseClient.js");
 
 export default async function handler(
   req: VercelRequest,
