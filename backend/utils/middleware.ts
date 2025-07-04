@@ -17,6 +17,19 @@ export function withAuth(handler: ApiHandler) {
       return;
     }
 
+    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+      try {
+        // Manually parse the body if it's not already parsed
+        if (typeof req.body === 'string') {
+          req.body = JSON.parse(req.body);
+        } else if (Buffer.isBuffer(req.body)) {
+          req.body = JSON.parse(req.body.toString());
+        }
+      } catch (error) {
+        return handleErrorResponse(res, 400, 'Corpo da requisição JSON inválido.');
+      }
+    }
+
     const authHeader = req.headers.authorization;
     console.log("Middleware: Authorization Header:", authHeader);
     const token = authHeader?.split(" ")[1];

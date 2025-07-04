@@ -3,90 +3,67 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { supabase } from '../supabase'
 
-// Import all view components used in routes
-import DashboardView from '../views/DashboardView.vue'
-import AccountsView from '../views/AccountsView.vue'
-import JournalEntryView from '../views/JournalEntryView.vue'
-import ProductsView from '../views/ProductsView.vue'
-import StockControlView from '../views/StockControlView.vue'
-import LedgerView from '../views/LedgerView.vue'
-import ReportsView from '../views/ReportsView.vue'
-import DREReport from '../views/DREView.vue'
-import BalanceSheetReport from '../views/BalanceSheetView.vue'
-import DFCReport from '../views/DFCView.vue'
-import VariationView from '../views/VariationView.vue'
-import TrialBalanceView from '../views/TrialBalanceView.vue'
-import ChartOfAccountsView from '../views/ChartOfAccountsView.vue'
-import YearEndClosingView from '../views/YearEndClosingView.vue'
-import AccountsPayableView from '../views/AccountsPayableView.vue'
-import AccountsReceivableView from '../views/AccountsReceivableView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import ForgotPasswordView from '../views/ForgotPasswordView.vue'
-import UpdatePasswordView from '../views/UpdatePasswordView.vue'
-import RegistrationSuccessView from '../views/RegistrationSuccessView.vue'
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'dashboard',
-      component: DashboardView,
+      component: () => import('../views/DashboardView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/accounts',
       name: 'accounts',
-      component: AccountsView,
+      component: () => import('../views/AccountsView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/journal-entries',
       name: 'journal-entries',
-      component: JournalEntryView,
+      component: () => import('../views/JournalEntryView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/products',
       name: 'products',
-      component: ProductsView,
+      component: () => import('../views/ProductsView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/stock-control',
       name: 'stock-control',
-      component: StockControlView,
+      component: () => import('../views/StockControlView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/ledger',
       name: 'ledger',
-      component: LedgerView,
+      component: () => import('../views/LedgerView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/reports',
       name: 'reports',
-      component: ReportsView,
+      component: () => import('../views/ReportsView.vue'),
       meta: { requiresAuth: true },
       children: [
         {
           path: 'dre',
           name: 'dre-report',
-          component: DREReport,
+          component: () => import('../views/DREView.vue'),
           meta: { requiresAuth: true },
         },
         {
           path: 'balance-sheet',
           name: 'balance-sheet-report',
-          component: BalanceSheetReport,
+          component: () => import('../views/BalanceSheetView.vue'),
           meta: { requiresAuth: true },
         },
         {
           path: 'dfc',
           name: 'dfc-report',
-          component: DFCReport,
+          component: () => import('../views/DFCView.vue'),
           meta: { requiresAuth: true },
         },
       ],
@@ -94,63 +71,63 @@ const router = createRouter({
     {
       path: '/variations',
       name: 'variations',
-      component: VariationView,
+      component: () => import('../views/VariationView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/trial-balance',
       name: 'trial-balance',
-      component: TrialBalanceView,
+      component: () => import('../views/TrialBalanceView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/chart-of-accounts',
       name: 'chart-of-accounts',
-      component: ChartOfAccountsView,
+      component: () => import('../views/ChartOfAccountsView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/year-end-closing',
       name: 'year-end-closing',
-      component: YearEndClosingView,
+      component: () => import('../views/YearEndClosingView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/accounts-payable',
       name: 'accounts-payable',
-      component: AccountsPayableView,
+      component: () => import('../views/AccountsPayableView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/accounts-receivable',
       name: 'accounts-receivable',
-      component: AccountsReceivableView,
+      component: () => import('../views/AccountsReceivableView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView,
+      component: () => import('../views/LoginView.vue'),
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView,
+      component: () => import('../views/RegisterView.vue'),
     },
     {
       path: '/forgot-password',
       name: 'forgot-password',
-      component: ForgotPasswordView,
+      component: () => import('../views/ForgotPasswordView.vue'),
     },
     {
       path: '/update-password',
       name: 'update-password',
-      component: UpdatePasswordView,
+      component: () => import('../views/UpdatePasswordView.vue'),
     },
     {
       path: '/registration-success',
       name: 'registration-success',
-      component: RegistrationSuccessView,
+      component: () => import('../views/RegistrationSuccessView.vue'),
       meta: { hideNavbar: true },
     },
     {

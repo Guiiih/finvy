@@ -38,6 +38,45 @@ interface LedgerDetailsData {
   [accountId: string]: LedgerDetailsEntry[];
 }
 
+// Helper function to convert data to CSV
+function convertToCsv(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): string {
+  let headers: string[] = [];
+  let rows: (string | number | boolean)[][] = [];
+
+  if (reportType === 'trialBalance') {
+    headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
+    rows = (data as TrialBalanceData[]).map(row => [
+      row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
+    ]);
+  } else if (reportType === 'dre') {
+    headers = ["Total Revenue", "Total Expenses", "Net Income"];
+    const dreData = data as DreData;
+    rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
+  } else if (reportType === 'balanceSheet') {
+    headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
+    const balanceSheetData = data as BalanceSheetData;
+    rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
+  } else if (reportType === 'ledgerDetails') {
+    headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
+    const flattenedData: LedgerDetailsEntry[] = [];
+    const ledgerData = data as LedgerDetailsData;
+    for (const accountId in ledgerData) {
+      ledgerData[accountId].forEach((entry: LedgerDetailsEntry) => {
+        flattenedData.push(entry);
+      });
+    }
+    rows = flattenedData.map((row: LedgerDetailsEntry) => [
+      row.journalEntryId, row.entryDate, row.description, row.debit || 0, row.credit || 0
+    ]);
+  }
+
+  const escapeCell = (cell: any) => `"${String(cell).replace(/"/g, '""')}"`;
+  const headerRow = headers.map(escapeCell).join(',');
+  const dataRows = rows.map(row => row.map(escapeCell).join('\n')).join('\n');
+
+  return `${headerRow}\n${dataRows}`;
+}
+
 // Helper function to convert data to XLSX
 async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -202,6 +241,10 @@ export default async function handler(
       fileBuffer = await convertToXlsx(reportData, reportType);
       contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       filename += ".xlsx";
+    } else if (format === 'csv') {
+      fileBuffer = convertToCsv(reportData, reportType);
+      contentType = "text/csv";
+      filename += ".csv";
     } else if (format === 'pdf') {
       fileBuffer = await convertToPdf(reportData, reportType);
       contentType = "application/pdf";

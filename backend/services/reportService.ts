@@ -78,19 +78,21 @@ async function getJournalEntries(
   const { data, error } = await query;
   if (error) throw error;
 
-  return data.map((entry: JournalEntryWithLines) => ({
-    ...entry,
-    lines: entry.entry_lines.map((line: EntryLine) => {
-       
-      return {
-        account_id: line.account_id,
-        type: (line.debit ?? 0) > 0 ? "debit" : "credit",
-        amount: (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0),
-        debit: line.debit || 0,
-        credit: line.credit || 0,
-      };
-    }),
-  }));
+  return data.map((entry: JournalEntryWithLines) => {
+    const { entry_lines, ...restOfEntry } = entry;
+    return {
+      ...restOfEntry,
+      lines: entry_lines.map((line: EntryLine) => {
+        return {
+          account_id: line.account_id,
+          type: (line.debit ?? 0) > 0 ? "debit" : "credit",
+          amount: (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0),
+          debit: line.debit || 0,
+          credit: line.credit || 0,
+        };
+      }),
+    };
+  });
 }
 
 export function calculateTrialBalance(
