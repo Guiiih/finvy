@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import accountsHandler from './accounts';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSupabaseClient, handleErrorResponse } from '../utils/supabaseClient';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-interface MockRequest {
+interface MockRequest extends Partial<VercelRequest> {
   method: string;
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
 }
 
-interface MockResponse {
+interface MockResponse extends Partial<VercelResponse> {
   status: (code: number) => MockResponse;
   json: (data: unknown) => void;
   send?: (data: unknown) => void;
@@ -89,7 +91,7 @@ describe('accountsHandler', () => {
     const mockData = [{ id: '123', name: 'Test Account', user_id }];
     mockEq.mockResolvedValueOnce({ data: mockData, error: null });
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockData);
@@ -100,7 +102,7 @@ describe('accountsHandler', () => {
     const mockData = { id: 'new-id', name: 'New Account', type: 'asset', user_id };
     mockInsert.mockReturnValue({ select: vi.fn().mockResolvedValueOnce({ data: [mockData], error: null }) });
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockData);
@@ -111,7 +113,7 @@ describe('accountsHandler', () => {
     const mockData = { id: '123', name: 'Updated Account', user_id };
     mockSelect.mockResolvedValueOnce({ data: [mockData], error: null });
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockData);
@@ -121,7 +123,7 @@ describe('accountsHandler', () => {
     req = { method: 'DELETE', query: { id: '123' } };
     mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) });
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(204);
     expect(res.send).toHaveBeenCalledWith('');
@@ -131,7 +133,7 @@ describe('accountsHandler', () => {
     req = { method: 'PUT', query: { id: '123' }, body: { name: 'Updated Account' } };
     mockSelect.mockResolvedValueOnce({ data: [], error: null }); // Simulate not found
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Conta não encontrada ou você não tem permissão para atualizar esta conta.');
   });
@@ -140,14 +142,14 @@ describe('accountsHandler', () => {
     req = { method: 'DELETE', query: { id: '123' } };
     mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }); // Simulate not found
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Conta não encontrada ou você não tem permissão para deletar esta conta.');
   });
 
   it('should return 405 for unsupported methods', async () => {
     req = { method: 'PATCH' };
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(res.setHeader).toHaveBeenCalledWith('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 405, 'Method PATCH Not Allowed');
@@ -158,7 +160,7 @@ describe('accountsHandler', () => {
     const dbError = new Error('Unexpected DB error');
     mockEq.mockRejectedValueOnce(dbError);
 
-    await accountsHandler(req as any, res as any, user_id, token);
+    await accountsHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
   });

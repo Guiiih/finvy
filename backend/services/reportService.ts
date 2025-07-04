@@ -30,6 +30,10 @@ async function getAccounts(user_id: string, token: string): Promise<Account[]> {
   return data;
 }
 
+interface JournalEntryWithLines extends JournalEntry {
+  entry_lines: EntryLine[];
+}
+
 async function getJournalEntries(
   user_id: string,
   token: string,
@@ -52,7 +56,7 @@ async function getJournalEntries(
   const { data, error } = await query;
   if (error) throw error;
 
-  return data.map((entry: any) => ({
+  return data.map((entry: JournalEntryWithLines) => ({
     ...entry,
     lines: entry.entry_lines.map((line: EntryLine) => {
        

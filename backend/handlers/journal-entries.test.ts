@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import productsHandler from './products';
+import journalEntriesHandler from './journal-entries';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSupabaseClient, handleErrorResponse, supabase } from '../utils/supabaseClient';
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -7,7 +7,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 interface MockRequest extends Partial<VercelRequest> {
   method: string;
   query?: Record<string, unknown>;
-  body?: unknown;
+  body?: Record<string, unknown>;
 }
 
 interface MockResponse extends Partial<VercelResponse> {
@@ -46,16 +46,16 @@ vi.mock('../utils/supabaseClient', () => ({
 }));
 
 vi.mock('../utils/schemas', () => ({
-  createProductSchema: {
-    safeParse: vi.fn((data: { name: string, unit_cost: number }) => {
-      if (data.name && data.unit_cost) {
+  createJournalEntrySchema: {
+    safeParse: vi.fn((data: { entry_date: string, description: string }) => {
+      if (data.entry_date && data.description) {
         return { success: true, data };
       }
       return { success: false, error: { errors: [{ message: 'Invalid data' }] } };
     }),
   },
-  updateProductSchema: {
-    safeParse: vi.fn((data: { name?: string, unit_cost?: number }) => {
+  updateJournalEntrySchema: {
+    safeParse: vi.fn((data: { entry_date?: string, description?: string }) => {
       if (Object.keys(data).length > 0) {
         return { success: true, data };
       }
@@ -64,7 +64,7 @@ vi.mock('../utils/schemas', () => ({
   },
 }));
 
-describe('productsHandler', () => {
+describe('journalEntriesHandler', () => {
   let req: MockRequest;
   let res: MockResponse;
   const user_id = 'test-user-id';
@@ -82,75 +82,76 @@ describe('productsHandler', () => {
 
     // Setup chainable mocks
     mockSelect.mockReturnValue({ order: mockOrder, eq: mockEq });
+    mockInsert.mockReturnValue({ select: vi.fn() });
     mockUpdate.mockReturnValue({ eq: mockEq });
     mockDelete.mockReturnValue({ eq: mockEq });
     mockEq.mockReturnValue({ eq: mockEq, select: mockSelect });
   });
 
-  it('should return products for GET requests', async () => {
+  it('should return journal entries for GET requests', async () => {
     req = { method: 'GET', query: {} };
-    const mockData = [{ id: 'prod1', name: 'Product 1', user_id }];
+    const mockData = [{ id: 'je1', entry_date: '2024-01-01', description: 'Entry 1', user_id }];
     mockOrder.mockResolvedValueOnce({ data: mockData, error: null });
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockData);
   });
 
-  it('should create a new product for POST requests', async () => {
-    req = { method: 'POST', body: { name: 'New Product', unit_cost: 10 } };
-    const mockData = { id: 'new-prod', name: 'New Product', unit_cost: 10, user_id };
+  it('should create a new journal entry for POST requests', async () => {
+    req = { method: 'POST', body: { entry_date: '2024-01-01', description: 'New Entry' } };
+    const mockData = { id: 'new-je', entry_date: '2024-01-01', description: 'New Entry', user_id };
     mockInsert.mockReturnValue({ select: vi.fn().mockResolvedValueOnce({ data: [mockData], error: null }) });
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockData);
   });
 
-  it('should update an existing product for PUT requests', async () => {
-    req = { method: 'PUT', query: { id: 'prod1' }, body: { name: 'Updated Product' } };
-    const mockData = { id: 'prod1', name: 'Updated Product', user_id };
+  it('should update an existing journal entry for PUT requests', async () => {
+    req = { method: 'PUT', query: { id: 'je1' }, body: { description: 'Updated Entry' } };
+    const mockData = { id: 'je1', entry_date: '2024-01-01', description: 'Updated Entry', user_id };
     mockSelect.mockResolvedValueOnce({ data: [mockData], error: null });
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockData);
   });
 
-  it('should delete a product for DELETE requests', async () => {
-    req = { method: 'DELETE', query: { id: 'prod1' } };
+  it('should delete a journal entry for DELETE requests', async () => {
+    req = { method: 'DELETE', query: { id: 'je1' } };
     mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) });
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(204);
     expect(res.end).toHaveBeenCalled();
   });
 
-  it('should return 404 if product not found for PUT', async () => {
-    req = { method: 'PUT', query: { id: 'prod1' }, body: { name: 'Updated Product' } };
+  it('should return 404 if journal entry not found for PUT', async () => {
+    req = { method: 'PUT', query: { id: 'je1' }, body: { description: 'Updated Entry' } };
     mockSelect.mockResolvedValueOnce({ data: [], error: null }); // Simulate not found
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Produto não encontrado ou você não tem permissão para atualizar.');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Lançamento não encontrado ou você não tem permissão para atualizar.');
   });
 
-  it('should return 404 if product not found for DELETE', async () => {
-    req = { method: 'DELETE', query: { id: 'prod1' } };
+  it('should return 404 if journal entry not found for DELETE', async () => {
+    req = { method: 'DELETE', query: { id: 'je1' } };
     mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }); // Simulate not found
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Produto não encontrado ou você não tem permissão para deletar.');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 404, 'Lançamento não encontrado ou você não tem permissão para deletar.');
   });
 
   it('should return 400 for invalid POST body', async () => {
-    req = { method: 'POST', body: { name: '' } }; // Invalid body
-    await productsHandler(req, res, user_id, token);
+    req = { method: 'POST', body: { entry_date: '' } }; // Invalid body
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 400, expect.any(String));
   });
@@ -160,7 +161,7 @@ describe('productsHandler', () => {
     const dbError = new Error('Unexpected DB error');
     mockOrder.mockRejectedValueOnce(dbError);
 
-    await productsHandler(req, res, user_id, token);
+    await journalEntriesHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
   });
