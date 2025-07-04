@@ -1,43 +1,34 @@
 import { describe, it, expect, vi } from 'vitest';
 import accountsHandler from './accounts';
 import { getSupabaseClient, handleErrorResponse } from '../utils/supabaseClient';
-import { z } from 'zod';
+;
 
 // Mock das dependências
 vi.mock('../utils/supabaseClient', () => {
-  const mockSupabaseClient = {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
+  const mockSelectEq: { data: { id: string; name: string; user_id: string; }[] | null; error: Error | null; } = { data: [{ id: '123', name: 'Test Account', user_id: 'test-user-id' }], error: null };
+  const mockInsertSelect: { data: { id: string; name: string; type: string; user_id: string; }[] | null; error: Error | null; } = { data: [{ id: 'new-id', name: 'New Account', type: 'asset', user_id: 'test-user-id' }], error: null };
+  const mockUpdateSelect: { data: { id: string; name: string; user_id: string; }[] | null; error: Error | null; } = { data: [{ id: '123', name: 'Updated Account', user_id: 'test-user-id' }], error: null };
+  const mockDeleteResult: { count: number | null; error: Error | null; } = { count: 1, error: null };
+
+  const mockFrom = vi.fn(() => ({
+    select: vi.fn(() => ({ eq: vi.fn(() => mockSelectEq) })),
+    insert: vi.fn(() => ({ select: vi.fn(() => mockInsertSelect) })),
+    update: vi.fn(() => ({
+      eq: vi.fn(() => ({
         eq: vi.fn(() => ({
-          data: [{ id: '123', name: 'Test Account', user_id: 'test-user-id' }],
-          error: null,
-        })),
-      })),
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          data: [{ id: 'new-id', name: 'New Account', type: 'asset', user_id: 'test-user-id' }],
-          error: null,
-        })),
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              data: [{ id: '123', name: 'Updated Account', user_id: 'test-user-id' }],
-              error: null,
-            })),
-          })),
-        })),
-      })),
-      delete: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            count: 1,
-            error: null,
-          })),
+          select: vi.fn(() => mockUpdateSelect),
         })),
       })),
     })),
+    delete: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        eq: vi.fn(() => mockDeleteResult),
+      })),
+    })),
+  }));
+
+  const mockSupabaseClient = {
+    from: mockFrom,
   };
 
   return {
@@ -46,7 +37,11 @@ vi.mock('../utils/supabaseClient', () => {
       res.status(status);
       res.json({ error: message });
     }),
-    supabase: mockSupabaseClient, // Export the mock client for direct access in tests
+    // Export individual mocks for specific test case overrides
+    mockSelectEq,
+    mockInsertSelect,
+    mockUpdateSelect,
+    mockDeleteResult,
   };
 });
 
@@ -79,13 +74,17 @@ vi.mock('../utils/schemas', () => ({
 
 describe('accountsHandler', () => {
   it('should return accounts for GET requests', async () => {
-    const req: any = { method: 'GET', query: {} };
-    const res: any = {
+    const req: MockRequest = { method: 'GET', query: {} };
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
     const user_id = 'test-user-id';
     const token = 'test-token';
+
+    // Mock para simular que a conta foi encontrada
+    mockSelectEq.data = [{ id: '123', name: 'Test Account', user_id: 'test-user-id' }];
+    mockSelectEq.error = null;
 
     await accountsHandler(req, res, user_id, token);
 
@@ -95,12 +94,14 @@ describe('accountsHandler', () => {
 
   it('should create a new account for POST requests', async () => {
     const req: any = { method: 'POST', body: { name: 'New Account', type: 'asset' } };
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
     const user_id = 'test-user-id';
     const token = 'test-token';
+
+    vi.mocked(getSupabaseClient('dummy-token').from('accounts').insert().select).mockResolvedValueOnce({ data: [{ id: 'new-id', name: 'New Account', type: 'asset', user_id: 'test-user-id' }], error: null });
 
     await accountsHandler(req, res, user_id, token);
 
@@ -109,13 +110,15 @@ describe('accountsHandler', () => {
   });
 
   it('should update an existing account for PUT requests', async () => {
-    const req: any = { method: 'PUT', query: { id: '123' }, body: { name: 'Updated Account' } };
-    const res: any = {
+    const req: MockRequest = { method: 'PUT', query: { id: '123' }, body: { name: 'Updated Account' } };
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
     const user_id = 'test-user-id';
     const token = 'test-token';
+
+    vi.mocked(getSupabaseClient('dummy-token').from('accounts').update().eq().eq().select).mockResolvedValueOnce({ data: [{ id: '123', name: 'Updated Account', user_id: 'test-user-id' }], error: null });
 
     await accountsHandler(req, res, user_id, token);
 
@@ -125,12 +128,14 @@ describe('accountsHandler', () => {
 
   it('should delete an account for DELETE requests', async () => {
     const req: any = { method: 'DELETE', query: { id: '123' } };
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn(),
     };
     const user_id = 'test-user-id';
     const token = 'test-token';
+
+    vi.mocked(getSupabaseClient('dummy-token').from('accounts').delete().eq().eq()).mockResolvedValueOnce({ count: 1, error: null });
 
     await accountsHandler(req, res, user_id, token);
 
@@ -140,7 +145,7 @@ describe('accountsHandler', () => {
 
   it('should return 400 for invalid POST body', async () => {
     const req: any = { method: 'POST', body: { name: '' } }; // Invalid name
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
@@ -155,7 +160,7 @@ describe('accountsHandler', () => {
 
   it('should return 400 for invalid PUT body', async () => {
     const req: any = { method: 'PUT', query: { id: '123' }, body: { name: '' } }; // Invalid name
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
@@ -170,7 +175,7 @@ describe('accountsHandler', () => {
 
   it('should return 400 for invalid DELETE id', async () => {
     const req: any = { method: 'DELETE', query: { id: 'invalid-uuid' } };
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
@@ -188,7 +193,7 @@ describe('accountsHandler', () => {
     vi.mocked(getSupabaseClient('dummy-token').from('accounts').update().eq().eq().select).mockResolvedValueOnce({ data: [], error: null });
 
     const req: any = { method: 'PUT', query: { id: '123' }, body: { name: 'Updated Account' } };
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };
@@ -206,7 +211,7 @@ describe('accountsHandler', () => {
     vi.mocked(getSupabaseClient('dummy-token').from('accounts').delete().eq().eq()).mockResolvedValueOnce({ count: 0, error: null });
 
     const req: any = { method: 'DELETE', query: { id: '123' } };
-    const res: any = {
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn(),
     };
@@ -220,8 +225,8 @@ describe('accountsHandler', () => {
   });
 
   it('should return 405 for unsupported methods', async () => {
-    const req: any = { method: 'PATCH' };
-    const res: any = {
+    const req: MockRequest = { method: 'PATCH' };
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
       setHeader: vi.fn(),
@@ -242,8 +247,8 @@ describe('accountsHandler', () => {
       throw new Error('Unexpected DB error');
     });
 
-    const req: any = { method: 'GET', query: {} };
-    const res: any = {
+    const req: MockRequest = { method: 'GET', query: {} };
+    const res: MockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
     };

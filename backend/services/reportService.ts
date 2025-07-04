@@ -1,4 +1,4 @@
-import { getSupabaseClient, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+
 import type {
   Account,
   JournalEntry,
@@ -42,7 +42,7 @@ async function getJournalEntries(
   return data.map((entry) => ({
     ...entry,
     lines: entry.entry_lines.map((line: any) => {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+       
       return {
         account_id: line.account_id,
         type: line.debit > 0 ? "debit" : "credit",
@@ -104,14 +104,14 @@ export function calculateTrialBalance(
 
 // Placeholder for DRE calculation
 function generateDreData(ledgerAccounts: LedgerAccount[]) {
-  // eslint-disable-line @typescript-eslint/no-unused-vars
+   
   // TODO: Implement actual DRE calculation logic
   return { lucroLiquido: 1000 }; // Placeholder
 }
 
 // Placeholder for Balance Sheet calculation
 function generateBalanceSheetData(ledgerAccounts: LedgerAccount[]) {
-  // eslint-disable-line @typescript-eslint/no-unused-vars
+   
   // TODO: Implement actual Balance Sheet calculation logic
   return {
     totalDoAtivo: 5000,
@@ -135,10 +135,9 @@ export async function generateReports(
 
   const dreData = generateDreData(ledgerAccountsList);
   const balanceSheetData = generateBalanceSheetData(ledgerAccountsList);
-  const stockBalances = [] as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const stockBalances: any[] = []; // TODO: Properly type when stock control is implemented
 
   return {
-    ledgerAccounts: ledgerAccountsList,
     trialBalanceData: ledgerAccountsList,
     dreData,
     balanceSheetData,

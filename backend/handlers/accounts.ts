@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
   handleErrorResponse,
-  supabase as serviceRoleSupabase,
+  
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";

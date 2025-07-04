@@ -98,6 +98,7 @@ function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
               </td>
             </tr>
           </template>
+        </template>
         <template v-else>
           <tr>
             <td colspan="5" class="no-entries">Nenhum lançamento encontrado.</td>
