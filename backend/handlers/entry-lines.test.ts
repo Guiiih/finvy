@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import entryLinesHandler from './entry-lines';
+import { mockFrom, mockSelect, mockInsert, mockUpdate, mockEq, mockSingle, mockLte, handleErrorResponse } from '../utils/supabaseClient';
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+
 
 
 interface MockRequest extends Partial<VercelRequest> {
@@ -18,13 +20,13 @@ interface MockResponse extends Partial<VercelResponse> {
 }
 
 vi.mock('../utils/supabaseClient', () => {
-  mockFrom = vi.fn();
-  mockSelect = vi.fn();
-  mockInsert = vi.fn();
-  mockUpdate = vi.fn();
-  mockEq = vi.fn();
-  mockSingle = vi.fn();
-  mockLte = vi.fn(); // For .lte() in GET requests
+  const mockFrom = vi.fn();
+  const mockSelect = vi.fn();
+  const mockInsert = vi.fn();
+  const mockUpdate = vi.fn();
+  const mockEq = vi.fn();
+  const mockSingle = vi.fn();
+  const mockLte = vi.fn(); // For .lte() in GET requests
 
   return {
     getSupabaseClient: vi.fn(() => ({
@@ -36,6 +38,7 @@ vi.mock('../utils/supabaseClient', () => {
     handleErrorResponse: vi.fn((res: MockResponse, status: number, message: string) => {
       res.status(status).json({ error: message });
     }),
+    mockFrom, mockSelect, mockInsert, mockUpdate, mockEq, mockSingle, mockLte
   };
 });
 

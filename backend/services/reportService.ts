@@ -10,8 +10,8 @@ import type {
 
 interface EntryLine {
   account_id: string;
-  debit: number;
-  credit: number;
+  debit: number | null;
+  credit: number | null;
 }
 
 interface StockBalance {
@@ -84,10 +84,10 @@ async function getJournalEntries(
        
       return {
         account_id: line.account_id,
-        type: line.debit > 0 ? "debit" : "credit",
-        amount: line.debit > 0 ? line.debit : line.credit,
-        debit: line.debit,
-        credit: line.credit,
+        type: (line.debit ?? 0) > 0 ? "debit" : "credit",
+        amount: (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0),
+        debit: line.debit || 0,
+        credit: line.credit || 0,
       };
     }),
   }));
@@ -117,11 +117,11 @@ export function calculateTrialBalance(
     entry.lines.forEach((line) => {
       const accountData = accountsMap.get(line.account_id);
       if (accountData) {
-        if (line.debit) {
-          accountData.totalDebits += line.debit;
+        if (line.debit !== null) {
+          accountData.totalDebits += line.debit ?? 0;
         }
-        if (line.credit) {
-          accountData.totalCredits += line.credit;
+        if (line.credit !== null) {
+          accountData.totalCredits += line.credit ?? 0;
         }
       }
     });
@@ -146,7 +146,7 @@ export function calculateLedgerDetails(
   accounts: Account[],
   journalEntries: JournalEntry[],
 ) {
-  const ledgerDetails: { [accountId: string]: any[] } = {}; // Using 'any' for simplicity, should be more specific
+  const ledgerDetails: { [accountId: string]: { journalEntryId: string; entryDate: string; description: string; debit: number; credit: number; }[] } = {};
 
   accounts.forEach(account => {
     ledgerDetails[account.id] = [];
@@ -159,8 +159,8 @@ export function calculateLedgerDetails(
           journalEntryId: entry.id,
           entryDate: entry.entry_date,
           description: entry.description,
-          debit: line.debit,
-          credit: line.credit,
+          debit: line.debit ?? 0,
+          credit: line.credit ?? 0,
         });
       }
     });

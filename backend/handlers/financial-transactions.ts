@@ -17,7 +17,8 @@ export default async function handler(
     if (req.method === "GET") {
       const { data, error: dbError } = await serviceRoleSupabase
         .from(tableName)
-        .select("*");
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (dbError) throw dbError;
       return res.status(200).json(data);
