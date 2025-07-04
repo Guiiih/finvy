@@ -66,9 +66,9 @@ const exportReport = async (reportType: string) => {
     link.remove();
     window.URL.revokeObjectURL(url);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao exportar relatório:', error);
-    reportStore.error = error.message || 'Erro ao exportar relatório.';
+    reportStore.error = error instanceof Error ? error.message : 'Erro ao exportar relatório.';
   } finally {
     reportStore.loading = false;
   }

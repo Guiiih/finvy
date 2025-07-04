@@ -41,7 +41,7 @@ vi.mock('../utils/supabaseClient', () => {
 
 vi.mock('../utils/schemas', () => ({
   createEntryLineSchema: {
-    safeParse: vi.fn((data: any) => {
+    safeParse: vi.fn((data: unknown) => {
       if (data.journal_entry_id && data.account_id && (data.debit || data.credit)) {
         return { success: true, data };
       }

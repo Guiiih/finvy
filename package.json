@@ -5,6 +5,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@types/pdfkit": "^0.14.0",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
     "@vercel/node": "^2.3.0",
@@ -20,13 +21,13 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-  "test": "vitest",
-  "lint:frontend": "npm run lint --workspace frontend",
-  "format:frontend": "npm run format --workspace frontend",
-  "lint:backend": "eslint \"api/**/*.ts\" \"backend/**/*.ts\" --fix",
-  "format:backend": "prettier --write \"api/**/*.ts\" \"backend/**/*.ts\"",
-  "lint": "npm run lint:frontend && npm run lint:backend",
-  "format": "npm run format:frontend && npm run format:backend"
+    "test": "vitest",
+    "lint:frontend": "npm run lint --workspace frontend",
+    "format:frontend": "npm run format --workspace frontend",
+    "lint:backend": "eslint \"api/**/*.ts\" \"backend/**/*.ts\" --fix",
+    "format:backend": "prettier --write \"api/**/*.ts\" \"backend/**/*.ts\"",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "format": "npm run format:frontend && npm run format:backend"
   },
   "workspaces": [
     "frontend"

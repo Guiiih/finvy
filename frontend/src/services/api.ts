@@ -28,7 +28,7 @@ export const api = {
       throw new Error(getErrorMessage(error))
     }
   },
-  post: async <T, U>(endpoint: string, data: U, config?: AxiosRequestConfig): Promise<any> => {
+  post: async <T, U>(endpoint: string, data: U, config?: AxiosRequestConfig): Promise<T | Blob> => {
     try {
       const response = await apiClient.post<T>(endpoint, data, config);
       return response.data;

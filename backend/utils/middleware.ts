@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import { anonSupabase, handleErrorResponse } from "./supabaseClient.js";
+import { handleCors } from "./corsHandler.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
 type ApiHandler = (
