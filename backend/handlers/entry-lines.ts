@@ -7,6 +7,9 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
+) {
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   const userSupabase = getSupabaseClient(token);
   try {

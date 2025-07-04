@@ -8,7 +8,8 @@ type ApiHandler = (
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
-  token: string, // Adicionado o token como argumento
+  token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) => Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export function withAuth(handler: ApiHandler) {
@@ -63,7 +64,21 @@ export function withAuth(handler: ApiHandler) {
         );
       }
 
-      await handler(req, res, user.id, token); // Passando o token para o handler
+      // NOVO: Buscar o perfil do usuário para obter a role
+      const { data: profileData, error: profileError } = await anonSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error("Erro ao buscar perfil do usuário:", profileError?.message || "Perfil não encontrado.");
+        return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
+      }
+
+      const user_role = profileData.role; // Obtém a role
+
+      await handler(req, res, user.id, token, user_role); // Passando a role para o handler
     } catch (error: unknown) {
       console.error("Erro inesperado no middleware de autenticação:", error);
       const message =

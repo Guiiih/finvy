@@ -5,8 +5,8 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
   user_id: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   const { closingDate } = req.body;
 

@@ -8,6 +8,7 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   console.log("Accounts Handler: user_id recebido:", user_id);
   const userSupabase = getSupabaseClient(token);
@@ -81,6 +82,11 @@ export default async function handler(
     }
 
     if (req.method === "DELETE") {
+      // Apenas administradores podem deletar contas
+      if (user_role !== 'admin') {
+        return handleErrorResponse(res, 403, "Acesso negado. Apenas administradores podem deletar contas.");
+      }
+
       const id = req.query.id as string;
       const parsedId = uuidSchema.safeParse(id);
       if (!parsedId.success) {

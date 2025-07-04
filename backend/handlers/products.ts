@@ -7,6 +7,7 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   const userSupabase = getSupabaseClient(token);
   try {
@@ -79,6 +80,11 @@ export default async function handler(
     }
 
     if (req.method === "DELETE") {
+      // Apenas administradores podem deletar produtos
+      if (user_role !== 'admin') {
+        return handleErrorResponse(res, 403, "Acesso negado. Apenas administradores podem deletar produtos.");
+      }
+
       const id = req.query.id as string;
       const { error: dbError, count } = await userSupabase
         .from("products")
