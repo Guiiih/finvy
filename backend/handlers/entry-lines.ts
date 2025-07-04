@@ -11,8 +11,6 @@ export default async function handler(
 ) {
   user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
-  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
-) {
   const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {

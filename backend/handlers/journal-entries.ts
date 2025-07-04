@@ -5,6 +5,26 @@ import {
   updateJournalEntrySchema,
 } from "../utils/schemas.js";
 
+// Cache em memória para os lançamentos contábeis
+const journalEntriesCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
+
+function getCachedJournalEntries(userId: string) {
+  const cached = journalEntriesCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedJournalEntries(userId: string, data: any) {
+  journalEntriesCache.set(userId, { data, timestamp: Date.now() });
+}
+
+function invalidateJournalEntriesCache(userId: string) {
+  journalEntriesCache.delete(userId);
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -15,12 +35,20 @@ export default async function handler(
   const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
-      const { data, error: dbError } = await serviceRoleSupabase
+      const cachedData = getCachedJournalEntries(user_id);
+      if (cachedData) {
+        console.log("Journal Entries Handler: Retornando lançamentos do cache para user_id:", user_id);
+        return res.status(200).json(cachedData);
+      }
+
+      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
         .from("journal_entries")
         .select("*")
+        .eq("user_id", user_id) // Adicionado filtro por user_id
         .order("entry_date", { ascending: false });
 
       if (dbError) throw dbError;
+      setCachedJournalEntries(user_id, data); // Armazena no cache
       return res.status(200).json(data);
     }
 
@@ -41,6 +69,7 @@ export default async function handler(
         .select();
 
       if (dbError) throw dbError;
+      invalidateJournalEntriesCache(user_id); // Invalida o cache após adicionar
       return res.status(201).json(data[0]);
     }
 
@@ -79,7 +108,7 @@ export default async function handler(
           "Lançamento não encontrado ou você não tem permissão para atualizar.",
         );
       }
-
+      invalidateJournalEntriesCache(user_id); // Invalida o cache após atualizar
       return res.status(200).json(data[0]);
     }
 
