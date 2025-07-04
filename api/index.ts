@@ -11,6 +11,7 @@ import financialTransactionsHandler from "../backend/handlers/financial-transact
 import generateReportsHandler from "../backend/handlers/reports/generate.js";
 import exportReportsHandler from "../backend/handlers/reports/export.js";
 import yearEndClosingHandler from "../backend/handlers/year-end-closing.js";
+import profileHandler from "../backend/handlers/profile.js"; // NOVO: Importa o handler de perfil
 
 /**
  * O handler principal que atua como um router.
@@ -22,6 +23,7 @@ async function mainHandler(
   res: VercelResponse,
   user_id: string,
   token: string,
+  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   // A Vercel coloca o caminho do URL (ex: "products" ou "accounts/123") no parâmetro de consulta "path"
   // devido à regra de reescrita { "source": "/api/:path*", "destination": "/api/index" }
@@ -32,35 +34,40 @@ async function mainHandler(
 
   // Roteamento baseado no início do caminho do URL
   if (urlPath.startsWith("/accounts")) {
-    return accountsHandler(req, res, user_id, token);
+    return accountsHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/products")) {
-    return productsHandler(req, res, user_id, token);
+    return productsHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/journal-entries")) {
-    return journalEntriesHandler(req, res, user_id, token);
+    return journalEntriesHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/entry-lines")) {
-    return entryLinesHandler(req, res, user_id, token);
+    return entryLinesHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/financial-transactions")) {
-    return financialTransactionsHandler(req, res, user_id, token);
+    return financialTransactionsHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/reports/generate")) {
-    return generateReportsHandler(req, res, user_id, token);
+    return generateReportsHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/reports/export")) {
-    return exportReportsHandler(req, res, user_id, token);
+    return exportReportsHandler(req, res, user_id, token, user_role);
   }
 
   if (urlPath.startsWith("/year-end-closing")) {
-    return yearEndClosingHandler(req, res, user_id, token);
+    return yearEndClosingHandler(req, res, user_id, token, user_role);
+  }
+
+  // NOVO: Rota para o handler de perfil
+  if (urlPath.startsWith("/profile")) {
+    return profileHandler(req, res, user_id, token, user_role);
   }
 
   // Se nenhuma rota corresponder, retorna um erro 404
