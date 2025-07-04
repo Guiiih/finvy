@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-const { getSupabaseClient, handleErrorResponse } = require("../utils/supabaseClient.js");
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";
 

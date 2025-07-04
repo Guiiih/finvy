@@ -1,6 +1,6 @@
 // backend/services/reportService.ts
 
-const { getSupabaseClient } = require("../utils/supabaseClient.js");
+import { getSupabaseClient } from "../utils/supabaseClient.js";
 import type {
   Account,
   JournalEntry,

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-const { handleErrorResponse } = require("../../utils/supabaseClient.js");
+import { handleErrorResponse } from "../../utils/supabaseClient.js";
 import { generateReports, calculateTrialBalance, calculateDreData, calculateBalanceSheetData, calculateLedgerDetails } from "../../services/reportService.js";
 import { Account, JournalEntry } from "../../../frontend/src/types/index.js";
 import ExcelJS from 'exceljs';

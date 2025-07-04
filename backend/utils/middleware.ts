@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-const { anonSupabase, handleErrorResponse } = require("./supabaseClient.js");
+import { anonSupabase, handleErrorResponse } from "./supabaseClient.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
 type ApiHandler = (
