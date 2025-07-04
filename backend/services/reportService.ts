@@ -1,9 +1,11 @@
+// backend/services/reportService.ts
 
 import { getSupabaseClient } from "../utils/supabaseClient.js";
 import type {
   Account,
   JournalEntry,
   LedgerAccount as FrontendLedgerAccount,
+  AccountType,
 } from "../../frontend/src/types/index.js";
 
 interface EntryLine {
@@ -19,6 +21,26 @@ interface StockBalance {
 }
 
 type LedgerAccount = FrontendLedgerAccount;
+
+// Helper to map Portuguese account types to English enum types for calculations
+function mapAccountTypeForCalculation(accountType: string): AccountType | undefined {
+  switch (accountType) {
+    case "Receita":
+      return "revenue";
+    case "Despesa":
+      return "expense";
+    case "Ativo Circulante":
+    case "Ativo Não Circulante":
+      return "asset";
+    case "Passivo":
+      return "liability";
+    case "Patrimônio Líquido":
+      return "equity";
+    default:
+      return undefined; // Or throw an error for unknown types
+  }
+}
+
 
 async function getAccounts(user_id: string, token: string): Promise<Account[]> {
   const userSupabase = getSupabaseClient(token);
@@ -119,23 +141,89 @@ export function calculateTrialBalance(
   return Array.from(accountsMap.values());
 }
 
-// Placeholder for DRE calculation
-function generateDreData() {
-   
-  // TODO: Implement actual DRE calculation logic
-  return { lucroLiquido: 1000 }; // Placeholder
+// New function for detailed ledger reports
+export function calculateLedgerDetails(
+  accounts: Account[],
+  journalEntries: JournalEntry[],
+) {
+  const ledgerDetails: { [accountId: string]: any[] } = {}; // Using 'any' for simplicity, should be more specific
+
+  accounts.forEach(account => {
+    ledgerDetails[account.id] = [];
+  });
+
+  journalEntries.forEach(entry => {
+    entry.lines.forEach(line => {
+      if (ledgerDetails[line.account_id]) {
+        ledgerDetails[line.account_id].push({
+          journalEntryId: entry.id,
+          entryDate: entry.entry_date,
+          description: entry.description,
+          debit: line.debit,
+          credit: line.credit,
+        });
+      }
+    });
+  });
+
+  return ledgerDetails;
 }
 
-// Placeholder for Balance Sheet calculation
-function generateBalanceSheetData() {
-   
-  // TODO: Implement actual Balance Sheet calculation logic
+
+// Actual DRE calculation
+function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let totalRevenue = 0;
+  let totalExpenses = 0;
+
+  const trialBalance = calculateTrialBalance(accounts, journalEntries);
+
+  trialBalance.forEach(account => {
+    const mappedType = mapAccountTypeForCalculation(account.type);
+    if (mappedType === 'revenue') {
+      totalRevenue += account.finalBalance;
+    } else if (mappedType === 'expense') {
+      totalExpenses += account.finalBalance;
+    }
+  });
+
+  const netIncome = totalRevenue - totalExpenses;
+
   return {
-    totalDoAtivo: 5000,
-    totalPassivoEPatrimonioLiquido: 5000,
-    isBalanced: true,
-  }; // Placeholder
+    totalRevenue,
+    totalExpenses,
+    netIncome,
+  };
 }
+
+// Actual Balance Sheet calculation
+function calculateBalanceSheetData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let totalAssets = 0;
+  let totalLiabilities = 0;
+  let totalEquity = 0;
+
+  const trialBalance = calculateTrialBalance(accounts, journalEntries);
+
+  trialBalance.forEach(account => {
+    const mappedType = mapAccountTypeForCalculation(account.type);
+    if (mappedType === 'asset') {
+      totalAssets += account.finalBalance;
+    } else if (mappedType === 'liability') {
+      totalLiabilities += account.finalBalance;
+    } else if (mappedType === 'equity') {
+      totalEquity += account.finalBalance;
+    }
+  });
+
+  const isBalanced = totalAssets === (totalLiabilities + totalEquity);
+
+  return {
+    totalAssets,
+    totalLiabilities,
+    totalEquity,
+    isBalanced,
+  };
+}
+
 
 export async function generateReports(
   user_id: string,
@@ -150,14 +238,16 @@ export async function generateReports(
 
   const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
 
-  const dreData = generateDreData();
-  const balanceSheetData = generateBalanceSheetData();
+  const dreData = calculateDreData(accounts, journalEntries); // Use actual DRE calculation
+  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries); // Use actual Balance Sheet calculation
+  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries); // New detailed ledger report
   const stockBalances: StockBalance[] = []; // TODO: Properly type when stock control is implemented
 
   return {
     trialBalanceData: ledgerAccountsList,
     dreData,
     balanceSheetData,
+    ledgerDetails,
     stockBalances,
   };
 }
