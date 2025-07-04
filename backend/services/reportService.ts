@@ -1,4 +1,5 @@
 
+import { getSupabaseClient } from "../utils/supabaseClient.js";
 import type {
   Account,
   JournalEntry,
@@ -51,7 +52,7 @@ async function getJournalEntries(
   const { data, error } = await query;
   if (error) throw error;
 
-  return data.map((entry) => ({
+  return data.map((entry: any) => ({
     ...entry,
     lines: entry.entry_lines.map((line: EntryLine) => {
        
