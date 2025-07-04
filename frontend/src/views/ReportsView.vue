@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import { RouterView, useRouter } from 'vue-router'
+import apiClient from '@/services/api' // Import apiClient
 
 const reportStore = useReportStore()
 const router = useRouter()
@@ -36,6 +37,40 @@ const navigateToReport = (reportName: string) => {
     },
   })
 }
+
+const exportReport = async (reportType: string) => {
+  try {
+    reportStore.setLoading(true);
+    reportStore.setError(null);
+
+    const response = await apiClient.post(
+      '/reports/export',
+      {
+        reportType,
+        startDate: startDate.value,
+        endDate: endDate.value,
+      },
+      {
+        responseType: 'blob', // Important for downloading files
+      }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${reportType}_report.csv`); // Or get filename from response headers
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (error: any) {
+    console.error('Erro ao exportar relatório:', error);
+    reportStore.setError(error.message || 'Erro ao exportar relatório.');
+  } finally {
+    reportStore.setLoading(false);
+  }
+};
 </script>
 
 <template>
@@ -50,6 +85,10 @@ const navigateToReport = (reportName: string) => {
       <button @click="navigateToReport('dre')">Ver DRE</button>
       <button @click="navigateToReport('balance-sheet')">Ver Balanço</button>
       <button @click="navigateToReport('dfc')">Ver DFC</button>
+      <button @click="exportReport('trialBalance')">Exportar Balancete</button>
+      <button @click="exportReport('dre')">Exportar DRE</button>
+      <button @click="exportReport('balanceSheet')">Exportar Balanço</button>
+      <button @click="exportReport('ledgerDetails')">Exportar Razão Detalhado</button>
     </div>
 
     <p v-if="reportStore.loading" class="loading-message">Gerando relatórios...</p>
