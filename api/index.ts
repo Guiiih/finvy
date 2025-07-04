@@ -9,6 +9,7 @@ import journalEntriesHandler from "../backend/handlers/journal-entries.js";
 import entryLinesHandler from "../backend/handlers/entry-lines.js";
 import financialTransactionsHandler from "../backend/handlers/financial-transactions.js";
 import generateReportsHandler from "../backend/handlers/reports/generate.js";
+import exportReportsHandler from "../backend/handlers/reports/export.js";
 import yearEndClosingHandler from "../backend/handlers/year-end-closing.js";
 
 /**
@@ -52,6 +53,10 @@ async function mainHandler(
 
   if (urlPath.startsWith("/reports/generate")) {
     return generateReportsHandler(req, res, user_id, token);
+  }
+
+  if (urlPath.startsWith("/reports/export")) {
+    return exportReportsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/year-end-closing")) {
