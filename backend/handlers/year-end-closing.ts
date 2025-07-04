@@ -26,7 +26,7 @@ export default async function handler(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: accounts, error: accountsError } = await serviceRoleSupabase
       .from("accounts")
-      .select("*");
+      .select("id, name, type");
     if (accountsError) throw accountsError;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

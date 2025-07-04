@@ -24,7 +24,7 @@ async function getAccounts(user_id: string, token: string): Promise<Account[]> {
   const userSupabase = getSupabaseClient(token);
   const { data, error } = await userSupabase
     .from("accounts")
-    .select("*")
+    .select("id, name, type")
     .eq("user_id", user_id);
   if (error) throw error;
   return data;
