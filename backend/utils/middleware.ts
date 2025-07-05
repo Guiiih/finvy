@@ -76,7 +76,7 @@ export function withAuth(handler: ApiHandler) {
         return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
       }
 
-      await handler(req, res, user.id, token); // Passando a role para o handler
+      await handler(req, res, user.id, token, profileData.role); // Passando a role para o handler
     } catch (err: unknown) {
       console.error("Erro inesperado no middleware de autenticação:", err);
       const message =
