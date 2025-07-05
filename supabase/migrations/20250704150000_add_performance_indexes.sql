@@ -11,5 +11,5 @@ CREATE INDEX IF NOT EXISTS idx_financial_transactions_user_id ON public.financia
 CREATE INDEX IF NOT EXISTS idx_journal_entries_user_id_entry_date ON public.journal_entries(user_id, entry_date);
 
 -- Index na chave estrangeira da tabela de linhas de lançamento.
--- Melhora a performance das junções (implícitas) ao buscar lançamentos com suas linhas.
+-- Melhor a performance das junções (implícitas) ao buscar lançamentos com suas linhas.
 CREATE INDEX IF NOT EXISTS idx_entry_lines_journal_entry_id ON public.entry_lines(journal_entry_id);

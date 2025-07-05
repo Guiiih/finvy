@@ -3,6 +3,26 @@ import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.
 import { z } from "zod";
 import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";
 
+// Cache em memória para as contas
+const accountsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
+
+function getCachedAccounts(userId: string) {
+  const cached = accountsCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedAccounts(userId: string, data: any) {
+  accountsCache.set(userId, { data, timestamp: Date.now() });
+}
+
+function invalidateAccountsCache(userId: string) {
+  accountsCache.delete(userId);
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -14,14 +34,20 @@ export default async function handler(
   const userSupabase = getSupabaseClient(token);
   try {
     if (req.method === "GET") {
+      const cachedData = getCachedAccounts(user_id);
+      if (cachedData) {
+        console.log("Accounts Handler: Retornando contas do cache para user_id:", user_id);
+        return res.status(200).json(cachedData);
+      }
+
       const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
         .from("accounts")
         .select("*")
-        .eq("user_id", user_id);
-      if (dbError) {
-        console.error("Erro do Supabase ao buscar contas:", dbError);
-        throw dbError;
-      }
+        .eq("user_id", user_id) // Adicionado filtro por user_id
+        .order("name", { ascending: true });
+
+      if (dbError) throw dbError;
+      setCachedAccounts(user_id, data); // Armazena no cache
       return res.status(200).json(data);
     }
 
@@ -41,6 +67,7 @@ export default async function handler(
         .insert({ name, type, user_id })
         .select();
       if (dbError) throw dbError;
+      invalidateAccountsCache(user_id); // Invalida o cache após adicionar
       return res.status(201).json(data[0]);
     }
 
@@ -78,8 +105,8 @@ export default async function handler(
           "Conta não encontrada ou você não tem permissão para atualizar esta conta.",
         );
       }
+      invalidateAccountsCache(user_id); // Invalida o cache após atualizar
       return res.status(200).json(data[0]);
-    }
 
     if (req.method === "DELETE") {
       // Apenas administradores podem deletar contas
@@ -110,8 +137,8 @@ export default async function handler(
           "Conta não encontrada ou você não tem permissão para deletar esta conta.",
         );
       }
+      invalidateAccountsCache(user_id); // Invalida o cache após deletar
       return res.status(204).send("");
-    }
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
