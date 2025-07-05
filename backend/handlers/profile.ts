@@ -6,7 +6,6 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string,
 ) {
   const userSupabase = getSupabaseClient(token);
 

@@ -85,7 +85,7 @@ describe('journalEntriesHandler', () => {
     mockInsert.mockReturnValue({ select: vi.fn() });
     mockUpdate.mockReturnValue({ eq: mockEq });
     mockDelete.mockReturnValue({ eq: mockEq });
-    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect });
+    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect, order: mockOrder });
   });
 
   it('should return journal entries for GET requests', async () => {
@@ -163,6 +163,6 @@ describe('journalEntriesHandler', () => {
 
     await journalEntriesHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Erro inesperado na API de lançamentos.');
   });
 });

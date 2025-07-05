@@ -27,6 +27,7 @@ vi.mock('../utils/supabaseClient', async (importOriginal) => {
   const mockSelect = vi.fn(() => ({
     single: mockSingle,
     order: mockOrder,
+    eq: vi.fn(() => ({ order: mockOrder }))
   }));
   const mockInsert = vi.fn(() => ({
     select: mockSelect,

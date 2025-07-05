@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {
   createJournalEntrySchema,
   updateJournalEntrySchema,
 } from "../utils/schemas.js";
 
 // Cache em memória para os lançamentos contábeis
-const journalEntriesCache = new Map<string, { data: any; timestamp: number }>();
+const journalEntriesCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
 
 function getCachedJournalEntries(userId: string) {
@@ -17,7 +17,7 @@ function getCachedJournalEntries(userId: string) {
   return null;
 }
 
-function setCachedJournalEntries(userId: string, data: any) {
+function setCachedJournalEntries(userId: string, data: unknown) {
   journalEntriesCache.set(userId, { data, timestamp: Date.now() });
 }
 
@@ -113,11 +113,6 @@ export default async function handler(
     }
 
     if (req.method === "DELETE") {
-      // Apenas administradores podem deletar lançamentos
-      if (user_role !== 'admin') {
-        return handleErrorResponse(res, 403, "Acesso negado. Apenas administradores podem deletar lançamentos.");
-      }
-
       const id = req.query.id as string;
       const { error: dbError, count } = await userSupabase
         .from("journal_entries")

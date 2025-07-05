@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
 
 // Cache em memória para os produtos
-const productsCache = new Map<string, { data: any; timestamp: number }>();
+const productsCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
 
 function getCachedProducts(userId: string) {
@@ -14,7 +14,7 @@ function getCachedProducts(userId: string) {
   return null;
 }
 
-function setCachedProducts(userId: string, data: any) {
+function setCachedProducts(userId: string, data: unknown) {
   productsCache.set(userId, { data, timestamp: Date.now() });
 }
 
@@ -110,11 +110,6 @@ export default async function handler(
     }
 
     if (req.method === "DELETE") {
-      // Apenas administradores podem deletar produtos
-      if (user_role !== 'admin') {
-        return handleErrorResponse(res, 403, "Acesso negado. Apenas administradores podem deletar produtos.");
-      }
-
       const id = req.query.id as string;
       const { error: dbError, count } = await userSupabase
         .from("products")

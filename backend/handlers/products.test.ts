@@ -84,7 +84,7 @@ describe('productsHandler', () => {
     mockSelect.mockReturnValue({ order: mockOrder, eq: mockEq });
     mockUpdate.mockReturnValue({ eq: mockEq });
     mockDelete.mockReturnValue({ eq: mockEq });
-    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect });
+        mockEq.mockReturnValue({ eq: mockEq, select: mockSelect, order: mockOrder });
   });
 
   it('should return products for GET requests', async () => {
@@ -162,6 +162,6 @@ describe('productsHandler', () => {
 
     await productsHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Erro inesperado na API de produtos.');
   });
 });

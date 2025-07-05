@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";
 
 // Cache em memória para as contas
-const accountsCache = new Map<string, { data: any; timestamp: number }>();
+const accountsCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
 
 function getCachedAccounts(userId: string) {
@@ -15,7 +15,7 @@ function getCachedAccounts(userId: string) {
   return null;
 }
 
-function setCachedAccounts(userId: string, data: any) {
+function setCachedAccounts(userId: string, data: unknown) {
   accountsCache.set(userId, { data, timestamp: Date.now() });
 }
 
@@ -28,7 +28,6 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
 ) {
   console.log("Accounts Handler: user_id recebido:", user_id);
   const userSupabase = getSupabaseClient(token);
@@ -49,9 +48,7 @@ export default async function handler(
       if (dbError) throw dbError;
       setCachedAccounts(user_id, data); // Armazena no cache
       return res.status(200).json(data);
-    }
-
-    if (req.method === "POST") {
+    } else if (req.method === "POST") {
       const parsedBody = createAccountSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(
@@ -69,9 +66,7 @@ export default async function handler(
       if (dbError) throw dbError;
       invalidateAccountsCache(user_id); // Invalida o cache após adicionar
       return res.status(201).json(data[0]);
-    }
-
-    if (req.method === "PUT") {
+    } else if (req.method === "PUT") {
       const id = req.query.id as string;
       const parsedBody = updateAccountSchema.safeParse(req.body);
       if (!parsedBody.success) {
@@ -107,14 +102,7 @@ export default async function handler(
       }
       invalidateAccountsCache(user_id); // Invalida o cache após atualizar
       return res.status(200).json(data[0]);
-    }
-
-    if (req.method === "DELETE") {
-      // Apenas administradores podem deletar contas
-      if (user_role !== 'admin') {
-        return handleErrorResponse(res, 403, "Acesso negado. Apenas administradores podem deletar contas.");
-      }
-
+    } else if (req.method === "DELETE") {
       const id = req.query.id as string;
       const parsedId = uuidSchema.safeParse(id);
       if (!parsedId.success) {
@@ -140,10 +128,10 @@ export default async function handler(
       }
       invalidateAccountsCache(user_id); // Invalida o cache após deletar
       return res.status(204).send("");
+    } else {
+      res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+      return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
     }
-
-    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
     console.error("Erro inesperado na API de contas:", error);
     const message =

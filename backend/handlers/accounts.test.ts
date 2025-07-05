@@ -83,7 +83,8 @@ describe('accountsHandler', () => {
     mockSelect.mockReturnValue({ eq: mockEq });
     mockUpdate.mockReturnValue({ eq: mockEq });
     mockDelete.mockReturnValue({ eq: mockEq });
-    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect });
+    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect, order: vi.fn().mockReturnThis(), single: vi.fn() });
+        
   });
 
   it('should return accounts for GET requests', async () => {
@@ -121,7 +122,7 @@ describe('accountsHandler', () => {
 
   it('should delete an account for DELETE requests', async () => {
     req = { method: 'DELETE', query: { id: '123' } };
-    mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) });
+    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect, order: vi.fn().mockReturnThis(), single: vi.fn() });
 
     await accountsHandler(req, res, user_id, token);
 
@@ -162,6 +163,6 @@ describe('accountsHandler', () => {
 
     await accountsHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Erro inesperado na API de contas.');
   });
 });

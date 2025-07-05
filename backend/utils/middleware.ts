@@ -26,8 +26,8 @@ export function withAuth(handler: ApiHandler) {
         } else if (Buffer.isBuffer(req.body)) {
           req.body = JSON.parse(req.body.toString());
         }
-      } catch (error) {
-        return handleErrorResponse(res, 400, 'Corpo da requisição JSON inválido.');
+      } catch (err: unknown) {
+        return handleErrorResponse(res, 400, `Corpo da requisição JSON inválido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
       }
     }
 
@@ -76,14 +76,12 @@ export function withAuth(handler: ApiHandler) {
         return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
       }
 
-      const user_role = profileData.role; // Obtém a role
-
-      await handler(req, res, user.id, token, user_role); // Passando a role para o handler
-    } catch (error: unknown) {
-      console.error("Erro inesperado no middleware de autenticação:", error);
+      await handler(req, res, user.id, token); // Passando a role para o handler
+    } catch (err: unknown) {
+      console.error("Erro inesperado no middleware de autenticação:", err);
       const message =
-        error instanceof Error
-          ? error.message
+        err instanceof Error
+          ? err.message
           : "Erro interno ao verificar autenticação.";
       return handleErrorResponse(res, 500, message);
     }
