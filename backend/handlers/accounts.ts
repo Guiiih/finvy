@@ -107,6 +107,7 @@ export default async function handler(
       }
       invalidateAccountsCache(user_id); // Invalida o cache após atualizar
       return res.status(200).json(data[0]);
+    }
 
     if (req.method === "DELETE") {
       // Apenas administradores podem deletar contas
@@ -139,6 +140,7 @@ export default async function handler(
       }
       invalidateAccountsCache(user_id); // Invalida o cache após deletar
       return res.status(204).send("");
+    }
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
