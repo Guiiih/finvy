@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import entryLinesHandler from './entry-lines';
-import { mockFrom, mockSelect, mockInsert, mockUpdate, mockEq, mockSingle, mockLte, handleErrorResponse } from '../utils/supabaseClient';
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-
 
 interface MockRequest extends Partial<VercelRequest> {
   method: string;
@@ -19,26 +15,33 @@ interface MockResponse extends Partial<VercelResponse> {
   setHeader?: (name: string, value: string | string[]) => void;
 }
 
-vi.mock('../utils/supabaseClient', () => {
+
+
+vi.mock('../utils/supabaseClient', async (importOriginal) => {
+  const actual = await importOriginal<typeof supabaseClient>();
+
   const mockFrom = vi.fn();
   const mockSelect = vi.fn();
   const mockInsert = vi.fn();
   const mockUpdate = vi.fn();
+  const mockDelete = vi.fn();
   const mockEq = vi.fn();
   const mockSingle = vi.fn();
-  const mockLte = vi.fn(); // For .lte() in GET requests
+  const mockLte = vi.fn();
+  const mockOrder = vi.fn();
+  const mockRpc = vi.fn();
 
   return {
+    ...actual,
     getSupabaseClient: vi.fn(() => ({
       from: mockFrom,
+      rpc: mockRpc,
     })),
     supabase: {
-      from: mockFrom, // Both getSupabaseClient and supabase use the same mockFrom
+      from: mockFrom,
+      rpc: mockRpc,
     },
-    handleErrorResponse: vi.fn((res: MockResponse, status: number, message: string) => {
-      res.status(status).json({ error: message });
-    }),
-    mockFrom, mockSelect, mockInsert, mockUpdate, mockEq, mockSingle, mockLte
+    mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSingle, mockLte, mockOrder, mockRpc
   };
 });
 
@@ -68,26 +71,19 @@ describe('entryLinesHandler', () => {
       setHeader: vi.fn(),
     };
 
-    // Clear and reset mocks
-    mockFrom.mockClear();
-    mockSelect.mockClear();
-    mockInsert.mockClear();
-    mockUpdate.mockClear();
-    mockEq.mockClear();
-    mockSingle.mockClear();
-    mockLte.mockClear();
-
     // Default chaining for common operations
-    mockFrom.mockReturnValue({
-      select: mockSelect,
-      insert: mockInsert,
-      update: mockUpdate,
+    supabaseClient.mockFrom.mockReturnValue({
+      select: supabaseClient.mockSelect,
+      insert: supabaseClient.mockInsert,
+      update: supabaseClient.mockUpdate,
+      delete: supabaseClient.mockDelete,
     });
-    mockSelect.mockReturnValue({ eq: mockEq, single: mockSingle });
-    mockEq.mockReturnValue({ single: mockSingle, eq: mockEq, lte: mockLte });
-    mockLte.mockReturnValue({ data: [], error: null }); // Default for lte
-    mockInsert.mockReturnValue({ select: mockSelect });
-    mockUpdate.mockReturnValue({ eq: mockEq });
+    supabaseClient.mockSelect.mockReturnValue({ eq: supabaseClient.mockEq, order: supabaseClient.mockOrder, single: supabaseClient.mockSingle, lte: supabaseClient.mockLte });
+    supabaseClient.mockInsert.mockReturnValue({ select: supabaseClient.mockSelect });
+    supabaseClient.mockUpdate.mockReturnValue({ eq: supabaseClient.mockEq });
+    supabaseClient.mockDelete.mockReturnValue({ eq: supabaseClient.mockEq });
+    supabaseClient.mockEq.mockReturnValue({ order: supabaseClient.mockOrder, single: supabaseClient.mockSingle, lte: supabaseClient.mockLte });
+    supabaseClient.mockOrder.mockReturnValue({ single: supabaseClient.mockSingle });
   });
 
   // --- GET Requests ---

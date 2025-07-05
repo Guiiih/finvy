@@ -18,38 +18,35 @@ interface MockResponse extends Partial<VercelResponse> {
   end?: vi.Mock;
 }
 
-// Mocks for supabaseClient
+
+
 vi.mock('../utils/supabaseClient', async (importOriginal) => {
   const actual = await importOriginal<typeof supabaseClient>();
 
-  const mockSingle = vi.fn();
+  const mockFrom = vi.fn();
+  const mockSelect = vi.fn();
+  const mockInsert = vi.fn();
+  const mockUpdate = vi.fn();
+  const mockDelete = vi.fn();
+  const mockEq = vi.fn();
   const mockOrder = vi.fn();
-  const mockSelect = vi.fn(() => ({
-    single: mockSingle,
-    order: mockOrder,
-    eq: vi.fn(() => ({ order: mockOrder }))
-  }));
-  const mockInsert = vi.fn(() => ({
-    select: mockSelect,
-  }));
-  const mockFrom = vi.fn(() => ({
-    select: mockSelect,
-    insert: mockInsert,
-  }));
+  const mockSingle = vi.fn();
+  const mockRpc = vi.fn();
 
   return {
     ...actual,
     getSupabaseClient: vi.fn(() => ({
       from: mockFrom,
+      rpc: mockRpc,
     })),
     handleErrorResponse: vi.fn((res: MockResponse, status: number, message: string) => {
       res.status(status).json({ error: message });
     }),
     supabase: {
       from: mockFrom,
+      rpc: mockRpc,
     },
-    // Export the mocks so they can be used in individual tests
-    mockSelect, mockInsert, mockSingle, mockOrder, mockFrom
+    mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockOrder, mockSingle, mockRpc
   };
 });
 
@@ -83,13 +80,17 @@ describe('financialTransactionsHandler', () => {
       setHeader: vi.fn(),
       end: vi.fn(),
     };
-    // Reset mocks for each test
-    // Reset mocks for each test
-    vi.mocked(supabaseClient.mockFrom).mockClear();
-    vi.mocked(supabaseClient.mockSelect).mockClear();
-    vi.mocked(supabaseClient.mockInsert).mockClear();
-    vi.mocked(supabaseClient.mockSingle).mockClear();
-    vi.mocked(supabaseClient.mockOrder).mockClear();
+
+    // Setup chainable mocks
+    supabaseClient.mockFrom.mockReturnValue({
+      select: supabaseClient.mockSelect,
+      insert: supabaseClient.mockInsert,
+      update: supabaseClient.mockUpdate,
+      delete: supabaseClient.mockDelete,
+    });
+    supabaseClient.mockSelect.mockReturnValue({ eq: supabaseClient.mockEq, order: supabaseClient.mockOrder, single: supabaseClient.mockSingle });
+    supabaseClient.mockEq.mockReturnValue({ order: supabaseClient.mockOrder, single: supabaseClient.mockSingle });
+    supabaseClient.mockOrder.mockReturnValue({ single: supabaseClient.mockSingle });
   });
 
   it('should return accounts payable for GET requests', async () => {
