@@ -92,9 +92,32 @@ function cancelEdit() {
   editingAccount.value = null
 }
 
-async function handleDeleteAccount(id: string) {
+async function handleDeleteAccount(id: string | undefined) { // Altere o tipo para incluir undefined
+  if (!id) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Aviso',
+      detail: 'Não foi possível deletar a conta: ID inválido.',
+      life: 3000,
+    });
+    console.error('Tentativa de deletar conta com ID indefinido.');
+    return; // Impede a chamada à API se o ID for undefined
+  }
+
   if (confirm('Tem certeza de que deseja excluir esta conta?')) {
-    await accountStore.deleteAccount(id)
+    try {
+      await accountStore.deleteAccount(id);
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Conta excluída com sucesso!',
+        life: 3000,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao deletar.';
+      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+      console.error('Erro ao deletar conta:', err);
+    }
   }
 }
 
