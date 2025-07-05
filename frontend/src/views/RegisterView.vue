@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page-container">
     <div class="auth-logo-column">
-      <img src="../assets/Finvy Logo.svg" alt="Logo" class="logo" />
+      <img src="../assets/FinvyLogo.svg" alt="Logo" class="logo" />
     </div>
 
     <div class="auth-form-column">

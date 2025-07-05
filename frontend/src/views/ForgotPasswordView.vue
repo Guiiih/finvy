@@ -37,7 +37,7 @@
     </div>
 
     <div class="auth-logo-column">
-      <img src="../assets/Finvy Logo.svg" alt="Logo" class="logo" />
+      <img src="../assets/FinvyLogo.svg" alt="Logo" class="logo" />
     </div>
   </div>
 </template>
