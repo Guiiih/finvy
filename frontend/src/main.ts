@@ -1,5 +1,6 @@
 import './assets/main.css'
 
+import 'primeicons/primeicons.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' // 1. Importe o plugin
