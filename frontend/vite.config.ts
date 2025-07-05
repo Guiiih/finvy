@@ -10,8 +10,8 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     visualizer({
-      open: true, // Abre o relatório automaticamente no navegador
-      filename: "bundle-analysis.html", // Nome do arquivo de saída
+      open: false, // Abre o relatório automaticamente no navegador
+      // filename: "bundle-analysis.html", // Nome do arquivo de saída
     }),
   ],
   resolve: {
