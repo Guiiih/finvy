@@ -1,1 +1,15 @@
-{"projectId":"prj_ZMAn6QwN0iVCU5OG3MXZj5sWBDc9","orgId":"team_E1zl1oNRWrBAo5KAZWUaK27V"}
+{
+  "projectId": "prj_ZMAn6QwN0iVCU5OG3MXZj5sWBDc9",
+  "orgId": "team_E1zl1oNRWrBAo5KAZWUaK27V",
+  "settings": {
+    "createdAt": 1751542078971,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": "npm run build --workspace=frontend",
+    "outputDirectory": "frontend/dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}
