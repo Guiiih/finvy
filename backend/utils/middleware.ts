@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { anonSupabase, handleErrorResponse } from "./supabaseClient.js";
+import { anonSupabase, handleErrorResponse, getSupabaseClient } from "./supabaseClient.js";
 import { handleCors } from "./corsHandler.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
@@ -32,9 +32,7 @@ export function withAuth(handler: ApiHandler) {
     }
 
     const authHeader = req.headers.authorization;
-    console.log("Middleware: Authorization Header:", authHeader);
     const token = authHeader?.split(" ")[1];
-    console.log("Middleware: Extracted Token:", token);
 
     if (!token) {
       return handleErrorResponse(
@@ -65,7 +63,8 @@ export function withAuth(handler: ApiHandler) {
       }
 
       // NOVO: Buscar o perfil do usuário para obter a role
-      const { data: profileData, error: profileError } = await anonSupabase
+      const userSupabase = getSupabaseClient(token);
+      const { data: profileData, error: profileError } = await userSupabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)

@@ -48,37 +48,34 @@ O Finvy oferece a geração de relatórios financeiros fundamentais, todos com a
 * **Estilização:** CSS puro (scoped).
 
 ## **Estrutura do Projeto**
+O projeto Finvy é organizado como um monorepo, contendo o frontend, o backend e as configurações de banco de dados.
+
 ```
 finvy/
-|
-|-- 📂 api/                  
-|   |-- index.ts           
-|
-|-- 📂 frontend/             
-|   |-- src/                
-|   |   |-- assets/        
-|   |   |-- components/   
-|   |   |-- router/       
-|   |   |-- services/     
-|   |   |-- stores/       
-|   |   |-- types/        
-|   |   |-- views/        
-|   |-- ...
-|
-|-- 📂 handlers/             
-|
-|-- 📂 supabase/            
-|   |-- migrations/        
-|   |-- config.toml         
-|   |-- .gitignore          
-|
-|-- 📂 utils/               
-|
-|-- 📄 .gitignore         
-|-- 📄 package.json         
-|-- 📄 README.md            
-|-- 📄 vercel.json        
-
+├── 📂 api/                  # Funções Serverless para a API (Vercel Functions)
+│   └── index.ts             # Ponto de entrada da API
+├── 📂 backend/              # Lógica de negócio do backend
+│   ├── 📂 handlers/         # Manipuladores de requisições da API
+│   ├── 📂 services/         # Serviços de negócio
+│   └── 📂 utils/            # Utilitários e configurações do backend
+├── 📂 frontend/             # Aplicação web frontend
+│   ├── 📂 public/           # Ativos estáticos
+│   └── 📂 src/              # Código fonte do frontend
+│       ├── 📂 assets/       # Imagens, ícones, CSS global
+│       ├── 📂 components/   # Componentes Vue reutilizáveis
+│       ├── 📂 router/       # Configuração de rotas do Vue Router
+│       ├── 📂 services/     # Serviços de comunicação com a API
+│       ├── 📂 stores/       # Gerenciamento de estado (Pinia)
+│       ├── 📂 types/        # Definições de tipos TypeScript
+│       └── 📂 views/        # Páginas/visualizações da aplicação
+├── 📂 supabase/             # Configurações e migrações do Supabase
+│   ├── 📂 migrations/       # Arquivos de migração do banco de dados
+│   ├── config.toml          # Configuração do projeto Supabase
+│   └── .gitignore           # Ignorar arquivos gerados pelo Supabase
+├── .gitignore               # Arquivos e diretórios ignorados pelo Git
+├── package.json             # Dependências e scripts do monorepo
+├── README.md                # Este arquivo
+└── vercel.json              # Configurações de deploy do Vercel
 ```
 
 ## **Configuração do Ambiente de Desenvolvimento**
@@ -163,7 +160,8 @@ Para executar os testes do projeto, utilize os seguintes comandos:
 
 ## **Fluxo de Trabalho de Migrações**
 
-Para fazer alterações no banco de dados:
+Para fazer alterações no banco de dados, siga este fluxo de trabalho:
+
 1.  **Faça as alterações localmente** (por exemplo, através do Supabase Studio local em `http://127.0.0.1:54323`).
 2.  **Gere um ficheiro de migração** com as diferenças:
     ```bash
