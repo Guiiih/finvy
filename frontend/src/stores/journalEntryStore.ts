@@ -16,6 +16,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     try {
       const entriesData = await api.get<JournalEntry[]>('/journal-entries')
 
+      // Adicione esta verificação aqui
+      if (!Array.isArray(entriesData)) {
+        console.error('Dados da API não são um array:', entriesData);
+        journalEntries.value = []; // Garante que journalEntries seja um array vazio
+        return;
+      }
+
       const entriesWithLines = await Promise.all(
         entriesData.map(async (entry) => {
           try {
