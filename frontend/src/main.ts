@@ -20,7 +20,7 @@ app.use(ToastService) // Adiciona o serviço de Toast
 
 async function initApp() {
   const authStore = useAuthStore()
-  // await authStore.initAuthListener()
+    await authStore.initAuthListener()
   app.use(router)
   app.mount('#app')
 }
