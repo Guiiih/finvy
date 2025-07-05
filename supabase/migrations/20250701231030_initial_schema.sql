@@ -37,3 +37,13 @@
             quantity INTEGER,
             unit_cost NUMERIC(10, 2)
         );
+
+        CREATE TABLE financial_transactions (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            transaction_date DATE NOT NULL,
+            amount NUMERIC(10, 2) NOT NULL,
+            type VARCHAR(50) NOT NULL, -- Ex: 'income', 'expense', 'payment'
+            description TEXT,
+            account_id UUID REFERENCES accounts(id), -- Opcional: Para vincular a uma conta contábil
+            user_id UUID REFERENCES auth.users(id)
+        );
