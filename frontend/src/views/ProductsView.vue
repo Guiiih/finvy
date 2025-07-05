@@ -11,14 +11,12 @@ const productStore = useProductStore()
 const authStore = useAuthStore()
 const toast = useToast()
 
-// Crie um tipo para os cabeçalhos da tabela de produtos
 type ProductTableHeader = {
   key: keyof Product | 'total_gross_stock' | 'icms_value_stock' | 'total_net_stock' | 'actions'
   label: string
   align?: 'left' | 'center' | 'right'
 }
 
-// Use o novo tipo para o seu array de cabeçalhos
 const headers: ProductTableHeader[] = [
   { key: 'name', label: 'Nome', align: 'left' },
   { key: 'description', label: 'Descrição', align: 'left' },

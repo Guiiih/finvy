@@ -1,5 +1,3 @@
-// frontend/src/types/index.ts
-
 export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
 
 export interface Account {
@@ -17,7 +15,7 @@ export interface Product {
   description?: string
   unit_cost: number
   current_stock: number
-  icms_rate?: number // Nova propriedade para alíquota de ICMS
+  icms_rate?: number
   user_id?: string
 }
 
@@ -25,15 +23,15 @@ export type EntryType = 'debit' | 'credit'
 
 export interface EntryLine {
   account_id: string
-  type: EntryType // 'debit' or 'credit'
+  type: EntryType
   amount: number
   product_id?: string
   quantity?: number
-  unit_cost?: number // Custo unitário do produto na linha
-  total_gross?: number // Valor total bruto da linha (quantidade * unit_cost)
-  icms_value?: number // Valor do ICMS calculado para a linha
-  icms_rate?: number // Alíquota de ICMS para a linha
-  total_net?: number // Valor total líquido da linha (total_gross - icms_value)
+  unit_cost?: number
+  total_gross?: number
+  icms_value?: number
+  icms_rate?: number
+  total_net?: number
   debit?: number
   credit?: number
 }

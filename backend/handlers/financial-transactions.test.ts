@@ -153,7 +153,7 @@ describe('financialTransactionsHandler', () => {
   });
 
   it('should return 405 for unsupported methods', async () => {
-    req = { method: 'PUT', query: { type: 'payable' } }; // PUT is not implemented, but type is needed
+    req = { method: 'PUT', query: { type: 'payable' } };
     await financialTransactionsHandler(req, res, user_id, token);
 
     expect(res.setHeader).toHaveBeenCalledWith('Allow', ['GET', 'POST', 'PUT', 'DELETE']);

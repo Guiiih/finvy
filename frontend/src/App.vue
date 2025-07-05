@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router' // Adicione useRoute
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { ref, computed } from 'vue'
 import { supabase } from './supabase'
-import Toast from 'primevue/toast' // Importa o componente Toast
+import Toast from 'primevue/toast'
+import type { Session } from '@supabase/supabase-js'
 
 const router = useRouter()
-const route = useRoute() // NOVO: Obtenha a rota atual
-import type { Session } from '@supabase/supabase-js'
+const route = useRoute()
 
 const session = ref<Session | null>(null)
 
@@ -30,86 +30,63 @@ const handleLogout = async () => {
   }
 }
 
-// NOVO: Computed property para esconder a navbar
 const shouldHideNavbar = computed(() => {
-  return route.meta.hideNavbar || false // Retorna true se hideNavbar for true na meta da rota
+  return route.meta.hideNavbar || false
 })
 </script>
 
 <template>
   <Toast />
-  <div v-if="session && !shouldHideNavbar">
-    <header>
-      <div class="wrapper">
-        <h1 class="title">Finvy</h1>
-        <nav>
-          <RouterLink to="/">Dashboard</RouterLink>
-          <RouterLink to="/accounts">Plano de Contas</RouterLink>
-          <RouterLink to="/journal-entries">Lançamentos Contábeis</RouterLink>
-          <RouterLink to="/products">Produtos</RouterLink>
-          <RouterLink to="/stock-control">Controle de Estoque</RouterLink>
-          <RouterLink to="/ledger">Razão</RouterLink>
-          <RouterLink to="/reports">Relatórios</RouterLink>
-          <button @click="handleLogout" class="logout-button">Sair</button>
-        </nav>
+
+  <div v-if="session && !shouldHideNavbar" class="min-h-screen bg-gray-100">
+    <header class="bg-white shadow-sm py-4 px-6 grid items-center" style="grid-template-columns: 180px 1fr auto;">
+      <div class="flex items-center">
+        <img src="./assets/FinvyLogoBlack.svg" alt="Finvy Logo" class="h-16 w-16" />
+      </div>
+
+      <nav class="flex justify-start space-x-6 whitespace-nowrap">
+        <RouterLink to="/"
+          class="text-gray-600 hover:text-gray-900 font-medium router-link-active:text-blue-600">Home</RouterLink>
+        <RouterLink to="/accounts"
+          class="text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap router-link-active:text-blue-600">Plano de
+          Contas</RouterLink>
+        <RouterLink to="/journal-entries"
+          class="text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap router-link-active:text-blue-600">Lançamentos Contábeis</RouterLink>
+        <RouterLink to="/products"
+          class="text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap router-link-active:text-blue-600">Produtos</RouterLink>
+        <RouterLink to="/stock-control"
+          class="text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap router-link-active:text-blue-600">Controle de Estoque</RouterLink>
+        <RouterLink to="/ledger"
+          class="text-gray-600 hover:text-gray-900 font-medium router-link-active:text-blue-600">Razão</RouterLink>
+        <RouterLink to="/reports"
+          class="text-gray-600 hover:text-gray-900 font-medium router-link-active:text-blue-600">Relatórios</RouterLink>
+      </nav>
+
+      <div class="flex justify-end items-center space-x-4">
+        <div class="relative">
+          <input type="text" placeholder="Enter your search request..."
+            class="rounded-full bg-gray-100 px-4 py-2 text-sm w-64 outline-none focus:ring-2 focus:ring-gray-300" />
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <button class="p-2 rounded-full hover:bg-gray-200 relative">
+          <i class="pi pi-bell text-xl text-gray-600"></i>
+        </button>
+
+        <img src="./assets/LogoIcon.svg" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click="handleLogout" />
       </div>
     </header>
 
-    <main>
+    <main class="p-6">
       <RouterView />
     </main>
   </div>
+
   <div v-else>
     <RouterView />
   </div>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-  border-bottom: 1px solid #e0e0e0;
-  padding: 1rem 2rem;
-}
-
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-nav {
-  width: 100%;
-  font-size: 1rem;
-  text-align: center;
-  margin-top: 1rem;
-}
-
-nav a.router-link-exact-active {
-  color: hsla(160, 100%, 37%, 1);
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-.logout-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 1rem;
-}
-
-.logout-button:hover {
-  background-color: #c82333;
-}
-</style>

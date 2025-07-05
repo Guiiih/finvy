@@ -17,3 +17,5 @@ body {
 }
 
 /* Restante dos seus estilos globais, se houver */
+
+@import "tailwindcss";

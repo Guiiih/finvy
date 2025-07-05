@@ -12,13 +12,10 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
   throw new Error("Variáveis de ambiente do Supabase não configuradas.");
 }
 
-// Cliente Supabase para operações que não exigem autenticação de usuário (ex: auth.getUser no middleware)
-export const anonSupabase = createClient(supabaseUrl!, supabaseAnonKey!);
+export const anonSupabase = createClient(supabaseUrl!, supabaseAnonKey!); 
 
-// Cliente Supabase com Service Role Key (ignora RLS - usar com cautela no backend)
-export const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
+export const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!); 
 
-// Função para obter um cliente Supabase autenticado com o JWT do usuário (para RLS)
 export function getSupabaseClient(token: string): SupabaseClient {
   return createClient(supabaseUrl!, supabaseAnonKey!, {
     global: {

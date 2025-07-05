@@ -158,7 +158,7 @@ describe('productsHandler', () => {
   });
 
   it('should return 400 for invalid POST body', async () => {
-    req = { method: 'POST', body: { name: '' } }; // Invalid body
+    req = { method: 'POST', body: { name: '' } };
     await productsHandler(req, res, user_id, token);
 
     expect(supabaseClient.handleErrorResponse).toHaveBeenCalledWith(res, 400, expect.any(String));

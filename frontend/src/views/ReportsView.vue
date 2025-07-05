@@ -2,23 +2,21 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import { RouterView, useRouter } from 'vue-router'
-import { api } from '@/services/api' // Import api
+import { api } from '@/services/api'
 
 const reportStore = useReportStore()
 const router = useRouter()
 
 const startDate = ref('')
 const endDate = ref('')
-const selectedFormat = ref('csv') // Default to CSV
+const selectedFormat = ref('csv')
 
-// Inicializa as datas com o ano corrente
 onMounted(() => {
   const today = new Date()
   endDate.value = today.toISOString().split('T')[0]
   startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
 })
 
-// Observa as mudanças nas datas e atualiza a rota com query params
 watch([startDate, endDate], ([newStartDate, newEndDate]) => {
   router.replace({
     query: {
@@ -28,7 +26,6 @@ watch([startDate, endDate], ([newStartDate, newEndDate]) => {
   })
 })
 
-// Função para navegar para um relatório específico
 const navigateToReport = (reportName: string) => {
   router.push({
     path: `/reports/${reportName}`,
@@ -50,17 +47,17 @@ const exportReport = async (reportType: string) => {
         reportType,
         startDate: startDate.value,
         endDate: endDate.value,
-        format: selectedFormat.value, // Pass the selected format
+        format: selectedFormat.value,
       },
       {
-        responseType: 'blob', // Important for downloading files
+        responseType: 'blob',
       }
     );
 
     const url = window.URL.createObjectURL(new Blob([response as Blob]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${reportType}_report.${selectedFormat.value}`); // Use selected format for filename
+    link.setAttribute('download', `${reportType}_report.${selectedFormat.value}`);
     document.body.appendChild(link);
     link.click();
     link.remove();

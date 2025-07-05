@@ -6,7 +6,6 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async (config) => {
-    // Import useAuthStore locally to avoid circular dependency at module initialization
     const { useAuthStore } = await import('@/stores/authStore');
     const authStore = useAuthStore();
     const token = authStore.token;

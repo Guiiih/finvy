@@ -1,10 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
 
-// Cache em memória para os produtos
 const productsCache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
+const CACHE_DURATION_MS = 5 * 60 * 1000;
 
 function getCachedProducts(userId: string) {
   const cached = productsCache.get(userId);
@@ -27,7 +26,7 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
+  user_role: string,
 ) {
   const userSupabase = getSupabaseClient(token);
   try {
@@ -38,14 +37,14 @@ export default async function handler(
         return res.status(200).json(cachedData);
       }
 
-      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
+      const { data, error: dbError } = await userSupabase
         .from("products")
         .select("*")
-        .eq("user_id", user_id) // Adicionado filtro por user_id
+        .eq("user_id", user_id)
         .order("name", { ascending: true });
 
       if (dbError) throw dbError;
-      setCachedProducts(user_id, data); // Armazena no cache
+      setCachedProducts(user_id, data);
       return res.status(200).json(data);
     }
 
@@ -66,7 +65,7 @@ export default async function handler(
         .select();
 
       if (dbError) throw dbError;
-      invalidateProductsCache(user_id); // Invalida o cache após adicionar
+      invalidateProductsCache(user_id);
       return res.status(201).json(data[0]);
     }
 
@@ -105,7 +104,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para atualizar.",
         );
       }
-      invalidateProductsCache(user_id); // Invalida o cache após atualizar
+      invalidateProductsCache(user_id);
       return res.status(200).json(data[0]);
     }
 
@@ -125,7 +124,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para deletar.",
         );
       }
-      invalidateProductsCache(user_id); // Invalida o cache após deletar
+      invalidateProductsCache(user_id);
       return res.status(204).end();
     }
 

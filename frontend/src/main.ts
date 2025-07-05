@@ -3,7 +3,7 @@ import './assets/main.css'
 import 'primeicons/primeicons.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' // 1. Importe o plugin
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { useAuthStore } from './stores/authStore'
 
 import App from './App.vue'
@@ -14,10 +14,10 @@ import ToastService from 'primevue/toastservice'
 const app = createApp(App)
 const pinia = createPinia()
 
-pinia.use(piniaPluginPersistedstate) // 2. Diga ao Pinia para usar o plugin
+pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
-app.use(ToastService) // Adiciona o serviço de Toast
+app.use(ToastService)
 
 async function initApp() {
   const authStore = useAuthStore()

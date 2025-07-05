@@ -32,7 +32,6 @@ function getAccountCode(accountId: string): number | undefined {
 
 function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
   return lines.reduce((sum, line) => {
-    // A propriedade 'amount' já vem calculada
     if (line.type === type) {
       return sum + (line.amount || 0)
     }

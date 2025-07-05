@@ -20,7 +20,6 @@ export const useStockControlStore = defineStore('stockControlStore', () => {
   })
 
   const totalCostOfGoodsSold = computed(() => {
-    // This will be calculated in the backend and provided via reportStore.dreData.cmv
     return reportStore.dreData.cmv
   })
 

@@ -161,8 +161,6 @@
             <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
             <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
             <td>
-              <!-- Edição e exclusão direta desabilitadas para manter a integridade contábil. 
-                   Correções devem ser feitas com lançamentos de estorno. -->
               <button disabled title="Edição desabilitada para lançamentos registrados">
                 Editar
               </button>
@@ -227,7 +225,6 @@ const newEntryDate = ref('')
 const newEntryDescription = ref('')
 const editingEntryId = ref<string | null>(null)
 
-// Add this line to declare newEntryLines as a ref
 type EntryLine = {
   account_id: string
   type: 'debit' | 'credit'
@@ -235,7 +232,7 @@ type EntryLine = {
   product_id?: string
   quantity?: number
   unit_cost?: number
-  icms_rate?: number // Adicionado icms_rate
+  icms_rate?: number
   total_gross?: number
   icms_value?: number
   total_net?: number
@@ -273,7 +270,7 @@ const totalCredits = computed(() =>
 function calculateLineTotals(line: EntryLine) {
   const icms_rate = line.icms_rate || 0
 
-  line.total_gross = line.amount // Use the amount entered by the user as the gross value
+  line.total_gross = line.amount
   line.icms_value = line.total_gross * (icms_rate / 100)
   line.total_net = line.total_gross - line.icms_value
 }
@@ -470,9 +467,7 @@ const resetAllData = () => {
   }
 }
 
-// Adiciona a propriedade computada para os lançamentos ordenados
 const sortedJournalEntries = computed(() => {
-  // Ordena por data decrescente, depois por id decrescente
   return [...journalEntryStore.journalEntries].sort((a, b) => {
     if (a.entry_date > b.entry_date) return -1
     if (a.entry_date < b.entry_date) return 1
@@ -482,10 +477,6 @@ const sortedJournalEntries = computed(() => {
 </script>
 
 <style scoped>
-/* O CSS pode precisar de pequenos ajustes nos flexboxes ou larguras */
-/* para garantir que os campos restantes ocupem bem o espaço após a remoção. */
-/* O estilo abaixo é o original, você pode ajustá-lo conforme necessário. */
-
 .journal-entry-view {
   padding: 20px;
   max-width: 1200px;
@@ -568,7 +559,6 @@ h3 {
   border-radius: 4px;
 }
 
-/* Ajuste o flex para as colunas restantes se necessário */
 .entry-line select:not(.product-select) {
   flex: 2;
   min-width: 150px;
@@ -580,7 +570,7 @@ h3 {
 }
 
 .entry-line .product-select {
-  flex: 2; /* Pode ser ajustado para ocupar mais espaço */
+  flex: 2;
   min-width: 180px;
 }
 

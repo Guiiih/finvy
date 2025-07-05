@@ -63,7 +63,7 @@ export type { LedgerAccount }
 
 export const useReportStore = defineStore('report', () => {
   const reports = ref<ReportData | null>(null)
-  const trialBalance = ref<LedgerAccount[]>([]) // New state for trial balance
+  const trialBalance = ref<LedgerAccount[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -148,6 +148,7 @@ export const useReportStore = defineStore('report', () => {
         salariosAPagar: 0,
         impostoAPagar: 0,
         icmsARecolher: 0,
+        icmsARecuperar: 0,
         passivoNaoCirculante: 0,
         capitalSocial: 0,
         capitalSocialSubscrito: 0,
@@ -643,9 +644,9 @@ export const useReportStore = defineStore('report', () => {
     loading,
     error,
     fetchReports,
-    fetchTrialBalance, // Expose the new fetch function
+    fetchTrialBalance,
     ledgerAccounts,
-    trialBalanceData, // Expose the new computed property
+    trialBalanceData,
     dreData,
     balanceSheetData,
     stockBalances,

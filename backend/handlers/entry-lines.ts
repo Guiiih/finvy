@@ -14,7 +14,6 @@ export default async function handler(
       const { journal_entry_id } = req.query;
 
       if (journal_entry_id) {
-        // Rota para buscar linhas de um lançamento específico
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select("*, product_id, quantity, unit_cost")
@@ -23,7 +22,6 @@ export default async function handler(
         if (dbError) throw dbError;
         return res.status(200).json(data);
       } else {
-        // Rota antiga para buscar todas as linhas do utilizador (pode ser mantida ou removida)
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select("*, journal_entry_id(user_id)")
@@ -56,7 +54,6 @@ export default async function handler(
         total_net,
       } = parsedBody.data;
 
-      // Verifica se o utilizador tem permissão para o lançamento principal
       const { data: journalEntry } = await userSupabase
         .from("journal_entries")
         .select("id")
@@ -93,7 +90,6 @@ export default async function handler(
 
       if (insertError) throw insertError;
 
-      // Lógica para atualizar o stock
       if (newLine.product_id && newLine.quantity) {
         const { data: product } = await userSupabase
           .from("products")
@@ -118,9 +114,6 @@ export default async function handler(
 
       return res.status(201).json(newLine);
     }
-
-    // A lógica para PUT e DELETE seguiria um padrão semelhante,
-    // sempre verificando a permissão do utilizador no `journal_entry` associado.
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);

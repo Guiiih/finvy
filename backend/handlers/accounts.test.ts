@@ -156,7 +156,7 @@ describe('accountsHandler', () => {
 
   it('should return 404 if account not found for DELETE', async () => {
     req = { method: 'DELETE', query: { id: '123' } };
-    supabaseClient.mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }); // Simulate not found
+    supabaseClient.mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) });
 
     await accountsHandler(req, res, user_id, token);
 

@@ -4,7 +4,6 @@ import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
 import type { EntryLine } from '@/types'
 
-// O componente emite um evento 'submit' quando o formulário está pronto
 const emit = defineEmits(['submit'])
 
 const accountStore = useAccountStore()
@@ -17,7 +16,6 @@ const newEntryLines = ref<Partial<EntryLine>[]>([
   { account_id: '', type: 'credit', amount: 0 },
 ])
 
-// Toda a lógica de cálculo de débitos e créditos vive dentro deste componente
 const totalDebits = computed(() =>
   newEntryLines.value.reduce(
     (sum, line) => (line.type === 'debit' ? sum + (line.amount || 0) : sum),
@@ -50,11 +48,9 @@ function handleSubmit() {
     description: newEntryDescription.value,
     lines: newEntryLines.value.filter((line) => line.account_id && line.amount),
   }
-  // Emite o evento com os dados para o componente pai
   emit('submit', entryToSubmit)
 }
 
-// Carrega as contas e produtos necessários para os selects do formulário
 onMounted(() => {
   accountStore.fetchAccounts()
   productStore.fetchProducts()

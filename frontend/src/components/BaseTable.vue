@@ -1,12 +1,9 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-// CORREÇÃO: A interface agora é genérica e a chave é restrita a strings de T.
 export interface TableHeader<T> {
   label: string
-  key: Extract<keyof T, string> | 'actions' // Garante que a chave é uma string
+  key: Extract<keyof T, string> | 'actions' 
 }
 
-// O componente agora usa a interface genérica para a prop 'headers'.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
   headers: TableHeader<T>[]
   items: T[]
@@ -17,7 +14,6 @@ const emit = defineEmits<{
   (e: 'delete', item: T): void
 }>()
 
-// Não são necessárias mais alterações no resto do script
 const handleEdit = (item: T) => {
   emit('edit', item)
 }

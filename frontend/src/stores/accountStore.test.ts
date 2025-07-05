@@ -21,7 +21,6 @@ describe('Account Store', () => {
 
   it('fetches accounts successfully', async () => {
     const store = useAccountStore()
-    // CORREÇÃO: Removida a propriedade 'balance'
     const mockAccounts: Account[] = [{ id: '1', name: 'Bank A', type: 'asset' }]
     ;(api.get as Mock).mockResolvedValue(mockAccounts)
 
@@ -32,7 +31,6 @@ describe('Account Store', () => {
 
   it('adds an account successfully', async () => {
     const store = useAccountStore()
-    // CORREÇÃO: Removida a propriedade 'balance'
     const newAccount: Omit<Account, 'id'> = { name: 'Bank B', type: 'asset' }
     const addedAccount: Account = { id: '2', ...newAccount }
     ;(api.post as Mock).mockResolvedValue(addedAccount)
@@ -44,11 +42,9 @@ describe('Account Store', () => {
 
   it('updates an account successfully', async () => {
     const store = useAccountStore()
-    // CORREÇÃO: Removida a propriedade 'balance'
     const existingAccount: Account = { id: '1', name: 'Bank A', type: 'asset' }
     store.accounts = [existingAccount]
 
-    // CORREÇÃO: Removida a propriedade 'balance'
     const updatedAccountData: Partial<Account> = { name: 'Bank A Updated' }
     const updatedAccount: Account = { ...existingAccount, ...updatedAccountData }
     ;(api.put as Mock).mockResolvedValue(updatedAccount)
@@ -61,7 +57,6 @@ describe('Account Store', () => {
   it('deletes an account successfully', async () => {
     const store = useAccountStore()
     const accountIdToDelete = '1'
-    // CORREÇÃO: Removida a propriedade 'balance'
     store.accounts = [{ id: accountIdToDelete, name: 'Bank A', type: 'asset' }]
     ;(api.delete as Mock).mockResolvedValue(null)
 

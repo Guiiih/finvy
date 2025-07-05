@@ -7,7 +7,6 @@ import BaseTable from '@/components/BaseTable.vue'
 import ProgressSpinner from 'primevue/progressspinner'
 import Skeleton from 'primevue/skeleton'
 
-// Importações do VeeValidate e Zod
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -15,12 +14,11 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 
 const accountStore = useAccountStore()
-const toast = useToast() // Inicializa o serviço de toast
+const toast = useToast()
 
 const isEditing = ref(false)
 const editingAccount = ref<Account | null>(null)
 
-// O schema Zod para validação
 const accountSchema = toTypedSchema(
   z.object({
     name: z
@@ -32,10 +30,8 @@ const accountSchema = toTypedSchema(
   }),
 )
 
-// Pega as contas da store para a tabela
 const filteredAccounts = computed(() => accountStore.accounts)
 
-// Define os cabeçalhos para a BaseTable
 type AccountTableHeader = {
   key: keyof Account | 'actions'
   label: string
@@ -48,14 +44,12 @@ const headers: AccountTableHeader[] = [
   { key: 'actions', label: 'Ações', align: 'center' },
 ]
 
-// Função para lidar com o envio do formulário (adição ou edição)
 async function handleSubmit(
   values: Omit<Account, 'id'> | Partial<Account>,
   { resetForm }: { resetForm: () => void },
 ) {
   try {
     if (isEditing.value && editingAccount.value) {
-      // Modo de edição
       await accountStore.updateAccount(editingAccount.value.id, values as Omit<Account, 'id'>)
       toast.add({
         severity: 'success',
@@ -66,7 +60,6 @@ async function handleSubmit(
       isEditing.value = false
       editingAccount.value = null
     } else {
-      // Modo de adição
       await accountStore.addAccount(values as Omit<Account, 'id'>)
       toast.add({
         severity: 'success',
@@ -75,7 +68,7 @@ async function handleSubmit(
         life: 3000,
       })
     }
-    resetForm() // Limpa o formulário após o sucesso
+    resetForm()
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
     toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
@@ -84,7 +77,7 @@ async function handleSubmit(
 
 function startEdit(account: Account) {
   isEditing.value = true
-  editingAccount.value = { ...account } // Clona o objeto para edição
+  editingAccount.value = { ...account }
 }
 
 function cancelEdit() {
@@ -92,7 +85,7 @@ function cancelEdit() {
   editingAccount.value = null
 }
 
-async function handleDeleteAccount(id: string | undefined) { // Altere o tipo para incluir undefined
+async function handleDeleteAccount(id: string | undefined) {
   if (!id) {
     toast.add({
       severity: 'warn',
@@ -101,7 +94,7 @@ async function handleDeleteAccount(id: string | undefined) { // Altere o tipo pa
       life: 3000,
     });
     console.error('Tentativa de deletar conta com ID indefinido.');
-    return; // Impede a chamada à API se o ID for undefined
+    return;
   }
 
   if (confirm('Tem certeza de que deseja excluir esta conta?')) {
@@ -191,7 +184,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Estilos principais do container */
 .accounts-container {
   padding: 20px;
   max-width: 900px;
@@ -223,8 +215,6 @@ h2 {
   padding-bottom: 10px;
 }
 
-/* --- Início das Melhorias de Design --- */
-
 .form-group {
   margin-bottom: 15px;
 }
@@ -238,19 +228,18 @@ h2 {
 
 .form-group input,
 .form-group select {
-  width: 100%; /* Ocupa a largura total */
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
-  box-sizing: border-box; /* Garante que o padding não aumente a largura */
+  box-sizing: border-box;
 }
 
-/* Estilo para os botões de ação na tabela */
 .action-buttons button {
-  padding: 5px 10px; /* Botões menores */
-  font-size: 0.9em; /* Texto menor */
-  margin-right: 5px; /* Espaçamento entre botões */
+  padding: 5px 10px;
+  font-size: 0.9em;
+  margin-right: 5px;
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
@@ -263,7 +252,6 @@ h2 {
   margin-right: 0;
 }
 
-/* Botão de Editar */
 .action-buttons .edit-button {
   background-color: #e9ecef;
   color: #495057;
@@ -273,7 +261,6 @@ h2 {
   background-color: #dee2e6;
 }
 
-/* Botão de Excluir */
 .action-buttons .delete-button {
   background-color: #f8d7da;
   color: #721c24;
@@ -289,6 +276,4 @@ h2 {
   margin-top: 4px;
   display: block;
 }
-
-/* --- Fim das Melhorias de Design --- */
 </style>

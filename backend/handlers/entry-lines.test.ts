@@ -71,7 +71,6 @@ describe('entryLinesHandler', () => {
       setHeader: vi.fn(),
     };
 
-    // Default chaining for common operations
     supabaseClient.mockFrom.mockReturnValue({
       select: supabaseClient.mockSelect,
       insert: supabaseClient.mockInsert,
@@ -86,7 +85,6 @@ describe('entryLinesHandler', () => {
     supabaseClient.mockOrder.mockReturnValue({ single: supabaseClient.mockSingle });
   });
 
-  // --- GET Requests ---
   it('should return entry lines for a given journal_entry_id', async () => {
     req = { method: 'GET', query: { journal_entry_id: 'journal-123' } };
     const mockData = [{ id: 'el1', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 100 }];
@@ -112,7 +110,7 @@ describe('entryLinesHandler', () => {
   it('should return all entry lines for the user when no journal_entry_id is provided', async () => {
     req = { method: 'GET', query: {} };
     const mockData = [{ id: 'el2', journal_entry_id: 'journal-456', account_id: 'acc2', debit: 200 }];
-    mockEq.mockResolvedValueOnce({ data: mockData, error: null }); // For the .eq("journal_entry_id.user_id", user_id) call
+    mockEq.mockResolvedValueOnce({ data: mockData, error: null });
 
     await entryLinesHandler(req, res, user_id, token);
 
@@ -131,7 +129,6 @@ describe('entryLinesHandler', () => {
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'DB fetch all error');
   });
 
-  // --- POST Requests ---
   it('should create a new entry line successfully', async () => {
     req = {
       method: 'POST',
@@ -151,8 +148,8 @@ describe('entryLinesHandler', () => {
     const mockJournalEntry = { id: 'journal-123' };
     const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 100 };
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // For journal entry permission check
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) }); // For insert operation
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) });
 
     await entryLinesHandler(req, res, user_id, token);
 
@@ -162,7 +159,7 @@ describe('entryLinesHandler', () => {
   });
 
   it('should return 400 for invalid request body (validation error)', async () => {
-    req = { method: 'POST', body: { journal_entry_id: 'journal-123' } }; // Missing account_id and debit/credit
+    req = { method: 'POST', body: { journal_entry_id: 'journal-123' } };
 
     await entryLinesHandler(req, res, user_id, token);
 
@@ -179,7 +176,7 @@ describe('entryLinesHandler', () => {
         credit: 0,
       },
     };
-    mockSingle.mockResolvedValueOnce({ data: null, error: null }); // Simulate journal entry not found or no permission
+    mockSingle.mockResolvedValueOnce({ data: null, error: null });
 
     await entryLinesHandler(req, res, user_id, token);
 
@@ -199,8 +196,8 @@ describe('entryLinesHandler', () => {
     const mockJournalEntry = { id: 'journal-123' };
     const insertError = new Error('Insert failed');
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // For journal entry permission check
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: null, error: insertError }) }) }); // Simulate insert error
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: null, error: insertError }) }) });
 
     await entryLinesHandler(req, res, user_id, token);
 
@@ -213,7 +210,7 @@ describe('entryLinesHandler', () => {
       body: {
         journal_entry_id: 'journal-123',
         account_id: 'acc1',
-        debit: 100, // Indicates purchase
+        debit: 100,
         credit: 0,
         product_id: 'prod-1',
         quantity: 10,
@@ -227,10 +224,9 @@ describe('entryLinesHandler', () => {
     const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 100, product_id: 'prod-1', quantity: 10 };
     const mockProduct = { current_stock: 50 };
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // Journal entry permission
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) }); // Insert entry line
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) });
 
-    // Mock for product fetch
     const mockProductSelect = vi.fn();
     const mockProductEq = vi.fn();
     mockFrom.mockImplementation((tableName: string) => {
@@ -249,14 +245,13 @@ describe('entryLinesHandler', () => {
     mockProductSelect.mockReturnValue({ eq: mockProductEq });
     mockProductEq.mockReturnValue({ eq: mockProductEq, single: vi.fn().mockResolvedValueOnce({ data: mockProduct, error: null }) });
 
-    // Mock for product update
     mockUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ data: null, error: null }) });
 
     await entryLinesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockNewLine);
-    expect(mockUpdate).toHaveBeenCalledWith({ current_stock: 60 }); // 50 + 10
+    expect(mockUpdate).toHaveBeenCalledWith({ current_stock: 60 });
   });
 
   it('should update product stock when product_id and quantity are provided (sale)', async () => {
@@ -266,7 +261,7 @@ describe('entryLinesHandler', () => {
         journal_entry_id: 'journal-123',
         account_id: 'acc1',
         debit: 0,
-        credit: 50, // Indicates sale
+        credit: 50,
         product_id: 'prod-1',
         quantity: 5,
         unit_cost: 10,
@@ -279,10 +274,9 @@ describe('entryLinesHandler', () => {
     const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 0, credit: 50, product_id: 'prod-1', quantity: 5 };
     const mockProduct = { current_stock: 50 };
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // Journal entry permission
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) }); // Insert entry line
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) });
 
-    // Mock for product fetch
     const mockProductSelect = vi.fn();
     const mockProductEq = vi.fn();
     mockFrom.mockImplementation((tableName: string) => {
@@ -301,14 +295,13 @@ describe('entryLinesHandler', () => {
     mockProductSelect.mockReturnValue({ eq: mockProductEq });
     mockProductEq.mockReturnValue({ eq: mockProductEq, single: vi.fn().mockResolvedValueOnce({ data: mockProduct, error: null }) });
 
-    // Mock for product update
     mockUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ data: null, error: null }) });
 
     await entryLinesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockNewLine);
-    expect(mockUpdate).toHaveBeenCalledWith({ current_stock: 45 }); // 50 - 5
+    expect(mockUpdate).toHaveBeenCalledWith({ current_stock: 45 });
   });
 
   it('should not update product stock if product_id or quantity is missing', async () => {
@@ -319,7 +312,7 @@ describe('entryLinesHandler', () => {
         account_id: 'acc1',
         debit: 100,
         credit: 0,
-        product_id: null, // Missing product_id
+        product_id: null,
         quantity: 10,
         unit_cost: 10,
         total_gross: 100,
@@ -330,14 +323,14 @@ describe('entryLinesHandler', () => {
     const mockJournalEntry = { id: 'journal-123' };
     const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 100, product_id: null, quantity: 10 };
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // Journal entry permission
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) }); // Insert entry line
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) });
 
     await entryLinesHandler(req, res, user_id, token);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockNewLine);
-    expect(mockUpdate).not.toHaveBeenCalled(); // Stock update should not be called
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it('should handle product not found during stock update', async () => {
@@ -359,10 +352,9 @@ describe('entryLinesHandler', () => {
     const mockJournalEntry = { id: 'journal-123' };
     const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'acc1', debit: 100, product_id: 'prod-not-found', quantity: 10 };
 
-    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null }); // Journal entry permission
-    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) }); // Insert entry line
+    mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+    mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValueOnce({ data: mockNewLine, error: null }) }) });
 
-    // Mock for product fetch (not found)
     const mockProductSelect = vi.fn();
     const mockProductEq = vi.fn();
     mockFrom.mockImplementation((tableName: string) => {
@@ -385,12 +377,11 @@ describe('entryLinesHandler', () => {
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockNewLine);
-    expect(mockUpdate).not.toHaveBeenCalled(); // Stock update should not be called
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  // --- General ---
   it('should return 405 for unsupported methods', async () => {
-    req = { method: 'PUT' }; // PUT is not fully implemented in the handler
+    req = { method: 'PUT' };
     await entryLinesHandler(req, res, user_id, token);
 
     expect(res.setHeader).toHaveBeenCalledWith('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
@@ -400,7 +391,7 @@ describe('entryLinesHandler', () => {
   it('should handle unexpected errors', async () => {
     req = { method: 'GET', query: {} };
     const dbError = new Error('Unexpected DB error');
-    mockEq.mockRejectedValueOnce(dbError); // Simulate an error at the first Supabase call
+    mockEq.mockRejectedValueOnce(dbError);
 
     await entryLinesHandler(req, res, user_id, token);
 

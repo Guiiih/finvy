@@ -15,14 +15,13 @@ async function fetchDREData() {
   await reportStore.fetchReports(props.startDate, props.endDate)
 }
 
-// Observa as mudanças nas props de data e busca os dados
 watch(
   [() => props.startDate, () => props.endDate],
   () => {
     fetchDREData()
   },
   { immediate: true },
-) // Executa imediatamente na montagem
+)
 
 const dreData = computed(() => reportStore.dreData)
 </script>
@@ -84,6 +83,11 @@ const dreData = computed(() => reportStore.dreData)
   max-width: 800px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 30px;
 }
 
 h1 {
@@ -105,7 +109,7 @@ h1 {
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   padding: 20px;
-  margin-bottom: 30px; /* Adicionado para espaçamento */
+  margin-bottom: 30px;
 }
 
 .dre-section.header {

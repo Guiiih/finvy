@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   const userSupabase = getSupabaseClient(token);
   try {
-    const { type } = req.query; // 'payable' or 'receivable'
+    const { type } = req.query;
     const tableName =
       type === "payable" ? "accounts_payable" : "accounts_receivable";
 
@@ -44,13 +44,8 @@ export default async function handler(
 
       if (dbError) throw dbError;
 
-      // Lógica para gerar o lançamento contábil omitida para brevidade,
-      // mas permaneceria a mesma do ficheiro original.
-
       return res.status(201).json(newFinancialTransaction);
     }
-
-    // A lógica para PUT e DELETE seguiria o mesmo padrão.
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);

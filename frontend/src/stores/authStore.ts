@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { supabase } from '@/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 import { AuthApiError } from '@supabase/supabase-js'
-import { api } from '@/services/api' // Importa o cliente da API
+import { api } from '@/services/api'
 
 export const useAuthStore = defineStore(
   'auth',
@@ -12,11 +12,11 @@ export const useAuthStore = defineStore(
     const session = ref<Session | null>(null)
     const loading = ref(false)
     const error = ref<string | null>(null)
-    const userRole = ref<string | null>(null) // NOVO: Adiciona a role do usuário
+    const userRole = ref<string | null>(null)
 
     const isLoggedIn = computed(() => !!user.value)
     const token = computed(() => session.value?.access_token || null)
-    const isAdmin = computed(() => userRole.value === 'admin') // NOVO: Computed para verificar se é admin
+    const isAdmin = computed(() => userRole.value === 'admin')
 
     async function fetchUserProfile() {
       if (!user.value) {
@@ -46,16 +46,16 @@ export const useAuthStore = defineStore(
         user.value = initialSession?.user || null
 
         if (user.value) {
-          await fetchUserProfile(); // Busca a role após obter a sessão inicial
+          await fetchUserProfile();
         }
 
         supabase.auth.onAuthStateChange(async (event, newSession) => {
           session.value = newSession
           user.value = newSession?.user || null
           if (user.value) {
-            await fetchUserProfile(); // Busca a role em cada mudança de estado de autenticação
+            await fetchUserProfile();
           } else {
-            userRole.value = null; // Limpa a role se não houver usuário
+            userRole.value = null;
           }
         })
       } catch (err: unknown) {
@@ -81,7 +81,7 @@ export const useAuthStore = defineStore(
         if (authError) throw authError
         user.value = data.user
         session.value = data.session
-        await fetchUserProfile(); // Busca a role após o login bem-sucedido
+        await fetchUserProfile();
         console.log('Login bem-sucedido:', data)
         return true
       } catch (err: unknown) {
@@ -108,8 +108,6 @@ export const useAuthStore = defineStore(
           password,
         })
         if (authError) throw authError
-        // Após o signup, o usuário pode não estar logado imediatamente ou a sessão pode não ter a role ainda.
-        // A role será buscada no próximo initAuthListener ou signIn.
         console.log('Registro bem-sucedido. Verifique seu email para confirmar:', data)
         return true
       } catch (err: unknown) {
@@ -135,7 +133,7 @@ export const useAuthStore = defineStore(
         if (authError) throw authError
         user.value = null
         session.value = null
-        userRole.value = null; // Limpa a role no logout
+        userRole.value = null;
         console.log('Logout bem-sucedido.')
         return true
       } catch (err: unknown) {
@@ -185,7 +183,6 @@ export const useAuthStore = defineStore(
         })
         if (authError) throw authError
         user.value = data.user
-        // Não é necessário buscar a role aqui, pois a sessão não muda.
         console.log('Senha atualizada com sucesso.')
         return true
       } catch (err: unknown) {
@@ -210,8 +207,8 @@ export const useAuthStore = defineStore(
       error,
       isLoggedIn,
       token,
-      userRole, // NOVO: Retorna a role do usuário
-      isAdmin, // NOVO: Retorna se o usuário é admin
+      userRole,
+      isAdmin,
       initAuthListener,
       signIn,
       signUp,

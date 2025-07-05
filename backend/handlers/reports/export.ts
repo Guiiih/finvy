@@ -38,7 +38,6 @@ interface LedgerDetailsData {
   [accountId: string]: LedgerDetailsEntry[];
 }
 
-// Helper function to convert data to CSV
 function convertToCsv(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): string {
   let headers: string[] = [];
   let rows: (string | number | boolean)[][] = [];
@@ -77,7 +76,6 @@ function convertToCsv(data: TrialBalanceData[] | DreData | BalanceSheetData | Le
   return `${headerRow}\n${dataRows}`;
 }
 
-// Helper function to convert data to XLSX
 async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(reportType);
@@ -120,7 +118,6 @@ async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetDa
   return workbook.xlsx.writeBuffer() as Promise<Buffer>;
 }
 
-// Helper function to convert data to PDF
 async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
@@ -165,11 +162,9 @@ async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetDat
       ]);
     }
 
-    // Basic table drawing for PDF
     const tableTop = doc.y;
     let currentY = tableTop;
 
-    // Draw headers
     doc.font('Helvetica-Bold').fontSize(10);
     headers.forEach((header, i) => {
       doc.text(header, 50 + (i * 100), currentY, { width: 90, align: 'left' });
@@ -177,7 +172,6 @@ async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetDat
     doc.moveDown();
     currentY = doc.y;
 
-    // Draw rows
     doc.font('Helvetica').fontSize(9);
     rows.forEach(row => {
       row.forEach((cell, i) => {
@@ -202,7 +196,7 @@ export default async function handler(
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   }
 
-  const { reportType, startDate, endDate, format } = req.body; // Added format
+  const { reportType, startDate, endDate, format } = req.body;
 
   if (!reportType || !format) {
     return handleErrorResponse(res, 400, "Tipo de relatório e formato são obrigatórios.");

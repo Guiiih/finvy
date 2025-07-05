@@ -84,7 +84,7 @@ describe('journalEntriesHandler', () => {
       end: vi.fn(),
     };
 
-    // Setup chainable mocks
+    
     supabaseClient.mockFrom.mockReturnValue({
       select: supabaseClient.mockSelect,
       insert: supabaseClient.mockInsert,
@@ -150,7 +150,7 @@ describe('journalEntriesHandler', () => {
 
   it('should return 404 if journal entry not found for DELETE', async () => {
     req = { method: 'DELETE', query: { id: 'je1' } };
-    supabaseClient.mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }); // Simulate not found
+    supabaseClient.mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) });
 
     await journalEntriesHandler(req, res, user_id, token);
 

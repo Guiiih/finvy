@@ -13,44 +13,35 @@ async function fetchDFCData() {
   await reportStore.fetchReports(props.startDate, props.endDate)
 }
 
-// Observa as mudanças nas props de data e busca os dados
 watch(
   [() => props.startDate, () => props.endDate],
   () => {
     fetchDFCData()
   },
   { immediate: true },
-) // Executa imediatamente na montagem
+)
 
 const dfcData = computed(() => {
   const lle = reportStore.dreData.lucroLiquido
   const bsd = reportStore.balanceSheetData
 
-  // Variações das contas do Balanço (Calculadas como Saldo Final - Saldo Inicial)
-  // Ajuste de sinal para DFC:
-  // Ativos (exceto caixa): Aumento (-) ou Diminuição (+) no caixa
-  // Passivos/PL: Aumento (+) ou Diminuição (+) no caixa
+  const varFornecedores = bsd.fornecedores
+  const varImpostosAPagar = bsd.impostoAPagar
+  const varClientes = bsd.clientes
+  const varEstoque = bsd.estoqueDeMercadorias
+  const varImobilizado = bsd.moveisEUtensilios
+  const varCapitalSocial = bsd.capitalSocial
 
-  const varFornecedores = bsd.fornecedores // Passivo: Aumento (+) no caixa
-  const varImpostosAPagar = bsd.impostoAPagar // Passivo: Aumento (+) no caixa
-  const varClientes = bsd.clientes // Ativo: Aumento (-) no caixa
-  const varEstoque = bsd.estoqueDeMercadorias // Ativo: Aumento (-) no caixa
-  const varImobilizado = bsd.moveisEUtensilios // Ativo Não Circulante: Aumento (-) no caixa
-  const varCapitalSocial = bsd.capitalSocial // PL: Aumento (+) no caixa
+  let fluxoOperacional = lle
+  fluxoOperacional += varFornecedores
+  fluxoOperacional += varImpostosAPagar
+  fluxoOperacional -= varClientes
+  fluxoOperacional -= varEstoque
 
-  // Fluxo de Caixa das Atividades Operacionais
-  let fluxoOperacional = lle // Começa com o Lucro Líquido
-  fluxoOperacional += varFornecedores // + Var. Fornecedores
-  fluxoOperacional += varImpostosAPagar // + Var. Impostos
-  fluxoOperacional -= varClientes // - Var. Clientes
-  fluxoOperacional -= varEstoque // - Var. Estoque
-
-  // Fluxo de Caixa das Atividades de Investimento
   let fluxoInvestimento = 0
-  fluxoInvestimento -= varImobilizado // - Var. Imobilizado
-  fluxoInvestimento += varCapitalSocial // + Var. Capital Social
+  fluxoInvestimento -= varImobilizado
+  fluxoInvestimento += varCapitalSocial
 
-  // Saldo Final de Caixa
   const sldFinalCaixa = fluxoOperacional + fluxoInvestimento
 
   return {
@@ -141,7 +132,7 @@ const dfcData = computed(() => {
   max-width: 600px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
-  background-color: #fff; /* Fundo branco como na imagem */
+  background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -162,7 +153,7 @@ h1 {
 .dfc-report {
   display: flex;
   flex-direction: column;
-  border: 1px solid #e0e0e0; /* Borda cinza clara */
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -170,10 +161,10 @@ h1 {
 .header-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  background-color: #f0f0f0; /* Fundo cinza claro */
+  background-color: #f0f0f0;
   font-weight: bold;
   padding: 10px 15px;
-  border-bottom: 2px solid #ccc; /* Borda um pouco mais forte */
+  border-bottom: 2px solid #ccc;
   color: #222;
 }
 
@@ -181,33 +172,32 @@ h1 {
   display: grid;
   grid-template-columns: 2fr 1fr;
   padding: 8px 15px;
-  border-bottom: 1px dashed #eee; /* Linha tracejada suave */
+  border-bottom: 1px dashed #eee;
   align-items: center;
   font-size: 0.95em;
-  color: #333; /* Texto padrão mais escuro */
+  color: #333;
 }
 
 .dfc-line:last-of-type {
-  border-bottom: none; /* Remove borda do último item do grupo */
+  border-bottom: none;
 }
 
 .dfc-line.subheader {
   font-weight: bold;
-  background-color: #e9ecef; /* Fundo sutil para o Lucro do Exercício */
+  background-color: #e9ecef;
 }
 
 .dfc-line.item {
-  /* Estilo padrão para os itens, sem fundo especial */
 }
 
 .dfc-total {
   display: grid;
   grid-template-columns: 2fr 1fr;
   font-weight: bold;
-  border-top: 1px solid #999; /* Linha divisória antes do total */
+  border-top: 1px solid #999;
   padding: 10px 15px;
   margin-top: 5px;
-  background-color: #e9ecef; /* Fundo sutil para totais de atividade */
+  background-color: #e9ecef;
   font-size: 1em;
 }
 
@@ -216,19 +206,19 @@ h1 {
 }
 
 .dfc-total.final-total {
-  border-top: 2px solid #333; /* Borda mais forte no total final */
-  background-color: #d4edda; /* Fundo verde claro para o total final */
+  border-top: 2px solid #333;
+  background-color: #d4edda;
   font-size: 1.1em;
   color: #155724;
 }
 
 span:last-child {
   text-align: right;
-  font-weight: normal; /* Valores não são negrito por padrão */
+  font-weight: normal;
 }
 
 .dfc-line.subheader span:last-child,
 .dfc-total span:last-child {
-  font-weight: bold; /* Valores dos subtotais e totais são negrito */
+  font-weight: bold;
 }
 </style>

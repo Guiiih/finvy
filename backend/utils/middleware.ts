@@ -9,8 +9,8 @@ type ApiHandler = (
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string, // NOVO: Adicionado o nível de permissão do usuário
-) => Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  user_role: string,
+) => Promise<any>;
 
 export function withAuth(handler: ApiHandler) {
   return async (req: VercelRequest, res: VercelResponse) => {
@@ -20,7 +20,6 @@ export function withAuth(handler: ApiHandler) {
 
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       try {
-        // Manually parse the body if it's not already parsed
         if (typeof req.body === 'string') {
           req.body = JSON.parse(req.body);
         } else if (Buffer.isBuffer(req.body)) {
@@ -46,7 +45,7 @@ export function withAuth(handler: ApiHandler) {
       const {
         data: { user },
         error: authError,
-      } = await anonSupabase.auth.getUser(token); // Usando anonSupabase aqui
+      } = await anonSupabase.auth.getUser(token);
 
       if (authError || !user) {
         console.error(
@@ -62,7 +61,6 @@ export function withAuth(handler: ApiHandler) {
         );
       }
 
-      // NOVO: Buscar o perfil do usuário para obter a role
       const userSupabase = getSupabaseClient(token);
       const { data: profileData, error: profileError } = await userSupabase
         .from('profiles')
@@ -75,7 +73,7 @@ export function withAuth(handler: ApiHandler) {
         return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
       }
 
-      await handler(req, res, user.id, token, profileData.role); // Passando a role para o handler
+      await handler(req, res, user.id, token, profileData.role);
     } catch (err: unknown) {
       console.error("Erro inesperado no middleware de autenticação:", err);
       const message =

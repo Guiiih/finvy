@@ -11,11 +11,10 @@ const endDate = ref('')
 
 async function fetchLedgerData() {
   await reportStore.fetchReports(startDate.value, endDate.value)
-  await journalEntryStore.fetchJournalEntries() // This might need date filters too, but for now, keep as is.
+  await journalEntryStore.fetchJournalEntries()
 }
 
 onMounted(async () => {
-  // Set default dates (e.g., beginning of current year to today)
   const today = new Date()
   endDate.value = today.toISOString().split('T')[0]
   startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
@@ -31,7 +30,6 @@ function getBalanceClass(account: LedgerAccount) {
     return ''
   }
 
-  // Special cases for specific accounts that might not follow standard nature rules
   if (account.accountName === 'Resultado Bruto') {
     return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
@@ -48,13 +46,11 @@ function getBalanceClass(account: LedgerAccount) {
     return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
 
-  // Determine normal balance nature based on account type
   const isDebitNature = ['asset', 'expense'].includes(account.type)
 
   if (isDebitNature) {
     return account.finalBalance >= 0 ? 'positive' : 'negative'
   } else {
-    // Credit nature (liability, equity, revenue)
     return account.finalBalance >= 0 ? 'positive' : 'negative'
   }
 }

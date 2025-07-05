@@ -5,7 +5,7 @@ import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/s
 
 // Cache em memória para as contas
 const accountsCache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de cache
+const CACHE_DURATION_MS = 5 * 60 * 1000; 
 
 function getCachedAccounts(userId: string) {
   const cached = accountsCache.get(userId);
@@ -40,14 +40,14 @@ export default async function handler(
         return res.status(200).json(cachedData);
       }
 
-      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
+      const { data, error: dbError } = await userSupabase 
         .from("accounts")
         .select("*")
-        .eq("user_id", user_id) // Adicionado filtro por user_id
+        .eq("user_id", user_id) 
         .order("name", { ascending: true });
 
       if (dbError) throw dbError;
-      setCachedAccounts(user_id, data); // Armazena no cache
+      setCachedAccounts(user_id, data); 
       return res.status(200).json(data);
     } else if (req.method === "POST") {
       const parsedBody = createAccountSchema.safeParse(req.body);
@@ -60,12 +60,12 @@ export default async function handler(
       }
       const { name, type } = parsedBody.data;
 
-      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
+      const { data, error: dbError } = await userSupabase 
         .from("accounts")
         .insert({ name, type, user_id })
         .select();
       if (dbError) throw dbError;
-      invalidateAccountsCache(user_id); // Invalida o cache após adicionar
+      invalidateAccountsCache(user_id); 
       return res.status(201).json(data[0]);
     } else if (req.method === "PUT") {
       const id = req.query.id as string;
@@ -87,7 +87,7 @@ export default async function handler(
         );
       }
 
-      const { data, error: dbError } = await userSupabase // Usando o cliente com token do usuário
+      const { data, error: dbError } = await userSupabase 
         .from("accounts")
         .update(updateData)
         .eq("id", id)
@@ -101,7 +101,7 @@ export default async function handler(
           "Conta não encontrada ou você não tem permissão para atualizar esta conta.",
         );
       }
-      invalidateAccountsCache(user_id); // Invalida o cache após atualizar
+      invalidateAccountsCache(user_id); 
       return res.status(200).json(data[0]);
     } else if (req.method === "DELETE") {
       const id = req.query.id as string;
@@ -113,7 +113,7 @@ export default async function handler(
           parsedId.error.errors.map((err: z.ZodIssue) => err.message).join(", "),
         );
       }
-      const { error: dbError, count } = await userSupabase // Usando o cliente com token do usuário
+      const { error: dbError, count } = await userSupabase 
         .from("accounts")
         .delete()
         .eq("id", id)
@@ -127,7 +127,7 @@ export default async function handler(
           "Conta não encontrada ou você não tem permissão para deletar esta conta.",
         );
       }
-      invalidateAccountsCache(user_id); // Invalida o cache após deletar
+      invalidateAccountsCache(user_id); 
       return res.status(204).send("");
     } else {
       res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);

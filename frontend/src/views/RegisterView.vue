@@ -1,66 +1,84 @@
 <template>
-  <div class="auth-page-container">
-    <div class="auth-logo-column">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="logo" />
+  <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
+    <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center">
+      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
 
-    <div class="auth-form-column">
-      <div class="auth-form-wrapper">
-        <h2 class="auth-title">Cadastro</h2>
-        <p class="auth-subtitle">Preencha os dados abaixo para começar.</p>
-        <form @submit.prevent="handleRegister" class="auth-form">
-          <div class="form-group">
+    <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50">
+      <div class="max-w-sm w-full px-10 box-border">
+        <h2 class="text-gray-800 text-3xl mb-1 text-left font-semibold mt-0">Cadastro</h2>
+        <p class="text-gray-400 text-sm mt-0 mb-6 text-left">Preencha os dados abaixo para começar.</p>
+
+        <form @submit.prevent="handleRegister" class="space-y-5">
+          <div>
             <input
               type="text"
               id="name"
               v-model="firstName"
               placeholder="Nome"
               required
-              class="auth-input"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
+                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
           </div>
-          <div class="form-group">
+          <div>
             <input
               type="email"
               id="email"
               v-model="email"
               placeholder="E-mail"
               required
-              class="auth-input"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
+                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
           </div>
-          <div class="form-group password-group">
+          <div class="relative">
             <input
               :type="passwordFieldType"
               id="password"
               v-model="password"
               placeholder="Senha"
               required
-              class="auth-input"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12
+                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
-            <span class="password-toggle" @click="togglePasswordVisibility">
+            <span
+              class="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center text-lg"
+              @click="togglePasswordVisibility"
+              :class="{ 'text-purple-600': passwordFieldType === 'text' || password }"
+            >
               <span v-if="passwordFieldType === 'password'">🙈</span>
               <span v-else>🙉</span>
             </span>
           </div>
-          <div class="form-group password-group">
+          <div class="relative">
             <input
               :type="confirmPasswordFieldType"
               id="confirmPassword"
               v-model="confirmPassword"
               placeholder="Confirma Senha"
               required
-              class="auth-input"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12
+                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
-            <span class="password-toggle" @click="toggleConfirmPasswordVisibility">
+            <span
+              class="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center text-lg"
+              @click="toggleConfirmPasswordVisibility"
+              :class="{ 'text-purple-600': confirmPasswordFieldType === 'text' || confirmPassword }"
+            >
               <span v-if="confirmPasswordFieldType === 'password'">🙈</span>
               <span v-else>🙉</span>
             </span>
           </div>
-          <button type="submit" class="auth-button">Concluir cadastro</button>
+          <button type="submit" class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853]">
+            Concluir cadastro
+          </button>
         </form>
-        <p class="auth-footer-text">
-          Já tem uma conta? <router-link to="/login" class="auth-link">Faça login</router-link>
+        <p class="mt-8 text-center text-gray-400 text-sm">
+          Já tem uma conta?
+          <router-link to="/login" class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline">
+            Faça login
+          </router-link>
         </p>
       </div>
     </div>
@@ -101,9 +119,9 @@ const handleRegister = async () => {
       password: password.value,
       options: {
         data: {
-          first_name: firstName.value,
-        },
-      },
+          first_name: firstName.value
+        }
+      }
     })
 
     if (error) throw error
@@ -124,193 +142,21 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
-/* Estilos gerais do container da página de autenticação */
-.auth-page-container {
-  display: flex;
-  min-height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #f8f8f8; /* Fundo claro para a coluna do formulário */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  transition: background-color 50000s ease-in-out 0s !important;
+  border-color: transparent !important;
 }
 
-/* Coluna do logo (visualmente à esquerda) */
-.auth-logo-column {
-  flex: 1;
-  background-color: #1a1a1a; /* Fundo escuro */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  order: 1; /* Força esta coluna a ser a primeira (esquerda) */
-}
-
-.logo {
-  max-width: 30%;
-  height: auto;
-}
-
-/* Coluna do formulário (visualmente à direita) */
-.auth-form-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background-color: #f8f8f8;
-  order: 2; /* Força esta coluna a ser a segunda (direita) */
-}
-
-.auth-form-wrapper {
-  max-width: 380px;
-  width: 100%;
-  padding: 0 40px;
-  box-sizing: border-box;
-}
-
-.auth-title {
-  color: #333333;
-  font-size: 2.2em;
-  margin-bottom: 5px;
-  text-align: left;
-  font-weight: 600;
-  margin-top: 0;
-}
-
-.auth-subtitle {
-  color: #a0a0a0;
-  font-size: 0.9em;
-  margin-top: 0;
-  margin-bottom: 25px;
-  text-align: left;
-}
-
-.auth-form .form-group {
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.auth-input {
-  width: 100%;
-  padding: 15px 20px;
-  border: 1px solid transparent; /* Bordas transparentes por padrão */
-  border-radius: 8px;
-  background-color: white; /* Fundo BRANCO para inputs */
-  font-size: 1em;
-  color: #4a4a4a; /* Cor do texto padrão */
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease;
-}
-
-.auth-input:focus {
-  border-color: #926eeb; /* Borda roxa ao focar */
-}
-
-.auth-input::placeholder {
-  color: #a0a0a0;
-}
-
-/* ESTILOS PARA INPUTS PREENCHIDOS / AUTOFILL (MANTIDOS E APLICADOS A TODOS OS INPUTS) */
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus,
-.auth-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* Fundo branco */
-  -webkit-text-fill-color: #4a4a4a !important; /* Texto cinza escuro */
-  transition: background-color 50000s ease-in-out 0s !important; /* Transição imediata */
-  border: 1px solid transparent !important; /* Remove borda extra */
-}
-
-/* Estilo específico para inputs de SENHA com borda roxa lateral no focus */
-.password-group input[type='password']:focus,
-.password-group input[type='password']:-webkit-autofill:focus {
-  border-left: 3px solid #926eeb !important;
-  padding-left: 17px !important;
-  border-color: transparent !important; /* Ensure other borders are transparent */
-}
-
-.password-group .auth-input {
-  padding-right: 50px; /* Make space for the toggle icon */
-}
-
-.password-group .password-toggle {
-  position: absolute;
-  right: 20px; /* Adjust this value to move the icon left/right */
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #a0a0a0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2em; /* Ensure emoji size is consistent */
-  line-height: 1; /* Helps with vertical alignment of emojis */
-}
-
-/* Cor do ícone de olho quando o input está preenchido/focado */
-.password-group .auth-input:not(:placeholder-shown) + .password-toggle,
-.password-group .auth-input:focus + .password-toggle {
-  color: #926eeb;
-}
-
-.auth-button {
-  width: 100%;
-  padding: 15px;
-  background-color: #00e676;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.auth-button:hover {
-  background-color: #00c853;
-}
-
-.auth-footer-text {
-  margin-top: 30px;
-  text-align: center;
-  color: #a0a0a0;
-  font-size: 0.9em;
-}
-
-.auth-link {
-  color: #926eeb;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.2s ease;
-}
-
-.auth-link:hover {
-  text-decoration: underline;
-}
-
-/* Responsividade básica */
-@media (max-width: 768px) {
-  .auth-page-container {
-    flex-direction: column;
-  }
-
-  .auth-logo-column {
-    display: none;
-  }
-
-  .auth-form-column {
-    flex: none;
-    width: 100%;
-  }
-
-  .auth-form-wrapper {
-    padding: 20px;
-  }
-
-  .password-group .password-toggle {
-    right: 20px;
-  }
+input:focus,
+input:-webkit-autofill:focus {
+  border-left: 4px solid #1a1a1a !important;
+  padding-left: calc(1rem - 1px) !important;
+  box-shadow: 0 0 0px 1px #1a1a1a inset !important;
+  outline: none !important;
 }
 </style>

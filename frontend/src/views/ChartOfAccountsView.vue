@@ -125,7 +125,7 @@ h1 {
   font-weight: bold;
   color: #555;
   margin-right: 15px;
-  min-width: 60px; /* Garante alinhamento para códigos */
+  min-width: 60px;
 }
 
 .account-name {

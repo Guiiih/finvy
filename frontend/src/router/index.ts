@@ -1,4 +1,4 @@
-// frontend/src/router/index.ts
+
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { supabase } from '../supabase'
@@ -8,8 +8,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'dashboard',
-      component: () => import('../views/DashboardView.vue'),
+      name: 'Inital',
+      component: () => import('../views/InitialView.vue'),
       meta: { requiresAuth: true },
     },
     {

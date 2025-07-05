@@ -1,8 +1,8 @@
 <template>
-  <div class="auth-page-container">
-    <div class="auth-form-column">
-      <div class="back-button-wrapper">
-        <router-link to="/login" class="back-button">
+  <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
+    <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50 order-1 relative">
+      <div class="absolute top-10 left-10 z-10">
+        <router-link to="/login" class="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-gray-200 cursor-pointer text-gray-600 transition-colors duration-200 hover:bg-gray-100 no-underline">
           <svg
             width="24"
             height="24"
@@ -17,27 +17,36 @@
           </svg>
         </router-link>
       </div>
-      <div class="auth-form-wrapper">
-        <h2 class="auth-title">Eita, esqueceu sua senha?</h2>
-        <p class="auth-subtitle">Não esquenta, vamos dar um jeito nisso.</p>
-        <form @submit.prevent="handleForgotPassword" class="auth-form">
-          <div class="form-group">
+
+      <div class="max-w-sm w-full px-10 box-border md:p-10">
+        <h2 class="text-gray-800 text-3xl font-semibold mb-2 text-left">Eita, esqueceu sua senha?</h2>
+        <p class="text-gray-400 text-sm mb-8 text-left">Não esquenta, vamos dar um jeito nisso.</p>
+
+        <form @submit.prevent="handleForgotPassword" class="space-y-5">
+          <div class="relative bg-white rounded-lg shadow-sm overflow-hidden">
             <input
               type="email"
               id="email"
               v-model="email"
               placeholder="E-mail"
               required
-              class="auth-input"
+              class="w-full p-4 border border-transparent rounded-lg bg-transparent text-gray-700 placeholder-gray-400 outline-none
+                     focus:border-l-4 focus:border-[#1a1a1a] transition-all duration-200 ease-in-out focus:pl-[calc(1rem-1px)]"
             />
           </div>
-          <button type="submit" class="auth-button" :disabled="!email">Enviar</button>
+          <button
+            type="submit"
+            class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853] disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+            :disabled="!email"
+          >
+            Enviar
+          </button>
         </form>
       </div>
     </div>
 
-    <div class="auth-logo-column">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="logo" />
+    <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center order-2">
+      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
   </div>
 </template>
@@ -53,7 +62,7 @@ const router = useRouter()
 const handleForgotPassword = async () => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-      redirectTo: window.location.origin + '/update-password',
+      redirectTo: window.location.origin + '/update-password'
     })
 
     if (error) throw error
@@ -69,189 +78,20 @@ const handleForgotPassword = async () => {
 </script>
 
 <style scoped>
-/* Reset global de margens e paddings é crucial, como em main.css */
-/* html, body { margin: 0; padding: 0; } */
-
-.auth-page-container {
-  display: flex;
-  min-height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #f8f8f8; /* Fundo claro para a coluna do formulário */
-  flex-direction: row;
-}
-
-/* Coluna do formulário (clara) à esquerda */
-.auth-form-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background-color: #f8f8f8;
-  order: 1;
-  position: relative; /* Adicionado para posicionar o back-button-wrapper */
-}
-
-/* Coluna do logo (escura) à direita */
-.auth-logo-column {
-  flex: 1;
-  background-color: #1a1a1a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  order: 2;
-}
-
-.logo {
-  max-width: 30%;
-  height: auto;
-}
-
-/* NOVO: Estilos para o botão de voltar */
-.back-button-wrapper {
-  position: absolute;
-  top: 40px; /* Distância do topo */
-  left: 40px; /* Distância da esquerda */
-  z-index: 10;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px; /* Tamanho do círculo do botão */
-  height: 40px;
-  border-radius: 50%;
-  background-color: transparent;
-  border: 1px solid #e0e0e0; /* Borda cinza clara, como na imagem */
-  cursor: pointer;
-  color: #888888; /* Cor da seta */
-  transition: background-color 0.2s ease;
-  text-decoration: none; /* Remover sublinhado do RouterLink */
-}
-
-.back-button:hover {
-  background-color: #efefef; /* Pequeno destaque no hover */
-}
-
-.auth-form-wrapper {
-  max-width: 380px;
-  width: 100%;
-  padding: 40px;
-  background-color: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  box-sizing: border-box;
-}
-
-.auth-title {
-  color: #333333;
-  font-size: 2.2em;
-  font-weight: 600;
-  margin-bottom: 10px;
-  text-align: left;
-}
-
-.auth-subtitle {
-  color: #a0a0a0;
-  font-size: 0.9em;
-  margin-bottom: 30px;
-  text-align: left;
-}
-
-.auth-form .form-group {
-  margin-bottom: 20px;
-  position: relative;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 0;
-  overflow: hidden;
-}
-
-.auth-input {
-  width: 100%;
-  padding: 15px 20px;
-  border: none;
-  border-radius: 8px;
-  background-color: transparent;
-  font-size: 1em;
-  color: #4a4a4a;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.auth-input::placeholder {
-  color: #a0a0a0;
-}
-
-/* Estilos para Inputs Autofill */
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus,
-.auth-input:-webkit-autofill:active {
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0px 1000px white inset !important;
   -webkit-text-fill-color: #4a4a4a !important;
   transition: background-color 50000s ease-in-out 0s !important;
+  border-color: transparent !important;
 }
 
-.auth-button {
-  width: 100%;
-  padding: 15px;
-  background-color: #00e676; /* VERDE por padrão */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.auth-button:hover {
-  background-color: #00c853; /* Verde um pouco mais escuro no hover */
-}
-
-.auth-button:disabled {
-  background-color: #e0e0e0; /* Cinza claro quando desabilitado */
-  color: #a0a0a0; /* Texto cinza */
-  cursor: not-allowed;
-}
-
-.auth-button:hover:disabled {
-  background-color: #e0e0e0; /* Mantém a cor desabilitada no hover */
-}
-
-/* Responsividade básica */
-@media (max-width: 600px) {
-  .auth-form-column {
-    padding: 20px;
-  }
-  .auth-form-wrapper {
-    padding: 20px;
-  }
-  /* Ajuste a posição do botão de voltar em telas menores */
-  .back-button-wrapper {
-    top: 20px;
-    left: 20px;
-  }
-}
-@media (max-width: 768px) {
-  .auth-page-container {
-    flex-direction: column;
-  }
-
-  .auth-logo-column {
-    display: none;
-  }
-
-  .auth-form-column {
-    flex: none;
-    width: 100%;
-  }
+input:focus,
+input:-webkit-autofill:focus {
+  border-left: 4px solid #1a1a1a !important;
+  padding-left: calc(1rem - 1px) !important;
+  border-color: transparent !important;
+  outline: none !important;
 }
 </style>

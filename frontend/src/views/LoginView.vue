@@ -1,50 +1,58 @@
 <template>
-  <div class="auth-page-container">
-    <div class="auth-logo-column">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="logo" />
+  <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
+    <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center">
+      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
 
-    <div class="auth-form-column">
-      <div class="auth-form-wrapper">
-        <h2 class="auth-title">Fazer login</h2>
-        <form @submit.prevent="handleLogin" class="auth-form">
-          <div class="form-group">
+    <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50">
+      <div class="max-w-sm w-full px-10 box-border">
+        <h2 class="text-gray-800 text-3xl mb-6 text-left font-semibold mt-0">Fazer login</h2>
+        <form @submit.prevent="handleLogin" class="space-y-5">
+          <div>
             <input
               type="email"
               id="email"
               v-model="email"
               placeholder="E-mail"
               required
-              class="auth-input"
+              class="w-full p-4 border border-transparent rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none focus:border-l-4 focus:border-[#1a1a1a] transition-all duration-200 ease-in-out focus:pl-[calc(1rem-1px)]"
             />
           </div>
-          <div class="form-group password-group">
+          <div class="relative">
             <input
               :type="passwordFieldType"
               id="password"
               v-model="password"
               placeholder="Senha"
               required
-              class="auth-input"
+              class="w-full p-4 border border-transparent rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none focus:border-l-4 focus:border-[#1a1a1a] transition-all duration-200 ease-in-out focus:pl-[calc(1rem-1px)]"
             />
-            <span class="password-toggle" @click="togglePasswordVisibility">
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center"
+              @click="togglePasswordVisibility"
+              :class="{ 'text-purple-600': passwordFieldType === 'text' || password }"
+            >
               <span v-if="passwordFieldType === 'password'">🙈</span>
               <span v-else>🙉</span>
             </span>
           </div>
-          <div class="form-options">
-            <label class="checkbox-container">
-              <input type="checkbox" />
+          <div class="flex justify-between items-center text-sm">
+            <label class="flex items-center text-gray-400">
+              <input type="checkbox" class="mr-2 w-4 h-4 accent-[#00e676]" />
               Lembrar-me
             </label>
-            <router-link to="/forgot-password" class="forgot-password-link"
+            <router-link to="/forgot-password" class="text-gray-400 no-underline transition-colors duration-200 hover:text-[#00e676]"
               >Esqueci minha senha</router-link
             >
           </div>
-          <button type="submit" class="auth-button">Entrar</button>
+          <button type="submit" class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853]">
+            Entrar
+          </button>
         </form>
-        <p class="auth-footer-text">
-          Não tem uma conta? <router-link to="/register" class="auth-link">Cadastre-se</router-link>
+        <p class="mt-8 text-center text-gray-400 text-sm">
+          Não tem uma conta?
+          <router-link to="/register" class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline">
+            Cadastre-se
+          </router-link>
         </p>
       </div>
     </div>
@@ -69,11 +77,11 @@ const handleLogin = async () => {
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email: email.value,
-      password: password.value,
+      password: password.value
     })
 
     if (error) throw error
-    router.push('/') // Redireciona para a página inicial após o login
+    router.push('/')
   } catch (error: unknown) {
     if (error instanceof Error) {
       alert(error.message)
@@ -85,217 +93,19 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* Estilos gerais do container da página de autenticação */
-.auth-page-container {
-  display: flex;
-  min-height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Garante que não haverá barras de rolagem desnecessárias */
-  background-color: #f8f8f8; /* Fundo claro para a coluna do formulário (direita) */
-}
-
-/* Coluna do logo (visualmente à esquerda) */
-.auth-logo-column {
-  flex: 1;
-  background-color: #1a1a1a; /* Fundo escuro */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo {
-  max-width: 30%;
-  height: auto;
-}
-
-/* Coluna do formulário (visualmente à direita) */
-.auth-form-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px; /* Padding geral da coluna */
-  background-color: #f8f8f8; /* Certifica o fundo claro */
-}
-
-.auth-form-wrapper {
-  max-width: 380px; /* Largura máxima para o conteúdo do formulário */
-  width: 100%;
-  padding: 0 40px; /* Padding horizontal para afastar do lado da coluna */
-  box-sizing: border-box; /* Garante que padding seja incluído na largura */
-}
-
-.auth-title {
-  color: #333333;
-  font-size: 2.2em;
-  margin-bottom: 25px;
-  text-align: left;
-  font-weight: 600;
-  margin-top: 0;
-}
-
-.auth-form .form-group {
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.auth-input {
-  width: 100%;
-  padding: 15px 20px;
-  border: 1px solid transparent; /* **AJUSTADO:** Bordas transparentes por padrão */
-  border-radius: 8px;
-  background-color: white; /* **AJUSTADO:** Fundo BRANCO para inputs */
-  font-size: 1em;
-  color: #4a4a4a; /* Cor do texto padrão */
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease;
-}
-
-.auth-input:focus {
-  border-left: 3px solid #926eeb !important; /* Borda roxa de 3px no lado esquerdo */
-  padding-left: 17px !important; /* Ajusta o padding para compensar a borda */
-}
-
-.auth-input::placeholder {
-  color: #a0a0a0;
-}
-
-/* ESTILOS PARA INPUTS PREENCHIDOS / AUTOFILL */
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus,
-.auth-input:-webkit-autofill:active {
-  /* Define a cor de fundo para a cor desejada (BRANCO) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-  /* Define a cor do texto para a cor desejada (cinza escuro) */
   -webkit-text-fill-color: #4a4a4a !important;
-  /* Transição para que a mudança de cor seja imediata */
   transition: background-color 50000s ease-in-out 0s !important;
-  /* **NOVO:** Remove a borda lateral roxa que o navegador pode adicionar */
-  border: 1px solid transparent !important;
 }
 
-/* **NOVO:** Estilo específico para quando o input de senha está focado e preenchido, para a borda roxa lateral */
-.password-group input#password:focus {
-  border-left: 3px solid #926eeb !important; /* Borda roxa de 3px no lado esquerdo */
-  padding-left: 17px !important; /* Ajusta o padding para compensar a borda */
-}
-.password-group input#password:-webkit-autofill:focus {
-  border-left: 3px solid #926eeb !important; /* Aplica também no autofill */
-  padding-left: 17px !important;
-  border-color: transparent !important;
-}
-
-.password-group .password-toggle {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #a0a0a0; /* Cor do ícone no estado normal */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* **NOVO:** Cor do ícone de olho quando o input está preenchido/focado */
-.password-group .auth-input:not(:placeholder-shown) + .password-toggle, /* Quando o input tem valor */
-.password-group .auth-input:focus + .password-toggle {
-  color: #926eeb; /* Cor roxa, como na imagem */
-}
-
-.password-toggle svg {
-  width: 20px;
-  height: 20px;
-}
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  font-size: 0.9em;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  color: #a0a0a0;
-}
-
-.checkbox-container input[type='checkbox'] {
-  margin-right: 8px;
-  width: 16px;
-  height: 16px;
-  accent-color: #00e676;
-}
-
-.forgot-password-link {
-  color: #a0a0a0;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.forgot-password-link:hover {
-  color: #00e676;
-}
-
-.auth-button {
-  width: 100%; /* Ajuste para ter o mesmo espaçamento horizontal dos inputs */
-  padding: 15px;
-  background-color: #00e676;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.auth-button:hover {
-  background-color: #00c853;
-}
-
-.auth-footer-text {
-  margin-top: 30px;
-  text-align: center;
-  color: #a0a0a0;
-  font-size: 0.9em;
-}
-
-.auth-link {
-  color: #926eeb; /* **AJUSTADO:** Cor roxa para o link "Cadastre-se" */
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.2s ease;
-}
-
-.auth-link:hover {
-  text-decoration: underline;
-}
-
-/* Responsividade básica */
-@media (max-width: 768px) {
-  .auth-page-container {
-    flex-direction: column;
-  }
-
-  .auth-logo-column {
-    display: none; /* Esconde a coluna do logo em telas menores */
-  }
-
-  .auth-form-column {
-    flex: none;
-    width: 100%;
-  }
-
-  .auth-form-wrapper {
-    padding: 20px;
-  }
+input:focus,
+input:-webkit-autofill:focus {
+  border-left: 4px solid #1a1a1a !important;
+  padding-left: calc(1rem - 1px) !important;
+  outline: none !important;
 }
 </style>

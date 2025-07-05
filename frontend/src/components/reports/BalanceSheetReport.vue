@@ -13,17 +13,16 @@ const journalEntryStore = useJournalEntryStore()
 
 async function fetchBalanceSheetData() {
   await reportStore.fetchReports(props.startDate, props.endDate)
-  await journalEntryStore.fetchJournalEntries() // This might need date filters too, but for now, keep as is.
+  await journalEntryStore.fetchJournalEntries()
 }
 
-// Observa as mudanças nas props de data e busca os dados
 watch(
   [() => props.startDate, () => props.endDate],
   () => {
     fetchBalanceSheetData()
   },
   { immediate: true },
-) // Executa imediatamente na montagem
+)
 
 const balanceSheetData = computed(() => reportStore.balanceSheetData)
 </script>
@@ -236,6 +235,7 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
   background-color: #fff;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding-bottom: 0;
 }
 
 h1 {

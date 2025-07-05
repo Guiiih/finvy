@@ -13,7 +13,6 @@ describe('InfoCard.vue', () => {
     })
 
     expect(wrapper.find('.card-title').text()).toBe('Saldo Atual')
-    // O valor formatado inclui o sinal, a moeda e os decimais
     expect(wrapper.find('.card-value').text()).toBe('R$ 1234.56')
   })
 
@@ -46,7 +45,7 @@ describe('InfoCard.vue', () => {
       props: {
         title: 'Balanço',
         value: 0,
-        isPositive: undefined, // Explicitamente undefined
+        isPositive: undefined,
       },
     })
 

@@ -1,5 +1,3 @@
-// backend/services/reportService.ts
-
 import { getSupabaseClient } from "../utils/supabaseClient.js";
 import type {
   Account,
@@ -22,7 +20,6 @@ interface StockBalance {
 
 type LedgerAccount = FrontendLedgerAccount;
 
-// Helper to map Portuguese account types to English enum types for calculations
 function mapAccountTypeForCalculation(accountType: string): AccountType | undefined {
   switch (accountType) {
     case "Receita":
@@ -37,7 +34,7 @@ function mapAccountTypeForCalculation(accountType: string): AccountType | undefi
     case "Patrimônio Líquido":
       return "equity";
     default:
-      return undefined; // Or throw an error for unknown types
+      return undefined;
   }
 }
 
@@ -143,7 +140,6 @@ export function calculateTrialBalance(
   return Array.from(accountsMap.values());
 }
 
-// New function for detailed ledger reports
 export function calculateLedgerDetails(
   accounts: Account[],
   journalEntries: JournalEntry[],
@@ -172,7 +168,6 @@ export function calculateLedgerDetails(
 }
 
 
-// Actual DRE calculation
 export function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
   let totalRevenue = 0;
   let totalExpenses = 0;
@@ -197,7 +192,6 @@ export function calculateDreData(accounts: Account[], journalEntries: JournalEnt
   };
 }
 
-// Actual Balance Sheet calculation
 export function calculateBalanceSheetData(accounts: Account[], journalEntries: JournalEntry[]) {
   let totalAssets = 0;
   let totalLiabilities = 0;
@@ -240,10 +234,10 @@ export async function generateReports(
 
   const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
 
-  const dreData = calculateDreData(accounts, journalEntries); // Use actual DRE calculation
-  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries); // Use actual Balance Sheet calculation
-  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries); // New detailed ledger report
-  const stockBalances: StockBalance[] = []; // TODO: Properly type when stock control is implemented
+  const dreData = calculateDreData(accounts, journalEntries);
+  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries);
+  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries);
+  const stockBalances: StockBalance[] = [];
 
   return {
     accounts,

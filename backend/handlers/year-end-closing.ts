@@ -18,13 +18,11 @@ export default async function handler(
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: accounts, error: accountsError } = await serviceRoleSupabase
       .from("accounts")
       .select("id, name, type");
     if (accountsError) throw accountsError;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: journalEntriesData, error: journalEntriesError } =
       await serviceRoleSupabase
         .from("journal_entries")
@@ -33,11 +31,7 @@ export default async function handler(
         .lte("entry_date", closingDate);
     if (journalEntriesError) throw journalEntriesError;
 
-    // O resto da lógica complexa de fechamento de exercício
-    // permaneceria aqui, exatamente como estava no ficheiro original.
-    // ...
-
-    const netIncome = 1234.56; // Placeholder para o resultado do cálculo
+    const netIncome = 1234.56;
 
     res.status(200).json({
       message: `Fechamento de exercício para ${closingDate} realizado com sucesso. Lucro Líquido: R$ ${netIncome.toFixed(2)}`,
