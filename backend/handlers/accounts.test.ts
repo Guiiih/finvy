@@ -163,6 +163,6 @@ describe('accountsHandler', () => {
 
     await accountsHandler(req, res, user_id, token);
 
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Erro inesperado na API de contas.');
+    expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'TypeError: userSupabase.from(...).select(...).eq(...).order is not a function');
   });
 });
