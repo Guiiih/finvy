@@ -46,28 +46,28 @@ async function mainHandler(
   }
 
   if (urlPath.startsWith("/entry-lines")) {
-    return entryLinesHandler(req, res, user_id, token, user_role);
+    return entryLinesHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/financial-transactions")) {
-    return financialTransactionsHandler(req, res, user_id, token, user_role);
+    return financialTransactionsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/reports/generate")) {
-    return generateReportsHandler(req, res, user_id, token, user_role);
+    return generateReportsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/reports/export")) {
-    return exportReportsHandler(req, res, user_id, token, user_role);
+    return exportReportsHandler(req, res, user_id, token);
   }
 
   if (urlPath.startsWith("/year-end-closing")) {
-    return yearEndClosingHandler(req, res, user_id, token, user_role);
+    return yearEndClosingHandler(req, res, user_id);
   }
 
   // NOVO: Rota para o handler de perfil
   if (urlPath.startsWith("/profile")) {
-    return profileHandler(req, res, user_id, token, user_role);
+    return profileHandler(req, res, user_id, token);
   }
 
   // Se nenhuma rota corresponder, retorna um erro 404

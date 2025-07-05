@@ -28,6 +28,7 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
+  user_role: string,
 ) {
   console.log("Accounts Handler: user_id recebido:", user_id);
   const userSupabase = getSupabaseClient(token);
