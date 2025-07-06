@@ -64,7 +64,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     return journalEntries.value.find((entry) => entry.id === id)
   })
 
-  async function addJournalEntry(entry: JournalEntry) {
+  async function addJournalEntry(entry: Omit<JournalEntry, 'id'>) {
     loading.value = true
     error.value = null
     try {

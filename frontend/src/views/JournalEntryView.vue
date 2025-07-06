@@ -1,227 +1,20 @@
-<template>
-  <div class="journal-entry-view">
-    <h1>Lançamentos Contábeis</h1>
-
-    <div class="controls">
-      <button @click="showAddEntryForm = !showAddEntryForm">
-        {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
-      </button>
-
-      <button @click="resetAllData">Resetar Todos os Dados</button>
-    </div>
-
-    <form v-if="showAddEntryForm" @submit.prevent="submitEntry" class="journal-entry-form">
-      <h2>{{ editingEntryId ? 'Editar Lançamento' : 'Adicionar Novo Lançamento' }}</h2>
-      <div class="form-group">
-        <label for="entry-date">Data:</label>
-        <input type="date" id="entry-date" v-model="newEntryDate" required />
-      </div>
-      <div class="form-group">
-        <label for="entry-description">Descrição:</label>
-        <input
-          type="text"
-          id="entry-description"
-          v-model="newEntryDescription"
-          placeholder="Descrição do lançamento"
-          required
-        />
-      </div>
-
-      <h3>Linhas do Lançamento:</h3>
-      <div v-for="(line, index) in newEntryLines" :key="index" class="entry-line">
-        <select v-model="line.account_id" @change="handleAccountChange(line)" required>
-          <option value="" disabled>Selecione a Conta</option>
-          <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
-            <option
-              v-for="account in accountStore.getAccountsByType(type)"
-              :value="account.id"
-              :key="account.id"
-            >
-              {{ account.name }}
-            </option>
-          </optgroup>
-        </select>
-        <select v-model="line.type" required>
-          <option value="">Tipo</option>
-          <option value="debit">Débito</option>
-          <option value="credit">Crédito</option>
-        </select>
-        <input
-          type="number"
-          :value="line.amount"
-          @input="
-            (event) => {
-              const target = event.target as HTMLInputElement | null
-              line.amount = target && target.value ? parseFloat(target.value) || 0 : 0
-            }
-          "
-          placeholder="Valor"
-          step="0.01"
-          min="0"
-          required
-        />
-
-        <select
-          v-model="line.product_id"
-          @change="handleProductChange(line)"
-          class="product-select"
-        >
-          <option value="" :disabled="true">Selecione o Produto (Opcional)</option>
-          <option v-for="product in productStore.products" :value="product.id" :key="product.id">
-            {{ product.name }}
-          </option>
-        </select>
-        <input
-          v-if="line.product_id"
-          type="number"
-          v-model.number="line.quantity"
-          placeholder="Qtd."
-          step="1"
-          min="0"
-          :required="!!line.product_id"
-          @input="calculateLineTotals(line)"
-        />
-        <input
-          v-if="line.product_id"
-          type="number"
-          v-model.number="line.unit_cost"
-          placeholder="Custo Unit."
-          step="0.01"
-          min="0"
-          :required="!!line.product_id"
-          @input="calculateLineTotals(line)"
-        />
-        <input
-          v-if="line.product_id"
-          type="number"
-          v-model.number="line.icms_rate"
-          placeholder="ICMS %"
-          step="0.01"
-          min="0"
-          @input="calculateLineTotals(line)"
-        />
-        <span v-if="line.product_id">Bruto: R$ {{ (line.total_gross || 0).toFixed(2) }}</span>
-        <span v-if="line.product_id">ICMS: R$ {{ (line.icms_value || 0).toFixed(2) }}</span>
-        <span v-if="line.product_id">Líquido: R$ {{ (line.total_net || 0).toFixed(2) }}</span>
-        <button type="button" @click="removeLine(index)">Remover</button>
-      </div>
-      <button type="button" @click="addLine">Adicionar Linha</button>
-
-      <div class="balance-info">
-        <p
-          :class="{
-            positive: totalDebits === totalCredits,
-            negative: totalDebits !== totalCredits,
-          }"
-        >
-          Total Débitos: R$ {{ totalDebits.toFixed(2) }}
-        </p>
-        <p
-          :class="{
-            positive: totalDebits === totalCredits,
-            negative: totalDebits !== totalCredits,
-          }"
-        >
-          Total Créditos: R$ {{ totalCredits.toFixed(2) }}
-        </p>
-        <p
-          :class="{
-            positive: totalDebits === totalCredits,
-            negative: totalDebits !== totalCredits,
-          }"
-        >
-          Diferença: R$ {{ (totalDebits - totalCredits).toFixed(2) }}
-        </p>
-      </div>
-
-      <button type="submit" :disabled="totalDebits !== totalCredits || journalEntryStore.loading">
-        {{ editingEntryId ? 'Atualizar Lançamento' : 'Registrar Lançamento' }}
-      </button>
-      <button type="button" @click="cancelEdit" v-if="editingEntryId">Cancelar</button>
-    </form>
-
-    <h2>Lançamentos Registrados</h2>
-    <p v-if="journalEntryStore.loading">Carregando lançamentos...</p>
-    <p v-else-if="journalEntryStore.error" class="error-message">{{ journalEntryStore.error }}</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Descrição</th>
-          <th>Débitos</th>
-          <th>Créditos</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="entry in sortedJournalEntries" :key="entry.id">
-          <tr class="entry-summary">
-            <td>{{ entry.entry_date }}</td>
-            <td>{{ entry.description }}</td>
-            <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
-            <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
-            <td>
-              <button disabled title="Edição desabilitada para lançamentos registrados">
-                Editar
-              </button>
-              <button disabled title="Exclusão desabilitada para lançamentos registrados">
-                Excluir
-              </button>
-              <button
-                @click="journalEntryStore.reverseJournalEntry(entry.id)"
-                title="Estornar este lançamento"
-              >
-                Estornar
-              </button>
-              <button @click="toggleDetails(entry.id)">
-                {{ showDetails[entry.id] ? 'Ocultar Detalhes' : 'Mostrar Detalhes' }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="showDetails[entry.id]" class="entry-details">
-            <td colspan="5">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Conta</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Produto</th>
-                    <th>Cód. Conta</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
-                    <td>{{ getAccountName(line.account_id) }}</td>
-                    <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
-                    <td>R$ {{ line.amount.toFixed(2) }}</td>
-                    <td>{{ getProductName(line.product_id) }}</td>
-                    <td>{{ getAccountCode(line.account_id) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-
 import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index'
+import { useToast } from 'primevue/usetoast'
+import ProgressSpinner from 'primevue/progressspinner'
+import Skeleton from 'primevue/skeleton'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
 const productStore = useProductStore()
+const toast = useToast()
 
 const showAddEntryForm = ref(false)
-const newEntryDate = ref('')
+const newEntryDate = ref(new Date().toISOString().split('T')[0])
 const newEntryDescription = ref('')
 const editingEntryId = ref<string | null>(null)
 
@@ -238,20 +31,49 @@ type EntryLine = {
   total_net?: number
 }
 
-const newEntryLines = ref<EntryLine[]>([
-  {
-    account_id: '',
-    type: 'debit',
-    amount: 0,
-    product_id: '',
-    quantity: undefined,
-    unit_cost: undefined,
-    icms_rate: undefined,
-    total_gross: undefined,
-    icms_value: undefined,
-    total_net: undefined,
-  },
-])
+const newEntryLines = ref<EntryLine[]>([])
+
+const searchTerm = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+
+const showDetails = ref<{ [key: string]: boolean }>({})
+
+const sortedJournalEntries = computed(() => {
+  return [...journalEntryStore.journalEntries].sort((a, b) => {
+    if (a.entry_date > b.entry_date) return -1
+    if (a.entry_date < b.entry_date) return 1
+    return (b.id ?? '').localeCompare(a.id ?? '')
+  })
+})
+
+const filteredEntries = computed(() => {
+  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
+  if (!lowerCaseSearchTerm) {
+    return sortedJournalEntries.value
+  }
+  return sortedJournalEntries.value.filter(
+    (entry) =>
+      entry.description.toLowerCase().includes(lowerCaseSearchTerm) ||
+      entry.entry_date.includes(lowerCaseSearchTerm),
+  )
+})
+
+const paginatedEntries = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredEntries.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredEntries.value.length / itemsPerPage)
+})
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
 
 const totalDebits = computed(() =>
   newEntryLines.value.reduce(
@@ -267,9 +89,12 @@ const totalCredits = computed(() =>
   ),
 )
 
+function formatCurrency(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 function calculateLineTotals(line: EntryLine) {
   const icms_rate = line.icms_rate || 0
-
   line.total_gross = line.amount
   line.icms_value = line.total_gross * (icms_rate / 100)
   line.total_net = line.total_gross - line.icms_value
@@ -279,47 +104,33 @@ function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
   newEntryDescription.value = ''
   newEntryLines.value = [
-    {
-      account_id: '',
-      type: 'debit',
-      amount: 0,
-      product_id: '',
-      quantity: undefined,
-      unit_cost: undefined,
-      icms_rate: undefined,
-      total_gross: undefined,
-      icms_value: undefined,
-      total_net: undefined,
-    },
-    {
-      account_id: '',
-      type: 'credit',
-      amount: 0,
-      product_id: '',
-      quantity: undefined,
-      unit_cost: undefined,
-      icms_rate: undefined,
-      total_gross: undefined,
-      icms_value: undefined,
-      total_net: undefined,
-    },
+    { account_id: '', type: 'debit', amount: 0 },
+    { account_id: '', type: 'credit', amount: 0 },
   ]
   editingEntryId.value = null
+  showAddEntryForm.value = false
+}
+
+function toggleNewEntryForm() {
+  // If the form is shown for a new entry (not editing), toggle it off.
+  if (showAddEntryForm.value && !editingEntryId.value) {
+    showAddEntryForm.value = false
+  } else {
+    // Otherwise, open a fresh form for a new entry.
+    // This handles cases where the form is closed, or was open for editing.
+    editingEntryId.value = null
+    newEntryDate.value = new Date().toISOString().split('T')[0]
+    newEntryDescription.value = ''
+    newEntryLines.value = [
+      { account_id: '', type: 'debit', amount: 0 },
+      { account_id: '', type: 'credit', amount: 0 },
+    ]
+    showAddEntryForm.value = true
+  }
 }
 
 function addLine() {
-  newEntryLines.value.push({
-    account_id: '',
-    type: 'debit',
-    amount: 0,
-    product_id: '',
-    quantity: undefined,
-    unit_cost: undefined,
-    icms_rate: undefined,
-    total_gross: undefined,
-    icms_value: undefined,
-    total_net: undefined,
-  })
+  newEntryLines.value.push({ account_id: '', type: 'debit', amount: 0 })
 }
 
 function removeLine(index: number) {
@@ -327,41 +138,17 @@ function removeLine(index: number) {
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
-  return lines.reduce((sum, line) => {
-    if (line.type === type) {
-      return sum + (line.amount || 0)
-    }
-    return sum
-  }, 0)
+  return lines.reduce((sum, line) => (line.type === type ? sum + (line.amount || 0) : sum), 0)
 }
 
 function getAccountName(accountId: string): string {
-  return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida'
+  return accountStore.getAccountById(accountId)?.name || 'N/A'
 }
 
-function getAccountCode(accountId: string): number | undefined {
-  return accountStore.getAccountById(accountId)?.code
-}
-
-function getProductName(productId: string | undefined): string {
-  if (!productId) return '-'
-  return productStore.getProductById(productId)?.name || 'Produto Desconhecido'
-}
-
-const showDetails = ref<{ [key: string]: boolean }>({})
-
-function toggleDetails(id: string) {
-  showDetails.value[id] = !showDetails.value[id]
-}
-
-function handleAccountChange(line: EntryLine) {
-  line.product_id = ''
-  line.quantity = undefined
-  line.unit_cost = undefined
-  line.icms_rate = undefined
-  line.total_gross = undefined
-  line.icms_value = undefined
-  line.total_net = undefined
+function toggleDetails(id: string | undefined) {
+  if (id) {
+    showDetails.value[id] = !showDetails.value[id]
+  }
 }
 
 function handleProductChange(line: EntryLine) {
@@ -371,87 +158,85 @@ function handleProductChange(line: EntryLine) {
     line.icms_rate = product.icms_rate || 0
     line.quantity = 1
     calculateLineTotals(line)
-  } else {
-    line.unit_cost = undefined
-    line.icms_rate = undefined
-    line.quantity = undefined
-    line.total_gross = undefined
-    line.icms_value = undefined
-    line.total_net = undefined
   }
 }
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
-    alert('Débitos e Créditos devem ser iguais!')
+    toast.add({
+      severity: 'error',
+      summary: 'Erro de Validação',
+      detail: 'O total de débitos e créditos deve ser igual.',
+      life: 3000,
+    })
+    return
+  }
+  if (newEntryLines.value.length < 2) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro de Validação',
+      detail: 'Um lançamento deve ter pelo menos duas linhas.',
+      life: 3000,
+    })
     return
   }
 
-  const validLines = newEntryLines.value.filter((line) => line.account_id)
-
-  if (validLines.length < 2) {
-    alert('Um lançamento deve ter pelo menos duas linhas válidas.')
-    return
-  }
-
-  for (const line of validLines) {
-    if (line.product_id) {
-      if (
-        line.quantity === undefined ||
-        line.quantity <= 0 ||
-        line.unit_cost === undefined ||
-        line.unit_cost <= 0
-      ) {
-        alert(
-          'Para linhas com produto, Quantidade e Custo Unitário são obrigatórios e devem ser maiores que zero.',
-        )
-        return
-      }
-    }
-  }
-
-  const newEntry: Omit<JournalEntry, 'lines' | 'id'> & {
-    id?: string
-    lines: Omit<JournalEntryLine, 'id'>[]
-  } = {
+  const entryData = {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: validLines.map((line) => ({
-      account_id: line.account_id,
-      type: line.type,
-      amount: line.amount,
-      product_id: line.product_id || undefined,
-      quantity: line.quantity || undefined,
-      unit_cost: line.unit_cost || undefined,
-      icms_rate: line.icms_rate || undefined,
-      total_gross: line.total_gross || undefined,
-      icms_value: line.icms_value || undefined,
-      total_net: line.total_net || undefined,
-    })),
-  }
-  if (editingEntryId.value) {
-    newEntry.id = editingEntryId.value
+    lines: newEntryLines.value.map((line) => ({ ...line })),
   }
 
   try {
     if (editingEntryId.value) {
-      await journalEntryStore.updateEntry(newEntry as JournalEntry)
-      alert('Lançamento atualizado com sucesso!')
-      console.log('Lançamento atualizado:', newEntry)
+      await journalEntryStore.updateEntry({ id: editingEntryId.value, ...entryData })
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Lançamento atualizado com sucesso!',
+        life: 3000,
+      })
     } else {
-      await journalEntryStore.addJournalEntry(newEntry as JournalEntry)
-      alert('Novo lançamento adicionado com sucesso!')
-      console.log('Novo lançamento adicionado:', newEntry)
+      await journalEntryStore.addJournalEntry(entryData)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Lançamento adicionado com sucesso!',
+        life: 3000,
+      })
     }
     resetForm()
   } catch (err: unknown) {
-    console.error('Erro ao registrar lançamento:', err)
-    alert(err instanceof Error ? err.message : 'Erro ao registrar lançamento.')
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
   }
 }
 
-function cancelEdit() {
-  resetForm()
+function startEdit(entry: JournalEntry) {
+  editingEntryId.value = entry.id!
+  newEntryDate.value = entry.entry_date
+  newEntryDescription.value = entry.description
+  newEntryLines.value = JSON.parse(JSON.stringify(entry.lines))
+  showAddEntryForm.value = true
+  window.scrollTo(0, 0)
+}
+
+async function handleDelete(id: string | undefined) {
+  if (!id) return
+  if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+    try {
+      await journalEntryStore.deleteEntry(id)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Lançamento excluído com sucesso!',
+        life: 3000,
+      })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
+      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+    }
+  }
 }
 
 const resetAllData = () => {
@@ -463,245 +248,381 @@ const resetAllData = () => {
     alert(
       'A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.',
     )
-    console.warn('Tentativa de resetar todos os dados. Implementação de reset de DB necessária.')
   }
 }
 
-const sortedJournalEntries = computed(() => {
-  return [...journalEntryStore.journalEntries].sort((a, b) => {
-    if (a.entry_date > b.entry_date) return -1
-    if (a.entry_date < b.entry_date) return 1
-    return b.id.localeCompare(a.id)
-  })
+onMounted(() => {
+  journalEntryStore.fetchJournalEntries()
+  accountStore.fetchAccounts()
+  productStore.fetchProducts()
+  resetForm()
 })
 </script>
 
-<style scoped>
-.journal-entry-view {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
+<template>
+    <div class="max-w-7xl mx-auto p-8 rounded-lg">
+    <div class="max-w-screen-xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-black">Lançamentos Contábeis</h1>
+      </div>
 
-h1,
-h2,
-h3 {
-  color: #333;
-}
+      <div class="mb-6 flex items-center space-x-4">
+        <div class="relative flex-grow">
+          <input
+            type="text"
+            v-model="searchTerm"
+            placeholder="Busque um lançamento"
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+        <button
+          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center gap-2"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+          Buscar
+        </button>
+        <button
+          @click="toggleNewEntryForm"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+          {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
+        </button>
+        <button
+          @click="resetAllData"
+          class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+          Resetar contas
+        </button>
+      </div>
 
-.controls {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+      <div v-if="showAddEntryForm" class="bg-gray-50 p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6">
+          {{ editingEntryId ? 'Editar Lançamento' : 'Adicionar Lançamento' }}
+        </h2>
+        <form @submit.prevent="submitEntry" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col">
+              <label for="entry-date" class="text-gray-700 font-medium mb-2">Data:</label>
+              <input
+                type="date"
+                id="entry-date"
+                v-model="newEntryDate"
+                required
+                class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div class="flex flex-col">
+              <label for="entry-description" class="text-gray-700 font-medium mb-2"
+                >Descrição:</label
+              >
+              <input
+                type="text"
+                id="entry-description"
+                v-model="newEntryDescription"
+                placeholder="Descrição do lançamento"
+                required
+                class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 "
+              />
+            </div>
+          </div>
 
-.controls button {
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
+          <div class="space-y-4">
+            <h3 class="text-xl font-semibold text-gray-700 border-b border-gray-300 pb-2">
+              Linhas do Lançamento
+            </h3>
+            <div
+              v-for="(line, index) in newEntryLines"
+              :key="index"
+              class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
+            >
+              <select
+                v-model="line.account_id"
+                required
+                class="md:col-span-5 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>Selecione a Conta</option>
+                <optgroup
+                  v-for="type in accountStore.accountTypes"
+                  :label="type"
+                  :key="type"
+                  class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option
+                    v-for="account in accountStore.getAccountsByType(type)"
+                    :value="account.id"
+                    :key="account.id"
+                  >
+                    {{ account.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <select
+                v-model="line.type"
+                required
+                class="md:col-span-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="debit">Débito</option>
+                <option value="credit">Crédito</option>
+              </select>
+              <input
+                type="number"
+                v-model.number="line.amount"
+                placeholder="Valor"
+                step="0.01"
+                min="0"
+                required
+                class="md:col-span-4 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div class="md:col-span-1 flex items-center space-x-2">
+                <button
+                  type="button"
+                  @click="removeLine(index)"
+                  class="flex justify-center items-center p-2 rounded-full hover:bg-red-500/20 text-red-500 transition"
+                  title="Remover Linha"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  @click="addLine"
+                  class="flex justify-center items-center w-8 h-8 bg-green-400 hover:bg-green-300 text-white font-bold rounded-full transition"
+                  title="Adicionar Linha"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 rounded-lg flex justify-around items-center">
+            <p class="text-lg">
+              Total Débitos:
+              <span class="font-bold text-green-400">{{ formatCurrency(totalDebits) }}</span>
+            </p>
+            <p class="text-lg">
+              Total Créditos:
+              <span class="font-bold text-red-400">{{ formatCurrency(totalCredits) }}</span>
+            </p>
+            <p
+              class="text-lg"
+              :class="{
+                'text-green-400': totalDebits === totalCredits,
+                'text-yellow-400': totalDebits !== totalCredits,
+              }"
+            >
+              Diferença:
+              <span class="font-bold">{{ formatCurrency(totalDebits - totalCredits) }}</span>
+            </p>
+          </div>
 
-.controls button:hover {
-  background-color: #0056b3;
-}
+          <div class="flex space-x-4 pt-4">
+            <button
+              type="submit"
+              :disabled="journalEntryStore.loading || totalDebits !== totalCredits"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition flex items-center justify-center disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              <ProgressSpinner
+                v-if="journalEntryStore.loading"
+                class="w-5 h-5 mr-2"
+                strokeWidth="8"
+              />
+              <span>{{ editingEntryId ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}</span>
+            </button>
+            
+          </div>
+        </form>
+      </div>
 
-.controls button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
+      <div class="overflow-hidden">
+        <div
+          class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-gray-400 border border-gray-200 uppercase text-sm"
+        >
+          <div class="col-span-2">Data</div>
+          <div class="col-span-5">Descrição</div>
+          <div class="col-span-3 text-right">Valor Total</div>
+          <div class="col-span-2 text-center">Ações</div>
+        </div>
 
-.journal-entry-form {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
-}
+        <div v-if="journalEntryStore.loading" class="p-4 space-y-4">
+          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
+          <Skeleton height="3rem" class="bg-gray-700" />
+        </div>
+        <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
+          {{ journalEntryStore.error }}
+        </p>
+        <p
+          v-else-if="paginatedEntries.length === 0"
+          class="text-gray-400 text-center p-8"
+        >
+          Nenhum lançamento encontrado.
+        </p>
 
-.form-group {
-  margin-bottom: 15px;
-}
+        <div v-else>
+          <div
+            v-for="entry in paginatedEntries"
+            :key="entry.id"
+            class="border-b border-gray-700 last:border-b-0"
+          >
+            <div
+              class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-700/50 transition cursor-pointer"
+              @click="toggleDetails(entry.id)"
+            >
+              <div class="md:col-span-2 font-medium text-white">{{ entry.entry_date }}</div>
+              <div class="md:col-span-5 text-gray-300">{{ entry.description }}</div>
+              <div class="md:col-span-3 text-right font-mono text-white">
+                {{ formatCurrency(calculateTotal(entry.lines, 'debit')) }}
+              </div>
+              <div class="md:col-span-2 flex justify-center items-center space-x-2">
+                <button
+                  @click.stop="startEdit(entry)"
+                  class="p-2 rounded-full hover:bg-yellow-500/20 text-yellow-500 transition"
+                  title="Editar"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
+                    ></path>
+                    <path
+                      fill-rule="evenodd"
+                      d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  @click.stop="handleDelete(entry.id)"
+                  class="p-2 rounded-full hover:bg-red-500/20 text-red-500 transition"
+                  title="Excluir"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  @click.stop="toggleDetails(entry.id)"
+                  class="p-2 rounded-full hover:bg-blue-500/20 text-blue-500 transition"
+                  title="Ver Detalhes"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      d="M10 12a2 2 0 100-4 2 2 0 000 4z"
+                    ></path>
+                    <path
+                      fill-rule="evenodd"
+                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
+            <div v-if="showDetails[entry.id]" class="bg-gray-700/50 p-4">
+              <div
+                class="grid grid-cols-3 gap-4 p-2 font-semibold text-gray-300 border-b border-gray-600"
+              >
+                <div>CONTA</div>
+                <div>TIPO</div>
+                <div class="text-right">VALOR</div>
+              </div>
+              <div
+                v-for="(line, index) in entry.lines"
+                :key="index"
+                class="grid grid-cols-3 gap-4 p-2 items-center border-b border-gray-600/50 last:border-b-0"
+              >
+                <div class="text-white">{{ getAccountName(line.account_id) }}</div>
+                <div
+                  class="capitalize"
+                  :class="{
+                    'text-green-400': line.type === 'debit',
+                    'text-red-400': line.type === 'credit',
+                  }"
+                >
+                  {{ line.type }}
+                </div>
+                <div class="text-right font-mono text-white">
+                  {{ formatCurrency(line.amount) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-.form-group input[type='date'],
-.form-group input[type='text'] {
-  width: calc(100% - 20px);
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.entry-line {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.entry-line select,
-.entry-line input[type='number'],
-.entry-line input[type='text'] {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.entry-line select:not(.product-select) {
-  flex: 2;
-  min-width: 150px;
-}
-
-.entry-line input[type='number'] {
-  flex: 1;
-  min-width: 100px;
-}
-
-.entry-line .product-select {
-  flex: 2;
-  min-width: 180px;
-}
-
-.entry-line button {
-  padding: 8px 12px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.entry-line button:hover {
-  background-color: #c82333;
-}
-
-.balance-info {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 5px;
-  background-color: #e9ecef;
-}
-
-.balance-info p {
-  margin: 5px 0;
-  font-weight: bold;
-}
-
-.balance-info .positive {
-  color: green;
-}
-
-.balance-info .negative {
-  color: red;
-}
-
-.journal-entry-form button[type='submit'],
-.journal-entry-form button[type='button']:not(.entry-line button) {
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-  margin-right: 10px;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-.journal-entry-form button[type='submit']:hover,
-.journal-entry-form button[type='button']:not(.entry-line button):hover {
-  background-color: #218838;
-}
-
-.journal-entry-form button[type='submit']:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-  color: #333;
-}
-
-.entry-summary td {
-  background-color: #ffffff;
-}
-
-.entry-details td {
-  background-color: #f0f8ff;
-  padding: 10px 20px;
-}
-
-.entry-details table {
-  width: 100%;
-  margin: 0;
-  box-shadow: none;
-}
-
-.entry-details th,
-.entry-details td {
-  padding: 8px;
-  font-size: 0.9em;
-}
-
-.entry-summary button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.entry-summary button:hover {
-  background-color: #138496;
-}
-
-.entry-summary button:last-child {
-  background-color: #6c757d;
-}
-
-.entry-summary button:last-child:hover {
-  background-color: #5a6268;
-}
-
-.entry-summary button:nth-child(2) {
-  background-color: #dc3545;
-}
-
-.entry-summary button:nth-child(2):hover {
-  background-color: #c82333;
-}
-</style>
+      <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          &lt;
+        </button>
+        <button
+          v-for="page in totalPages"
+          :key="page"
+          @click="goToPage(page)"
+          :class="[
+            'px-4 py-2 w-10 h-10 flex items-center justify-center rounded-full font-semibold',
+            currentPage === page
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+          ]"
+        >
+          {{ page }}
+        </button>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          &gt;
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

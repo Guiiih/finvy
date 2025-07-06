@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { useProductStore } from '@/stores/productStore'
 import { useAuthStore } from '@/stores/authStore'
 import BaseTable from '@/components/BaseTable.vue'
@@ -7,42 +7,56 @@ import type { Product } from '@/types'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
 
+const newProductName = ref('')
+const newProductIcmsRate = ref(0)
+
+async function handleAddProduct() {
+  if (!newProductName.value || newProductIcmsRate.value < 0) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro de Validação',
+      detail: 'Por favor, preencha o nome do produto e uma alíquota de ICMS válida.',
+      life: 3000,
+    })
+    return
+  }
+
+  try {
+    await productStore.addProduct({
+      name: newProductName.value,
+      icms_rate: newProductIcmsRate.value,
+      unit_cost: 0, // Default to 0, can be updated later if needed
+      current_stock: 0, // Default to 0, can be updated later if needed
+    })
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Produto adicionado com sucesso!',
+      life: 3000,
+    })
+    newProductName.value = ''
+    newProductIcmsRate.value = 0
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao adicionar o produto.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+  }
+}
+
 const productStore = useProductStore()
 const authStore = useAuthStore()
 const toast = useToast()
 
 type ProductTableHeader = {
-  key: keyof Product | 'total_gross_stock' | 'icms_value_stock' | 'total_net_stock' | 'actions'
+  key: keyof Product | 'actions'
   label: string
   align?: 'left' | 'center' | 'right'
 }
 
 const headers: ProductTableHeader[] = [
   { key: 'name', label: 'Nome', align: 'left' },
-  { key: 'description', label: 'Descrição', align: 'left' },
-  { key: 'unit_cost', label: 'Custo Unitário', align: 'right' },
   { key: 'icms_rate', label: 'Alíquota ICMS (%)', align: 'center' },
-  { key: 'current_stock', label: 'Estoque Atual', align: 'center' },
-  { key: 'total_gross_stock', label: 'Valor Bruto Total (Estoque)', align: 'right' },
-  { key: 'icms_value_stock', label: 'ICMS Total (Estoque)', align: 'right' },
-  { key: 'total_net_stock', label: 'Valor Líquido Total (Estoque)', align: 'right' },
   { key: 'actions', label: 'Ações', align: 'center' },
 ]
-
-const filteredProducts = computed(() => {
-  return productStore.products.map((product) => {
-    const total_gross_stock = product.unit_cost * product.current_stock
-    const icms_rate = product.icms_rate || 0
-    const icms_value_stock = total_gross_stock * (icms_rate / 100)
-    const total_net_stock = total_gross_stock - icms_value_stock
-    return {
-      ...product,
-      total_gross_stock,
-      icms_value_stock,
-      total_net_stock,
-    }
-  })
-})
 
 async function handleDeleteProduct(id: string) {
   if (confirm('Tem certeza de que deseja excluir este produto?')) {
@@ -73,6 +87,28 @@ watchEffect(() => {
   <div class="products-container">
     <h1>Gerenciar Produtos</h1>
 
+    <div class="form-section">
+      <h2>Adicionar Novo Produto</h2>
+      <form @submit.prevent="handleAddProduct">
+        <div class="form-group">
+          <label for="product-name">Nome do Produto:</label>
+          <input type="text" id="product-name" v-model="newProductName" required />
+        </div>
+        <div class="form-group">
+          <label for="icms-rate">Alíquota de ICMS (%):</label>
+          <input
+            type="number"
+            id="icms-rate"
+            v-model.number="newProductIcmsRate"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
+        <button type="submit">Adicionar Produto</button>
+      </form>
+    </div>
+
     <div class="products-list-section">
       <h2>Produtos Existentes</h2>
       <div v-if="productStore.loading">
@@ -84,20 +120,10 @@ watchEffect(() => {
       <BaseTable
         v-else
         :headers="headers"
-        :items="filteredProducts"
+        :items="productStore.products"
         empty-message="Nenhum produto encontrado. Adicione um novo produto acima."
       >
-        <template #cell(unit_cost)="{ value }"> R$ {{ (value as number).toFixed(2) }} </template>
         <template #cell(icms_rate)="{ value }"> {{ (value as number).toFixed(2) }}% </template>
-        <template #cell(total_gross_stock)="{ value }">
-          R$ {{ (value as number).toFixed(2) }}
-        </template>
-        <template #cell(icms_value_stock)="{ value }">
-          R$ {{ (value as number).toFixed(2) }}
-        </template>
-        <template #cell(total_net_stock)="{ value }">
-          R$ {{ (value as number).toFixed(2) }}
-        </template>
         <template #cell(actions)="{ item }">
           <button @click="handleDeleteProduct(item.id as string)" class="delete-button">
             Excluir

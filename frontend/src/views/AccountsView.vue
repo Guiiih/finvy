@@ -18,6 +18,9 @@ const toast = useToast()
 
 const isEditing = ref(false)
 const editingAccount = ref<Account | null>(null)
+const searchTerm = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
 
 const accountSchema = toTypedSchema(
   z.object({
@@ -30,18 +33,42 @@ const accountSchema = toTypedSchema(
   }),
 )
 
-const filteredAccounts = computed(() => accountStore.accounts)
+const filteredAccounts = computed(() => {
+  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
+  return accountStore.accounts.filter(
+    (account) =>
+      account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      account.code?.toString().includes(lowerCaseSearchTerm) ||
+      account.type.toLowerCase().includes(lowerCaseSearchTerm),
+  )
+})
+
+const paginatedAccounts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredAccounts.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredAccounts.value.length / itemsPerPage)
+})
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
 
 type AccountTableHeader = {
   key: keyof Account | 'actions'
   label: string
-  align: 'left' | 'center'
+  align?: 'left' | 'center' | 'right'
 }
 const headers: AccountTableHeader[] = [
-  { key: 'code', label: 'Código', align: 'left' },
-  { key: 'name', label: 'Nome', align: 'left' },
-  { key: 'type', label: 'Tipo', align: 'left' },
-  { key: 'actions', label: 'Ações', align: 'center' },
+  { key: 'code', label: 'CÓDIGO', align: 'left' },
+  { key: 'name', label: 'NOME', align: 'left' },
+  { key: 'type', label: 'TIPO', align: 'left' },
+  { key: 'actions', label: 'AÇÕES', align: 'center' },
 ]
 
 async function handleSubmit(
@@ -120,160 +147,247 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="accounts-container">
-    <h1>Gerenciar Contas Contábeis</h1>
-
-    <div class="form-section">
-      <h2>{{ isEditing ? 'Editar Conta' : 'Adicionar Nova Conta' }}</h2>
-
-      <Form
-        @submit="handleSubmit"
-        :validation-schema="accountSchema"
-        :initial-values="editingAccount || {}"
-        v-slot="{ isSubmitting }"
-      >
-        <div class="form-group">
-          <label for="accountName">Nome da Conta:</label>
-          <Field name="name" type="text" id="accountName" />
-          <ErrorMessage name="name" class="error-text" />
-        </div>
-        <div class="form-group">
-          <label for="accountType">Tipo:</label>
-          <Field name="type" as="select" id="accountType">
-            <option value="" disabled>Selecione...</option>
-            <option value="asset">Ativo</option>
-            <option value="liability">Passivo</option>
-            <option value="equity">Patrimônio Líquido</option>
-            <option value="revenue">Receita</option>
-            <option value="expense">Despesa</option>
-          </Field>
-          <ErrorMessage name="type" class="error-text" />
-        </div>
-        <button type="submit" :disabled="isSubmitting">
-          <ProgressSpinner v-if="isSubmitting" style="width: 20px; height: 20px" strokeWidth="8" />
-          <span v-else>{{ isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</span>
-        </button>
-        <button v-if="isEditing" type="button" @click="cancelEdit">Cancelar</button>
-      </Form>
-    </div>
-
-    <div class="accounts-list-section">
-      <h2>Contas Existentes</h2>
-      <div v-if="accountStore.loading">
-        <Skeleton height="2rem" class="mb-2"></Skeleton>
-        <Skeleton height="2rem" class="mb-2"></Skeleton>
-        <Skeleton height="2rem"></Skeleton>
+  <div>
+    <div class="max-w-7xl mx-auto p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Gerenciar Contas Contábeis</h1>
       </div>
-      <p v-else-if="accountStore.error" class="error-message">{{ accountStore.error }}</p>
 
-      <BaseTable
-        v-else
-        :headers="headers"
-        :items="filteredAccounts"
-        empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
-      >
-        <template #cell(actions)="{ item }">
-          <div class="action-buttons">
-            <button @click="startEdit(item)" class="edit-button">Editar</button>
-            <button @click="handleDeleteAccount(item.id)" class="delete-button">Excluir</button>
+      <div class="mb-6 flex items-center space-x-4">
+        <div class="relative flex-grow">
+          <input
+            type="text"
+            v-model="searchTerm"
+            placeholder="Busque uma conta"
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+        <button
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+          Buscar
+        </button>
+        <button
+          @click="isEditing = !isEditing; if (!isEditing) editingAccount = null"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+          {{ isEditing || editingAccount ? 'Fechar Formulário' : 'Nova Conta' }}
+        </button>
+      </div>
+
+
+      <div v-if="isEditing || editingAccount" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">{{ isEditing ?'Adicionar Conta' : 'Editar Conta' }}</h2>
+        <Form
+          @submit="handleSubmit"
+          :validation-schema="accountSchema"
+          :initial-values="editingAccount || {}"
+          v-slot="{ isSubmitting }"
+          class="space-y-4"
+        >
+          <div class="flex flex-col">
+            <label for="accountName" class="text-gray-700 font-medium mb-1">Nome da Conta:</label>
+            <Field
+              name="name"
+              type="text"
+              id="accountName"
+              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
           </div>
-        </template>
-      </BaseTable>
+          <div class="flex flex-col">
+            <label for="accountType" class="text-gray-700 font-medium mb-1">Tipo:</label>
+            <Field
+              name="type"
+              as="select"
+              id="accountType"
+              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>Selecione...</option>
+              <option value="asset">Ativo</option>
+              <option value="liability">Passivo</option>
+              <option value="equity">Patrimônio Líquido</option>
+              <option value="revenue">Receita</option>
+              <option value="expense">Despesa</option>
+            </Field>
+            <ErrorMessage name="type" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex space-x-4">
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+            >
+              <ProgressSpinner v-if="isSubmitting" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
+              <span v-else>{{ isEditing ? 'Adicionar Conta' : 'Atualizar Conta'  }}</span>
+            </button>
+            
+          </div>
+        </Form>
+      </div>
+
+      <div class="p-6">
+        <div v-if="accountStore.loading" class="space-y-4">
+          <Skeleton height="3rem" class="mb-2" />
+          <Skeleton height="3rem" class="mb-2" />
+          <Skeleton height="3rem" />
+        </div>
+        <p v-else-if="accountStore.error" class="text-red-500 text-center text-lg">{{ accountStore.error }}</p>
+        <BaseTable
+          :headers="headers"
+          :items="paginatedAccounts"
+          empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
+        >
+          <template #cell(code)="{ value }">
+            <span class="font-mono text-gray-700">{{ value }}</span>
+          </template>
+          <template #cell(type)="{ value }">
+            <span
+              :class="{
+                'bg-blue-100 text-blue-800': value === 'asset',
+                'bg-red-100 text-red-800': value === 'liability',
+                'bg-green-100 text-green-800': value === 'equity',
+                'bg-purple-100 text-purple-800': value === 'revenue',
+                'bg-yellow-100 text-yellow-800': value === 'expense',
+                'px-2.5 py-0.5 rounded-full text-xs font-medium': true,
+              }"
+            >
+              {{ value }}
+            </span>
+          </template>
+          <template #cell(actions)="{ item }">
+            <div class="flex items-center space-x-2">
+              <button
+                @click="startEdit(item)"
+                class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
+                title="Editar"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.232z"
+                  ></path>
+                </svg>
+              </button>
+              <button
+                @click="handleDeleteAccount(item.id)"
+                class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
+                title="Excluir"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </template>
+        </BaseTable>
+
+        <p v-if="paginatedAccounts.length === 0 && !accountStore.loading && !accountStore.error" class="text-gray-400 text-center p-8">
+          Nenhuma conta encontrada.
+        </p>
+
+        <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
+          <button
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              ></path>
+            </svg>
+          </button>
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            @click="goToPage(page)"
+            :class="[
+              'px-4 py-2 rounded-full font-semibold',
+              currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700',
+            ]"
+          >
+            {{ page }}
+          </button>
+          <button
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage === totalPages"
+            class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.accounts-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.form-section,
-.accounts-list-section {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-h2 {
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #666;
-  font-weight: bold;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-  box-sizing: border-box;
-}
-
-.action-buttons button {
-  padding: 5px 10px;
-  font-size: 0.9em;
-  margin-right: 5px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.action-buttons button:last-child {
-  margin-right: 0;
-}
-
-.action-buttons .edit-button {
-  background-color: #e9ecef;
-  color: #495057;
-  border-color: #ced4da;
-}
-.action-buttons .edit-button:hover {
-  background-color: #dee2e6;
-}
-
-.action-buttons .delete-button {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-color: #f5c6cb;
-}
-.action-buttons .delete-button:hover {
-  background-color: #f1b0b7;
-}
-
-.error-text {
-  color: #dc3545;
-  font-size: 0.875em;
-  margin-top: 4px;
-  display: block;
-}
-</style>
