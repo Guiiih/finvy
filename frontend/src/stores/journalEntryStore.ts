@@ -177,11 +177,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   async function deleteEntry(id: string) {
     loading.value = true
     error.value = null
+    console.log('JournalEntryStore: Tentando deletar lançamento com ID:', id);
     try {
       await api.delete(`/journal-entries/${id}`)
       journalEntries.value = journalEntries.value.filter((entry) => entry.id !== id)
+      console.log('JournalEntryStore: Lançamento deletado com sucesso no frontend.');
     } catch (err: unknown) {
-      console.error('Erro ao deletar lançamento:', err)
+      console.error('JournalEntryStore: Erro ao deletar lançamento:', err)
       error.value = err instanceof Error ? err.message : 'Falha ao deletar lançamento.'
       throw err
     } finally {

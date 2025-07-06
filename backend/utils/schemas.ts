@@ -66,10 +66,12 @@ export const createEntryLineSchema = z
     debit: z
       .number()
       .nonnegative("Débito deve ser um valor não negativo.")
+      .nullable()
       .optional(),
     credit: z
       .number()
       .nonnegative("Crédito deve ser um valor não negativo.")
+      .nullable()
       .optional(),
     product_id: z
       .string()
@@ -88,14 +90,50 @@ export const createEntryLineSchema = z
       .number()
       .nonnegative("Valor total bruto deve ser um valor não negativo.")
       .optional(),
-    icms_value: z
+    icms_rate: z
       .number()
-      .nonnegative("Valor do ICMS deve ser um valor não negativo.")
+      .nonnegative("Alíquota de ICMS deve ser um valor não negativo.")
+      .optional(),
+    ipi_rate: z
+      .number()
+      .nonnegative("Alíquota de IPI deve ser um valor não negativo.")
+      .optional(),
+    pis_rate: z
+      .number()
+      .nonnegative("Alíquota de PIS deve ser um valor não negativo.")
+      .optional(),
+    cofins_rate: z
+      .number()
+      .nonnegative("Alíquota de COFINS deve ser um valor não negativo.")
+      .optional(),
+    mva_rate: z
+      .number()
+      .nonnegative("Alíquota de MVA deve ser um valor não negativo.")
+      .optional(),
+    icms_st_value: z
+      .number()
+      .nonnegative("Valor do ICMS-ST deve ser um valor não negativo.")
+      .optional(),
+    ipi_value: z
+      .number()
+      .nonnegative("Valor do IPI deve ser um valor não negativo.")
+      .optional(),
+    pis_value: z
+      .number()
+      .nonnegative("Valor do PIS deve ser um valor não negativo.")
+      .optional(),
+    cofins_value: z
+      .number()
+      .nonnegative("Valor do COFINS deve ser um valor não negativo.")
       .optional(),
     total_net: z
       .number()
       .nonnegative("Valor total líquido deve ser um valor não negativo.")
+      .nullable()
       .optional(),
+    transaction_type: z.enum(["sale", "purchase"], {
+      message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
+    }),
   })
   .refine((data) => data.debit !== undefined || data.credit !== undefined, {
     message: "Pelo menos um dos campos (debit ou credit) é obrigatório.",
@@ -111,10 +149,12 @@ export const updateEntryLineSchema = z
     debit: z
       .number()
       .nonnegative("Débito deve ser um valor não negativo.")
+      .nullable()
       .optional(),
     credit: z
       .number()
       .nonnegative("Crédito deve ser um valor não negativo.")
+      .nullable()
       .optional(),
     product_id: z
       .string()

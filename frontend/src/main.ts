@@ -9,6 +9,7 @@ import { useAuthStore } from './stores/authStore'
 import App from './App.vue'
 import router from './router'
 
+import PrimeVue from 'primevue/config'; // Add this line
 import ToastService from 'primevue/toastservice'
 
 const app = createApp(App)
@@ -17,6 +18,7 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
+app.use(PrimeVue); // Add this line
 app.use(ToastService)
 
 async function initApp() {

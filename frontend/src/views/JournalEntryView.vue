@@ -222,8 +222,13 @@ function startEdit(entry: JournalEntry) {
 }
 
 async function handleDelete(id: string | undefined) {
-  if (!id) return
+  console.log('handleDelete chamado com ID:', id);
+  if (!id) {
+    console.log('ID é indefinido ou nulo, retornando.');
+    return;
+  }
   if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+    console.log('Confirmação de exclusão aceita para ID:', id);
     try {
       await journalEntryStore.deleteEntry(id)
       toast.add({
@@ -233,9 +238,12 @@ async function handleDelete(id: string | undefined) {
         life: 3000,
       })
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
+      console.error('Erro ao deletar lançamento no frontend:', err);
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
       toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
     }
+  } else {
+    console.log('Confirmação de exclusão cancelada.');
   }
 }
 
@@ -289,25 +297,7 @@ onMounted(() => {
             ></path>
           </svg>
         </div>
-        <button
-          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center gap-2"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
-          Buscar
-        </button>
+        
         <button
           @click="toggleNewEntryForm"
           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"

@@ -1,0 +1,9 @@
+ALTER TABLE entry_lines
+ADD COLUMN ipi_rate NUMERIC,
+ADD COLUMN pis_rate NUMERIC,
+ADD COLUMN cofins_rate NUMERIC,
+ADD COLUMN mva_rate NUMERIC,
+ADD COLUMN icms_st_value NUMERIC,
+ADD COLUMN ipi_value NUMERIC,
+ADD COLUMN pis_value NUMERIC,
+ADD COLUMN cofins_value NUMERIC;

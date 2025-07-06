@@ -190,7 +190,6 @@ Para fazer alterações no banco de dados, siga este fluxo de trabalho:
 
 ## **Próximos Passos e Melhorias Futuras**
 
-* **Relatórios Mais Detalhados:** Adicionar opções de detalhamento e exportação.
 * **Gestão de Usuários:** Expandir a gestão de usuários com diferentes níveis de permissão.
 * **Internacionalização (i18n):** Suporte a múltiplos idiomas.
 * **Testes Abrangentes:** Aumentar a cobertura de testes unitários e de integração.
