@@ -236,84 +236,87 @@ onMounted(() => {
         </Form>
       </div>
 
-      <div class="p-6">
-        <div v-if="accountStore.loading" class="space-y-4">
-          <Skeleton height="3rem" class="mb-2" />
-          <Skeleton height="3rem" class="mb-2" />
-          <Skeleton height="3rem" />
+      <div class="overflow-x-auto">
+        <div class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-gray-400 border border-gray-200 uppercase text-sm">
+          <div class="col-span-2">Código</div>
+          <div class="col-span-5">Nome</div>
+          <div class="col-span-3">Tipo</div>
+          <div class="col-span-2 text-center">Ações</div>
+        </div>
+        <div v-if="accountStore.loading" class="p-4 space-y-4">
+          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
+          <Skeleton height="3rem" class="bg-gray-700" />
         </div>
         <p v-else-if="accountStore.error" class="text-red-500 text-center text-lg">{{ accountStore.error }}</p>
-        <BaseTable
-          :headers="headers"
-          :items="paginatedAccounts"
-          empty-message="Nenhuma conta encontrada. Adicione uma nova conta acima."
-        >
-          <template #cell(code)="{ value }">
-            <span class="font-mono text-gray-700">{{ value }}</span>
-          </template>
-          <template #cell(type)="{ value }">
-            <span
-              :class="{
-                'bg-blue-100 text-blue-800': value === 'asset',
-                'bg-red-100 text-red-800': value === 'liability',
-                'bg-green-100 text-green-800': value === 'equity',
-                'bg-purple-100 text-purple-800': value === 'revenue',
-                'bg-yellow-100 text-yellow-800': value === 'expense',
-                'px-2.5 py-0.5 rounded-full text-xs font-medium': true,
-              }"
-            >
-              {{ value }}
-            </span>
-          </template>
-          <template #cell(actions)="{ item }">
-            <div class="flex items-center space-x-2">
-              <button
-                @click="startEdit(item)"
-                class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
-                title="Editar"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+        <div v-else>
+          <div v-for="account in paginatedAccounts" :key="account.id" class="border-b border-gray-200 last:border-b-0">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition">
+              <div class="md:col-span-2 font-mono text-black">{{ account.code }}</div>
+              <div class="md:col-span-5 text-black">{{ account.name }}</div>
+              <div class="md:col-span-3">
+                <span
+                  :class="{
+                    'bg-blue-100 text-blue-800': account.type === 'asset',
+                    'bg-red-100 text-red-800': account.type === 'liability',
+                    'bg-green-100 text-green-800': account.type === 'equity',
+                    'bg-purple-100 text-purple-800': account.type === 'revenue',
+                    'bg-yellow-100 text-yellow-800': account.type === 'expense',
+                    'px-2.5 py-0.5 rounded-full text-xs font-medium': true,
+                  }"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.232z"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                @click="handleDeleteAccount(item.id)"
-                class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
-                title="Excluir"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  {{ account.type }}
+                </span>
+              </div>
+              <div class="md:col-span-2 flex justify-center items-center space-x-2">
+                <button
+                  @click="startEdit(account)"
+                  class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
+                  title="Editar"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  ></path>
-                </svg>
-              </button>
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.232z"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  @click="handleDeleteAccount(account.id)"
+                  class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
+                  title="Excluir"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
             </div>
-          </template>
-        </BaseTable>
-
+          </div>
+        </div>
         <p v-if="paginatedAccounts.length === 0 && !accountStore.loading && !accountStore.error" class="text-gray-400 text-center p-8">
           Nenhuma conta encontrada.
         </p>
+      </div>
 
         <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
           <button
@@ -370,6 +373,5 @@ onMounted(() => {
         </div>
       </div>
     </div>
-  </div>
 </template>
 

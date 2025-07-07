@@ -1,6 +1,11 @@
--- Redefine a função handle_new_user para evitar a criação de perfis duplicados
+set check_function_bodies = off;
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
 BEGIN
   -- Verifica se um perfil já existe para o novo usuário
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
@@ -9,7 +14,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$function$
+;
 
--- Garante que a função handle_new_user seja executada como superuser para inserir na tabela profiles
-ALTER FUNCTION public.handle_new_user() SET search_path = public, pg_temp;
+

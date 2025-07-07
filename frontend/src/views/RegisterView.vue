@@ -13,8 +13,8 @@
           <div>
             <input
               type="text"
-              id="name"
-              v-model="firstName"
+              id="fullName"
+              v-model="name"
               placeholder="Nome"
               required
               class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
@@ -87,10 +87,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { supabase } from '../supabase'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
-const firstName = ref('')
+const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -107,6 +107,8 @@ const toggleConfirmPasswordVisibility = () => {
     confirmPasswordFieldType.value === 'password' ? 'text' : 'password'
 }
 
+const authStore = useAuthStore()
+
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
     alert('As senhas não coincidem!')
@@ -114,23 +116,13 @@ const handleRegister = async () => {
   }
 
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
-      options: {
-        data: {
-          first_name: firstName.value
-        }
-      }
-    })
+    const success = await authStore.signUp(email.value, password.value, name.value)
 
-    if (error) throw error
-
-    if (data.user) {
-      await supabase.auth.signOut()
+    if (success) {
+      router.push('/registration-success')
+    } else {
+      alert(authStore.error || 'Ocorreu um erro desconhecido.')
     }
-
-    router.push('/registration-success')
   } catch (error: unknown) {
     if (error instanceof Error) {
       alert(error.message)

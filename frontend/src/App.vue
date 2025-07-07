@@ -4,6 +4,31 @@ import { ref, computed } from 'vue'
 import { supabase } from './supabase'
 import Toast from 'primevue/toast'
 import type { Session } from '@supabase/supabase-js'
+import UserMenu from './components/UserMenu.vue'
+import { onClickOutside } from '@vueuse/core'
+
+const showUserMenu = ref(false)
+const userMenuRef = ref(null)
+
+const userName = computed(() => {
+  return session.value?.user?.user_metadata?.name || 'Usuário'
+})
+
+const userEmail = computed(() => {
+  return session.value?.user?.email || 'email@example.com'
+})
+
+const userAvatarUrl = computed(() => {
+  return session.value?.user?.user_metadata?.avatar_url || './assets/LogoIcon.svg'
+})
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+}
+
+const handleOutsideClick = () => {
+  showUserMenu.value = false
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -33,6 +58,8 @@ const handleLogout = async () => {
 const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false
 })
+
+onClickOutside(userMenuRef, handleOutsideClick)
 </script>
 
 <template>
@@ -77,7 +104,10 @@ const shouldHideNavbar = computed(() => {
           <i class="pi pi-bell text-xl text-gray-600"></i>
         </button>
 
-        <img src="./assets/LogoIcon.svg" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click="handleLogout" />
+        <div class="relative" ref="userMenuRef">
+          <img :src="userAvatarUrl" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click="toggleUserMenu" />
+          <UserMenu v-if="showUserMenu" :user-name="userName" :user-email="userEmail" :avatar-url="userAvatarUrl" @logout="handleLogout" />
+        </div>
       </div>
     </header>
 

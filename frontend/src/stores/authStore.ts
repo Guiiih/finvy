@@ -99,15 +99,25 @@ export const useAuthStore = defineStore(
       }
     }
 
-    async function signUp(email: string, password: string) {
+    async function signUp(email: string, password: string, fullName: string) {
       loading.value = true
       error.value = null
       try {
         const { data, error: authError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              name: fullName,
+            },
+          },
         })
         if (authError) throw authError
+        user.value = data.user // Update user in store
+        session.value = data.session // Update session in store
+        if (user.value) {
+          await fetchUserProfile(); // Fetch profile to get latest user_metadata
+        }
         console.log('Registro bem-sucedido. Verifique seu email para confirmar:', data)
         return true
       } catch (err: unknown) {

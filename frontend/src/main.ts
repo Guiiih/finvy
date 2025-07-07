@@ -9,8 +9,19 @@ import { useAuthStore } from './stores/authStore'
 import App from './App.vue'
 import router from './router'
 
-import PrimeVue from 'primevue/config'; // Add this line
+import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import FileUpload from 'primevue/fileupload'
+import SelectButton from 'primevue/selectbutton'
+import Dropdown from 'primevue/dropdown'
+import { Cropper } from 'vue-advanced-cropper'
+
+// PrimeVue 4 Theme
+import Aura from '@primeuix/themes/aura'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -18,8 +29,23 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
-app.use(PrimeVue); // Add this line
+app.use(PrimeVue, {
+  theme: {
+    preset: Aura,
+    options: {
+      darkModeSelector: '.dark',
+    },
+  },
+})
 app.use(ToastService)
+app.component('InputText', InputText)
+app.component('Password', Password)
+app.component('Button', Button)
+app.component('Dialog', Dialog)
+app.component('FileUpload', FileUpload)
+app.component('SelectButton', SelectButton)
+app.component('Dropdown', Dropdown)
+app.component('Cropper', Cropper)
 
 async function initApp() {
   const authStore = useAuthStore()
