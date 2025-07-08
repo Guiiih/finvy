@@ -6,8 +6,6 @@ const MyAuraPreset = definePreset(Aura, {
         colorScheme: {
             light: {
                 surface: {
-                    ground: '#f3f4f6',
-                    0: '{white}',
                     50: '{gray.50}',
                     100: '{gray.100}',
                     200: '{gray.200}',
@@ -33,18 +31,9 @@ const MyAuraPreset = definePreset(Aura, {
                     900: '{emerald.900}',
                     950: '{emerald.950}'
                 },
-                text: {
-                    primary: '{#e5e7eb}',     // cor do texto principal
-                    secondary: '{gray.700}',   // texto secundário
-                    muted: '{gray.500}',       // texto desabilitado ou de menor destaque
-                    accent: '{emerald.600}',   // textos com destaque especial
-                    contrast: '{white}'        // usado sobre superfícies escuras
-                }
             },
             dark: {
                 surface: {
-                    ground: '#1E1E1E',
-                    0: '{zinc.950}',
                     50: '{zinc.900}',
                     100: '{zinc.800}',
                     200: '{zinc.700}',
@@ -70,13 +59,6 @@ const MyAuraPreset = definePreset(Aura, {
                     900: '{emerald.100}',
                     950: '{emerald.50}'
                 },
-                text: {
-                    primary: '{gray.100}',
-                    secondary: '{gray.400}',
-                    muted: '{gray.500}',
-                    accent: '{emerald.400}',
-                    contrast: '{black}'
-                }
             }
         }
     }

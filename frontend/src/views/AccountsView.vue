@@ -138,8 +138,8 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="max-w-7xl mx-auto p-8">
-      <div class="flex justify-between items-center mb-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex justify-between items-center">
         
       </div>
 
@@ -149,35 +149,22 @@ onMounted(() => {
             type="text"
             v-model="searchTerm"
             placeholder="Busque uma conta"
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />
-          <svg
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
+          <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"></i>
         </div>
         
         <button
           @click="isEditing = !isEditing; editingAccount = null"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+          class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
           {{ isEditing || editingAccount ? 'Fechar Formulário' : 'Nova Conta' }}
         </button>
       </div>
 
 
-      <div v-if="isEditing" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">{{ editingAccount ? 'Editar Conta' : 'Adicionar Conta' }}</h2>
+      <div v-if="isEditing" class="bg-surface-50 p-6 rounded-lg shadow-inner mb-6">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">{{ editingAccount ? 'Editar Conta' : 'Adicionar Conta' }}</h2>
         <Form
           @submit="handleSubmit"
           :validation-schema="accountSchema"
@@ -186,22 +173,22 @@ onMounted(() => {
           class="space-y-4"
         >
           <div class="flex flex-col">
-            <label for="accountName" class="text-gray-700 font-medium mb-1">Nome da Conta:</label>
+            <label for="accountName" class="text-surface-700 font-medium mb-1">Nome da Conta:</label>
             <Field
               name="name"
               type="text"
               id="accountName"
-              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
             <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
           </div>
           <div class="flex flex-col">
-            <label for="accountType" class="text-gray-700 font-medium mb-1">Tipo:</label>
+            <label for="accountType" class="text-surface-700 font-medium mb-1">Tipo:</label>
             <Field
               name="type"
               as="select"
               id="accountType"
-              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             >
               <option value="" disabled>Selecione...</option>
               <option value="asset">Ativo</option>
@@ -216,7 +203,7 @@ onMounted(() => {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+              class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
             >
               <ProgressSpinner v-if="isSubmitting" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
               <span v-else>{{ editingAccount ? 'Atualizar Conta' : 'Adicionar Conta'  }}</span>
@@ -228,7 +215,7 @@ onMounted(() => {
 
       <div class="overflow-hidden">
         <div
-          class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-gray-400 border border-gray-200 uppercase text-sm"
+          class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
           <div class="col-span-2">CÓDIGO</div>
           <div class="col-span-5">NOME</div>
@@ -237,16 +224,16 @@ onMounted(() => {
         </div>
 
         <div v-if="accountStore.loading" class="p-4 space-y-4">
-          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
-          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
-          <Skeleton height="3rem" class="bg-gray-200" />
+          <Skeleton height="3rem" class="mb-2 bg-surface-200" />
+          <Skeleton height="3rem" class="mb-2 bg-surface-200" />
+          <Skeleton height="3rem" class="bg-surface-200" />
         </div>
         <p v-else-if="accountStore.error" class="text-red-400 text-center p-8">
           {{ accountStore.error }}
         </p>
         <p
           v-else-if="paginatedAccounts.length === 0"
-          class="text-gray-400 text-center p-8"
+          class="text-surface-400 text-center p-8"
         >
           Nenhuma conta encontrada. Adicione uma nova conta acima.
         </p>
@@ -255,13 +242,13 @@ onMounted(() => {
           <div
             v-for="account in paginatedAccounts"
             :key="account.id"
-            class="border-b border-gray-200 last:border-b-0"
+            class="border-b border-surface-200 last:border-b-0"
           >
             <div
-              class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition"
+              class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center hover:bg-surface-50 transition"
             >
-              <div class="md:col-span-2 font-mono text-gray-700">{{ account.code }}</div>
-              <div class="md:col-span-5 text-gray-800">{{ account.name }}</div>
+              <div class="md:col-span-2 font-mono text-surface-700">{{ account.code }}</div>
+              <div class="md:col-span-5 text-surface-800">{{ account.name }}</div>
               <div class="md:col-span-3">
                 <span
                   :class="{
@@ -282,40 +269,14 @@ onMounted(() => {
                   class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
                   title="Editar"
                 >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.232z"
-                    ></path>
-                  </svg>
+                  <i class="pi pi-pencil w-5 h-5"></i>
                 </button>
                 <button
                   @click="handleDeleteAccount(account.id)"
                   class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
                   title="Excluir"
                 >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    ></path>
-                  </svg>
+                  <i class="pi pi-trash w-5 h-5"></i>
                 </button>
               </div>
             </div>
@@ -325,22 +286,9 @@ onMounted(() => {
           <button
             @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"
-            class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 rounded-full bg-surface-200 hover:bg-surface-300 text-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              ></path>
-            </svg>
+            <i class="pi pi-angle-left w-5 h-5"></i>
           </button>
           <button
             v-for="page in totalPages"
@@ -348,7 +296,7 @@ onMounted(() => {
             @click="goToPage(page)"
             :class="[
               'px-4 py-2 rounded-full font-semibold',
-              currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700',
+              currentPage === page ? 'bg-emerald-400 text-white' : 'bg-surface-200 hover:bg-surface-300 text-surface-700',
             ]"
           >
             {{ page }}
@@ -356,22 +304,9 @@ onMounted(() => {
           <button
             @click="goToPage(currentPage + 1)"
             :disabled="currentPage === totalPages"
-            class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 rounded-full bg-surface-200 hover:bg-surface-300 text-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              ></path>
-            </svg>
+            <i class="pi pi-angle-right w-5 h-5"></i>
           </button>
         </div>
       </div>

@@ -44,7 +44,7 @@ const logoSrc = computed(() => {
 <template>
   <Toast />
 
-  <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-surface-ground">
+  <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-surface-100">
         <header class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50" style="grid-template-columns: 180px 1fr auto;">
       <div class="flex items-center">
         <img :src="logoSrc" alt="Finvy Logo" class="h-16 w-16" />
@@ -90,7 +90,7 @@ const logoSrc = computed(() => {
       </div>
     </header>
 
-    <main class="p-6">
+    <main class="p-8">
       <RouterView />
     </main>
   </div>
