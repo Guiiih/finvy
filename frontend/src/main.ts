@@ -21,7 +21,7 @@ import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 
 // PrimeVue 4 Theme
-import Aura from '@primeuix/themes/aura'
+import MyAuraPreset from '@/themes/MyAuraPreset'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -31,7 +31,7 @@ pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(PrimeVue, {
   theme: {
-    preset: Aura,
+    preset: MyAuraPreset,
     options: {
       darkModeSelector: '.dark',
     },
