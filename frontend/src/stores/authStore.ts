@@ -13,6 +13,8 @@ export const useAuthStore = defineStore(
     const loading = ref(false)
     const error = ref<string | null>(null)
     const userRole = ref<string | null>(null)
+    const username = ref<string | null>(null)
+    const avatarUrl = ref<string | null>(null)
 
     const isLoggedIn = computed(() => !!user.value)
     const token = computed(() => session.value?.access_token || null)
@@ -21,14 +23,20 @@ export const useAuthStore = defineStore(
     async function fetchUserProfile() {
       if (!user.value) {
         userRole.value = null;
+        username.value = null;
         return;
       }
       try {
-        const response = await api.get<{ username: string; role: string }>('/profile');
+        const response = await api.get<{ username: string; role: string; avatar_url: string }>('/profile');
         userRole.value = response.role;
+        username.value = response.username;
+        avatarUrl.value = response.avatar_url;
+        console.log('fetchUserProfile: avatarUrl', avatarUrl.value);
       } catch (err: unknown) {
         console.error('Erro ao buscar perfil do usuário:', err);
         userRole.value = null;
+        username.value = null;
+        avatarUrl.value = null;
       }
     }
 
@@ -56,6 +64,8 @@ export const useAuthStore = defineStore(
             await fetchUserProfile();
           } else {
             userRole.value = null;
+            username.value = null;
+            avatarUrl.value = null;
           }
         })
       } catch (err: unknown) {
@@ -99,7 +109,7 @@ export const useAuthStore = defineStore(
       }
     }
 
-    async function signUp(email: string, password: string, fullName: string) {
+    async function signUp(email: string, password: string, firstName: string) {
       loading.value = true
       error.value = null
       try {
@@ -108,16 +118,11 @@ export const useAuthStore = defineStore(
           password,
           options: {
             data: {
-              name: fullName,
+              first_name: firstName,
             },
           },
         })
         if (authError) throw authError
-        user.value = data.user // Update user in store
-        session.value = data.session // Update session in store
-        if (user.value) {
-          await fetchUserProfile(); // Fetch profile to get latest user_metadata
-        }
         console.log('Registro bem-sucedido. Verifique seu email para confirmar:', data)
         return true
       } catch (err: unknown) {
@@ -144,6 +149,7 @@ export const useAuthStore = defineStore(
         user.value = null
         session.value = null
         userRole.value = null;
+        username.value = null;
         console.log('Logout bem-sucedido.')
         return true
       } catch (err: unknown) {
@@ -210,6 +216,118 @@ export const useAuthStore = defineStore(
       }
     }
 
+    async function updateUserProfile(fullName: string) {
+      loading.value = true
+      error.value = null
+      try {
+        const { data, error: authError } = await supabase.auth.updateUser({
+          data: { first_name: fullName },
+        })
+        if (authError) throw authError
+        user.value = data.user
+        // Atualiza o nome de usuário localmente
+        if (username.value) {
+          username.value = fullName
+        }
+        console.log('Perfil atualizado com sucesso.')
+        return true
+      } catch (err: unknown) {
+        console.error('Erro ao atualizar perfil:', err)
+        if (err instanceof AuthApiError) {
+          error.value = err.message
+        } else if (err instanceof Error) {
+          error.value = err.message
+        } else {
+          error.value = 'Falha ao atualizar perfil.'
+        }
+        return false
+      } finally {
+        loading.value = false
+      }
+    }
+
+    async function uploadAvatar(file: Blob) {
+      loading.value = true
+      error.value = null
+      if (!user.value) {
+        error.value = 'Usuário não autenticado.'
+        loading.value = false
+        return false
+      }
+
+      const fileExt = 'png' // Forçamos PNG para a imagem cortada
+      const fileName = `${user.value.id}-${Math.random()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: 'image/png' })
+
+        if (uploadError) throw uploadError
+
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
+
+        if (!publicUrlData) throw new Error('Não foi possível obter a URL pública do avatar.')
+
+        const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrlData.publicUrl }).eq('id', user.value.id)
+
+        if (updateError) throw updateError
+
+        // Atualiza o user_metadata para que o avatar_url seja acessível via user.user_metadata
+        const { data: updatedUser, error: updateUserError } = await supabase.auth.updateUser({
+          data: { avatar_url: publicUrlData.publicUrl },
+        })
+
+        if (updateUserError) throw updateUserError
+
+        user.value = updatedUser.user
+
+        console.log('Avatar atualizado com sucesso.')
+        return true
+      } catch (err: unknown) {
+        console.error('Erro ao fazer upload do avatar:', err)
+        if (err instanceof Error) {
+          error.value = err.message
+        } else {
+          error.value = 'Falha ao fazer upload do avatar.'
+        }
+        return false
+      } finally {
+        loading.value = false
+      }
+    }
+
+    async function deleteUserAccount() {
+      loading.value = true
+      error.value = null
+      try {
+        // A lógica de exclusão real será no backend
+        // Aqui, apenas chamamos o endpoint da API
+        await api.delete('/profile')
+        // Força o logout no cliente para limpar o token localmente
+        await supabase.auth.signOut()
+        // Limpa os dados locais após a exclusão bem-sucedida
+        user.value = null
+        session.value = null
+        userRole.value = null
+        username.value = null
+        avatarUrl.value = null
+        console.log('Conta de usuário excluída com sucesso.')
+        return true
+      } catch (err: unknown) {
+        console.error('Erro ao excluir conta:', err)
+        if (err instanceof Error) {
+          error.value = err.message
+        } else {
+          error.value = 'Falha ao excluir conta.'
+        }
+        return false
+      } finally {
+        loading.value = false
+      }
+    }
+
     return {
       user,
       session,
@@ -219,12 +337,17 @@ export const useAuthStore = defineStore(
       token,
       userRole,
       isAdmin,
+      username,
+      avatarUrl,
       initAuthListener,
       signIn,
       signUp,
       signOut,
       resetPassword,
       updatePassword,
+      updateUserProfile,
+      deleteUserAccount,
+      uploadAvatar,
     }
   },
   {

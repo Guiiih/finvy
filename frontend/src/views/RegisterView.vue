@@ -13,8 +13,8 @@
           <div>
             <input
               type="text"
-              id="fullName"
-              v-model="name"
+              id="name"
+              v-model="firstName"
               placeholder="Nome"
               required
               class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
@@ -87,14 +87,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
 
-const name = ref('')
+const authStore = useAuthStore()
+const router = useRouter()
+
+const firstName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const router = useRouter()
 const passwordFieldType = ref('password')
 const confirmPasswordFieldType = ref('password')
 
@@ -107,28 +109,18 @@ const toggleConfirmPasswordVisibility = () => {
     confirmPasswordFieldType.value === 'password' ? 'text' : 'password'
 }
 
-const authStore = useAuthStore()
-
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
     alert('As senhas não coincidem!')
     return
   }
 
-  try {
-    const success = await authStore.signUp(email.value, password.value, name.value)
+  const success = await authStore.signUp(email.value, password.value, firstName.value)
 
-    if (success) {
-      router.push('/registration-success')
-    } else {
-      alert(authStore.error || 'Ocorreu um erro desconhecido.')
-    }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      alert(error.message)
-    } else {
-      alert('Ocorreu um erro desconhecido.')
-    }
+  if (success) {
+    router.push('/registration-success')
+  } else {
+    alert(authStore.error || 'Ocorreu um erro desconhecido.')
   }
 }
 </script>

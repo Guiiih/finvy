@@ -1,12 +1,18 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
+import Skeleton from 'primevue/skeleton'
+
 export interface TableHeader<T> {
   label: string
   key: Extract<keyof T, string> | 'actions' 
+  align?: 'left' | 'center' | 'right'
 }
 
 const props = defineProps<{
   headers: TableHeader<T>[]
   items: T[]
+  loading?: boolean
+  skeletonRowCount?: number
+  emptyMessage?: string
 }>()
 
 const emit = defineEmits<{
@@ -32,29 +38,46 @@ const handleDelete = (item: T) => {
             v-for="header in headers"
             :key="header.key"
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            :class="{ 'text-center': header.align === 'center', 'text-right': header.align === 'right' }"
           >
             {{ header.label }}
           </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
-        <tr v-for="(item, index) in items" :key="index">
-          <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap">
-            <slot :name="`cell(${String(header.key)})`" :item="item" :value="item[header.key]">
-              <span v-if="header.key !== 'actions'">
-                {{ item[header.key] }}
-              </span>
-              <div v-else class="flex space-x-2">
-                <button @click="handleEdit(item)" class="text-blue-500 hover:text-blue-700">
-                  Editar
-                </button>
-                <button @click="handleDelete(item)" class="text-red-500 hover:text-red-700">
-                  Excluir
-                </button>
-              </div>
-            </slot>
-          </td>
-        </tr>
+        <template v-if="props.loading">
+          <tr v-for="i in props.skeletonRowCount || 5" :key="i">
+            <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap">
+              <Skeleton height="1.5rem" />
+            </td>
+          </tr>
+        </template>
+        <template v-else-if="props.items.length > 0">
+          <tr v-for="(item, index) in items" :key="index">
+            <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap">
+              <slot :name="`cell(${String(header.key)})`" :item="item" :value="item[header.key]">
+                <span v-if="header.key !== 'actions'">
+                  {{ item[header.key] }}
+                </span>
+                <div v-else class="flex space-x-2">
+                  <button @click="handleEdit(item)" class="text-blue-500 hover:text-blue-700">
+                    Editar
+                  </button>
+                  <button @click="handleDelete(item)" class="text-red-500 hover:text-red-700">
+                    Excluir
+                  </button>
+                </div>
+              </slot>
+            </td>
+          </tr>
+        </template>
+        <template v-else>
+          <tr>
+            <td :colspan="headers.length" class="px-6 py-4 text-center text-gray-500">
+              {{ props.emptyMessage || 'Nenhum item encontrado.' }}
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>

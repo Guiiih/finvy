@@ -1,118 +1,114 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto">
-    <Toast />
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Configurações</h1>
+  <div class="p-6 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Configurações da Conta</h1>
 
-    <!-- Avatar Section -->
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Avatar</h2>
-      <div class="flex items-center space-x-4">
-        <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-4xl">
-          <img :src="avatarUrl" alt="User Avatar" class="h-full w-full rounded-full object-cover" />
+      <!-- Seção de Avatar -->
+      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Avatar</h2>
+        <div class="flex items-center space-x-6">
+          <img :src="tempAvatarPreview || authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar" class="h-24 w-24 rounded-full object-cover bg-gray-200 cursor-pointer shadow-lg" @click="triggerFileInput" />
+          <input type="file" ref="fileInput" @change="handleAvatarSelect" accept="image/*" class="hidden" />
+          <Button label="Mudar Avatar" icon="pi pi-image" class="p-button-outlined" @click="triggerFileInput" />
         </div>
-        <input type="file" ref="avatarInput" @change="handleAvatarChange" class="hidden" accept="image/*" />
-        <button @click="avatarInput?.click()" class="px-4 py-2 border border-[#10b981] text-[#10b981] rounded-md hover:bg-[#10b981] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:ring-opacity-50">
-          <i class="pi pi-image mr-2"></i>Mudar Avatar
-        </button>
       </div>
-    </div>
 
-    <!-- Edit Profile Section -->
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Editar Perfil</h2>
-      <form @submit.prevent="updateProfile">
-        <div class="mb-4">
-          <label for="fullName" class="block text-sm font-medium text-gray-700">Nome Completo</label>
-          <InputText type="text" id="fullName" v-model="name" class="mt-1 block w-full" placeholder="Seu nome completo" />
+      <!-- Seção de Perfil -->
+      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Editar Perfil</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+            <InputText id="fullName" v-model="fullName" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+            <InputText id="email" :model-value="authStore.user?.email" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed" disabled />
+          </div>
+          <Button label="Salvar Alterações" icon="pi pi-check" @click="handleUpdateProfile" :loading="loadingProfile" class="p-button-primary mt-4" />
         </div>
-        <div class="mb-4">
-          <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-          <InputText type="email" id="email" v-model="email" class="mt-1 block w-full bg-gray-50 cursor-not-allowed" placeholder="seu.email@example.com" disabled />
-        </div>
-        <Button type="submit" label="Salvar Alterações" icon="pi pi-check" class="bg-[#10b981] text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:ring-opacity-50" />
-      </form>
-    </div>
-
-    <!-- Change Password Section -->
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Alterar Senha</h2>
-      <form @submit.prevent="changePassword" class="p-fluid">
-        <div class="mb-4 w-full">
-          <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Senha</label>
-          <Password id="newPassword" v-model="newPassword" toggleMask :feedback="false" />
-        </div>
-        <div class="mb-4 w-full">
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label>
-          <Password id="confirmPassword" v-model="confirmPassword" toggleMask :feedback="false" />
-        </div>
-        <Button type="submit" label="Atualizar Senha" icon="pi pi-lock" class="bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" />
-      </form>
-    </div>
-
-    <!-- Appearance Section -->
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Aparência</h2>
-      <div class="mb-4">
-        <label id="theme-label" class="block text-sm font-medium text-gray-700 mb-2">Tema</label>
-        <SelectButton v-model="selectedTheme" :options="themeOptions" optionLabel="name" optionValue="value" aria-labelledby="theme-label" />
       </div>
-      <div class="mb-4">
-        <label for="language" class="block text-sm font-medium text-gray-700 mb-2">Idioma</label>
-        <Dropdown inputId="language" v-model="selectedLanguage" :options="languageOptions" optionLabel="name" optionValue="code" placeholder="Selecione o Idioma" />
+
+      <!-- Seção de Senha -->
+      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Alterar Senha</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
+            <Password id="newPassword" v-model="newPassword" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" :feedback="false" toggleMask />
+          </div>
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Nova Senha</label>
+            <Password id="confirmPassword" v-model="confirmNewPassword" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" :feedback="false" toggleMask />
+          </div>
+          <Button label="Atualizar Senha" icon="pi pi-lock" @click="handleUpdatePassword" :loading="loadingPassword" class="p-button-primary mt-4" />
+        </div>
       </div>
-    </div>
 
-    <!-- Delete Account Section -->
-    <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6">
-      <h2 class="text-xl font-semibold text-red-700 mb-4">Excluir Conta</h2>
-      <p class="text-sm mb-4">
-        A exclusão da sua conta é uma ação permanente e irreversível. Todos os seus dados serão removidos.
-      </p>
-      <button @click="deleteAccount" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-        <i class="pi pi-trash mr-2"></i>Excluir Minha Conta
-      </button>
-    </div>
-
-    <!-- Avatar Modal -->
-    <Dialog v-model:visible="showAvatarModal" modal header="Cortar e girar" :style="{ width: '25vw', height: 'auto' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-      <div class="mb-4">
-        <div class="cropper-wrapper mb-4">
-          <Cropper
-            v-if="image.src"
-            ref="cropper"
-            :src="image.src"
-            :stencil-props="{
-              aspectRatio: 1/1
-            }"
-            class="cropper"
-            :key="image.src"
-            :wheel-zoom="true"
-            @update="updateCroppedImage"
-            @change="updateCroppedImage"
-          />
-          <div class="cropper-buttons">
-            <Button icon="pi pi-search-minus" @click="zoomOut" text rounded severity="secondary" aria-label="Zoom Out" />
-            <Button icon="pi pi-search-plus" @click="zoomIn" text rounded severity="secondary" aria-label="Zoom In" />
-            <Button icon="pi pi-refresh" @click="rotateRight" text rounded severity="secondary" aria-label="Rotate Right" />
+      <!-- Seção de Aparência -->
+      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Aparência</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tema</label>
+            <SelectButton v-model="themeStore.theme" :options="themeOptions" optionLabel="name" dataKey="value" @change="changeTheme" class="p-button-outlined" />
+          </div>
+          <div>
+            <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+            <Dropdown id="language" v-model="languageStore.language" :options="languageOptions" optionLabel="name" optionValue="code" class="w-full md:w-1/4 p-button-outlined" @change="changeLanguage" />
           </div>
         </div>
       </div>
-      <div class="bg-gray-100 p-4 rounded-lg text-center mt-4">
-        <h3 class="text-lg font-semibold mb-2 text-center mt-4">Nova foto do perfil</h3>
-        <div class="relative w-32 h-32 mx-auto">
-          <div class="w-full h-full rounded-full overflow-hidden border-2 border-gray-300 flex items-center justify-center">
-            <img :src="croppedImageUrl" alt="Preview" class="w-full h-full object-cover" v-if="croppedImageUrl" />
-            <i class="pi pi-user text-5xl text-gray-400" v-else></i>
-          </div>
-          <div class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 text-xs flex items-center justify-center" style="width: 24px; height: 24px;">
-            <i class="pi pi-eye text-white"></i>
-          </div>
+
+      <!-- Seção de Exclusão de Conta -->
+      <div class="p-6 border rounded-lg bg-red-50 border-red-200">
+        <h2 class="text-2xl font-semibold text-red-700 mb-4">Excluir Conta</h2>
+        <p class="text-red-600 mb-4">A exclusão da sua conta é uma ação permanente e irreversível. Todos os seus dados serão removidos.</p>
+        <Button label="Excluir Minha Conta" icon="pi pi-trash" severity="danger" @click="confirmDeleteAccount" class="p-button-danger" />
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <Dialog header="Confirmar Exclusão" v-model:visible="showDeleteModal" :modal="true" :style="{ width: '450px' }" class="p-dialog-confirm">
+      <div class="flex items-center p-4">
+        <i class="pi pi-exclamation-triangle mr-3 text-red-500" style="font-size: 2rem;"></i>
+        <span class="text-gray-700">
+          Você tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.
+        </span>
+      </div>
+      <template #footer>
+        <Button label="Cancelar" icon="pi pi-times" @click="showDeleteModal = false" class="p-button-text" />
+        <Button label="Excluir" icon="pi pi-check" @click="handleDeleteAccount" :loading="loadingDelete" class="p-button-danger" />
+      </template>
+    </Dialog>
+
+    <!-- Modal de Corte de Imagem -->
+    <Dialog header="Cortar e girar" v-model:visible="showCropperModal" :modal="true" :style="{ width: '500px' }" class="p-dialog-cropper">
+      <div class="cropper-container flex justify-center items-center bg-gray-800 rounded-md overflow-hidden" style="height: 300px;">
+        <Cropper
+          ref="cropperRef"
+          :src="imageSrc"
+          :stencil-props="{ aspectRatio: 1 / 1 }"
+          :auto-zoom="true"
+          image-restriction="stencil"
+          @change="onCropperChange"
+          class="cropper-instance"
+        />
+      </div>
+      <div class="flex flex-col items-center mt-6 p-4 bg-gray-100 rounded-lg">
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Nova foto do perfil</h3>
+        <div class="relative mb-4">
+          <img :src="croppedImagePreviewUrl || './assets/LogoIcon.svg'" alt="Preview" class="h-32 w-32 rounded-full object-cover bg-gray-200 shadow-md border-4 border-white" />
+          <span class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 text-xs flex items-center justify-center" style="width: 24px; height: 24px;">
+            <i class="pi pi-eye"></i>
+          </span>
         </div>
+        <p class="text-sm text-gray-600 text-center mb-4">Pode levar um ou dois dias para que a mudança seja exibida em todos os Serviços do Google</p>
       </div>
       <template #footer>
         <div class="flex justify-between w-full">
-          <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="closeAvatarModal" />
-          <Button label="Salvar como foto do perfil" icon="pi pi-check" @click="saveNewAvatar" class="bg-[#10b981] text-white" />
+          <Button label="Cancelar" icon="pi pi-times" @click="cancelCropping" class="p-button-text p-button-secondary" />
+          <Button label="Salvar como foto do perfil" icon="pi pi-check" @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-primary" />
         </div>
       </template>
     </Dialog>
@@ -120,13 +116,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { storeToRefs } from 'pinia'
+import { useThemeStore } from '@/stores/themeStore'
+import { useLanguageStore } from '@/stores/languageStore'
 import { useToast } from 'primevue/usetoast'
-import { supabase } from '../supabase'
-import { Cropper } from 'vue-advanced-cropper'
-import 'vue-advanced-cropper/dist/style.css'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -134,280 +129,171 @@ import Dialog from 'primevue/dialog'
 import FileUpload from 'primevue/fileupload'
 import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
-
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
+const themeStore = useThemeStore()
+const languageStore = useLanguageStore()
 const toast = useToast()
+const router = useRouter()
 
-const name = ref('')
-const email = ref('')
+const fullName = ref('')
 const newPassword = ref('')
-const confirmPassword = ref('')
-const avatarUrl = ref('../assets/LogoIcon.svg') // Default avatar
-const showAvatarModal = ref(false)
-const avatarInput = ref<HTMLInputElement | null>(null)
-const cropper = ref<any>(null)
-const image = ref({
-  src: '',
-  type: '',
-})
-const croppedImageUrl = ref<string | null>(null)
-const initialStencilWidth = ref(0)
-const initialZoom = ref(0)
-const originalImageNaturalWidth = ref(0)
-const originalImageNaturalHeight = ref(0)
-let isAdjustingZoom = false
+const confirmNewPassword = ref('')
 
-watch(showAvatarModal, (newValue) => {
-  if (newValue && cropper.value) {
-    // Wait for the cropper to render and get its initial state
-    nextTick(() => {
-      const { coordinates, image } = cropper.value.getResult()
-      initialStencilWidth.value = coordinates.width
-      initialZoom.value = image.zoom
-    })
-  }
-})
+const loadingProfile = ref(false)
+const loadingPassword = ref(false)
+const loadingDelete = ref(false)
+const showDeleteModal = ref(false)
+
+// Avatar Cropper
+const showCropperModal = ref(false)
+const imageSrc = ref('')
+const cropperRef = ref<any>(null)
+const loadingAvatarUpload = ref(false)
+const tempAvatarPreview = ref<string | null>(null)
+const croppedImagePreviewUrl = ref<string | null>(null)
+const croppedBlobToSave = ref<Blob | null>(null)
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+// Theme options
+const themeOptions = ref([
+  { name: 'Claro', value: 'light' },
+  { name: 'Escuro', value: 'dark' }
+])
+
+// Language options
+const languageOptions = ref([
+  { name: 'Português (Brasil)', code: 'pt-BR' },
+  { name: 'English', code: 'en-US' }
+])
 
 onMounted(() => {
-  if (user.value) {
-    name.value = user.value.user_metadata?.name || ''
-    email.value = user.value.email || ''
-    if (user.value.user_metadata?.avatar_url) {
-      avatarUrl.value = user.value.user_metadata.avatar_url
-    }
-  }
+  fullName.value = authStore.username || ''
+  console.log('UserConfigurationView mounted. authStore.avatarUrl:', authStore.avatarUrl)
+  console.log('authStore.user:', authStore.user)
 })
 
-const handleAvatarChange = (event: Event) => {
+const handleAvatarSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
+  const file = target.files?.[0]
+  if (file) {
     const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        originalImageNaturalWidth.value = img.naturalWidth
-        originalImageNaturalHeight.value = img.naturalHeight
-        image.value = {
-          src: e.target?.result as string,
-          type: file.type,
-        }
-        croppedImageUrl.value = e.target?.result as string // Set initial preview
-        console.log("Image src:", image.value.src) // Log the image src
-        showAvatarModal.value = true
-      }
-      img.src = e.target?.result as string
+      imageSrc.value = e.target?.result as string
+      showCropperModal.value = true
+      // Limpa a pré-visualização temporária e o blob cortado ao selecionar nova imagem
+      tempAvatarPreview.value = null
+      croppedBlobToSave.value = null
+      croppedImagePreviewUrl.value = null
     }
     reader.readAsDataURL(file)
   }
 }
 
-const closeAvatarModal = () => {
-  showAvatarModal.value = false
-  image.value = { src: '', type: '' } // Clear image data
-  croppedImageUrl.value = null // Clear cropped image preview
-  if (avatarInput.value) {
-    avatarInput.value.value = '' // Clear the file input
-  }
+const triggerFileInput = () => {
+  fileInput.value?.click()
 }
 
-const updateCroppedImage = ({ coordinates, image, canvas }: { coordinates: any, image: any, canvas: HTMLCanvasElement }) => {
-  if (canvas) {
-    croppedImageUrl.value = canvas.toDataURL(image.type)
-  }
-
-  if (isAdjustingZoom) {
-    return
-  }
-
-  if (initialStencilWidth.value > 0 && cropper.value) {
-    const currentStencilWidth = coordinates.width
-    const currentImageZoom = image.zoom
-
-    const stencilWidthRatio = currentStencilWidth / initialStencilWidth.value
-    const newZoom = initialZoom.value * stencilWidthRatio
-
-    isAdjustingZoom = true
-    cropper.value.zoom(newZoom / currentImageZoom)
-    nextTick(() => {
-      isAdjustingZoom = false
-    })
-  }
-}
-
-const zoomIn = () => {
-  if (cropper.value) {
-    cropper.value.zoom(1.1)
-  }
-}
-
-const zoomOut = () => {
-  if (cropper.value) {
-    cropper.value.zoom(0.9)
-  }
-}
-
-const rotateRight = () => {
-  if (cropper.value) {
-    cropper.value.rotate(90)
-  }
-}
-
-const saveNewAvatar = async () => {
-  if (cropper.value) {
-    const { canvas } = cropper.value.getResult()
+const onCropperChange = () => {
+  // Atualiza a pré-visualização em tempo real enquanto o usuário corta
+  if (cropperRef.value) {
+    const { canvas } = cropperRef.value.getResult()
     if (canvas) {
-      croppedImageUrl.value = canvas.toDataURL(image.value.type) // Update preview with cropped image
-      canvas.toBlob(async (blob: Blob) => {
-        if (blob) {
-          const fileExt = image.value.type.split('/')[1]
-          const fileName = `${user.value?.id}-${Date.now()}.${fileExt}`
-          const filePath = `avatars/${fileName}`
-
-          try {
-            const { error: uploadError } = await supabase.storage
-              .from('avatars')
-              .upload(filePath, blob, {
-                cacheControl: '3600',
-                upsert: false,
-              })
-
-            if (uploadError) throw uploadError
-
-            const { data: publicUrlData } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(filePath)
-
-            if (publicUrlData) {
-              const { error: updateError } = await supabase.auth.updateUser({
-                data: { avatar_url: publicUrlData.publicUrl },
-              })
-
-              if (updateError) throw updateError
-
-              avatarUrl.value = publicUrlData.publicUrl
-              toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado com sucesso!', life: 3000 })
-              closeAvatarModal()
-            }
-          } catch (error: any) {
-            toast.add({ severity: 'error', summary: 'Erro', detail: error.message, life: 3000 })
-          }
-        }
-      }, image.value.type)
+      croppedImagePreviewUrl.value = canvas.toDataURL('image/png')
     }
   }
 }
 
-const updateProfile = async () => {
-  try {
-    const { error } = await supabase.auth.updateUser({
-      data: { name: name.value },
-    })
-    if (error) throw error
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso!', life: 3000 })
-  } catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message, life: 3000 })
+const saveCroppedImage = async () => {
+  if (cropperRef.value) {
+    loadingAvatarUpload.value = true
+    const { canvas } = cropperRef.value.getResult()
+    if (canvas) {
+      canvas.toBlob(async (blob: Blob) => {
+        if (blob) {
+          const success = await authStore.uploadAvatar(blob)
+          if (success) {
+            toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado com sucesso!', life: 3000 })
+            showCropperModal.value = false
+            tempAvatarPreview.value = URL.createObjectURL(blob) // Atualiza a miniatura imediatamente
+          } else {
+            toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar o avatar.', life: 3000 })
+          }
+        } else {
+          toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao obter a imagem cortada.', life: 3000 })
+        }
+        loadingAvatarUpload.value = false
+      }, 'image/png') // Você pode escolher o formato da imagem de saída
+    }
   }
 }
 
-const changePassword = async () => {
-  if (newPassword.value !== confirmPassword.value) {
+const cancelCropping = () => {
+  showCropperModal.value = false
+  imageSrc.value = ''
+  croppedBlobToSave.value = null
+  croppedImagePreviewUrl.value = null
+}
+
+const handleUpdateProfile = async () => {
+  loadingProfile.value = true
+
+  const profileUpdateSuccess = await authStore.updateUserProfile(fullName.value)
+  if (profileUpdateSuccess) {
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso!', life: 3000 })
+    tempAvatarPreview.value = null // Limpa a pré-visualização temporária
+  } else {
+    toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar o perfil.', life: 3000 })
+  }
+  loadingProfile.value = false
+}
+
+const handleUpdatePassword = async () => {
+  if (newPassword.value !== confirmNewPassword.value) {
     toast.add({ severity: 'error', summary: 'Erro', detail: 'As senhas não coincidem.', life: 3000 })
     return
   }
-
-  try {
-    const success = await authStore.updatePassword(newPassword.value)
-    if (success) {
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Senha atualizada com sucesso!', life: 3000 })
-      newPassword.value = ''
-      confirmPassword.value = ''
-    } else {
-      toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar senha.', life: 3000 })
-    }
-  } catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message, life: 3000 })
+  if (!newPassword.value) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'A nova senha não pode estar em branco.', life: 3000 })
+    return
   }
-}
-
-const selectedTheme = ref(localStorage.getItem('theme') || 'light');
-const selectedLanguage = ref(localStorage.getItem('language') || 'pt-BR');
-
-const themeOptions = ref([
-  { name: 'Claro', value: 'light' },
-  { name: 'Escuro', value: 'dark' }
-]);
-
-const languageOptions = ref([
-  { name: 'Português (Brasil)', code: 'pt-BR' },
-  { name: 'English (United States)', code: 'en-US' }
-]);
-
-const applyTheme = (theme: string) => {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark')
+  loadingPassword.value = true
+  const success = await authStore.updatePassword(newPassword.value)
+  if (success) {
+    newPassword.value = ''
+    confirmNewPassword.value = ''
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Senha atualizada com sucesso!', life: 3000 })
   } else {
-    document.documentElement.classList.remove('dark')
+    toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar a senha.', life: 3000 })
   }
-  localStorage.setItem('theme', theme)
+  loadingPassword.value = false
 }
 
-watch(selectedTheme, (newTheme) => {
-  applyTheme(newTheme)
-})
+const confirmDeleteAccount = () => {
+  showDeleteModal.value = true
+}
 
-watch(selectedLanguage, (newLang) => {
-  localStorage.setItem('language', newLang)
-  // Aqui você pode adicionar lógica para mudar o idioma da aplicação
-  // Por exemplo, usando uma biblioteca de i18n
-})
-
-onMounted(() => {
-  applyTheme(selectedTheme.value)
-})
-
-const deleteAccount = async () => {
-  if (confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) {
-    try {
-      await authStore.signOut()
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta excluída com sucesso!', life: 3000 })
-      // Redirecionar para a página de login ou home após a exclusão
-      // router.push('/login') // Se houver um router disponível
-    } catch (error: any) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: error.message, life: 3000 })
-    }
+const handleDeleteAccount = async () => {
+  loadingDelete.value = true
+  const success = await authStore.deleteUserAccount()
+  if (success) {
+    showDeleteModal.value = false
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Conta excluída com sucesso.', life: 5000 })
+    router.push('/login') // Redireciona para a página de login
+  } else {
+    toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao excluir a conta.', life: 3000 })
   }
+  loadingDelete.value = false
+}
+
+const changeTheme = (event: any) => {
+  themeStore.setTheme(event.value)
+}
+
+const changeLanguage = (event: any) => {
+  languageStore.setLanguage(event.value)
 }
 </script>
-
-<style>
-.cropper-wrapper {
-  position: relative;
-  width: 100%;
-  height: 300px; /* Increased height */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000000; /* bg-gray-100 */
-  border-radius: 0.5rem; /* rounded-lg */
-  border: 1px solid #000000; /* border-gray-200 */
-}
-.cropper-buttons {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 5px 10px;
-  border-radius: 20px;
-}
-.cropper {
-  max-height: 100%;
-  max-width: 100%;
-  background: #000000; /* Slightly darker gray for the cropper itself */
-}
-</style>

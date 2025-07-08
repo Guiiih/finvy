@@ -1,71 +1,41 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
-import { ref, computed } from 'vue'
-import { supabase } from './supabase'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
 import Toast from 'primevue/toast'
-import type { Session } from '@supabase/supabase-js'
-import UserMenu from './components/UserMenu.vue'
-import { onClickOutside } from '@vueuse/core'
+import UserMenu from '@/components/UserMenu.vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
 
 const showUserMenu = ref(false)
-const userMenuRef = ref(null)
-
-const userName = computed(() => {
-  return session.value?.user?.user_metadata?.name || 'Usuário'
-})
-
-const userEmail = computed(() => {
-  return session.value?.user?.email || 'email@example.com'
-})
-
-const userAvatarUrl = computed(() => {
-  return session.value?.user?.user_metadata?.avatar_url || './assets/LogoIcon.svg'
-})
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
 
-const handleOutsideClick = () => {
+const closeUserMenu = () => {
   showUserMenu.value = false
 }
 
-const router = useRouter()
-const route = useRoute()
-
-const session = ref<Session | null>(null)
-
-supabase.auth.getSession().then(({ data }) => {
-  session.value = data.session
+onMounted(() => {
+  authStore.initAuthListener()
+  window.addEventListener('click', closeUserMenu)
 })
 
-supabase.auth.onAuthStateChange((_, _session) => {
-  session.value = _session
+onUnmounted(() => {
+  window.removeEventListener('click', closeUserMenu)
 })
-
-const handleLogout = async () => {
-  try {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    router.push('/login')
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      alert(error.message)
-    }
-  }
-}
 
 const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false
 })
-
-onClickOutside(userMenuRef, handleOutsideClick)
 </script>
 
 <template>
   <Toast />
 
-  <div v-if="session && !shouldHideNavbar" class="min-h-screen bg-gray-100">
+  <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-gray-100">
     <header class="bg-gray-100 py-4 px-6 grid items-center sticky top-0 z-50" style="grid-template-columns: 180px 1fr auto;">
       <div class="flex items-center">
         <img src="./assets/FinvyLogoBlack.svg" alt="Finvy Logo" class="h-16 w-16" />
@@ -104,9 +74,9 @@ onClickOutside(userMenuRef, handleOutsideClick)
           <i class="pi pi-bell text-xl text-gray-600"></i>
         </button>
 
-        <div class="relative" ref="userMenuRef">
-          <img :src="userAvatarUrl" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click="toggleUserMenu" />
-          <UserMenu v-if="showUserMenu" :user-name="userName" :user-email="userEmail" :avatar-url="userAvatarUrl" @logout="handleLogout" />
+        <div class="relative">
+          <img :src="authStore.avatarUrl || './assets/LogoIcon.svg'" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click.stop="toggleUserMenu" />
+          <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
       </div>
     </header>

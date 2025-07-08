@@ -271,7 +271,7 @@ onMounted(() => {
     <div class="max-w-7xl mx-auto p-8 rounded-lg">
     <div class="max-w-screen-xl mx-auto">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-black">Lançamentos Contábeis</h1>
+        
       </div>
 
       <div class="mb-6 flex items-center space-x-4">

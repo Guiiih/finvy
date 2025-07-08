@@ -104,7 +104,8 @@ export default async function handler(
       invalidateAccountsCache(user_id); 
       return res.status(200).json(data[0]);
     } else if (req.method === "DELETE") {
-      const id = req.query.id as string;
+      const pathSegments = (req.query.path as string).split('/');
+      const id = pathSegments[pathSegments.length - 1];
       const parsedId = uuidSchema.safeParse(id);
       if (!parsedId.success) {
         return handleErrorResponse(

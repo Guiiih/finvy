@@ -133,7 +133,7 @@ export const createEntryLineSchema = z
       .optional(),
     transaction_type: z.enum(["sale", "purchase"], {
       message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
-    }),
+    }).optional(),
   })
   .refine((data) => data.debit !== undefined || data.credit !== undefined, {
     message: "Pelo menos um dos campos (debit ou credit) é obrigatório.",

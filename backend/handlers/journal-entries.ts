@@ -121,7 +121,7 @@ export default async function handler(
     }
 
     if (req.method === "DELETE") {
-      const id = req.query.id as string;
+      const id = req.url?.split('?')[0].split('/').pop() as string;
       console.log(`Journal Entries Handler: Processando DELETE para lançamento ${id}.`);
 
       // First, delete all associated entry_lines

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { Account } from '@/types'
-import BaseTable from '@/components/BaseTable.vue'
+
 
 import ProgressSpinner from 'primevue/progressspinner'
 import Skeleton from 'primevue/skeleton'
@@ -59,17 +59,7 @@ function goToPage(page: number) {
   }
 }
 
-type AccountTableHeader = {
-  key: keyof Account | 'actions'
-  label: string
-  align?: 'left' | 'center' | 'right'
-}
-const headers: AccountTableHeader[] = [
-  { key: 'code', label: 'CÓDIGO', align: 'left' },
-  { key: 'name', label: 'NOME', align: 'left' },
-  { key: 'type', label: 'TIPO', align: 'left' },
-  { key: 'actions', label: 'AÇÕES', align: 'center' },
-]
+
 
 async function handleSubmit(
   values: Omit<Account, 'id'> | Partial<Account>,
@@ -150,7 +140,7 @@ onMounted(() => {
   <div>
     <div class="max-w-7xl mx-auto p-8">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Gerenciar Contas Contábeis</h1>
+        
       </div>
 
       <div class="mb-6 flex items-center space-x-4">
@@ -178,7 +168,7 @@ onMounted(() => {
         </div>
         
         <button
-          @click="isEditing = !isEditing; if (!isEditing) editingAccount = null"
+          @click="isEditing = !isEditing; editingAccount = null"
           class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
           {{ isEditing || editingAccount ? 'Fechar Formulário' : 'Nova Conta' }}
@@ -186,8 +176,8 @@ onMounted(() => {
       </div>
 
 
-      <div v-if="isEditing || editingAccount" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">{{ isEditing ?'Adicionar Conta' : 'Editar Conta' }}</h2>
+      <div v-if="isEditing" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">{{ editingAccount ? 'Editar Conta' : 'Adicionar Conta' }}</h2>
         <Form
           @submit="handleSubmit"
           :validation-schema="accountSchema"
@@ -229,31 +219,49 @@ onMounted(() => {
               class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
             >
               <ProgressSpinner v-if="isSubmitting" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
-              <span v-else>{{ isEditing ? 'Adicionar Conta' : 'Atualizar Conta'  }}</span>
+              <span v-else>{{ editingAccount ? 'Atualizar Conta' : 'Adicionar Conta'  }}</span>
             </button>
             
           </div>
         </Form>
       </div>
 
-      <div class="overflow-x-auto">
-        <div class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-gray-400 border border-gray-200 uppercase text-sm">
-          <div class="col-span-2">Código</div>
-          <div class="col-span-5">Nome</div>
-          <div class="col-span-3">Tipo</div>
-          <div class="col-span-2 text-center">Ações</div>
+      <div class="overflow-hidden">
+        <div
+          class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-gray-400 border border-gray-200 uppercase text-sm"
+        >
+          <div class="col-span-2">CÓDIGO</div>
+          <div class="col-span-5">NOME</div>
+          <div class="col-span-3">TIPO</div>
+          <div class="col-span-2 text-center">AÇÕES</div>
         </div>
+
         <div v-if="accountStore.loading" class="p-4 space-y-4">
-          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
-          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
-          <Skeleton height="3rem" class="bg-gray-700" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
+          <Skeleton height="3rem" class="bg-gray-200" />
         </div>
-        <p v-else-if="accountStore.error" class="text-red-500 text-center text-lg">{{ accountStore.error }}</p>
+        <p v-else-if="accountStore.error" class="text-red-400 text-center p-8">
+          {{ accountStore.error }}
+        </p>
+        <p
+          v-else-if="paginatedAccounts.length === 0"
+          class="text-gray-400 text-center p-8"
+        >
+          Nenhuma conta encontrada. Adicione uma nova conta acima.
+        </p>
+
         <div v-else>
-          <div v-for="account in paginatedAccounts" :key="account.id" class="border-b border-gray-200 last:border-b-0">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition">
-              <div class="md:col-span-2 font-mono text-black">{{ account.code }}</div>
-              <div class="md:col-span-5 text-black">{{ account.name }}</div>
+          <div
+            v-for="account in paginatedAccounts"
+            :key="account.id"
+            class="border-b border-gray-200 last:border-b-0"
+          >
+            <div
+              class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition"
+            >
+              <div class="md:col-span-2 font-mono text-gray-700">{{ account.code }}</div>
+              <div class="md:col-span-5 text-gray-800">{{ account.name }}</div>
               <div class="md:col-span-3">
                 <span
                   :class="{
@@ -313,12 +321,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        <p v-if="paginatedAccounts.length === 0 && !accountStore.loading && !accountStore.error" class="text-gray-400 text-center p-8">
-          Nenhuma conta encontrada.
-        </p>
-      </div>
-
-        <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
+      <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
           <button
             @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"
@@ -373,5 +376,5 @@ onMounted(() => {
         </div>
       </div>
     </div>
+  </div>
 </template>
-

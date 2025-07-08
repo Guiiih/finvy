@@ -24,6 +24,10 @@ export function getSupabaseClient(token: string): SupabaseClient {
   });
 }
 
+export function getSupabaseAdmin(): SupabaseClient {
+  return createClient(supabaseUrl!, supabaseServiceRoleKey!);
+}
+
 export const handleErrorResponse = (
   res: VercelResponse,
   statusCode: number,

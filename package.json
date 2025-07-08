@@ -1,7 +1,9 @@
 {
   "type": "module",
   "dependencies": {
+    "@primeuix/themes": "^1.2.1",
     "@supabase/supabase-js": "^2.50.2",
+    "vue-advanced-cropper": "^2.8.9",
     "zod": "^3.25.67"
   },
   "devDependencies": {

@@ -117,53 +117,48 @@ export default async function handler(
         );
       }
 
-      // Fetch required account IDs
-      const { data: accounts, error: accountsError } = await userSupabase
-        .from("accounts")
-        .select("id, name")
-        .in("name", [
-          "Receita de Vendas",
-          "IPI a Recolher",
-          "ICMS a Recolher",
-          "ICMS-ST a Recolher",
-          "PIS a Recolher",
-          "COFINS a Recolher",
-          "Custo da Mercadoria Vendida",
-          "Estoque de Produtos Acabados",
-          "Estoque de Mercadorias", // For retailer purchases
-          "Fornecedores", // For retailer purchases
-          "PIS sobre Faturamento", // Expense account for PIS
-          "COFINS sobre Faturamento", // Expense account for COFINS
-        ]);
-
-      if (accountsError) throw accountsError;
-
-      const accountMap = new Map(accounts.map((acc) => [acc.name, acc.id]));
-
-      const revenueAccount = accountMap.get("Receita de Vendas");
-      const ipiPayableAccount = accountMap.get("IPI a Recolher");
-      const icmsPayableAccount = accountMap.get("ICMS a Recolher");
-      const icmsStPayableAccount = accountMap.get("ICMS-ST a Recolher");
-      const pisPayableAccount = accountMap.get("PIS a Recolher");
-      const cofinsPayableAccount = accountMap.get("COFINS a Recolher");
-      const cmvAccount = accountMap.get("Custo da Mercadoria Vendida");
-      const finishedGoodsStockAccount = accountMap.get("Estoque de Produtos Acabados");
-      const merchandiseStockAccount = accountMap.get("Estoque de Mercadorias");
-      const suppliersAccount = accountMap.get("Fornecedores");
-      const pisExpenseAccount = accountMap.get("PIS sobre Faturamento");
-      const cofinsExpenseAccount = accountMap.get("COFINS sobre Faturamento");
-
-      if (!revenueAccount || !ipiPayableAccount || !icmsPayableAccount || !icmsStPayableAccount || !pisPayableAccount || !cofinsPayableAccount || !cmvAccount || !finishedGoodsStockAccount || !merchandiseStockAccount || !suppliersAccount || !pisExpenseAccount || !cofinsExpenseAccount) {
-        return handleErrorResponse(
-          res,
-          500,
-          "Contas contábeis essenciais não encontradas. Verifique se todas as contas necessárias existem.",
-        );
-      }
-
       const entryLinesToInsert = [];
 
       if (transaction_type === "sale") {
+        // Fetch required account IDs for sales
+        const { data: accounts, error: accountsError } = await userSupabase
+          .from("accounts")
+          .select("id, name")
+          .in("name", [
+            "Receita de Vendas",
+            "IPI a Recolher",
+            "ICMS a Recolher",
+            "ICMS-ST a Recolher",
+            "PIS a Recolher",
+            "COFINS a Recolher",
+            "Custo da Mercadoria Vendida",
+            "Estoque de Produtos Acabados",
+            "PIS sobre Faturamento", // Expense account for PIS
+            "COFINS sobre Faturamento", // Expense account for COFINS
+          ]);
+
+        if (accountsError) throw accountsError;
+
+        const accountMap = new Map(accounts.map((acc) => [acc.name, acc.id]));
+
+        const revenueAccount = accountMap.get("Receita de Vendas");
+        const ipiPayableAccount = accountMap.get("IPI a Recolher");
+        const icmsPayableAccount = accountMap.get("ICMS a Recolher");
+        const icmsStPayableAccount = accountMap.get("ICMS-ST a Recolher");
+        const pisPayableAccount = accountMap.get("PIS a Recolher");
+        const cofinsPayableAccount = accountMap.get("COFINS a Recolher");
+        const cmvAccount = accountMap.get("Custo da Mercadoria Vendida");
+        const finishedGoodsStockAccount = accountMap.get("Estoque de Produtos Acabados");
+        const pisExpenseAccount = accountMap.get("PIS sobre Faturamento");
+        const cofinsExpenseAccount = accountMap.get("COFINS sobre Faturamento");
+
+        if (!revenueAccount || !ipiPayableAccount || !icmsPayableAccount || !icmsStPayableAccount || !pisPayableAccount || !cofinsPayableAccount || !cmvAccount || !finishedGoodsStockAccount || !pisExpenseAccount || !cofinsExpenseAccount) {
+          return handleErrorResponse(
+            res,
+            500,
+            "Contas contábeis essenciais para vendas não encontradas. Verifique se todas as contas necessárias existem.",
+          );
+        }
         // Main transaction line (Debit Clients/Cash, Credit Revenue + Taxes)
         entryLinesToInsert.push({
           journal_entry_id,
@@ -295,6 +290,30 @@ export default async function handler(
           }
         }
       } else if (transaction_type === "purchase") {
+        // Fetch required account IDs for purchases
+        const { data: accounts, error: accountsError } = await userSupabase
+          .from("accounts")
+          .select("id, name")
+          .in("name", [
+            "Estoque de Mercadorias", // For retailer purchases
+            "Fornecedores", // For retailer purchases
+          ]);
+
+        if (accountsError) throw accountsError;
+
+        const accountMap = new Map(accounts.map((acc) => [acc.name, acc.id]));
+
+        const merchandiseStockAccount = accountMap.get("Estoque de Mercadorias");
+        const suppliersAccount = accountMap.get("Fornecedores");
+
+        if (!merchandiseStockAccount || !suppliersAccount) {
+          return handleErrorResponse(
+            res,
+            500,
+            "Contas contábeis essenciais para compras não encontradas. Verifique se todas as contas necessárias existem.",
+          );
+        }
+
         // Retailer Purchase Scenario
         // Debit Estoque de Mercadorias, Credit Fornecedores
         entryLinesToInsert.push({
