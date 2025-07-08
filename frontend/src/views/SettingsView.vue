@@ -84,7 +84,7 @@
 
     <!-- Modal de Corte de Imagem -->
     <Dialog header="Cortar e girar" v-model:visible="showCropperModal" :modal="true" :style="{ width: '500px' }" class="p-dialog-cropper">
-      <div class="cropper-container flex justify-center items-center bg-gray-800 rounded-md overflow-hidden" style="height: 300px;">
+      <div class="cropper-container flex justify-center items-center bg-gray-800 rounded-md overflow-hidden relative" style="height: 300px;">
         <Cropper
           ref="cropperRef"
           :src="imageSrc"
@@ -94,6 +94,12 @@
           @change="onCropperChange"
           class="cropper-instance"
         />
+        <!-- New buttons for zoom and rotate -->
+        <div class="cropper-buttons">
+          <Button icon="pi pi-search-minus" class="p-button-rounded p-button-text p-button-plain" @click="zoomOut" />
+          <Button icon="pi pi-search-plus" class="p-button-rounded p-button-text p-button-plain" @click="zoomIn" />
+          <Button icon="pi pi-refresh" class="p-button-rounded p-button-text p-button-plain" @click="rotate" />
+        </div>
       </div>
       <div class="flex flex-col items-center mt-6 p-4 bg-gray-100 rounded-lg">
         <h3 class="text-xl font-semibold text-gray-800 mb-3">Nova foto do perfil</h3>
@@ -103,7 +109,6 @@
             <i class="pi pi-eye"></i>
           </span>
         </div>
-        <p class="text-sm text-gray-600 text-center mb-4">Pode levar um ou dois dias para que a mudança seja exibida em todos os Serviços do Google</p>
       </div>
       <template #footer>
         <div class="flex justify-between w-full">
@@ -236,6 +241,24 @@ const cancelCropping = () => {
   imageSrc.value = ''
   croppedBlobToSave.value = null
   croppedImagePreviewUrl.value = null
+}
+
+const zoomIn = () => {
+  if (cropperRef.value) {
+    cropperRef.value.zoom(1.1)
+  }
+}
+
+const zoomOut = () => {
+  if (cropperRef.value) {
+    cropperRef.value.zoom(0.9)
+  }
+}
+
+const rotate = () => {
+  if (cropperRef.value) {
+    cropperRef.value.rotate(90)
+  }
 }
 
 const handleUpdateProfile = async () => {

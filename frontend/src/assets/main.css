@@ -19,3 +19,15 @@ body {
 /* Restante dos seus estilos globais, se houver */
 
 @import "tailwindcss";
+
+.cropper-buttons {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 5px 10px;
+  border-radius: 20px;
+}
