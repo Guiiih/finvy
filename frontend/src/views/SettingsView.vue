@@ -1,60 +1,60 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-      <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Configurações da Conta</h1>
+  <div class="p-6 bg-surface-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-8">
+      <h1 class="text-3xl font-bold text-surface-800 mb-8 border-b pb-4">Configurações da Conta</h1>
 
       <!-- Seção de Avatar -->
-      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Avatar</h2>
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Avatar</h2>
         <div class="flex items-center space-x-6">
-          <img :src="tempAvatarPreview || authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar" class="h-24 w-24 rounded-full object-cover bg-gray-200 cursor-pointer shadow-lg" @click="triggerFileInput" />
+          <img :src="tempAvatarPreview || authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar" class="h-24 w-24 rounded-full object-cover bg-surface-200 cursor-pointer shadow-lg" @click="triggerFileInput" />
           <input type="file" ref="fileInput" @change="handleAvatarSelect" accept="image/*" class="hidden" />
           <Button label="Mudar Avatar" icon="pi pi-image" class="p-button-outlined" @click="triggerFileInput" />
         </div>
       </div>
 
       <!-- Seção de Perfil -->
-      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Editar Perfil</h2>
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Editar Perfil</h2>
         <div class="space-y-4">
           <div>
-            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-            <InputText id="fullName" v-model="fullName" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+            <label for="fullName" class="block text-sm font-medium text-surface-700 mb-1">Nome</label>
+            <InputText id="fullName" v-model="fullName" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
           </div>
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <InputText id="email" :model-value="authStore.user?.email" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed" disabled />
+            <label for="email" class="block text-sm font-medium text-surface-700 mb-1">E-mail</label>
+            <InputText id="email" :model-value="authStore.user?.email" class="w-full p-3 border border-surface-300 rounded-md bg-surface-100 cursor-not-allowed" disabled />
           </div>
           <Button label="Salvar Alterações" icon="pi pi-check" @click="handleUpdateProfile" :loading="loadingProfile" class="p-button-primary mt-4" />
         </div>
       </div>
 
       <!-- Seção de Senha -->
-      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Alterar Senha</h2>
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Alterar Senha</h2>
         <div class="space-y-4">
           <div>
-            <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
-            <Password id="newPassword" v-model="newPassword" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" :feedback="false" toggleMask />
+            <label for="newPassword" class="block text-sm font-medium text-surface-700 mb-1">Nova Senha</label>
+            <Password id="newPassword" v-model="newPassword" class=" rounded-md focus:ring-2 focus:ring-blue-500 transition duration-200" :feedback="false" toggleMask />
           </div>
           <div>
-            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Nova Senha</label>
-            <Password id="confirmPassword" v-model="confirmNewPassword" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" :feedback="false" toggleMask />
+            <label for="confirmPassword" class="block text-sm font-medium text-surface-700 mb-1">Confirmar Nova Senha</label>
+            <Password id="confirmPassword" v-model="confirmNewPassword" class=" rounded-md focus:ring-2 focus:ring-blue-500 transition duration-200" :feedback="false" toggleMask />
           </div>
           <Button label="Atualizar Senha" icon="pi pi-lock" @click="handleUpdatePassword" :loading="loadingPassword" class="p-button-primary mt-4" />
         </div>
       </div>
 
       <!-- Seção de Aparência -->
-      <div class="mb-8 p-6 border rounded-lg bg-gray-50">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Aparência</h2>
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Aparência</h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tema</label>
+            <label class="block text-sm font-medium text-surface-700 mb-2">Tema</label>
             <SelectButton v-model="themeStore.theme" :options="themeOptions" optionLabel="name" dataKey="value" @change="changeTheme" class="p-button-outlined" />
           </div>
           <div>
-            <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+            <label for="language" class="block text-sm font-medium text-surface-700 mb-1">Idioma</label>
             <Dropdown id="language" v-model="languageStore.language" :options="languageOptions" optionLabel="name" optionValue="code" class="w-full md:w-1/4 p-button-outlined" @change="changeLanguage" />
           </div>
         </div>
@@ -72,7 +72,7 @@
     <Dialog header="Confirmar Exclusão" v-model:visible="showDeleteModal" :modal="true" :style="{ width: '450px' }" class="p-dialog-confirm">
       <div class="flex items-center p-4">
         <i class="pi pi-exclamation-triangle mr-3 text-red-500" style="font-size: 2rem;"></i>
-        <span class="text-gray-700">
+        <span class="text-surface-700">
           Você tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.
         </span>
       </div>
@@ -83,39 +83,40 @@
     </Dialog>
 
     <!-- Modal de Corte de Imagem -->
-    <Dialog header="Cortar e girar" v-model:visible="showCropperModal" :modal="true" :style="{ width: '500px' }" class="p-dialog-cropper">
-      <div class="cropper-container flex justify-center items-center bg-gray-800 rounded-md overflow-hidden relative" style="height: 300px;">
-        <Cropper
-          ref="cropperRef"
-          :src="imageSrc"
-          :stencil-props="{ aspectRatio: 1 / 1 }"
-          :auto-zoom="true"
-          image-restriction="stencil"
-          @change="onCropperChange"
-          class="cropper-instance"
-        />
-        <!-- New buttons for zoom and rotate -->
-        <div class="cropper-buttons">
-          <Button icon="pi pi-search-minus" class="p-button-rounded p-button-text p-button-plain" @click="zoomOut" />
-          <Button icon="pi pi-search-plus" class="p-button-rounded p-button-text p-button-plain" @click="zoomIn" />
-          <Button icon="pi pi-refresh" class="p-button-rounded p-button-text p-button-plain" @click="rotate" />
+    <Dialog v-model:visible="showCropperModal" :modal="true" :style="{ width: '500px' }" class="p-dialog-cropper">
+      <div class="p-4">
+        <h2 class="text-xl font-bold mb-4">Cortar e girar</h2>
+        <div class="cropper-container flex justify-center items-center bg-surface-800 rounded-md overflow-hidden relative" style="height: 300px;">
+          <Cropper
+            ref="cropperRef"
+            :src="imageSrc"
+            :stencil-props="{ aspectRatio: 1 / 1 }"
+            :auto-zoom="true"
+            image-restriction="stencil"
+            @change="onCropperChange"
+            class="cropper-instance"
+          />
+          <!-- New buttons for zoom and rotate -->
+          <div class="cropper-buttons">
+            <Button icon="pi pi-search-minus" class="p-button-rounded p-button-text p-button-plain" @click="zoomOut" />
+            <Button icon="pi pi-search-plus" class="p-button-rounded p-button-text p-button-plain" @click="zoomIn" />
+            <Button icon="pi pi-refresh" class="p-button-rounded p-button-text p-button-plain" @click="rotate" />
+          </div>
         </div>
-      </div>
-      <div class="flex flex-col items-center mt-6 p-4 bg-gray-100 rounded-lg">
-        <h3 class="text-xl font-semibold text-gray-800 mb-3">Nova foto do perfil</h3>
-        <div class="relative mb-4">
-          <img :src="croppedImagePreviewUrl || './assets/LogoIcon.svg'" alt="Preview" class="h-32 w-32 rounded-full object-cover bg-gray-200 shadow-md border-4 border-white" />
-          <span class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 text-xs flex items-center justify-center" style="width: 24px; height: 24px;">
-            <i class="pi pi-eye"></i>
-          </span>
+        <div class="flex flex-col items-center mt-6 p-4 bg-surface-100 rounded-lg">
+          <h3 class="text-xl font-semibold mb-3">Nova foto do perfil</h3>
+          <div class="relative mb-4">
+            <img :src="croppedImagePreviewUrl || './assets/LogoIcon.svg'" alt="Preview" class="h-32 w-32 rounded-full object-cover bg-surface-200 shadow-md border-4 border-white" />
+            <span class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 text-xs flex items-center justify-center" style="width: 24px; height: 24px;">
+              <i class="pi pi-eye"></i>
+            </span>
+          </div>
         </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-between w-full">
+        <div class="flex justify-between w-full mt-4">
           <Button label="Cancelar" icon="pi pi-times" @click="cancelCropping" class="p-button-text p-button-secondary" />
           <Button label="Salvar como foto do perfil" icon="pi pi-check" @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-primary" />
         </div>
-      </template>
+      </div>
     </Dialog>
   </div>
 </template>
@@ -313,7 +314,7 @@ const handleDeleteAccount = async () => {
 }
 
 const changeTheme = (event: any) => {
-  themeStore.setTheme(event.value)
+  themeStore.setTheme(event.value.value);
 }
 
 const changeLanguage = (event: any) => {

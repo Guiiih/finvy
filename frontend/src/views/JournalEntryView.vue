@@ -268,8 +268,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto p-8 rounded-lg">
-    <div class="max-w-screen-xl mx-auto">
+  <div>
+    <div class="max-w-7xl mx-auto p-8">
       <div class="flex justify-between items-center mb-6">
         
       </div>
@@ -300,47 +300,45 @@ onMounted(() => {
         
         <button
           @click="toggleNewEntryForm"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
           {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
         </button>
         <button
           @click="resetAllData"
-          class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
           Resetar contas
         </button>
       </div>
 
-      <div v-if="showAddEntryForm" class="bg-gray-50 p-6 mb-8">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-6">
+      <div v-if="showAddEntryForm" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">
           {{ editingEntryId ? 'Editar Lançamento' : 'Adicionar Lançamento' }}
         </h2>
-        <form @submit.prevent="submitEntry" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col">
-              <label for="entry-date" class="text-gray-700 font-medium mb-2">Data:</label>
-              <input
-                type="date"
-                id="entry-date"
-                v-model="newEntryDate"
-                required
-                class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div class="flex flex-col">
-              <label for="entry-description" class="text-gray-700 font-medium mb-2"
-                >Descrição:</label
-              >
-              <input
-                type="text"
-                id="entry-description"
-                v-model="newEntryDescription"
-                placeholder="Descrição do lançamento"
-                required
-                class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 "
-              />
-            </div>
+        <form @submit.prevent="submitEntry" class="space-y-4">
+          <div class="flex flex-col">
+            <label for="entry-date" class="text-gray-700 font-medium mb-1">Data:</label>
+            <input
+              type="date"
+              id="entry-date"
+              v-model="newEntryDate"
+              required
+              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="entry-description" class="text-gray-700 font-medium mb-1"
+              >Descrição:</label
+            >
+            <input
+              type="text"
+              id="entry-description"
+              v-model="newEntryDescription"
+              placeholder="Descrição do lançamento"
+              required
+              class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div class="space-y-4">
@@ -362,7 +360,6 @@ onMounted(() => {
                   v-for="type in accountStore.accountTypes"
                   :label="type"
                   :key="type"
-                  class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option
                     v-for="account in accountStore.getAccountsByType(type)"
@@ -394,24 +391,37 @@ onMounted(() => {
                 <button
                   type="button"
                   @click="removeLine(index)"
-                  class="flex justify-center items-center p-2 rounded-full hover:bg-red-500/20 text-red-500 transition"
+                  class="flex justify-center items-center p-2 rounded-full hover:bg-red-100 text-red-600 transition"
                   title="Remover Linha"
                 >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
-                      fill-rule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
-                      clip-rule="evenodd"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     ></path>
                   </svg>
                 </button>
                 <button
                   type="button"
                   @click="addLine"
-                  class="flex justify-center items-center w-8 h-8 bg-green-400 hover:bg-green-300 text-white font-bold rounded-full transition"
+                  class="flex justify-center items-center p-2 rounded-full hover:bg-green-100 text-green-600 transition"
                   title="Adicionar Linha"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -445,18 +455,14 @@ onMounted(() => {
             </p>
           </div>
 
-          <div class="flex space-x-4 pt-4">
+          <div class="flex space-x-4">
             <button
               type="submit"
               :disabled="journalEntryStore.loading || totalDebits !== totalCredits"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition flex items-center justify-center disabled:bg-gray-500 disabled:cursor-not-allowed"
+              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
             >
-              <ProgressSpinner
-                v-if="journalEntryStore.loading"
-                class="w-5 h-5 mr-2"
-                strokeWidth="8"
-              />
-              <span>{{ editingEntryId ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}</span>
+              <ProgressSpinner v-if="journalEntryStore.loading" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
+              <span v-else>{{ editingEntryId ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}</span>
             </button>
             
           </div>
@@ -474,9 +480,9 @@ onMounted(() => {
         </div>
 
         <div v-if="journalEntryStore.loading" class="p-4 space-y-4">
-          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
-          <Skeleton height="3rem" class="mb-2 bg-gray-700" />
-          <Skeleton height="3rem" class="bg-gray-700" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
+          <Skeleton height="3rem" class="mb-2 bg-gray-200" />
+          <Skeleton height="3rem" class="bg-gray-200" />
         </div>
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
           {{ journalEntryStore.error }}
@@ -506,7 +512,7 @@ onMounted(() => {
               <div class="md:col-span-2 flex justify-center items-center space-x-2">
                 <button
                   @click.stop="startEdit(entry)"
-                  class="p-2 rounded-full hover:bg-yellow-500/20 text-yellow-500 transition"
+                  class="p-2 rounded-full hover:bg-primary-500/20 text-primary-500 transition"
                   title="Editar"
                 >
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -535,7 +541,7 @@ onMounted(() => {
                 </button>
                 <button
                   @click.stop="toggleDetails(entry.id)"
-                  class="p-2 rounded-full hover:bg-blue-500/20 text-blue-500 transition"
+                  class="p-2 rounded-full hover:bg-primary-500/20 text-primary-500 transition"
                   title="Ver Detalhes"
                 >
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -569,7 +575,7 @@ onMounted(() => {
                 <div
                   class="capitalize"
                   :class="{
-                    'text-green-400': line.type === 'debit',
+                    'text-primary-400': line.type === 'debit',
                     'text-red-400': line.type === 'credit',
                   }"
                 >
@@ -588,7 +594,7 @@ onMounted(() => {
         <button
           @click="goToPage(currentPage - 1)"
           :disabled="currentPage === 1"
-          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-surface-700 hover:bg-surface-600 text-surface-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           &lt;
         </button>
@@ -599,8 +605,8 @@ onMounted(() => {
           :class="[
             'px-4 py-2 w-10 h-10 flex items-center justify-center rounded-full font-semibold',
             currentPage === page
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+              ? 'bg-primary-600 text-white'
+              : 'bg-surface-700 hover:bg-surface-600 text-surface-300',
           ]"
         >
           {{ page }}
@@ -608,7 +614,7 @@ onMounted(() => {
         <button
           @click="goToPage(currentPage + 1)"
           :disabled="currentPage === totalPages"
-          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-surface-700 hover:bg-surface-600 text-surface-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           &gt;
         </button>
