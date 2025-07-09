@@ -2,6 +2,7 @@ import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
+import { formatSupabaseError } from "../utils/errorUtils.js";
 
 const productsCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
@@ -352,10 +353,7 @@ export default async function handler(
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
     logger.error("Erro inesperado na API de produtos:", error);
-    let message = "Erro interno do servidor.";
-    if (error instanceof Error) {
-      message = error.message;
-    }
+    const message = formatSupabaseError(error);
     return handleErrorResponse(res, 500, message);
   }
 }

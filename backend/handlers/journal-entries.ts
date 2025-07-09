@@ -5,6 +5,7 @@ import {
   createJournalEntrySchema,
   updateJournalEntrySchema,
 } from "../utils/schemas.js";
+import { formatSupabaseError } from "../utils/errorUtils.js";
 
 const journalEntriesCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
@@ -349,11 +350,8 @@ export default async function handler(
     console.warn(`Journal Entries Handler: Método ${req.method} não permitido.`);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
-    console.error("Journal Entries Handler: Erro inesperado na API de lançamentos:", error);
-    let message = "Erro interno do servidor.";
-    if (error instanceof Error) {
-      message = error.message;
-    }
+    logger.error("Journal Entries Handler: Erro inesperado na API de lançamentos:", error);
+    const message = formatSupabaseError(error);
     return handleErrorResponse(res, 500, message);
   }
 }

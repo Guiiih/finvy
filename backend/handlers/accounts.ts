@@ -3,6 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { createAccountSchema, updateAccountSchema, uuidSchema } from "../utils/schemas.js";
+import { formatSupabaseError } from "../utils/errorUtils.js";
 
 // Cache em memória para as contas
 const accountsCache = new Map<string, { data: unknown; timestamp: number }>();
@@ -320,8 +321,7 @@ export default async function handler(
     }
   } catch (error: unknown) {
     logger.error("Erro inesperado na API de contas:", error);
-    const message =
-      error instanceof Error ? error.message : "Erro interno do servidor.";
+    const message = formatSupabaseError(error);
     return handleErrorResponse(res, 500, message);
   }
 }

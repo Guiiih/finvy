@@ -4,6 +4,7 @@ import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase
 import { createEntryLineSchema } from "../utils/schemas.js";
 import { updateProductStockAndCost } from "../services/productService.js";
 import { calculateTaxes } from "../services/taxService.js";
+import { formatSupabaseError } from "../utils/errorUtils.js";
 
 /**
  * @swagger
@@ -513,8 +514,7 @@ export default async function handler(
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
     logger.error("Erro inesperado na API de linhas de lançamento:", error);
-    const message =
-      error instanceof Error ? error.message : "Erro interno do servidor.";
+    const message = formatSupabaseError(error);
     return handleErrorResponse(res, 500, message);
   }
 }
