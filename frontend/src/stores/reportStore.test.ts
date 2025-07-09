@@ -2,7 +2,7 @@ import { type Mock, vi, describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useReportStore } from './reportStore'
 import { api } from '@/services/api'
-import type { LedgerAccount, ProductBalance, AccountType } from '@/types'
+import type { LedgerAccount} from '@/types'
 import { ref, computed } from 'vue'
 
 vi.mock('./reportStore', async (importOriginal) => {

@@ -3,7 +3,6 @@ import { useToast } from 'primevue/usetoast'
 import { setActivePinia, createPinia } from 'pinia'
 import { useJournalEntryStore } from './journalEntryStore'
 import { api } from '@/services/api'
-import { supabase } from '@/supabase'
 import type { JournalEntry, EntryLine } from '@/types'
 
 vi.mock('@/services/api', () => ({
