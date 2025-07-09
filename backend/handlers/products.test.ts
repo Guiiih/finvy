@@ -84,7 +84,6 @@ describe('productsHandler', () => {
       end: vi.fn(),
     };
 
-    // Setup chainable mocks
     supabaseClient.mockFrom.mockReturnValue({
       select: supabaseClient.mockSelect,
       insert: supabaseClient.mockInsert,

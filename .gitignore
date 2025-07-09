@@ -30,3 +30,7 @@ coverage
 
 *.tsbuildinfo
 .vercel
+
+# Supabase related files
+supabase/.branches
+supabase/.temp

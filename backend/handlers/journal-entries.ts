@@ -321,7 +321,6 @@ export default async function handler(
       }
       logger.info(`Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`);
 
-      // Then, delete the journal_entry itself
       logger.info(`Journal Entries Handler: Deletando lançamento principal ${id}.`);
       const { error: dbError, count } = await userSupabase
         .from("journal_entries")

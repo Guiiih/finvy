@@ -307,7 +307,6 @@ export const useAuthStore = defineStore(
         await api.delete('/profile')
         // Força o logout no cliente para limpar o token localmente
         await supabase.auth.signOut()
-        // Limpa os dados locais após a exclusão bem-sucedida
         user.value = null
         session.value = null
         userRole.value = null

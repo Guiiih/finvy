@@ -20,7 +20,6 @@ import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 
-// PrimeVue 4 Theme
 import MyAuraPreset from '@/themes/MyAuraPreset'
 
 const app = createApp(App)

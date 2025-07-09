@@ -4,8 +4,6 @@ import { useTransactionStore } from './transactionStore'
 import { useJournalEntryStore } from './journalEntryStore'
 import { useProductStore } from './productStore'
 import type { JournalEntry, Product } from '@/types'
-
-// Mock dependencies
 vi.mock('./journalEntryStore', () => ({
   useJournalEntryStore: vi.fn(() => ({
     addJournalEntry: vi.fn(),

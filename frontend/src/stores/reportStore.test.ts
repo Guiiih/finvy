@@ -263,8 +263,6 @@ describe('reportStore', () => {
 
     expect(variationData).toBeInstanceOf(Array)
     expect(variationData.length).toBeGreaterThan(0)
-
-    // Example assertions for specific entries
     expect(variationData).toContainEqual(expect.objectContaining({
       description: 'Ativo',
       value: 1000,

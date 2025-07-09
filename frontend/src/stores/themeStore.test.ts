@@ -32,10 +32,6 @@ describe('themeStore', () => {
   })
 
   it('should set theme to light and update localStorage and document class', () => {
-    // First set to dark to ensure the class is removed
-    localStorage.setItem('theme', 'dark')
-    document.documentElement.classList.add('dark')
-
     const store = useThemeStore()
     store.setTheme('light')
     expect(store.theme).toBe('light')

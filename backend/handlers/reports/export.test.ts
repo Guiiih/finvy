@@ -47,7 +47,6 @@ vi.mock('../../utils/schemas', () => ({
   },
 }));
 
-// Mock external libraries
 vi.mock('exceljs', () => ({
   default: class {
     Workbook = class {

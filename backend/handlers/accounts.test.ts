@@ -90,7 +90,6 @@ describe('accountsHandler', () => {
       setHeader: vi.fn(),
     };
 
-    // Setup chainable mocks
     supabaseClient.mockFrom.mockReturnValue({
       select: supabaseClient.mockSelect,
       insert: supabaseClient.mockInsert,

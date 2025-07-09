@@ -131,7 +131,6 @@ describe('journalEntriesHandler', () => {
 
   it('should delete a journal entry for DELETE requests', async () => {
     req = { method: 'DELETE', query: { id: 'je1' } };
-    // Mock for deleting entry_lines
     vi.mocked(supabaseClient.mockFrom).mockImplementation((tableName) => {
       if (tableName === 'entry_lines') {
         return { delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) };

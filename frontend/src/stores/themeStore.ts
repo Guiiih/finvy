@@ -17,7 +17,6 @@ export const useThemeStore = defineStore('theme', () => {
     }
   })
 
-  // Aplica o tema inicial
   if (theme.value === 'dark') {
     document.documentElement.classList.add('dark')
   }
