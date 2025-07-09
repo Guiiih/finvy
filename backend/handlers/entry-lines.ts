@@ -2,6 +2,8 @@ import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
+import { updateProductStockAndCost } from "../services/productService.js";
+import { calculateTaxes } from "../services/taxService.js";
 
 /**
  * @swagger
@@ -232,48 +234,23 @@ export default async function handler(
         total_net, // total_net from input
       } = parsedBody.data;
 
-      let calculated_icms_value = 0;
-      let calculated_ipi_value = 0;
-      let calculated_pis_value = 0;
-      let calculated_cofins_value = 0;
-      let calculated_icms_st_value = 0;
-      let base_for_icms_and_pis_cofins = total_gross || 0; // Initial base for ICMS and PIS/COFINS
-
-      let final_total_net = total_net || 0; // Use the provided total_net for purchase/default
-
-      // Only calculate taxes for sales (manufacturer scenario)
-      if (transaction_type === "sale") {
-        // 1. Calculate IPI
-        if (total_gross !== undefined && ipi_rate !== undefined) {
-          calculated_ipi_value = total_gross * (ipi_rate / 100);
-          base_for_icms_and_pis_cofins = (total_gross || 0) + calculated_ipi_value; // Price with IPI
-        }
-
-        // 2. Calculate ICMS Próprio (using price with IPI as base)
-        if (base_for_icms_and_pis_cofins !== undefined && icms_rate !== undefined) {
-          calculated_icms_value = base_for_icms_and_pis_cofins * (icms_rate / 100);
-        }
-
-        // 3. Calculate PIS and COFINS (using initial total_gross as base for monofasico)
-        if (total_gross !== undefined && pis_rate !== undefined) {
-          calculated_pis_value = total_gross * (pis_rate / 100);
-        }
-        if (total_gross !== undefined && cofins_rate !== undefined) {
-          calculated_cofins_value = total_gross * (cofins_rate / 100);
-        }
-
-        // 4. Calculate ICMS-ST
-        if (base_for_icms_and_pis_cofins !== undefined && mva_rate !== undefined && icms_rate !== undefined) {
-          const base_icms_st = base_for_icms_and_pis_cofins * (1 + (mva_rate / 100));
-          const icms_st_total = base_icms_st * (icms_rate / 100);
-          calculated_icms_st_value = icms_st_total - calculated_icms_value;
-        }
-
-        // Recalculate final_total_net for sales based on gross + calculated taxes
-        final_total_net = total_gross || 0;
-        final_total_net += calculated_ipi_value;
-        final_total_net += calculated_icms_st_value;
-      }
+      const {
+        calculated_icms_value,
+        calculated_ipi_value,
+        calculated_pis_value,
+        calculated_cofins_value,
+        calculated_icms_st_value,
+        final_total_net,
+      } = calculateTaxes({
+        total_gross,
+        icms_rate,
+        ipi_rate,
+        pis_rate,
+        cofins_rate,
+        mva_rate,
+        transaction_type,
+        total_net,
+      });
 
       const { data: journalEntry } = await userSupabase
         .from("journal_entries")
@@ -443,24 +420,11 @@ export default async function handler(
           });
         }
 
-        // Stock update logic for sales
+        // Stock and cost update logic for sales
         if (product_id && quantity) {
-          const { data: product } = await userSupabase
-            .from("products")
-            .select("current_stock")
-            .eq("id", product_id)
-            .eq("user_id", user_id)
-            .single();
-
-          if (product) {
-            let newStock = product.current_stock || 0;
-            newStock = newStock - quantity;
-
-            await userSupabase
-              .from("products")
-              .update({ current_stock: newStock })
-              .eq("id", product_id);
-          }
+          // For sales, unit_cost in entry_line should be the average cost at the time of sale.
+          // The updateProductStockAndCost function will only decrease stock for sales.
+          await updateProductStockAndCost(product_id, quantity, unit_cost || 0, 'sale', user_id, token);
         }
       } else if (transaction_type === "purchase") {
         // Fetch required account IDs for purchases
@@ -512,24 +476,9 @@ export default async function handler(
           credit: final_total_net,
         });
 
-        // Stock update logic for purchases
-        if (product_id && quantity) {
-          const { data: product } = await userSupabase
-            .from("products")
-            .select("current_stock")
-            .eq("id", product_id)
-            .eq("user_id", user_id)
-            .single();
-
-          if (product) {
-            let newStock = product.current_stock || 0;
-            newStock = newStock + quantity;
-
-            await userSupabase
-              .from("products")
-              .update({ current_stock: newStock })
-              .eq("id", product_id);
-          }
+        // Stock and cost update logic for purchases
+        if (product_id && quantity && unit_cost !== undefined) {
+          await updateProductStockAndCost(product_id, quantity, unit_cost, 'purchase', user_id, token);
         }
       } else { // Default or other types, for now, just insert the main line
         entryLinesToInsert.push({

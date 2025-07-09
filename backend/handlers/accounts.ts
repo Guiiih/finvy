@@ -80,7 +80,7 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase 
         .from("accounts")
-        .select("id, name, type, user_id, code")
+        .select("id, name, type, user_id, code, parent_account_id")
         .eq("user_id", user_id) 
         .order("name", { ascending: true });
 
@@ -151,11 +151,11 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { name, type } = parsedBody.data;
+      const { name, type, parent_account_id } = parsedBody.data;
 
       const { data, error: dbError } = await userSupabase 
         .from("accounts")
-        .insert({ name, type, user_id })
+        .insert({ name, type, user_id, parent_account_id })
         .select();
       if (dbError) throw dbError;
       invalidateAccountsCache(user_id); 

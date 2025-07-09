@@ -14,6 +14,7 @@ export const createAccountSchema = z.object({
   type: z.enum(["asset", "liability", "equity", "revenue", "expense"], {
     message: "Tipo de conta inválido.",
   }),
+  parent_account_id: z.string().uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." }).optional().nullable(),
 });
 
 export const updateAccountSchema = z
@@ -28,6 +29,7 @@ export const updateAccountSchema = z
         message: "Tipo de conta inválido.",
       })
       .optional(),
+    parent_account_id: z.string().uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." }).optional().nullable(),
   })
   .partial();
 
@@ -207,15 +209,6 @@ export const updateProductSchema = z
       .max(100, "Nome do produto muito longo.")
       .optional(),
     description: z.string().max(255, "Descrição muito longa.").optional(),
-    unit_cost: z
-      .number()
-      .nonnegative("Custo unitário deve ser um valor não negativo.")
-      .optional(),
-    current_stock: z
-      .number()
-      .int()
-      .nonnegative("Estoque atual deve ser um número inteiro não negativo.")
-      .optional(),
     icms_rate: z
       .number()
       .nonnegative("Alíquota de ICMS deve ser um valor não negativo.")

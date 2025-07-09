@@ -16,23 +16,7 @@ interface StockBalance {
 
 type LedgerAccount = FrontendLedgerAccount;
 
-function mapAccountTypeForCalculation(accountType: string): AccountType | undefined {
-  switch (accountType) {
-    case "Receita":
-      return "revenue";
-    case "Despesa":
-      return "expense";
-    case "Ativo Circulante":
-    case "Ativo Não Circulante":
-      return "asset";
-    case "Passivo":
-      return "liability";
-    case "Patrimônio Líquido":
-      return "equity";
-    default:
-      return undefined;
-  }
-}
+
 
 
 async function getAccounts(user_id: string, token: string): Promise<Account[]> {
@@ -144,11 +128,7 @@ export function calculateTrialBalance(
   });
 
   accountsMap.forEach((accountData) => {
-    const isDebitNature = [
-      "Ativo Circulante",
-      "Ativo Não Circulante",
-      "Despesa",
-    ].includes(accountData.type);
+    const isDebitNature = ["asset", "expense"].includes(accountData.type);
     accountData.finalBalance = isDebitNature
       ? accountData.totalDebits - accountData.totalCredits
       : accountData.totalCredits - accountData.totalDebits;
@@ -192,10 +172,9 @@ export function calculateDreData(accounts: Account[], journalEntries: JournalEnt
   const trialBalance = calculateTrialBalance(accounts, journalEntries);
 
   trialBalance.forEach(account => {
-    const mappedType = mapAccountTypeForCalculation(account.type);
-    if (mappedType === 'revenue') {
+    if (account.type === 'revenue') {
       totalRevenue += account.finalBalance;
-    } else if (mappedType === 'expense') {
+    } else if (account.type === 'expense') {
       totalExpenses += account.finalBalance;
     }
   });
@@ -217,12 +196,11 @@ export function calculateBalanceSheetData(accounts: Account[], journalEntries: J
   const trialBalance = calculateTrialBalance(accounts, journalEntries);
 
   trialBalance.forEach(account => {
-    const mappedType = mapAccountTypeForCalculation(account.type);
-    if (mappedType === 'asset') {
+    if (account.type === 'asset') {
       totalAssets += account.finalBalance;
-    } else if (mappedType === 'liability') {
+    } else if (account.type === 'liability') {
       totalLiabilities += account.finalBalance;
-    } else if (mappedType === 'equity') {
+    } else if (account.type === 'equity') {
       totalEquity += account.finalBalance;
     }
   });
@@ -237,6 +215,69 @@ export function calculateBalanceSheetData(accounts: Account[], journalEntries: J
   };
 }
 
+export function calculateDfcData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let operatingActivities = 0;
+  let investingActivities = 0;
+  let financingActivities = 0;
+
+  const cashAccountIds = accounts.filter(acc => acc.name === 'Cash' || acc.name === 'Bank Account').map(acc => acc.id);
+  const accountMap = new Map(accounts.map(acc => [acc.id, acc]));
+
+  journalEntries.forEach(entry => {
+    entry.lines.forEach(line => {
+      // Only consider lines that affect cash accounts
+      if (cashAccountIds.includes(line.account_id)) {
+        const relatedAccountLine = entry.lines.find(l => l.account_id !== line.account_id); // The other side of the entry
+        if (!relatedAccountLine) return; // Should not happen for balanced entries
+
+        const relatedAccount = accountMap.get(relatedAccountLine.account_id);
+        if (!relatedAccount) return;
+
+        const amount = (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0); // Cash movement amount
+
+        // Determine if cash is flowing in or out from the perspective of the cash account
+        // If cash account is debited, it's an inflow. If credited, it's an outflow.
+        const cashFlowDirection = (line.debit ?? 0) > 0 ? 1 : -1; 
+
+        // Categorization based on related account type and name
+        if (['revenue', 'expense'].includes(relatedAccount.type)) {
+          operatingActivities += (amount * cashFlowDirection);
+        } else if (relatedAccount.name === 'Equipment' || relatedAccount.name.includes('Invest')) { // Example for investing
+          investingActivities += (amount * cashFlowDirection);
+        } else if (['liability', 'equity'].includes(relatedAccount.type) && (relatedAccount.name.includes('Loan') || relatedAccount.name.includes('Capital'))) { // Example for financing
+          financingActivities += (amount * cashFlowDirection);
+        } else { // Fallback for other operating activities if not explicitly categorized
+          operatingActivities += (amount * cashFlowDirection);
+        }
+      }
+    });
+  });
+
+  const netCashFlow = operatingActivities + investingActivities + financingActivities;
+
+  return {
+    operatingActivities,
+    investingActivities,
+    financingActivities,
+    netCashFlow,
+  };
+}
+
+
+async function getProductStockBalances(user_id: string, token: string): Promise<StockBalance[]> {
+  const userSupabase = getSupabaseClient(token);
+  const { data, error } = await userSupabase
+    .from("products")
+    .select("id, name, current_stock"); // Assuming 'name' is product name
+
+  if (error) throw new Error(error.message || "Error fetching product stock balances.");
+
+  return data.map(product => ({
+    product_id: product.id,
+    product_name: product.name,
+    balance: product.current_stock,
+  }));
+}
 
 export async function generateReports(
   user_id: string,
@@ -244,17 +285,19 @@ export async function generateReports(
   startDate?: string,
   endDate?: string,
 ) {
-  const [accounts, journalEntries] = await Promise.all([
+  const [accounts, journalEntries, productStockBalances] = await Promise.all([
     getAccounts(user_id, token),
     getJournalEntries(user_id, token, startDate, endDate),
+    getProductStockBalances(user_id, token), // Fetch product stock balances
   ]);
 
   const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
 
   const dreData = calculateDreData(accounts, journalEntries);
   const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries);
+  const dfcData = calculateDfcData(accounts, journalEntries);
   const ledgerDetails = calculateLedgerDetails(accounts, journalEntries);
-  const stockBalances: StockBalance[] = [];
+  const stockBalances: StockBalance[] = productStockBalances; // Populate stockBalances
 
   return {
     accounts,
@@ -262,6 +305,7 @@ export async function generateReports(
     trialBalanceData: ledgerAccountsList,
     dreData,
     balanceSheetData,
+    dfcData,
     ledgerDetails,
     stockBalances,
   };

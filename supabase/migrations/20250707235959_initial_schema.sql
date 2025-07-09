@@ -4,7 +4,8 @@ CREATE TABLE accounts (
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
     user_id UUID REFERENCES auth.users(id),
-    code SERIAL
+    code SERIAL,
+    parent_account_id UUID REFERENCES accounts(id)
 );
 
 -- Tabela de Produtos
