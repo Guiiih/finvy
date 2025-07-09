@@ -67,18 +67,26 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   const urlPath = (req.url || "").split("?")[0];
   logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`);
 
-  // Create a separate Express app for Swagger UI
-  const swaggerApp = express();
-  swaggerApp.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
-  swaggerApp.get('/api/docs.json', (req, res) => res.json(specs));
-
-  // Handle public routes first
-  if (urlPath.startsWith("/api/docs")) {
-    // Delegate to the swaggerApp
-    return swaggerApp(req, res);
-  }
+  // Handle /api/docs.json directly
   if (urlPath === "/api/docs.json") {
     return res.setHeader("Content-Type", "application/json").send(specs);
+  }
+
+  // Handle /api/docs (Swagger UI)
+  if (urlPath.startsWith("/api/docs")) {
+    const swaggerOptions = {
+      swaggerUrl: '/api/docs.json', // Explicitly tell Swagger UI where to find the specs
+      explorer: true, // Enable the search bar
+      customSiteTitle: "Finvy API Documentation",
+    };
+
+    const tempApp = express();
+    tempApp.use('/', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
+
+    const subPath = urlPath.substring("/api/docs".length);
+    req.url = subPath || '/'; // Set req.url for the tempApp
+
+    return tempApp(req, res);
   }
 
   // For all other /api routes, apply the authentication middleware
