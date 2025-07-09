@@ -7,8 +7,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
-    vue(),
-    tailwindcss(),
+    vue() as any,
+    tailwindcss() as any,
   ],
   resolve: {
     alias: {

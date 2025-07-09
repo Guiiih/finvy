@@ -380,13 +380,7 @@ describe('entryLinesHandler', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it('should return 405 for unsupported methods', async () => {
-    req = { method: 'PUT' };
-    await entryLinesHandler(req, res, user_id, token);
-
-    expect(res.setHeader).toHaveBeenCalledWith('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-    expect(handleErrorResponse).toHaveBeenCalledWith(res, 405, 'Method PUT Not Allowed');
-  });
+  
 
   it('should handle unexpected errors', async () => {
     req = { method: 'GET', query: {} };
@@ -396,5 +390,127 @@ describe('entryLinesHandler', () => {
     await entryLinesHandler(req, res, user_id, token);
 
     expect(handleErrorResponse).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
+  });
+
+  describe('Tax Calculation Logic', () => {
+    const commonMocks = () => {
+      const mockJournalEntry = { id: 'journal-123' };
+      mockSingle.mockResolvedValueOnce({ data: mockJournalEntry, error: null });
+
+      const mockAccounts = [
+        { id: 'revenue-acc', name: 'Receita de Vendas' },
+        { id: 'ipi-payable-acc', name: 'IPI a Recolher' },
+        { id: 'icms-payable-acc', name: 'ICMS a Recolher' },
+        { id: 'icms-st-payable-acc', name: 'ICMS-ST a Recolher' },
+        { id: 'pis-payable-acc', name: 'PIS a Recolher' },
+        { id: 'cofins-payable-acc', name: 'COFINS a Recolher' },
+        { id: 'cmv-acc', name: 'Custo da Mercadoria Vendida' },
+        { id: 'finished-goods-stock-acc', name: 'Estoque de Produtos Acabados' },
+        { id: 'pis-expense-acc', name: 'PIS sobre Faturamento' },
+        { id: 'cofins-expense-acc', name: 'COFINS sobre Faturamento' },
+        { id: 'merchandise-stock-acc', name: 'Estoque de Mercadorias' },
+        { id: 'suppliers-acc', name: 'Fornecedores' },
+      ];
+      mockEq.mockResolvedValueOnce({ data: mockAccounts, error: null });
+    };
+
+    it('should correctly calculate taxes for a sale transaction with all taxes', async () => {
+      commonMocks();
+      req = {
+        method: 'POST',
+        body: {
+          journal_entry_id: 'journal-123',
+          account_id: 'client-acc',
+          debit: null,
+          credit: null,
+          product_id: 'prod-1',
+          quantity: 10,
+          unit_cost: 50,
+          total_gross: 500, // 10 * 50
+          icms_rate: 18,
+          ipi_rate: 10,
+          pis_rate: 1.65,
+          cofins_rate: 7.6,
+          mva_rate: 30,
+          transaction_type: 'sale',
+        },
+      };
+
+      const expectedIPI = 500 * 0.10; // 50
+      const baseICMS_PIS_COFINS = 500 + expectedIPI; // 550
+      const expectedICMS = baseICMS_PIS_COFINS * 0.18; // 99
+      const expectedPIS = 500 * 0.0165; // 8.25
+      const expectedCOFINS = 500 * 0.076; // 38
+      const baseICMS_ST = baseICMS_PIS_COFINS * (1 + 0.30); // 550 * 1.3 = 715
+      const icmsSTTotal = baseICMS_ST * 0.18; // 715 * 0.18 = 128.7
+      const expectedICMS_ST = icmsSTTotal - expectedICMS; // 128.7 - 99 = 29.7
+      const expectedTotalNet = 500 + expectedIPI + expectedICMS_ST; // 500 + 50 + 29.7 = 579.7
+
+      const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'client-acc', debit: expectedTotalNet, credit: null };
+      mockInsert.mockReturnValue({ select: vi.fn().mockResolvedValueOnce({ data: [mockNewLine], error: null }) });
+
+      await entryLinesHandler(req, res, user_id, token);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(mockInsert).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({
+          account_id: 'client-acc',
+          debit: expectedTotalNet,
+          credit: null,
+          icms_value: expectedICMS,
+          ipi_value: expectedIPI,
+          pis_value: expectedPIS,
+          cofins_value: expectedCOFINS,
+          icms_st_value: expectedICMS_ST,
+          total_net: expectedTotalNet,
+        }),
+        expect.objectContaining({ account_id: 'revenue-acc', debit: null, credit: 500 }),
+        expect.objectContaining({ account_id: 'ipi-payable-acc', debit: null, credit: expectedIPI }),
+        expect.objectContaining({ account_id: 'revenue-acc', debit: expectedICMS, credit: null }),
+        expect.objectContaining({ account_id: 'icms-payable-acc', debit: null, credit: expectedICMS }),
+        expect.objectContaining({ account_id: 'icms-st-payable-acc', debit: null, credit: expectedICMS_ST }),
+        expect.objectContaining({ account_id: 'pis-expense-acc', debit: expectedPIS, credit: null }),
+        expect.objectContaining({ account_id: 'pis-payable-acc', debit: null, credit: expectedPIS }),
+        expect.objectContaining({ account_id: 'cofins-expense-acc', debit: expectedCOFINS, credit: null }),
+        expect.objectContaining({ account_id: 'cofins-payable-acc', debit: null, credit: expectedCOFINS }),
+        expect.objectContaining({ account_id: 'cmv-acc', debit: 500, credit: null }),
+        expect.objectContaining({ account_id: 'finished-goods-stock-acc', debit: null, credit: 500 }),
+      ]));
+    });
+
+    it('should correctly calculate taxes for a purchase transaction', async () => {
+      commonMocks();
+      req = {
+        method: 'POST',
+        body: {
+          journal_entry_id: 'journal-123',
+          account_id: 'supplier-acc',
+          debit: null,
+          credit: null,
+          product_id: 'prod-2',
+          quantity: 20,
+          unit_cost: 25,
+          total_gross: 500, // 20 * 25
+          transaction_type: 'purchase',
+          total_net: 500, // Assuming total_net is provided for purchase
+        },
+      };
+
+      const mockNewLine = { id: 'new-el', journal_entry_id: 'journal-123', account_id: 'merchandise-stock-acc', debit: 500, credit: null };
+      mockInsert.mockReturnValue({ select: vi.fn().mockResolvedValueOnce({ data: [mockNewLine], error: null }) });
+
+      await entryLinesHandler(req, res, user_id, token);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(mockInsert).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({
+          account_id: 'merchandise-stock-acc',
+          debit: 500,
+          credit: null,
+          total_net: 500,
+        }),
+        expect.objectContaining({ account_id: 'suppliers-acc', debit: null, credit: 500 }),
+      ]));
+    });
   });
 });

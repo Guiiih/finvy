@@ -1,3 +1,4 @@
+import logger from "./logger.js";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { VercelResponse } from "@vercel/node";
 
@@ -6,7 +7,7 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-  console.error(
+  logger.error(
     "Erro: Variáveis de ambiente do Supabase (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) não definidas.",
   );
   throw new Error("Variáveis de ambiente do Supabase não configuradas.");

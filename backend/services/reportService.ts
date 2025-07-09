@@ -6,11 +6,7 @@ import type {
   AccountType,
 } from "../../frontend/src/types/index.js";
 
-interface EntryLine {
-  account_id: string;
-  debit: number | null;
-  credit: number | null;
-}
+
 
 interface StockBalance {
   product_id: string;
@@ -45,12 +41,33 @@ async function getAccounts(user_id: string, token: string): Promise<Account[]> {
     .from("accounts")
     .select("id, name, type")
     .eq("user_id", user_id);
-  if (error) throw error;
+  if (error) throw new Error(error.message || "Erro ao buscar dados.");
   return data;
 }
 
-interface JournalEntryWithLines extends JournalEntry {
-  entry_lines: EntryLine[];
+interface SupabaseRawJournalEntry {
+  id: string;
+  entry_date: string;
+  description: string;
+  user_id?: string;
+  entry_lines: Array<{
+    id: string;
+    account_id: string;
+    debit: number | null;
+    credit: number | null;
+    product_id: string | null;
+    quantity: number | null;
+    unit_cost: number | null;
+    total_gross: number | null;
+    icms_value: number | null;
+    ipi_value: number | null;
+    pis_value: number | null;
+    cofins_value: number | null;
+    mva_rate: number | null;
+    icms_st_value: number | null;
+    total_net: number | null;
+    transaction_type: string | null;
+  }>;
 }
 
 async function getJournalEntries(
@@ -62,7 +79,7 @@ async function getJournalEntries(
   const userSupabase = getSupabaseClient(token);
   let query = userSupabase
     .from("journal_entries")
-    .select("*, entry_lines(*)")
+    .select("id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)")
     .eq("user_id", user_id);
 
   if (startDate) {
@@ -73,13 +90,13 @@ async function getJournalEntries(
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message || "Erro ao buscar lançamentos contábeis.");
 
-  return data.map((entry: JournalEntryWithLines) => {
+  return data.map((entry: SupabaseRawJournalEntry): JournalEntry => {
     const { entry_lines, ...restOfEntry } = entry;
     return {
       ...restOfEntry,
-      lines: entry_lines.map((line: EntryLine) => {
+      lines: entry_lines.map((line) => {
         return {
           account_id: line.account_id,
           type: (line.debit ?? 0) > 0 ? "debit" : "credit",

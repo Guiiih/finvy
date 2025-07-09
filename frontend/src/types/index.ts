@@ -22,6 +22,7 @@ export interface Product {
 export type EntryType = 'debit' | 'credit'
 
 export interface EntryLine {
+  id?: string
   account_id: string
   type: EntryType
   amount: number
@@ -74,4 +75,16 @@ export interface LedgerAccount {
   debits: number
   credits: number
   finalBalance: number
+}
+
+export interface FinancialTransaction {
+  id: string
+  description: string
+  amount: number
+  due_date: string
+  paid_date?: string | null
+  received_date?: string | null
+  is_paid?: boolean
+  is_received?: boolean
+  created_at: string
 }

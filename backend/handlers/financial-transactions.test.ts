@@ -169,4 +169,49 @@ describe('financialTransactionsHandler', () => {
 
     expect(vi.mocked(supabaseClient.handleErrorResponse)).toHaveBeenCalledWith(res, 500, 'Unexpected DB error');
   });
+
+  it('should update an existing financial transaction for PUT requests', async () => {
+    req = { method: 'PUT', query: { type: 'payable', id: 'trans-123' }, body: { amount: 160, description: 'Updated Payable' } };
+    const mockData = { id: 'trans-123', amount: 160, description: 'Updated Payable', user_id };
+    vi.mocked(supabaseClient.mockEq).mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce({ data: [mockData], error: null }) });
+
+    await financialTransactionsHandler(req, res, user_id, token);
+
+    expect(vi.mocked(supabaseClient.mockFrom)).toHaveBeenCalledWith('accounts_payable');
+    expect(vi.mocked(supabaseClient.mockUpdate)).toHaveBeenCalledWith({ amount: 160, description: 'Updated Payable' });
+    expect(vi.mocked(supabaseClient.mockEq)).toHaveBeenCalledWith('id', 'trans-123');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(mockData);
+  });
+
+  it('should return 404 if transaction not found for PUT', async () => {
+    req = { method: 'PUT', query: { type: 'payable', id: 'trans-not-found' }, body: { amount: 160 } };
+    vi.mocked(supabaseClient.mockEq).mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce({ data: [], error: null }) });
+
+    await financialTransactionsHandler(req, res, user_id, token);
+
+    expect(vi.mocked(supabaseClient.handleErrorResponse)).toHaveBeenCalledWith(res, 404, 'Transação não encontrada ou você não tem permissão para atualizar esta transação.');
+  });
+
+  it('should delete a financial transaction for DELETE requests', async () => {
+    req = { method: 'DELETE', query: { type: 'payable', id: 'trans-123' } };
+    vi.mocked(supabaseClient.mockEq).mockReturnValueOnce({ eq: vi.fn().mockResolvedValueOnce({ count: 1, error: null }) });
+
+    await financialTransactionsHandler(req, res, user_id, token);
+
+    expect(vi.mocked(supabaseClient.mockFrom)).toHaveBeenCalledWith('accounts_payable');
+    expect(vi.mocked(supabaseClient.mockDelete)).toHaveBeenCalled();
+    expect(vi.mocked(supabaseClient.mockEq)).toHaveBeenCalledWith('id', 'trans-123');
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalledWith('');
+  });
+
+  it('should return 404 if transaction not found for DELETE', async () => {
+    req = { method: 'DELETE', query: { type: 'payable', id: 'trans-not-found' } };
+    vi.mocked(supabaseClient.mockEq).mockReturnValueOnce({ eq: vi.fn().mockResolvedValueOnce({ count: 0, error: null }) });
+
+    await financialTransactionsHandler(req, res, user_id, token);
+
+    expect(vi.mocked(supabaseClient.handleErrorResponse)).toHaveBeenCalledWith(res, 404, 'Transação não encontrada ou você não tem permissão para deletar esta transação.');
+  });
 });

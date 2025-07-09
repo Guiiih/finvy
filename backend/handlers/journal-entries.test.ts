@@ -131,10 +131,18 @@ describe('journalEntriesHandler', () => {
 
   it('should delete a journal entry for DELETE requests', async () => {
     req = { method: 'DELETE', query: { id: 'je1' } };
-    supabaseClient.mockEq.mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) });
+    // Mock for deleting entry_lines
+    vi.mocked(supabaseClient.mockFrom).mockImplementation((tableName) => {
+      if (tableName === 'entry_lines') {
+        return { delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) };
+      }
+      return { delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) }) };
+    });
 
     await journalEntriesHandler(req, res, user_id, token);
 
+    expect(vi.mocked(supabaseClient.mockFrom)).toHaveBeenCalledWith('entry_lines');
+    expect(vi.mocked(supabaseClient.mockFrom)).toHaveBeenCalledWith('journal_entries');
     expect(res.status).toHaveBeenCalledWith(204);
     expect(res.end).toHaveBeenCalled();
   });

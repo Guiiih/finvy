@@ -309,3 +309,19 @@ export const createFinancialTransactionSchema = z.object({
 
 export const updateFinancialTransactionSchema =
   createFinancialTransactionSchema.partial();
+
+export const yearEndClosingSchema = z.object({
+  closingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD."),
+});
+
+export const reportQuerySchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de início inválido. Use YYYY-MM-DD.").optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de fim inválido. Use YYYY-MM-DD.").optional(),
+});
+
+export const exportReportSchema = z.object({
+  reportType: z.enum(["trialBalance", "dre", "balanceSheet", "ledgerDetails"], { message: "Tipo de relatório inválido." }),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de início inválido. Use YYYY-MM-DD.").optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de fim inválido. Use YYYY-MM-DD.").optional(),
+  format: z.enum(["xlsx", "csv", "pdf"], { message: "Formato de exportação inválido." }),
+});

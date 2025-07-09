@@ -1,6 +1,8 @@
+import logger from "../../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleErrorResponse } from "../../utils/supabaseClient.js";
 import { generateReports, calculateTrialBalance, calculateDreData, calculateBalanceSheetData, calculateLedgerDetails } from "../../services/reportService.js";
+import { exportReportSchema } from "../../utils/schemas.js";
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 
@@ -196,11 +198,15 @@ export default async function handler(
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   }
 
-  const { reportType, startDate, endDate, format } = req.body;
-
-  if (!reportType || !format) {
-    return handleErrorResponse(res, 400, "Tipo de relatório e formato são obrigatórios.");
+  const parsedBody = exportReportSchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    return handleErrorResponse(
+      res,
+      400,
+      parsedBody.error.errors.map((err) => err.message).join(", "),
+    );
   }
+  const { reportType, startDate, endDate, format } = parsedBody.data;
 
   try {
     const { accounts, journalEntries } = await generateReports(user_id, token, startDate, endDate);
@@ -252,7 +258,7 @@ export default async function handler(
     res.status(200).send(fileBuffer);
 
   } catch (error: unknown) {
-    console.error("Erro ao exportar relatório:", error);
+    logger.error("Erro ao exportar relatório:", error);
     const message =
       error instanceof Error ? error.message : "Erro interno do servidor.";
     handleErrorResponse(res, 500, `Erro no servidor: ${message}`);

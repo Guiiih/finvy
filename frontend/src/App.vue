@@ -42,7 +42,7 @@ const logoSrc = computed(() => {
 </script>
 
 <template>
-  <Toast />
+  <Toast aria-live="polite" />
 
   <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-surface-100">
         <header class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50" style="grid-template-columns: 180px 1fr auto;">
@@ -70,8 +70,9 @@ const logoSrc = computed(() => {
 
       <div class="flex justify-end items-center space-x-4">
         <div class="relative">
-          <input type="text" placeholder="Faça uma busca"
-            class="rounded-full bg-surface-100 px-4 py-2 text-sm w-64 outline-none focus:ring-2 focus:ring-primary-500" />
+          <label for="search-input" class="sr-only">Faça uma busca</label>
+          <input type="text" id="search-input" placeholder="Faça uma busca"
+            class="rounded-full bg-surface-100 px-4 py-2 text-sm w-64 outline-none focus:ring-2 focus:ring-primary-500" aria-label="Campo de busca" />
           <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" fill="none" stroke="currentColor"
             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -79,12 +80,14 @@ const logoSrc = computed(() => {
           </svg>
         </div>
 
-        <button class="p-2 rounded-full hover:bg-surface-200 relative">
+        <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
         </button>
 
         <div class="relative">
-          <img :src="authStore.avatarUrl || './assets/LogoIcon.svg'" alt="User Avatar" class="h-8 w-8 rounded-full cursor-pointer" @click.stop="toggleUserMenu" />
+          <button type="button" class="rounded-full cursor-pointer" @click.stop="toggleUserMenu" aria-label="Menu do usuário">
+            <img :src="authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar do usuário" class="h-8 w-8 rounded-full" />
+          </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
       </div>

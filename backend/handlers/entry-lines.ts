@@ -1,7 +1,180 @@
+import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
 
+/**
+ * @swagger
+ * /entry-lines:
+ *   get:
+ *     summary: Retorna as linhas de um lançamento de diário.
+ *     description: Retorna todas as linhas de lançamento associadas a um `journal_entry_id` específico ou todas as linhas do usuário se nenhum ID for fornecido.
+ *     tags:
+ *       - Entry Lines
+ *     parameters:
+ *       - in: query
+ *         name: journal_entry_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         required: false
+ *         description: O ID do lançamento de diário para filtrar as linhas.
+ *     responses:
+ *       200:
+ *         description: Uma lista de linhas de lançamento.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   journal_entry_id:
+ *                     type: string
+ *                     format: uuid
+ *                   account_id:
+ *                     type: string
+ *                     format: uuid
+ *                   debit:
+ *                     type: number
+ *                     format: float
+ *                   credit:
+ *                     type: number
+ *                     format: float
+ *                   product_id:
+ *                     type: string
+ *                     format: uuid
+ *                   quantity:
+ *                     type: integer
+ *                   unit_cost:
+ *                     type: number
+ *                     format: float
+ *                   total_gross:
+ *                      type: number
+ *                      format: float
+ *                   icms_value:
+ *                      type: number
+ *                      format: float
+ *                   ipi_value:
+ *                      type: number
+ *                      format: float
+ *                   pis_value:
+ *                      type: number
+ *                      format: float
+ *                   cofins_value:
+ *                      type: number
+ *                      format: float
+ *                   icms_st_value:
+ *                      type: number
+ *                      format: float
+ *                   total_net:
+ *                      type: number
+ *                      format: float
+ *       401:
+ *         description: Não autorizado.
+ *       500:
+ *         description: Erro interno do servidor.
+ *   post:
+ *     summary: Cria uma ou mais linhas de lançamento.
+ *     description: Cria novas linhas de lançamento para um lançamento de diário existente, tratando a lógica de impostos e estoque para vendas e compras.
+ *     tags:
+ *       - Entry Lines
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - journal_entry_id
+ *               - account_id
+ *             properties:
+ *               journal_entry_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID do lançamento de diário ao qual a linha pertence.
+ *               account_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID da conta principal (e.g., Clientes para venda, Fornecedores para compra).
+ *               debit:
+ *                 type: number
+ *                 description: Valor do débito. Pelo menos um entre débito e crédito deve ser fornecido.
+ *               credit:
+ *                 type: number
+ *                 description: Valor do crédito. Pelo menos um entre débito e crédito deve ser fornecido.
+ *               product_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID do produto (opcional, para transações de estoque).
+ *               quantity:
+ *                 type: integer
+ *                 description: Quantidade do produto (opcional).
+ *               unit_cost:
+ *                 type: number
+ *                 description: Custo unitário do produto (opcional).
+ *               total_gross:
+ *                 type: number
+ *                 description: Valor total bruto da transação (base para impostos).
+ *               icms_rate:
+ *                 type: number
+ *                 description: Alíquota de ICMS (%).
+ *               ipi_rate:
+ *                 type: number
+ *                 description: Alíquota de IPI (%).
+ *               pis_rate:
+ *                 type: number
+ *                 description: Alíquota de PIS (%).
+ *               cofins_rate:
+ *                 type: number
+ *                 description: Alíquota de COFINS (%).
+ *               mva_rate:
+ *                 type: number
+ *                 description: Alíquota de MVA para ICMS-ST (%).
+ *               total_net:
+ *                 type: number
+ *                 description: Valor líquido total da nota (usado em compras). Se não fornecido em vendas, é calculado.
+ *               transaction_type:
+ *                 type: string
+ *                 enum: [sale, purchase]
+ *                 description: Tipo de transação para determinar a lógica contábil.
+ *     responses:
+ *       201:
+ *         description: Linhas de lançamento criadas com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   journal_entry_id:
+ *                     type: string
+ *                     format: uuid
+ *                   account_id:
+ *                     type: string
+ *                     format: uuid
+ *                   debit:
+ *                     type: number
+ *                     format: float
+ *                   credit:
+ *                     type: number
+ *                     format: float
+ *       400:
+ *         description: Requisição inválida.
+ *       401:
+ *         description: Não autorizado.
+ *       403:
+ *         description: Permissão negada para adicionar linhas a este lançamento.
+ *       500:
+ *         description: Erro interno do servidor, possivelmente por falta de contas contábeis.
+ */
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -16,7 +189,7 @@ export default async function handler(
       if (journal_entry_id) {
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
-          .select("*, product_id, quantity, unit_cost")
+          .select("id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net")
           .eq("journal_entry_id", journal_entry_id as string);
 
         if (dbError) throw dbError;
@@ -24,7 +197,7 @@ export default async function handler(
       } else {
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
-          .select("*, journal_entry_id(user_id)")
+          .select("id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id)")
           .eq("journal_entry_id.user_id", user_id);
 
         if (dbError) throw dbError;
@@ -390,7 +563,7 @@ export default async function handler(
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
-    console.error("Erro inesperado na API de linhas de lançamento:", error);
+    logger.error("Erro inesperado na API de linhas de lançamento:", error);
     const message =
       error instanceof Error ? error.message : "Erro interno do servidor.";
     return handleErrorResponse(res, 500, message);

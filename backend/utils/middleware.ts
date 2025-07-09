@@ -1,3 +1,4 @@
+import logger from "./logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import { anonSupabase, handleErrorResponse, getSupabaseClient } from "./supabaseClient.js";
@@ -48,7 +49,7 @@ export function withAuth(handler: ApiHandler) {
       } = await anonSupabase.auth.getUser(token);
 
       if (authError || !user) {
-        console.error(
+        logger.error(
           "Erro de autenticação:",
           authError?.message || "Usuário não encontrado.",
         );
@@ -69,13 +70,13 @@ export function withAuth(handler: ApiHandler) {
         .single();
 
       if (profileError || !profileData) {
-        console.error("Erro ao buscar perfil do usuário:", profileError?.message || "Perfil não encontrado.");
+        logger.error("Erro ao buscar perfil do usuário:", profileError?.message || "Perfil não encontrado.");
         return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
       }
 
       await handler(req, res, user.id, token, profileData.role);
     } catch (err: unknown) {
-      console.error("Erro inesperado no middleware de autenticação:", err);
+      logger.error("Erro inesperado no middleware de autenticação:", err);
       const message =
         err instanceof Error
           ? err.message

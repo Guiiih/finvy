@@ -1,5 +1,6 @@
+import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
 import {
   createJournalEntrySchema,
   updateJournalEntrySchema,
@@ -24,6 +25,44 @@ function invalidateJournalEntriesCache(userId: string) {
   journalEntriesCache.delete(userId);
 }
 
+/**
+ * @swagger
+ * /journal-entries:
+ *   get:
+ *     summary: Retorna todos os lançamentos de diário do usuário autenticado.
+ *     description: Retorna uma lista de todos os lançamentos de diário associados ao usuário autenticado. Os dados são cacheados por 5 minutos.
+ *     tags:
+ *       - Journal Entries
+ *     responses:
+ *       200:
+ *         description: Uma lista de lançamentos de diário.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                     description: O ID único do lançamento de diário.
+ *                   entry_date:
+ *                     type: string
+ *                     format: date
+ *                     description: A data do lançamento.
+ *                   description:
+ *                     type: string
+ *                     description: A descrição do lançamento.
+ *                   user_id:
+ *                     type: string
+ *                     format: uuid
+ *                     description: O ID do usuário ao qual o lançamento pertence.
+ *       401:
+ *         description: Não autorizado. Token de autenticação ausente ou inválido.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -32,18 +71,18 @@ export default async function handler(
   user_role: string,
 ) {
   const userSupabase = getSupabaseClient(token);
-  console.log(`Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`);
+  logger.info(`Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`);
   try {
     if (req.method === "GET") {
       const cachedData = getCachedJournalEntries(user_id);
       if (cachedData) {
-        console.log("Journal Entries Handler: Retornando lançamentos do cache para user_id:", user_id);
+        logger.info("Journal Entries Handler: Retornando lançamentos do cache para user_id:", user_id);
         return res.status(200).json(cachedData);
       }
 
       const { data, error: dbError } = await userSupabase
         .from("journal_entries")
-        .select("*")
+        .select("id, entry_date, description, user_id")
         .eq("user_id", user_id)
         .order("entry_date", { ascending: false });
 
@@ -52,11 +91,66 @@ export default async function handler(
       return res.status(200).json(data);
     }
 
+    /**
+     * @swagger
+     * /journal-entries:
+     *   post:
+     *     summary: Cria um novo lançamento de diário.
+     *     description: Cria um novo lançamento de diário para o usuário autenticado.
+     *     tags:
+     *       - Journal Entries
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - entry_date
+     *               - description
+     *             properties:
+     *               entry_date:
+     *                 type: string
+     *                 format: date
+     *                 description: A data do lançamento.
+     *               description:
+     *                 type: string
+     *                 description: A descrição do lançamento.
+     *     responses:
+     *       201:
+     *         description: Lançamento de diário criado com sucesso.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 id:
+     *                   type: string
+     *                   format: uuid
+     *                   description: O ID único do lançamento de diário criado.
+     *                 entry_date:
+     *                   type: string
+     *                   format: date
+     *                   description: A data do lançamento criado.
+     *                 description:
+     *                   type: string
+     *                   description: A descrição do lançamento criado.
+     *                 user_id:
+     *                   type: string
+     *                   format: uuid
+     *                   description: O ID do usuário ao qual o lançamento pertence.
+     *       400:
+     *         description: Requisição inválida. Dados fornecidos são inválidos.
+     *       401:
+     *         description: Não autorizado. Token de autenticação ausente ou inválido.
+     *       500:
+     *         description: Erro interno do servidor.
+     */
     if (req.method === "POST") {
-      console.log("Journal Entries Handler: Processando POST para criar lançamento.");
+      logger.info("Journal Entries Handler: Processando POST para criar lançamento.");
       const parsedBody = createJournalEntrySchema.safeParse(req.body);
       if (!parsedBody.success) {
-        console.error("Journal Entries Handler: Erro de validação no POST:", parsedBody.error.errors);
+        logger.error("Journal Entries Handler: Erro de validação no POST:", parsedBody.error.errors);
         return handleErrorResponse(
           res,
           400,
@@ -72,16 +166,78 @@ export default async function handler(
 
       if (dbError) throw dbError;
       invalidateJournalEntriesCache(user_id);
-      console.log("Journal Entries Handler: Lançamento criado com sucesso.");
+      logger.info("Journal Entries Handler: Lançamento criado com sucesso.");
       return res.status(201).json(data[0]);
     }
 
+    /**
+     * @swagger
+     * /journal-entries/{id}:
+     *   put:
+     *     summary: Atualiza um lançamento de diário existente.
+     *     description: Atualiza os detalhes de um lançamento de diário específico pelo seu ID.
+     *     tags:
+     *       - Journal Entries
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: string
+     *           format: uuid
+     *         required: true
+     *         description: O ID do lançamento de diário a ser atualizado.
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               entry_date:
+     *                 type: string
+     *                 format: date
+     *                 description: A nova data do lançamento.
+     *               description:
+     *                 type: string
+     *                 description: A nova descrição do lançamento.
+     *     responses:
+     *       200:
+     *         description: Lançamento de diário atualizado com sucesso.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 id:
+     *                   type: string
+     *                   format: uuid
+     *                   description: O ID único do lançamento de diário atualizado.
+     *                 entry_date:
+     *                   type: string
+     *                   format: date
+     *                   description: A data do lançamento atualizado.
+     *                 description:
+     *                   type: string
+     *                   description: A descrição do lançamento atualizado.
+     *                 user_id:
+     *                   type: string
+     *                   format: uuid
+     *                   description: O ID do usuário ao qual o lançamento pertence.
+     *       400:
+     *         description: Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido.
+     *       401:
+     *         description: Não autorizado. Token de autenticação ausente ou inválido.
+     *       404:
+     *         description: Lançamento de diário não encontrado ou você não tem permissão para atualizar este lançamento.
+     *       500:
+     *         description: Erro interno do servidor.
+     */
     if (req.method === "PUT") {
       const id = req.query.id as string;
-      console.log(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`);
+      logger.info(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`);
       const parsedBody = updateJournalEntrySchema.safeParse(req.body);
       if (!parsedBody.success) {
-        console.error("Journal Entries Handler: Erro de validação no PUT:", parsedBody.error.errors);
+        logger.error("Journal Entries Handler: Erro de validação no PUT:", parsedBody.error.errors);
         return handleErrorResponse(
           res,
           400,
@@ -91,7 +247,7 @@ export default async function handler(
       const updateData = parsedBody.data;
 
       if (Object.keys(updateData).length === 0) {
-        console.warn("Journal Entries Handler: Nenhuma campo para atualizar fornecido no PUT.");
+        logger.warn("Journal Entries Handler: Nenhuma campo para atualizar fornecido no PUT.");
         return handleErrorResponse(
           res,
           400,
@@ -108,7 +264,7 @@ export default async function handler(
 
       if (dbError) throw dbError;
       if (!data || data.length === 0) {
-        console.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`);
+        logger.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`);
         return handleErrorResponse(
           res,
           404,
@@ -116,29 +272,57 @@ export default async function handler(
         );
       }
       invalidateJournalEntriesCache(user_id);
-      console.log(`Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`);
+      logger.info(`Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`);
       return res.status(200).json(data[0]);
     }
 
+    /**
+     * @swagger
+     * /journal-entries/{id}:
+     *   delete:
+     *     summary: Deleta um lançamento de diário.
+     *     description: Deleta um lançamento de diário específico pelo seu ID, incluindo todas as suas linhas de lançamento associadas.
+     *     tags:
+     *       - Journal Entries
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: string
+     *           format: uuid
+     *         required: true
+     *         description: O ID do lançamento de diário a ser deletado.
+     *     responses:
+     *       204:
+     *         description: Lançamento de diário e suas linhas associadas deletados com sucesso. Nenhuma resposta de conteúdo.
+     *       400:
+     *         description: Requisição inválida. ID do lançamento de diário fornecido é inválido.
+     *       401:
+     *         description: Não autorizado. Token de autenticação ausente ou inválido.
+     *       404:
+     *         description: Lançamento de diário não encontrado ou você não tem permissão para deletar este lançamento.
+     *       500:
+     *         description: Erro interno do servidor.
+     */
     if (req.method === "DELETE") {
       const id = req.url?.split('?')[0].split('/').pop() as string;
-      console.log(`Journal Entries Handler: Processando DELETE para lançamento ${id}.`);
+      logger.info(`Journal Entries Handler: Processando DELETE para lançamento ${id}.`);
 
       // First, delete all associated entry_lines
-      console.log(`Journal Entries Handler: Deletando linhas de lançamento para ${id}.`);
+      logger.info(`Journal Entries Handler: Deletando linhas de lançamento para ${id}.`);
       const { error: deleteLinesError } = await userSupabase
         .from("entry_lines")
         .delete()
         .eq("journal_entry_id", id);
 
       if (deleteLinesError) {
-        console.error(`Journal Entries Handler: Erro ao deletar linhas de lançamento para ${id}:`, deleteLinesError);
+        logger.error(`Journal Entries Handler: Erro ao deletar linhas de lançamento para ${id}:`, deleteLinesError);
         throw deleteLinesError;
       }
-      console.log(`Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`);
+      logger.info(`Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`);
 
       // Then, delete the journal_entry itself
-      console.log(`Journal Entries Handler: Deletando lançamento principal ${id}.`);
+      logger.info(`Journal Entries Handler: Deletando lançamento principal ${id}.`);
       const { error: dbError, count } = await userSupabase
         .from("journal_entries")
         .delete()
@@ -146,11 +330,11 @@ export default async function handler(
         .eq("user_id", user_id);
 
       if (dbError) {
-        console.error(`Journal Entries Handler: Erro ao deletar lançamento principal ${id}:`, dbError);
+        logger.error(`Journal Entries Handler: Erro ao deletar lançamento principal ${id}:`, dbError);
         throw dbError;
       }
       if (count === 0) {
-        console.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`);
+        logger.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`);
         return handleErrorResponse(
           res,
           404,
@@ -158,7 +342,7 @@ export default async function handler(
         );
       }
       invalidateJournalEntriesCache(user_id);
-      console.log(`Journal Entries Handler: Lançamento ${id} deletado com sucesso.`);
+      logger.info(`Journal Entries Handler: Lançamento ${id} deletado com sucesso.`);
       return res.status(204).end();
     }
 
