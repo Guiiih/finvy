@@ -1,13 +1,19 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+} from "../utils/supabaseClient.js";
 import {
   createJournalEntrySchema,
   updateJournalEntrySchema,
 } from "../utils/schemas.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
 
-const journalEntriesCache = new Map<string, { data: unknown; timestamp: number }>();
+const journalEntriesCache = new Map<
+  string,
+  { data: unknown; timestamp: number }
+>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
 function getCachedJournalEntries(userId: string) {
@@ -69,15 +75,19 @@ export default async function handler(
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string,
 ) {
   const userSupabase = getSupabaseClient(token);
-  logger.info(`Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`);
+  logger.info(
+    `Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`,
+  );
   try {
     if (req.method === "GET") {
       const cachedData = getCachedJournalEntries(user_id);
       if (cachedData) {
-        logger.info("Journal Entries Handler: Retornando lançamentos do cache para user_id:", user_id);
+        logger.info(
+          "Journal Entries Handler: Retornando lançamentos do cache para user_id:",
+          user_id,
+        );
         return res.status(200).json(cachedData);
       }
 
@@ -148,10 +158,15 @@ export default async function handler(
      *         description: Erro interno do servidor.
      */
     if (req.method === "POST") {
-      logger.info("Journal Entries Handler: Processando POST para criar lançamento.");
+      logger.info(
+        "Journal Entries Handler: Processando POST para criar lançamento.",
+      );
       const parsedBody = createJournalEntrySchema.safeParse(req.body);
       if (!parsedBody.success) {
-        logger.error("Journal Entries Handler: Erro de validação no POST:", parsedBody.error.errors);
+        logger.error(
+          "Journal Entries Handler: Erro de validação no POST:",
+          parsedBody.error.errors,
+        );
         return handleErrorResponse(
           res,
           400,
@@ -235,10 +250,15 @@ export default async function handler(
      */
     if (req.method === "PUT") {
       const id = req.query.id as string;
-      logger.info(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`);
+      logger.info(
+        `Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`,
+      );
       const parsedBody = updateJournalEntrySchema.safeParse(req.body);
       if (!parsedBody.success) {
-        logger.error("Journal Entries Handler: Erro de validação no PUT:", parsedBody.error.errors);
+        logger.error(
+          "Journal Entries Handler: Erro de validação no PUT:",
+          parsedBody.error.errors,
+        );
         return handleErrorResponse(
           res,
           400,
@@ -248,7 +268,9 @@ export default async function handler(
       const updateData = parsedBody.data;
 
       if (Object.keys(updateData).length === 0) {
-        logger.warn("Journal Entries Handler: Nenhuma campo para atualizar fornecido no PUT.");
+        logger.warn(
+          "Journal Entries Handler: Nenhuma campo para atualizar fornecido no PUT.",
+        );
         return handleErrorResponse(
           res,
           400,
@@ -265,7 +287,9 @@ export default async function handler(
 
       if (dbError) throw dbError;
       if (!data || data.length === 0) {
-        logger.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`);
+        logger.warn(
+          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`,
+        );
         return handleErrorResponse(
           res,
           404,
@@ -273,7 +297,9 @@ export default async function handler(
         );
       }
       invalidateJournalEntriesCache(user_id);
-      logger.info(`Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`);
+      logger.info(
+        `Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`,
+      );
       return res.status(200).json(data[0]);
     }
 
@@ -306,23 +332,34 @@ export default async function handler(
      *         description: Erro interno do servidor.
      */
     if (req.method === "DELETE") {
-      const id = req.url?.split('?')[0].split('/').pop() as string;
-      logger.info(`Journal Entries Handler: Processando DELETE para lançamento ${id}.`);
+      const id = req.url?.split("?")[0].split("/").pop() as string;
+      logger.info(
+        `Journal Entries Handler: Processando DELETE para lançamento ${id}.`,
+      );
 
       // First, delete all associated entry_lines
-      logger.info(`Journal Entries Handler: Deletando linhas de lançamento para ${id}.`);
+      logger.info(
+        `Journal Entries Handler: Deletando linhas de lançamento para ${id}.`,
+      );
       const { error: deleteLinesError } = await userSupabase
         .from("entry_lines")
         .delete()
         .eq("journal_entry_id", id);
 
       if (deleteLinesError) {
-        logger.error(`Journal Entries Handler: Erro ao deletar linhas de lançamento para ${id}:`, deleteLinesError);
+        logger.error(
+          `Journal Entries Handler: Erro ao deletar linhas de lançamento para ${id}:`,
+          deleteLinesError,
+        );
         throw deleteLinesError;
       }
-      logger.info(`Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`);
+      logger.info(
+        `Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`,
+      );
 
-      logger.info(`Journal Entries Handler: Deletando lançamento principal ${id}.`);
+      logger.info(
+        `Journal Entries Handler: Deletando lançamento principal ${id}.`,
+      );
       const { error: dbError, count } = await userSupabase
         .from("journal_entries")
         .delete()
@@ -330,11 +367,16 @@ export default async function handler(
         .eq("user_id", user_id);
 
       if (dbError) {
-        logger.error(`Journal Entries Handler: Erro ao deletar lançamento principal ${id}:`, dbError);
+        logger.error(
+          `Journal Entries Handler: Erro ao deletar lançamento principal ${id}:`,
+          dbError,
+        );
         throw dbError;
       }
       if (count === 0) {
-        logger.warn(`Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`);
+        logger.warn(
+          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`,
+        );
         return handleErrorResponse(
           res,
           404,
@@ -342,15 +384,22 @@ export default async function handler(
         );
       }
       invalidateJournalEntriesCache(user_id);
-      logger.info(`Journal Entries Handler: Lançamento ${id} deletado com sucesso.`);
+      logger.info(
+        `Journal Entries Handler: Lançamento ${id} deletado com sucesso.`,
+      );
       return res.status(204).end();
     }
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-    console.warn(`Journal Entries Handler: Método ${req.method} não permitido.`);
+    console.warn(
+      `Journal Entries Handler: Método ${req.method} não permitido.`,
+    );
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
-    logger.error("Journal Entries Handler: Erro inesperado na API de lançamentos:", error);
+    logger.error(
+      "Journal Entries Handler: Erro inesperado na API de lançamentos:",
+      error,
+    );
     const message = formatSupabaseError(error);
     return handleErrorResponse(res, 500, message);
   }

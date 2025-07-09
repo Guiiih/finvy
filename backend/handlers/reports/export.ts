@@ -1,10 +1,16 @@
 import logger from "../../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleErrorResponse } from "../../utils/supabaseClient.js";
-import { generateReports, calculateTrialBalance, calculateDreData, calculateBalanceSheetData, calculateLedgerDetails } from "../../services/reportService.js";
+import {
+  generateReports,
+  calculateTrialBalance,
+  calculateDreData,
+  calculateBalanceSheetData,
+  calculateLedgerDetails,
+} from "../../services/reportService.js";
 import { exportReportSchema } from "../../utils/schemas.js";
-import ExcelJS from 'exceljs';
-import PDFDocument from 'pdfkit';
+import ExcelJS from "exceljs";
+import PDFDocument from "pdfkit";
 
 interface TrialBalanceData {
   account_id: string;
@@ -40,25 +46,58 @@ interface LedgerDetailsData {
   [accountId: string]: LedgerDetailsEntry[];
 }
 
-function convertToCsv(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): string {
+function convertToCsv(
+  data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData,
+  reportType: string,
+): string {
   let headers: string[] = [];
   let rows: (string | number | boolean)[][] = [];
 
-  if (reportType === 'trialBalance') {
-    headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
-    rows = (data as TrialBalanceData[]).map(row => [
-      row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
+  if (reportType === "trialBalance") {
+    headers = [
+      "Account ID",
+      "Account Name",
+      "Type",
+      "Total Debits",
+      "Total Credits",
+      "Final Balance",
+    ];
+    rows = (data as TrialBalanceData[]).map((row) => [
+      row.account_id,
+      row.accountName,
+      row.type,
+      row.totalDebits,
+      row.totalCredits,
+      row.finalBalance,
     ]);
-  } else if (reportType === 'dre') {
+  } else if (reportType === "dre") {
     headers = ["Total Revenue", "Total Expenses", "Net Income"];
     const dreData = data as DreData;
     rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
-  } else if (reportType === 'balanceSheet') {
-    headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
+  } else if (reportType === "balanceSheet") {
+    headers = [
+      "Total Assets",
+      "Total Liabilities",
+      "Total Equity",
+      "Is Balanced",
+    ];
     const balanceSheetData = data as BalanceSheetData;
-    rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
-  } else if (reportType === 'ledgerDetails') {
-    headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
+    rows = [
+      [
+        balanceSheetData.totalAssets,
+        balanceSheetData.totalLiabilities,
+        balanceSheetData.totalEquity,
+        balanceSheetData.isBalanced,
+      ],
+    ];
+  } else if (reportType === "ledgerDetails") {
+    headers = [
+      "Journal Entry ID",
+      "Entry Date",
+      "Description",
+      "Debit",
+      "Credit",
+    ];
     const flattenedData: LedgerDetailsEntry[] = [];
     const ledgerData = data as LedgerDetailsData;
     for (const accountId in ledgerData) {
@@ -67,39 +106,76 @@ function convertToCsv(data: TrialBalanceData[] | DreData | BalanceSheetData | Le
       });
     }
     rows = flattenedData.map((row: LedgerDetailsEntry) => [
-      row.journalEntryId, row.entryDate, row.description, row.debit || 0, row.credit || 0
+      row.journalEntryId,
+      row.entryDate,
+      row.description,
+      row.debit || 0,
+      row.credit || 0,
     ]);
   }
 
   const escapeCell = (cell: unknown) => `"${String(cell).replace(/"/g, '""')}"`;
-  const headerRow = headers.map(escapeCell).join(',');
-  const dataRows = rows.map(row => row.map(escapeCell).join('\n')).join('\n');
+  const headerRow = headers.map(escapeCell).join(",");
+  const dataRows = rows.map((row) => row.map(escapeCell).join("\n")).join("\n");
 
   return `${headerRow}\n${dataRows}`;
 }
 
-async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
+async function convertToXlsx(
+  data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData,
+  reportType: string,
+): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(reportType);
 
   let headers: string[] = [];
   let rows: (string | number | boolean)[][] = [];
 
-  if (reportType === 'trialBalance') {
-    headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
-    rows = (data as TrialBalanceData[]).map(row => [
-      row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
+  if (reportType === "trialBalance") {
+    headers = [
+      "Account ID",
+      "Account Name",
+      "Type",
+      "Total Debits",
+      "Total Credits",
+      "Final Balance",
+    ];
+    rows = (data as TrialBalanceData[]).map((row) => [
+      row.account_id,
+      row.accountName,
+      row.type,
+      row.totalDebits,
+      row.totalCredits,
+      row.finalBalance,
     ]);
-  } else if (reportType === 'dre') {
+  } else if (reportType === "dre") {
     headers = ["Total Revenue", "Total Expenses", "Net Income"];
     const dreData = data as DreData;
     rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
-  } else if (reportType === 'balanceSheet') {
-    headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
+  } else if (reportType === "balanceSheet") {
+    headers = [
+      "Total Assets",
+      "Total Liabilities",
+      "Total Equity",
+      "Is Balanced",
+    ];
     const balanceSheetData = data as BalanceSheetData;
-    rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
-  } else if (reportType === 'ledgerDetails') {
-    headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
+    rows = [
+      [
+        balanceSheetData.totalAssets,
+        balanceSheetData.totalLiabilities,
+        balanceSheetData.totalEquity,
+        balanceSheetData.isBalanced,
+      ],
+    ];
+  } else if (reportType === "ledgerDetails") {
+    headers = [
+      "Journal Entry ID",
+      "Entry Date",
+      "Description",
+      "Debit",
+      "Credit",
+    ];
     const flattenedData: LedgerDetailsEntry[] = [];
     const ledgerData = data as LedgerDetailsData;
     for (const accountId in ledgerData) {
@@ -108,50 +184,89 @@ async function convertToXlsx(data: TrialBalanceData[] | DreData | BalanceSheetDa
       });
     }
     rows = flattenedData.map((row: LedgerDetailsEntry) => [
-      row.journalEntryId, row.entryDate, row.description, row.debit || 0, row.credit || 0
+      row.journalEntryId,
+      row.entryDate,
+      row.description,
+      row.debit || 0,
+      row.credit || 0,
     ]);
   }
 
   worksheet.addRow(headers);
-  rows.forEach(row => {
+  rows.forEach((row) => {
     worksheet.addRow(row);
   });
 
   return workbook.xlsx.writeBuffer() as Promise<Buffer>;
 }
 
-async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData, reportType: string): Promise<Buffer> {
+async function convertToPdf(
+  data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData,
+  reportType: string,
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
     const buffers: Buffer[] = [];
 
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', () => {
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => {
       resolve(Buffer.concat(buffers));
     });
-    doc.on('error', reject);
+    doc.on("error", reject);
 
-    doc.fontSize(16).text(`Relatório: ${reportType.toUpperCase()}`, { align: 'center' });
+    doc
+      .fontSize(16)
+      .text(`Relatório: ${reportType.toUpperCase()}`, { align: "center" });
     doc.moveDown();
 
     let headers: string[] = [];
     let rows: (string | number | boolean)[][] = [];
 
-    if (reportType === 'trialBalance') {
-      headers = ["Account ID", "Account Name", "Type", "Total Debits", "Total Credits", "Final Balance"];
-      rows = (data as TrialBalanceData[]).map(row => [
-      row.account_id, row.accountName, row.type, row.totalDebits, row.totalCredits, row.finalBalance
-    ]);
-    } else if (reportType === 'dre') {
+    if (reportType === "trialBalance") {
+      headers = [
+        "Account ID",
+        "Account Name",
+        "Type",
+        "Total Debits",
+        "Total Credits",
+        "Final Balance",
+      ];
+      rows = (data as TrialBalanceData[]).map((row) => [
+        row.account_id,
+        row.accountName,
+        row.type,
+        row.totalDebits,
+        row.totalCredits,
+        row.finalBalance,
+      ]);
+    } else if (reportType === "dre") {
       headers = ["Total Revenue", "Total Expenses", "Net Income"];
       const dreData = data as DreData;
       rows = [[dreData.totalRevenue, dreData.totalExpenses, dreData.netIncome]];
-    } else if (reportType === 'balanceSheet') {
-      headers = ["Total Assets", "Total Liabilities", "Total Equity", "Is Balanced"];
+    } else if (reportType === "balanceSheet") {
+      headers = [
+        "Total Assets",
+        "Total Liabilities",
+        "Total Equity",
+        "Is Balanced",
+      ];
       const balanceSheetData = data as BalanceSheetData;
-      rows = [[balanceSheetData.totalAssets, balanceSheetData.totalLiabilities, balanceSheetData.totalEquity, balanceSheetData.isBalanced]];
-    } else if (reportType === 'ledgerDetails') {
-      headers = ["Journal Entry ID", "Entry Date", "Description", "Debit", "Credit"];
+      rows = [
+        [
+          balanceSheetData.totalAssets,
+          balanceSheetData.totalLiabilities,
+          balanceSheetData.totalEquity,
+          balanceSheetData.isBalanced,
+        ],
+      ];
+    } else if (reportType === "ledgerDetails") {
+      headers = [
+        "Journal Entry ID",
+        "Entry Date",
+        "Description",
+        "Debit",
+        "Credit",
+      ];
       const flattenedData: LedgerDetailsEntry[] = [];
       const ledgerData = data as LedgerDetailsData;
       for (const accountId in ledgerData) {
@@ -160,24 +275,31 @@ async function convertToPdf(data: TrialBalanceData[] | DreData | BalanceSheetDat
         });
       }
       rows = flattenedData.map((row: LedgerDetailsEntry) => [
-        row.journalEntryId, row.entryDate, row.description, row.debit || 0, row.credit || 0
+        row.journalEntryId,
+        row.entryDate,
+        row.description,
+        row.debit || 0,
+        row.credit || 0,
       ]);
     }
 
     const tableTop = doc.y;
     let currentY = tableTop;
 
-    doc.font('Helvetica-Bold').fontSize(10);
+    doc.font("Helvetica-Bold").fontSize(10);
     headers.forEach((header, i) => {
-      doc.text(header, 50 + (i * 100), currentY, { width: 90, align: 'left' });
+      doc.text(header, 50 + i * 100, currentY, { width: 90, align: "left" });
     });
     doc.moveDown();
     currentY = doc.y;
 
-    doc.font('Helvetica').fontSize(9);
-    rows.forEach(row => {
+    doc.font("Helvetica").fontSize(9);
+    rows.forEach((row) => {
       row.forEach((cell, i) => {
-        doc.text(String(cell), 50 + (i * 100), currentY, { width: 90, align: 'left' });
+        doc.text(String(cell), 50 + i * 100, currentY, {
+          width: 90,
+          align: "left",
+        });
       });
       doc.moveDown();
       currentY = doc.y;
@@ -209,27 +331,36 @@ export default async function handler(
   const { reportType, startDate, endDate, format } = parsedBody.data;
 
   try {
-    const { accounts, journalEntries } = await generateReports(user_id, token, startDate, endDate);
+    const { accounts, journalEntries } = await generateReports(
+      user_id,
+      token,
+      startDate,
+      endDate,
+    );
 
-    let reportData: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData;
+    let reportData:
+      | TrialBalanceData[]
+      | DreData
+      | BalanceSheetData
+      | LedgerDetailsData;
     let filename = "report";
     let contentType = "";
     let fileBuffer: Buffer | string;
 
     switch (reportType) {
-      case 'trialBalance':
+      case "trialBalance":
         reportData = calculateTrialBalance(accounts, journalEntries);
         filename = "balancete_de_verificacao";
         break;
-      case 'dre':
+      case "dre":
         reportData = calculateDreData(accounts, journalEntries);
         filename = "demonstrativo_de_resultado";
         break;
-      case 'balanceSheet':
+      case "balanceSheet":
         reportData = calculateBalanceSheetData(accounts, journalEntries);
         filename = "balanco_patrimonial";
         break;
-      case 'ledgerDetails':
+      case "ledgerDetails":
         reportData = calculateLedgerDetails(accounts, journalEntries);
         filename = "razao_detalhado";
         break;
@@ -237,15 +368,16 @@ export default async function handler(
         return handleErrorResponse(res, 400, "Tipo de relatório inválido.");
     }
 
-    if (format === 'xlsx') {
+    if (format === "xlsx") {
       fileBuffer = await convertToXlsx(reportData, reportType);
-      contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      contentType =
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       filename += ".xlsx";
-    } else if (format === 'csv') {
+    } else if (format === "csv") {
       fileBuffer = convertToCsv(reportData, reportType);
       contentType = "text/csv";
       filename += ".csv";
-    } else if (format === 'pdf') {
+    } else if (format === "pdf") {
       fileBuffer = await convertToPdf(reportData, reportType);
       contentType = "application/pdf";
       filename += ".pdf";
@@ -256,7 +388,6 @@ export default async function handler(
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.status(200).send(fileBuffer);
-
   } catch (error: unknown) {
     logger.error("Erro ao exportar relatório:", error);
     const message =

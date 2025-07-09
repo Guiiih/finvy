@@ -1,6 +1,10 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, getSupabaseAdmin, handleErrorResponse } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  getSupabaseAdmin,
+  handleErrorResponse,
+} from "../utils/supabaseClient.js";
 
 /**
  * @swagger
@@ -63,7 +67,7 @@ export default async function handler(
       const { data: profile, error: dbError } = await userSupabase
         .from("profiles")
         .select("username, role, avatar_url")
-        .eq('id', user_id)
+        .eq("id", user_id)
         .single();
 
       if (dbError) {
@@ -72,7 +76,11 @@ export default async function handler(
       }
 
       if (!profile) {
-        return handleErrorResponse(res, 404, "Perfil do usuário não encontrado.");
+        return handleErrorResponse(
+          res,
+          404,
+          "Perfil do usuário não encontrado.",
+        );
       }
 
       return res.status(200).json(profile);
@@ -85,7 +93,8 @@ export default async function handler(
   } else if (req.method === "DELETE") {
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+      const { error: deleteError } =
+        await supabaseAdmin.auth.admin.deleteUser(user_id);
 
       if (deleteError) {
         logger.error("Erro ao deletar usuário:", deleteError);

@@ -13,9 +13,9 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
   throw new Error("Variáveis de ambiente do Supabase não configuradas.");
 }
 
-export const anonSupabase = createClient(supabaseUrl!, supabaseAnonKey!); 
+export const anonSupabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
-export const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!); 
+export const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
 
 export function getSupabaseClient(token: string): SupabaseClient {
   return createClient(supabaseUrl!, supabaseAnonKey!, {

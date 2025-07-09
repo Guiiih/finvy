@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withAuth } from "../backend/utils/middleware.js";
 import { handleErrorResponse } from "../backend/utils/supabaseClient.js";
@@ -21,22 +20,23 @@ async function protectedRoutesHandler(
   res: VercelResponse,
   user_id: string,
   token: string,
-  user_role: string,
 ) {
   // Extract path from URL, remove /api prefix
   const url = (req.url || "").split("?")[0];
   const urlPath = url.startsWith("/api") ? url.substring(4) : url;
 
-  logger.info(`[API Router] Roteando o pedido protegido para: ${req.method} ${urlPath}`);
+  logger.info(
+    `[API Router] Roteando o pedido protegido para: ${req.method} ${urlPath}`,
+  );
 
   if (urlPath.startsWith("/accounts")) {
-    return accountsHandler(req, res, user_id, token, user_role);
+    return accountsHandler(req, res, user_id, token);
   }
   if (urlPath.startsWith("/products")) {
-    return productsHandler(req, res, user_id, token, user_role);
+    return productsHandler(req, res, user_id, token);
   }
   if (urlPath.startsWith("/journal-entries")) {
-    return journalEntriesHandler(req, res, user_id, token, user_role);
+    return journalEntriesHandler(req, res, user_id, token);
   }
   if (urlPath.startsWith("/entry-lines")) {
     return entryLinesHandler(req, res, user_id, token);
@@ -51,7 +51,7 @@ async function protectedRoutesHandler(
     return exportReportsHandler(req, res, user_id, token);
   }
   if (urlPath.startsWith("/year-end-closing")) {
-    return yearEndClosingHandler(req, res, user_id);
+    return yearEndClosingHandler(req, res);
   }
   if (urlPath.startsWith("/profile")) {
     return profileHandler(req, res, user_id, token);
@@ -64,8 +64,6 @@ async function protectedRoutesHandler(
 export default async function (req: VercelRequest, res: VercelResponse) {
   const urlPath = (req.url || "").split("?")[0];
   logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`);
-
-  
 
   // For all other /api routes, apply the authentication middleware
   if (urlPath.startsWith("/api/")) {

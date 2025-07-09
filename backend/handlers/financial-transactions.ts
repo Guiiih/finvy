@@ -1,6 +1,10 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 import { createFinancialTransactionSchema } from "../utils/schemas.js";
 
 /**
@@ -127,7 +131,9 @@ export default async function handler(
     if (req.method === "GET") {
       const { data, error: dbError } = await serviceRoleSupabase
         .from(tableName)
-        .select("id, description, amount, due_date, paid_date, is_paid, received_date, is_received")
+        .select(
+          "id, description, amount, due_date, paid_date, is_paid, received_date, is_received",
+        )
         .order("created_at", { ascending: false });
 
       if (dbError) throw dbError;

@@ -38,13 +38,13 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.component('InputText', InputText)
-app.component('Password', Password)
-app.component('Button', Button)
-app.component('Dialog', Dialog)
+app.component('PPassword', Password)
+app.component('PButton', Button)
+app.component('PDialog', Dialog)
 app.component('FileUpload', FileUpload)
 app.component('SelectButton', SelectButton)
-app.component('Dropdown', Dropdown)
-app.component('Cropper', Cropper)
+app.component('PDropdown', Dropdown)
+app.component('AppCropper', Cropper)
 
 async function initApp() {
   const authStore = useAuthStore()

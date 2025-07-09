@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const uuidSchema = z.string().uuid({ message: "ID inválido. Deve ser um UUID válido." });
+export const uuidSchema = z
+  .string()
+  .uuid({ message: "ID inválido. Deve ser um UUID válido." });
 
 export const idSchema = z.object({
   id: z.string().uuid({ message: "ID inválido. Deve ser um UUID válido." }),
@@ -14,7 +16,11 @@ export const createAccountSchema = z.object({
   type: z.enum(["asset", "liability", "equity", "revenue", "expense"], {
     message: "Tipo de conta inválido.",
   }),
-  parent_account_id: z.string().uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." }).optional().nullable(),
+  parent_account_id: z
+    .string()
+    .uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." })
+    .optional()
+    .nullable(),
 });
 
 export const updateAccountSchema = z
@@ -29,7 +35,11 @@ export const updateAccountSchema = z
         message: "Tipo de conta inválido.",
       })
       .optional(),
-    parent_account_id: z.string().uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." }).optional().nullable(),
+    parent_account_id: z
+      .string()
+      .uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." })
+      .optional()
+      .nullable(),
   })
   .partial();
 
@@ -133,9 +143,11 @@ export const createEntryLineSchema = z
       .nonnegative("Valor total líquido deve ser um valor não negativo.")
       .nullable()
       .optional(),
-    transaction_type: z.enum(["sale", "purchase"], {
-      message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
-    }).optional(),
+    transaction_type: z
+      .enum(["sale", "purchase"], {
+        message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
+      })
+      .optional(),
   })
   .refine((data) => data.debit !== undefined || data.credit !== undefined, {
     message: "Pelo menos um dos campos (debit ou credit) é obrigatório.",
@@ -304,17 +316,47 @@ export const updateFinancialTransactionSchema =
   createFinancialTransactionSchema.partial();
 
 export const yearEndClosingSchema = z.object({
-  closingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD."),
+  closingDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD."),
 });
 
 export const reportQuerySchema = z.object({
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de início inválido. Use YYYY-MM-DD.").optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de fim inválido. Use YYYY-MM-DD.").optional(),
+  startDate: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Formato de data de início inválido. Use YYYY-MM-DD.",
+    )
+    .optional(),
+  endDate: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Formato de data de fim inválido. Use YYYY-MM-DD.",
+    )
+    .optional(),
 });
 
 export const exportReportSchema = z.object({
-  reportType: z.enum(["trialBalance", "dre", "balanceSheet", "ledgerDetails"], { message: "Tipo de relatório inválido." }),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de início inválido. Use YYYY-MM-DD.").optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data de fim inválido. Use YYYY-MM-DD.").optional(),
-  format: z.enum(["xlsx", "csv", "pdf"], { message: "Formato de exportação inválido." }),
+  reportType: z.enum(["trialBalance", "dre", "balanceSheet", "ledgerDetails"], {
+    message: "Tipo de relatório inválido.",
+  }),
+  startDate: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Formato de data de início inválido. Use YYYY-MM-DD.",
+    )
+    .optional(),
+  endDate: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Formato de data de fim inválido. Use YYYY-MM-DD.",
+    )
+    .optional(),
+  format: z.enum(["xlsx", "csv", "pdf"], {
+    message: "Formato de exportação inválido.",
+  }),
 });

@@ -1,5 +1,3 @@
-import logger from "../utils/logger.js";
-
 interface TaxCalculationParams {
   total_gross?: number;
   icms_rate?: number;
@@ -7,7 +5,7 @@ interface TaxCalculationParams {
   pis_rate?: number;
   cofins_rate?: number;
   mva_rate?: number;
-  transaction_type?: 'sale' | 'purchase';
+  transaction_type?: "sale" | "purchase";
   total_net?: number | null; // For purchases, total_net might be provided
 }
 
@@ -20,8 +18,19 @@ interface TaxCalculationResult {
   final_total_net: number;
 }
 
-export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResult {
-  const { total_gross, icms_rate, ipi_rate, pis_rate, cofins_rate, mva_rate, transaction_type, total_net } = params;
+export function calculateTaxes(
+  params: TaxCalculationParams,
+): TaxCalculationResult {
+  const {
+    total_gross,
+    icms_rate,
+    ipi_rate,
+    pis_rate,
+    cofins_rate,
+    mva_rate,
+    transaction_type,
+    total_net,
+  } = params;
 
   let calculated_icms_value = 0;
   let calculated_ipi_value = 0;
@@ -53,8 +62,12 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
     }
 
     // 4. Calculate ICMS-ST
-    if (base_for_icms_and_pis_cofins !== undefined && mva_rate !== undefined && icms_rate !== undefined) {
-      const base_icms_st = base_for_icms_and_pis_cofins * (1 + (mva_rate / 100));
+    if (
+      base_for_icms_and_pis_cofins !== undefined &&
+      mva_rate !== undefined &&
+      icms_rate !== undefined
+    ) {
+      const base_icms_st = base_for_icms_and_pis_cofins * (1 + mva_rate / 100);
       const icms_st_total = base_icms_st * (icms_rate / 100);
       calculated_icms_st_value = icms_st_total - calculated_icms_value;
     }
@@ -79,8 +92,12 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
     if (total_gross !== undefined && cofins_rate !== undefined) {
       calculated_cofins_value = total_gross * (cofins_rate / 100);
     }
-    if (total_gross !== undefined && mva_rate !== undefined && icms_rate !== undefined) {
-      const base_icms_st = total_gross * (1 + (mva_rate / 100));
+    if (
+      total_gross !== undefined &&
+      mva_rate !== undefined &&
+      icms_rate !== undefined
+    ) {
+      const base_icms_st = total_gross * (1 + mva_rate / 100);
       const icms_st_total = base_icms_st * (icms_rate / 100);
       calculated_icms_st_value = icms_st_total - calculated_icms_value;
     }

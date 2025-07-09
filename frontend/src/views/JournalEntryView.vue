@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-import type { JournalEntry, EntryLine as JournalEntryLine, Product } from '@/types/index'
+import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import ProgressSpinner from 'primevue/progressspinner'
 import Skeleton from 'primevue/skeleton'
@@ -93,12 +93,7 @@ function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-function calculateLineTotals(line: EntryLine) {
-  const icms_rate = line.icms_rate || 0
-  line.total_gross = line.amount
-  line.icms_value = line.total_gross * (icms_rate / 100)
-  line.total_net = line.total_gross - line.icms_value
-}
+
 
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
@@ -151,15 +146,7 @@ function toggleDetails(id: string | undefined) {
   }
 }
 
-function handleProductChange(line: EntryLine) {
-  const product: Product | undefined = productStore.getProductById(line.product_id || '')
-  if (product) {
-    line.unit_cost = product.unit_cost
-    line.icms_rate = product.icms_rate || 0
-    line.quantity = 1
-    calculateLineTotals(line)
-  }
-}
+
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {

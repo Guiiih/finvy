@@ -5,8 +5,7 @@ import { api } from '@/services/api'
 import type { LedgerAccount} from '@/types'
 import { ref, computed } from 'vue'
 
-vi.mock('./reportStore', async (importOriginal) => {
-  const actual = await importOriginal()
+vi.mock('./reportStore', async () => {
   return {
     useReportStore: vi.fn(() => ({
       reports: ref(null),

@@ -4,7 +4,7 @@ import logger from "../utils/logger.js";
 export async function checkDoubleEntryBalance(
   journal_entry_id: string,
   user_id: string,
-  token: string
+  token: string,
 ): Promise<boolean> {
   const userSupabase = getSupabaseClient(token);
 
@@ -15,12 +15,17 @@ export async function checkDoubleEntryBalance(
       .eq("journal_entry_id", journal_entry_id);
 
     if (error) {
-      logger.error(`Error fetching entry lines for journal entry ${journal_entry_id}:`, error);
+      logger.error(
+        `Error fetching entry lines for journal entry ${journal_entry_id}:`,
+        error,
+      );
       return false;
     }
 
     if (!entryLines || entryLines.length === 0) {
-      logger.warn(`No entry lines found for journal entry ${journal_entry_id}.`);
+      logger.warn(
+        `No entry lines found for journal entry ${journal_entry_id}.`,
+      );
       return true; // Or false, depending on whether an empty entry is considered balanced
     }
 
@@ -35,12 +40,17 @@ export async function checkDoubleEntryBalance(
     const isBalanced = totalDebits.toFixed(2) === totalCredits.toFixed(2);
 
     if (!isBalanced) {
-      logger.warn(`Journal entry ${journal_entry_id} is unbalanced. Debits: ${totalDebits}, Credits: ${totalCredits}`);
+      logger.warn(
+        `Journal entry ${journal_entry_id} is unbalanced. Debits: ${totalDebits}, Credits: ${totalCredits}`,
+      );
     }
 
     return isBalanced;
   } catch (error) {
-    logger.error(`Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`, error);
+    logger.error(
+      `Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`,
+      error,
+    );
     return false;
   }
 }

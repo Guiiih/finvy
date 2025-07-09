@@ -64,7 +64,12 @@ describe("reportService", () => {
       const accounts: Account[] = [
         { id: "3", name: "Receita de Vendas", type: "Receita", code: 301 },
         { id: "4", name: "Despesas com Salários", type: "Despesa", code: 401 },
-        { id: "5", name: "Custo da Mercadoria Vendida", type: "Despesa", code: 402 },
+        {
+          id: "5",
+          name: "Custo da Mercadoria Vendida",
+          type: "Despesa",
+          code: 402,
+        },
       ];
 
       const journalEntries: JournalEntry[] = [
@@ -72,29 +77,23 @@ describe("reportService", () => {
           id: "e1",
           entry_date: "2025-07-15",
           description: "Venda",
-          lines: [
-            { account_id: "3", debit: 0, credit: 1000 },
-          ],
+          lines: [{ account_id: "3", debit: 0, credit: 1000 }],
         },
         {
           id: "e2",
           entry_date: "2025-07-16",
           description: "Salários",
-          lines: [
-            { account_id: "4", debit: 300, credit: 0 },
-          ],
+          lines: [{ account_id: "4", debit: 300, credit: 0 }],
         },
         {
           id: "e3",
           entry_date: "2025-07-17",
           description: "CMV",
-          lines: [
-            { account_id: "5", debit: 200, credit: 0 },
-          ],
+          lines: [{ account_id: "5", debit: 200, credit: 0 }],
         },
       ];
 
-      const { calculateDreData } = require("./reportService");
+      const { calculateDreData } = await import("./reportService");
       const result = calculateDreData(accounts, journalEntries);
 
       expect(result.totalRevenue).toBe(1000);
@@ -106,7 +105,12 @@ describe("reportService", () => {
       const accounts: Account[] = [
         { id: "1", name: "Caixa", type: "Ativo Circulante", code: 101 },
         { id: "2", name: "Fornecedores", type: "Passivo", code: 201 },
-        { id: "6", name: "Capital Social", type: "Patrimônio Líquido", code: 302 },
+        {
+          id: "6",
+          name: "Capital Social",
+          type: "Patrimônio Líquido",
+          code: 302,
+        },
       ];
 
       const journalEntries: JournalEntry[] = [
@@ -130,7 +134,7 @@ describe("reportService", () => {
         },
       ];
 
-      const { calculateBalanceSheetData } = require("./reportService");
+      const { calculateBalanceSheetData } = await import("./reportService");
       const result = calculateBalanceSheetData(accounts, journalEntries);
 
       expect(result.totalAssets).toBe(4000);
@@ -166,7 +170,7 @@ describe("reportService", () => {
         },
       ];
 
-      const { calculateLedgerDetails } = require("./reportService");
+      const { calculateLedgerDetails } = await import("./reportService");
       const result = calculateLedgerDetails(accounts, journalEntries);
 
       expect(result["1"]).toHaveLength(2);

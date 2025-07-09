@@ -1,6 +1,10 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient, handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import {
+  getSupabaseClient,
+  handleErrorResponse,
+  supabase as serviceRoleSupabase,
+} from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
 import { updateProductStockAndCost } from "../services/productService.js";
 import { calculateTaxes } from "../services/taxService.js";
@@ -192,7 +196,9 @@ export default async function handler(
       if (journal_entry_id) {
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
-          .select("id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net")
+          .select(
+            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net",
+          )
           .eq("journal_entry_id", journal_entry_id as string);
 
         if (dbError) throw dbError;
@@ -200,7 +206,9 @@ export default async function handler(
       } else {
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
-          .select("id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id)")
+          .select(
+            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id)",
+          )
           .eq("journal_entry_id.user_id", user_id);
 
         if (dbError) throw dbError;
@@ -299,11 +307,24 @@ export default async function handler(
         const pisPayableAccount = accountMap.get("PIS a Recolher");
         const cofinsPayableAccount = accountMap.get("COFINS a Recolher");
         const cmvAccount = accountMap.get("Custo da Mercadoria Vendida");
-        const finishedGoodsStockAccount = accountMap.get("Estoque de Produtos Acabados");
+        const finishedGoodsStockAccount = accountMap.get(
+          "Estoque de Produtos Acabados",
+        );
         const pisExpenseAccount = accountMap.get("PIS sobre Faturamento");
         const cofinsExpenseAccount = accountMap.get("COFINS sobre Faturamento");
 
-        if (!revenueAccount || !ipiPayableAccount || !icmsPayableAccount || !icmsStPayableAccount || !pisPayableAccount || !cofinsPayableAccount || !cmvAccount || !finishedGoodsStockAccount || !pisExpenseAccount || !cofinsExpenseAccount) {
+        if (
+          !revenueAccount ||
+          !ipiPayableAccount ||
+          !icmsPayableAccount ||
+          !icmsStPayableAccount ||
+          !pisPayableAccount ||
+          !cofinsPayableAccount ||
+          !cmvAccount ||
+          !finishedGoodsStockAccount ||
+          !pisExpenseAccount ||
+          !cofinsExpenseAccount
+        ) {
           return handleErrorResponse(
             res,
             500,
@@ -425,7 +446,14 @@ export default async function handler(
         if (product_id && quantity) {
           // For sales, unit_cost in entry_line should be the average cost at the time of sale.
           // The updateProductStockAndCost function will only decrease stock for sales.
-          await updateProductStockAndCost(product_id, quantity, unit_cost || 0, 'sale', user_id, token);
+          await updateProductStockAndCost(
+            product_id,
+            quantity,
+            unit_cost || 0,
+            "sale",
+            user_id,
+            token,
+          );
         }
       } else if (transaction_type === "purchase") {
         // Fetch required account IDs for purchases
@@ -441,7 +469,9 @@ export default async function handler(
 
         const accountMap = new Map(accounts.map((acc) => [acc.name, acc.id]));
 
-        const merchandiseStockAccount = accountMap.get("Estoque de Mercadorias");
+        const merchandiseStockAccount = accountMap.get(
+          "Estoque de Mercadorias",
+        );
         const suppliersAccount = accountMap.get("Fornecedores");
 
         if (!merchandiseStockAccount || !suppliersAccount) {
@@ -479,9 +509,17 @@ export default async function handler(
 
         // Stock and cost update logic for purchases
         if (product_id && quantity && unit_cost !== undefined) {
-          await updateProductStockAndCost(product_id, quantity, unit_cost, 'purchase', user_id, token);
+          await updateProductStockAndCost(
+            product_id,
+            quantity,
+            unit_cost,
+            "purchase",
+            user_id,
+            token,
+          );
         }
-      } else { // Default or other types, for now, just insert the main line
+      } else {
+        // Default or other types, for now, just insert the main line
         entryLinesToInsert.push({
           journal_entry_id,
           account_id,

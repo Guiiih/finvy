@@ -97,10 +97,7 @@ function startEdit(account: Account) {
   editingAccount.value = { ...account }
 }
 
-function cancelEdit() {
-  isEditing.value = false
-  editingAccount.value = null
-}
+
 
 async function handleDeleteAccount(id: string | undefined) {
   if (!id) {

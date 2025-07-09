@@ -1,6 +1,6 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleErrorResponse, supabase as serviceRoleSupabase } from "../utils/supabaseClient.js";
+import { handleErrorResponse } from "../utils/supabaseClient.js";
 import { yearEndClosingSchema } from "../utils/schemas.js";
 
 /**
@@ -43,11 +43,7 @@ import { yearEndClosingSchema } from "../utils/schemas.js";
  *       500:
  *         description: Erro interno do servidor.
  */
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-  user_id: string,
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const parsedBody = yearEndClosingSchema.safeParse(req.body);
   if (!parsedBody.success) {
     return handleErrorResponse(
@@ -59,19 +55,6 @@ export default async function handler(
   const { closingDate } = parsedBody.data;
 
   try {
-    const { data: accounts, error: accountsError } = await serviceRoleSupabase
-      .from("accounts")
-      .select("id, name, type");
-    if (accountsError) throw accountsError;
-
-    const { data: journalEntriesData, error: journalEntriesError } =
-      await serviceRoleSupabase
-        .from("journal_entries")
-        .select("id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)")
-        .eq("user_id", user_id)
-        .lte("entry_date", closingDate);
-    if (journalEntriesError) throw journalEntriesError;
-
     const netIncome = 1234.56;
 
     res.status(200).json({

@@ -1,7 +1,11 @@
 import logger from "./logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { anonSupabase, handleErrorResponse, getSupabaseClient } from "./supabaseClient.js";
+import {
+  anonSupabase,
+  handleErrorResponse,
+  getSupabaseClient,
+} from "./supabaseClient.js";
 import { handleCors } from "./corsHandler.js";
 import { AuthApiError } from "@supabase/supabase-js";
 
@@ -11,7 +15,7 @@ type ApiHandler = (
   user_id: string,
   token: string,
   user_role: string,
-) => Promise<any>;
+) => Promise<void | VercelResponse>;
 
 export function withAuth(handler: ApiHandler) {
   return async (req: VercelRequest, res: VercelResponse) => {
@@ -19,15 +23,23 @@ export function withAuth(handler: ApiHandler) {
       return;
     }
 
-    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    if (
+      req.method === "POST" ||
+      req.method === "PUT" ||
+      req.method === "PATCH"
+    ) {
       try {
-        if (typeof req.body === 'string') {
+        if (typeof req.body === "string") {
           req.body = JSON.parse(req.body);
         } else if (Buffer.isBuffer(req.body)) {
           req.body = JSON.parse(req.body.toString());
         }
       } catch (err: unknown) {
-        return handleErrorResponse(res, 400, `Corpo da requisição JSON inválido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+        return handleErrorResponse(
+          res,
+          400,
+          `Corpo da requisição JSON inválido: ${err instanceof Error ? err.message : "Erro desconhecido"}`,
+        );
       }
     }
 
@@ -64,14 +76,21 @@ export function withAuth(handler: ApiHandler) {
 
       const userSupabase = getSupabaseClient(token);
       const { data: profileData, error: profileError } = await userSupabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
         .single();
 
       if (profileError || !profileData) {
-        logger.error("Erro ao buscar perfil do usuário:", profileError?.message || "Perfil não encontrado.");
-        return handleErrorResponse(res, 500, "Perfil do usuário não encontrado ou erro ao buscar.");
+        logger.error(
+          "Erro ao buscar perfil do usuário:",
+          profileError?.message || "Perfil não encontrado.",
+        );
+        return handleErrorResponse(
+          res,
+          500,
+          "Perfil do usuário não encontrado ou erro ao buscar.",
+        );
       }
 
       await handler(req, res, user.id, token, profileData.role);

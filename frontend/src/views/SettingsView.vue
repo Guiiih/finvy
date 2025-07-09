@@ -132,7 +132,6 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import FileUpload from 'primevue/fileupload'
 import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
@@ -156,7 +155,7 @@ const showDeleteModal = ref(false)
 // Avatar Cropper
 const showCropperModal = ref(false)
 const imageSrc = ref('')
-const cropperRef = ref<any>(null)
+const cropperRef = ref<InstanceType<typeof Cropper> | null>(null)
 const loadingAvatarUpload = ref(false)
 const tempAvatarPreview = ref<string | null>(null)
 const croppedImagePreviewUrl = ref<string | null>(null)
@@ -218,7 +217,7 @@ const saveCroppedImage = async () => {
     loadingAvatarUpload.value = true
     const { canvas } = cropperRef.value.getResult()
     if (canvas) {
-      canvas.toBlob(async (blob: Blob) => {
+      canvas.toBlob(async (blob) => {
         if (blob) {
           const success = await authStore.uploadAvatar(blob)
           if (success) {
@@ -313,11 +312,11 @@ const handleDeleteAccount = async () => {
   loadingDelete.value = false
 }
 
-const changeTheme = (event: any) => {
+const changeTheme = (event: { value: { value: string } }) => {
   themeStore.setTheme(event.value.value);
 }
 
-const changeLanguage = (event: any) => {
+const changeLanguage = (event: { value: string }) => {
   languageStore.setLanguage(event.value)
 }
 </script>
