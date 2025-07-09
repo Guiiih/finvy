@@ -86,7 +86,7 @@ const logoSrc = computed(() => {
 
         <div class="relative">
           <button type="button" class="rounded-full cursor-pointer" @click.stop="toggleUserMenu" aria-label="Menu do usuário">
-            <img :src="authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar do usuário" class="h-8 w-8 rounded-full" />
+            <img :src="authStore.avatarUrl ?? undefined" alt="Avatar do usuário" class="h-8 w-8 rounded-full" />
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>

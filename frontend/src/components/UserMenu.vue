@@ -25,7 +25,7 @@ const closeMenu = () => {
 <template>
   <div class="absolute right-0 mt-2 w-64 bg-surface-0 rounded-md shadow-lg py-1 z-50" @click.stop>
     <div class="flex items-center px-4 py-3 border-b border-surface-200">
-      <img :src="authStore.avatarUrl || '@/assets/LogoIcon.svg'" alt="User Avatar" class="h-10 w-10 rounded-full mr-3" />
+      <img :src="authStore.avatarUrl ?? undefined" alt="User Avatar" class="h-10 w-10 rounded-full mr-3" />
       <div>
         <p class="text-sm font-medium text-surface-900">{{ authStore.username || authStore.user?.email }}</p>
         <p class="text-sm text-surface-500">{{ authStore.user?.email }}</p>

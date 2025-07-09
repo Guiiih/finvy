@@ -7,7 +7,7 @@
       <div class="mb-8 p-6 border rounded-lg bg-surface-50">
         <h2 class="text-2xl font-semibold text-surface-700 mb-4">Avatar</h2>
         <div class="flex items-center space-x-6">
-          <img :src="tempAvatarPreview || authStore.avatarUrl || './assets/LogoIcon.svg'" alt="Avatar" class="h-24 w-24 rounded-full object-cover bg-surface-200 cursor-pointer shadow-lg" @click="triggerFileInput" />
+          <img :src="tempAvatarPreview ?? authStore.avatarUrl ?? undefined" alt="Avatar" class="h-24 w-24 rounded-full object-cover bg-surface-200 cursor-pointer shadow-lg" @click="triggerFileInput" />
           <input type="file" ref="fileInput" @change="handleAvatarSelect" accept="image/*" class="hidden" />
           <Button label="Mudar Avatar" icon="pi pi-image" class="p-button-outlined" @click="triggerFileInput" />
         </div>
@@ -83,7 +83,7 @@
     </Dialog>
 
     <!-- Modal de Corte de Imagem -->
-    <Dialog v-model:visible="showCropperModal" :modal="true" :style="{ width: '500px' }" class="p-dialog-cropper">
+    <Dialog v-model:visible="showCropperModal" :modal="true" :closable="false" :style="{ width: '500px' }" class="p-dialog-cropper">
       <div class="p-4">
         <h2 class="text-xl font-bold mb-4">Cortar e girar</h2>
         <div class="cropper-container flex justify-center items-center bg-surface-800 rounded-md overflow-hidden relative" style="height: 300px;">
@@ -106,7 +106,7 @@
         <div class="flex flex-col items-center mt-6 p-4 bg-surface-100 rounded-lg">
           <h3 class="text-xl font-semibold mb-3">Nova foto do perfil</h3>
           <div class="relative mb-4">
-            <img :src="croppedImagePreviewUrl || './assets/LogoIcon.svg'" alt="Preview" class="h-32 w-32 rounded-full object-cover bg-surface-200 shadow-md border-4 border-white" />
+            <img :src="croppedImagePreviewUrl ?? undefined" alt="Preview" class="h-32 w-32 rounded-full object-cover bg-surface-200 shadow-md border-4 border-white" />
             <span class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 text-xs flex items-center justify-center" style="width: 24px; height: 24px;">
               <i class="pi pi-eye"></i>
             </span>
