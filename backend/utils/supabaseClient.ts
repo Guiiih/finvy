@@ -44,6 +44,7 @@ export async function getUserOrganizationAndPeriod(
   organization_id: string;
   active_accounting_period_id: string;
 } | null> {
+  logger.info(`[SupabaseClient] getUserOrganizationAndPeriod: Buscando perfil para user_id: ${user_id}`);
   const userSupabase = getSupabaseClient(token);
   const { data, error } = await userSupabase
     .from("profiles")
@@ -53,18 +54,23 @@ export async function getUserOrganizationAndPeriod(
 
   if (error) {
     logger.error(
-      "Erro ao buscar organization_id e active_accounting_period_id para o usuário:",
-      user_id,
+      `[SupabaseClient] Erro ao buscar organization_id e active_accounting_period_id para o usuário ${user_id}:`, 
       error,
     );
     return null;
   }
 
   if (!data) {
-    logger.warn("Perfil não encontrado para o usuário:", user_id);
+    logger.warn(`[SupabaseClient] Perfil não encontrado para o usuário: ${user_id}`);
     return null;
   }
 
+  if (!data.organization_id) {
+    logger.warn(`[SupabaseClient] organization_id ausente no perfil para o usuário: ${user_id}. Dados do perfil: ${JSON.stringify(data)}`);
+    return null;
+  }
+
+  logger.info(`[SupabaseClient] Perfil encontrado para user_id ${user_id}. Organization ID: ${data.organization_id}, Active Accounting Period ID: ${data.active_accounting_period_id}`);
   return {
     organization_id: data.organization_id,
     active_accounting_period_id: data.active_accounting_period_id,

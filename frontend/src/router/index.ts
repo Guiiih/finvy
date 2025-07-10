@@ -152,6 +152,12 @@ const router = createRouter({
       component: () => import('../views/HelpView.vue'),
       meta: { requiresAuth: true, title: 'Ajuda' },
     },
+    {
+      path: '/accounting-periods',
+      name: 'accounting-periods',
+      component: () => import('../views/AccountingPeriodView.vue'),
+      meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
+    },
   ],
 })
 

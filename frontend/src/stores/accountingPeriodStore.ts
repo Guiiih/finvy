@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { api } from '@/services/api';
 import type { AccountingPeriod } from '@/types';
 
+type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'>;
+
 export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const accountingPeriods = ref<AccountingPeriod[]>([]);
   const activeAccountingPeriod = ref<AccountingPeriod | null>(null);
@@ -36,11 +38,11 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
     }
   }
 
-  async function addAccountingPeriod(newPeriod: Omit<AccountingPeriod, 'id' | 'created_at'>) {
+  async function addAccountingPeriod(newPeriod: NewAccountingPeriodPayload) {
     loading.value = true;
     error.value = null;
     try {
-      const addedPeriod = await api.post<AccountingPeriod, Omit<AccountingPeriod, 'id' | 'created_at'>>('/accounting-periods', newPeriod);
+      const addedPeriod = await api.post<AccountingPeriod, NewAccountingPeriodPayload>('/accounting-periods', newPeriod);
       accountingPeriods.value.push(addedPeriod);
       if (addedPeriod.is_active) {
         activeAccountingPeriod.value = addedPeriod;
