@@ -3,6 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
   handleErrorResponse,
+  getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import {
@@ -77,6 +78,13 @@ export default async function handler(
 ) {
   logger.info("Accounts Handler: user_id recebido:", user_id);
   const userSupabase = getSupabaseClient(token);
+
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  if (!userOrgAndPeriod) {
+    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+  }
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+
   try {
     if (req.method === "GET") {
       const cachedData = getCachedAccounts(user_id);
@@ -90,8 +98,10 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("accounts")
-        .select("id, name, type, user_id, code, parent_account_id")
+        .select("id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id")
         .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .order("name", { ascending: true });
 
       if (dbError) throw dbError;
@@ -164,7 +174,7 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("accounts")
-        .insert({ name, type, user_id, parent_account_id })
+        .insert({ name, type, user_id, parent_account_id, organization_id, accounting_period_id: active_accounting_period_id })
         .select();
       if (dbError) throw dbError;
       invalidateAccountsCache(user_id);
@@ -255,6 +265,8 @@ export default async function handler(
         .update(updateData)
         .eq("id", id)
         .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .select();
       if (dbError) throw dbError;
       if (!data || data.length === 0) {
@@ -311,7 +323,9 @@ export default async function handler(
         .from("accounts")
         .delete()
         .eq("id", id)
-        .eq("user_id", user_id);
+        .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id);
 
       if (dbError) throw dbError;
       if (count === 0) {
@@ -333,3 +347,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

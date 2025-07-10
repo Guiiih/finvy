@@ -7,6 +7,8 @@ export interface Account {
   parentId?: string | null
   user_id?: string
   code?: number
+  organization_id?: string
+  accounting_period_id?: string
 }
 
 export interface Product {
@@ -17,6 +19,8 @@ export interface Product {
   current_stock: number
   icms_rate?: number
   user_id?: string
+  organization_id?: string
+  accounting_period_id?: string
 }
 
 export type EntryType = 'debit' | 'credit'
@@ -35,6 +39,8 @@ export interface EntryLine {
   total_net?: number
   debit?: number
   credit?: number
+  organization_id?: string;
+  accounting_period_id?: string;
 }
 
 export interface JournalEntry {
@@ -43,7 +49,15 @@ export interface JournalEntry {
   description: string
   lines: EntryLine[]
   user_id?: string
+  organization_id?: string;
+  accounting_period_id?: string;
 }
+
+export interface JournalEntryPayload extends Omit<JournalEntry, 'id' | 'lines' | 'user_id'> {
+  organization_id?: string;
+  accounting_period_id?: string;
+}
+
 
 export interface StockMovement {
   id: string
@@ -87,4 +101,14 @@ export interface FinancialTransaction {
   is_paid?: boolean
   is_received?: boolean
   created_at: string
+}
+
+export interface AccountingPeriod {
+  id: string;
+  organization_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  created_at: string;
 }

@@ -2,11 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Account } from '@/types'
 import { api } from '@/services/api'
+import { useAccountingPeriodStore } from './accountingPeriodStore'
 
 export const useAccountStore = defineStore('account', () => {
   const accounts = ref<Account[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  const accountingPeriodStore = useAccountingPeriodStore();
 
   const getAllAccounts = computed(() => accounts.value)
 
@@ -29,36 +32,52 @@ export const useAccountStore = defineStore('account', () => {
   })
 
   async function fetchAccounts() {
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
     try {
-      const data = await api.get<Account[]>('/accounts')
-      accounts.value = data
+      if (!accountingPeriodStore.activeAccountingPeriod?.id) {
+        await accountingPeriodStore.fetchAccountingPeriods();
+      }
+      const data = await api.get<Account[]>('/accounts', {
+        params: {
+          organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
+        },
+      });
+      accounts.value = data;
     } catch (err: unknown) {
-      console.error('Erro ao buscar contas:', err)
+      console.error('Erro ao buscar contas:', err);
       if (err instanceof Error) {
-        error.value = err.message
+        error.value = err.message;
       } else {
-        error.value = 'Ocorreu uma falha desconhecida ao buscar contas.'
+        error.value = 'Ocorreu uma falha desconhecida ao buscar contas.';
       }
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
   async function addAccount(newAccount: Omit<Account, 'id'>) {
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
     try {
-      const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', newAccount)
-      accounts.value.push(addedAccount)
-      return addedAccount
+      if (!accountingPeriodStore.activeAccountingPeriod?.id) {
+        throw new Error('Nenhum período contábil ativo selecionado.');
+      }
+      const payload = {
+        ...newAccount,
+        organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
+        accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
+      };
+      const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', payload);
+      accounts.value.push(addedAccount);
+      return addedAccount;
     } catch (err: unknown) {
-      console.error('Erro ao adicionar conta:', err)
-      error.value = err instanceof Error ? err.message : 'Falha ao adicionar conta.'
-      throw err
+      console.error('Erro ao adicionar conta:', err);
+      error.value = err instanceof Error ? err.message : 'Falha ao adicionar conta.';
+      throw err;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 

@@ -4,6 +4,7 @@ import {
   getSupabaseClient,
   handleErrorResponse,
   supabase as serviceRoleSupabase,
+  getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
 import { updateProductStockAndCost } from "../services/productService.js";
@@ -189,6 +190,12 @@ export default async function handler(
   token: string,
 ) {
   const userSupabase = getSupabaseClient(token);
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  if (!userOrgAndPeriod) {
+    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+  }
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+
   try {
     if (req.method === "GET") {
       const { journal_entry_id } = req.query;
@@ -197,19 +204,25 @@ export default async function handler(
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select(
-            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net",
+            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, organization_id, accounting_period_id",
           )
-          .eq("journal_entry_id", journal_entry_id as string);
+          .eq("journal_entry_id", journal_entry_id as string)
+          .eq("organization_id", organization_id)
+          .eq("accounting_period_id", active_accounting_period_id);
 
         if (dbError) throw dbError;
         return res.status(200).json(data);
       } else {
+        // This branch should ideally not be used if RLS is properly set up to filter by organization and period
+        // However, for completeness, we'll add the filters here as well.
         const { data, error: dbError } = await serviceRoleSupabase
           .from("entry_lines")
           .select(
-            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id)",
+            "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id), organization_id, accounting_period_id",
           )
-          .eq("journal_entry_id.user_id", user_id);
+          .eq("journal_entry_id.user_id", user_id)
+          .eq("organization_id", organization_id)
+          .eq("accounting_period_id", active_accounting_period_id);
 
         if (dbError) throw dbError;
         return res.status(200).json(data);
@@ -266,6 +279,8 @@ export default async function handler(
         .select("id")
         .eq("id", journal_entry_id)
         .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .single();
 
       if (!journalEntry) {
@@ -283,6 +298,8 @@ export default async function handler(
         const { data: accounts, error: accountsError } = await userSupabase
           .from("accounts")
           .select("id, name")
+          .eq("organization_id", organization_id)
+          .eq("accounting_period_id", active_accounting_period_id)
           .in("name", [
             "Receita de Vendas",
             "IPI a Recolher",
@@ -347,6 +364,8 @@ export default async function handler(
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
           total_net: final_total_net,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
         });
 
         // Credit Revenue
@@ -355,6 +374,8 @@ export default async function handler(
           account_id: revenueAccount,
           debit: null,
           credit: total_gross,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
         });
 
         // IPI Entry (Credit IPI a Recolher)
@@ -364,6 +385,8 @@ export default async function handler(
             account_id: ipiPayableAccount,
             debit: null,
             credit: calculated_ipi_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -374,12 +397,16 @@ export default async function handler(
             account_id: revenueAccount, // Debit Revenue
             debit: calculated_icms_value,
             credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: icmsPayableAccount, // Credit ICMS a Recolher
             debit: null,
             credit: calculated_icms_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -390,6 +417,8 @@ export default async function handler(
             account_id: icmsStPayableAccount,
             debit: null,
             credit: calculated_icms_st_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -400,12 +429,16 @@ export default async function handler(
             account_id: pisExpenseAccount,
             debit: calculated_pis_value,
             credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: pisPayableAccount,
             debit: null,
             credit: calculated_pis_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -416,12 +449,16 @@ export default async function handler(
             account_id: cofinsExpenseAccount,
             debit: calculated_cofins_value,
             credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: cofinsPayableAccount,
             debit: null,
             credit: calculated_cofins_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -433,12 +470,16 @@ export default async function handler(
             account_id: cmvAccount,
             debit: cmv_value,
             credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: finishedGoodsStockAccount,
             debit: null,
             credit: cmv_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
           });
         }
 
@@ -453,6 +494,8 @@ export default async function handler(
             "sale",
             user_id,
             token,
+            organization_id,
+            active_accounting_period_id,
           );
         }
       } else if (transaction_type === "purchase") {
@@ -460,6 +503,8 @@ export default async function handler(
         const { data: accounts, error: accountsError } = await userSupabase
           .from("accounts")
           .select("id, name")
+          .eq("organization_id", organization_id)
+          .eq("accounting_period_id", active_accounting_period_id)
           .in("name", [
             "Estoque de Mercadorias", // For retailer purchases
             "Fornecedores", // For retailer purchases
@@ -499,12 +544,16 @@ export default async function handler(
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
           total_net: final_total_net,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
         });
         entryLinesToInsert.push({
           journal_entry_id,
           account_id: suppliersAccount,
           debit: null,
           credit: final_total_net,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
         });
 
         // Stock and cost update logic for purchases
@@ -516,6 +565,8 @@ export default async function handler(
             "purchase",
             user_id,
             token,
+            organization_id,
+            active_accounting_period_id,
           );
         }
       } else {
@@ -535,6 +586,8 @@ export default async function handler(
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
           total_net: final_total_net,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
         });
       }
 
@@ -556,3 +609,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

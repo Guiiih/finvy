@@ -3,6 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
   handleErrorResponse,
+  getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import {
   createJournalEntrySchema,
@@ -80,6 +81,13 @@ export default async function handler(
   logger.info(
     `Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`,
   );
+
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  if (!userOrgAndPeriod) {
+    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+  }
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+
   try {
     if (req.method === "GET") {
       const cachedData = getCachedJournalEntries(user_id);
@@ -93,8 +101,10 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("journal_entries")
-        .select("id, entry_date, description, user_id")
+        .select("id, entry_date, description, user_id, organization_id, accounting_period_id")
         .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .order("entry_date", { ascending: false });
 
       if (dbError) throw dbError;
@@ -177,7 +187,7 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("journal_entries")
-        .insert([{ entry_date, description, user_id }])
+        .insert([{ entry_date, description, user_id, organization_id, accounting_period_id: active_accounting_period_id }])
         .select();
 
       if (dbError) throw dbError;
@@ -283,6 +293,8 @@ export default async function handler(
         .update(updateData)
         .eq("id", id)
         .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .select();
 
       if (dbError) throw dbError;
@@ -344,7 +356,9 @@ export default async function handler(
       const { error: deleteLinesError } = await userSupabase
         .from("entry_lines")
         .delete()
-        .eq("journal_entry_id", id);
+        .eq("journal_entry_id", id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id);
 
       if (deleteLinesError) {
         logger.error(
@@ -364,7 +378,9 @@ export default async function handler(
         .from("journal_entries")
         .delete()
         .eq("id", id)
-        .eq("user_id", user_id);
+        .eq("user_id", user_id)
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id);
 
       if (dbError) {
         logger.error(
@@ -404,3 +420,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
+

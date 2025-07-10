@@ -5,6 +5,7 @@ import {
   getSupabaseAdmin,
   handleErrorResponse,
 } from "../utils/supabaseClient.js";
+import { updateProfileSchema } from "../utils/schemas.js";
 
 /**
  * @swagger
@@ -104,6 +105,49 @@ export default async function handler(
       return res.status(200).json({ message: "Usuário excluído com sucesso." });
     } catch (error: unknown) {
       logger.error("Erro inesperado ao excluir usuário:", error);
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor.";
+      return handleErrorResponse(res, 500, message);
+    }
+  } else if (req.method === "PUT") {
+    try {
+      const parsedBody = updateProfileSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return handleErrorResponse(
+          res,
+          400,
+          parsedBody.error.errors.map((err) => err.message).join(", "),
+        );
+      }
+      const updateData = parsedBody.data;
+
+      if (Object.keys(updateData).length === 0) {
+        return handleErrorResponse(
+          res,
+          400,
+          "Nenhum campo para atualizar fornecido.",
+        );
+      }
+
+      const { data, error: dbError } = await userSupabase
+        .from("profiles")
+        .update(updateData)
+        .eq("id", user_id)
+        .select("username, role, avatar_url, organization_id, active_accounting_period_id")
+        .single();
+
+      if (dbError) throw dbError;
+      if (!data) {
+        return handleErrorResponse(
+          res,
+          404,
+          "Perfil não encontrado ou você não tem permissão para atualizar este perfil.",
+        );
+      }
+
+      return res.status(200).json(data);
+    } catch (error: unknown) {
+      logger.error("Erro inesperado na API de atualização de perfil:", error);
       const message =
         error instanceof Error ? error.message : "Erro interno do servidor.";
       return handleErrorResponse(res, 500, message);

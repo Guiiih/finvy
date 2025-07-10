@@ -11,8 +11,10 @@ import entryLinesHandler from "../backend/handlers/entry-lines.js";
 import financialTransactionsHandler from "../backend/handlers/financial-transactions.js";
 import generateReportsHandler from "../backend/handlers/reports/generate.js";
 import exportReportsHandler from "../backend/handlers/reports/export.js";
+import consolidatedReportsHandler from "../backend/handlers/reports/consolidated-reports.js";
 import yearEndClosingHandler from "../backend/handlers/year-end-closing.js";
 import profileHandler from "../backend/handlers/profile.js";
+import accountingPeriodsHandler from "../backend/handlers/accounting-periods.js";
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -22,39 +24,50 @@ async function protectedRoutesHandler(
   token: string,
 ) {
   // Extract path from URL, remove /api prefix
-  const url = (req.url || "").split("?")[0];
-  const urlPath = url.startsWith("/api") ? url.substring(4) : url;
+  const fullUrl = String(req.url || ""); // Explicitly convert to string
+  if (!fullUrl) {
+    logger.error("[API Router] req.url é indefinido ou vazio.");
+    return handleErrorResponse(res, 400, "URL da requisição ausente.");
+  }
+  const urlPath = fullUrl.split("?")[0];
+  const finalUrlPath = urlPath.startsWith("/api") ? urlPath.substring(4) : urlPath;
 
   logger.info(
-    `[API Router] Roteando o pedido protegido para: ${req.method} ${urlPath}`,
+    `[API Router] Roteando o pedido protegido para: ${req.method} ${finalUrlPath}`,
   );
 
-  if (urlPath.startsWith("/accounts")) {
+  if (finalUrlPath.startsWith("/accounts")) {
     return accountsHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/products")) {
+  if (finalUrlPath.startsWith("/products")) {
     return productsHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/journal-entries")) {
+  if (finalUrlPath.startsWith("/journal-entries")) {
     return journalEntriesHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/entry-lines")) {
+  if (finalUrlPath.startsWith("/entry-lines")) {
     return entryLinesHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/financial-transactions")) {
+  if (finalUrlPath.startsWith("/financial-transactions")) {
     return financialTransactionsHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/reports/generate")) {
+  if (finalUrlPath.startsWith("/reports/generate")) {
     return generateReportsHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/reports/export")) {
+  if (finalUrlPath.startsWith("/reports/export")) {
     return exportReportsHandler(req, res, user_id, token);
   }
-  if (urlPath.startsWith("/year-end-closing")) {
+  if (finalUrlPath.startsWith("/reports/consolidated")) {
+    return consolidatedReportsHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/year-end-closing")) {
     return yearEndClosingHandler(req, res);
   }
-  if (urlPath.startsWith("/profile")) {
+  if (finalUrlPath.startsWith("/profile")) {
     return profileHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/accounting-periods")) {
+    return accountingPeriodsHandler(req, res, user_id, token);
   }
 
   return handleErrorResponse(res, 404, "Endpoint protegido não encontrado.");
@@ -62,7 +75,19 @@ async function protectedRoutesHandler(
 
 // Main entry point for the serverless function
 export default async function (req: VercelRequest, res: VercelResponse) {
-  const urlPath = (req.url || "").split("?")[0];
+  const fullUrl = String(req.url || ""); 
+  if (!fullUrl) {
+    logger.error("[API Router] req.url é indefinido ou vazio.");
+    return handleErrorResponse(res, 400, "URL da requisição ausente.");
+  }
+
+  const urlPath = fullUrl.split("?")[0];
+  if (!urlPath) {
+    logger.error("[API Router] urlPath é indefinido ou vazio após split.");
+    return handleErrorResponse(res, 400, "Caminho da URL inválido.");
+  }
+
+  const finalUrlPath = urlPath.startsWith("/api") ? urlPath.substring(4) : urlPath;
   logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`);
 
   // For all other /api routes, apply the authentication middleware

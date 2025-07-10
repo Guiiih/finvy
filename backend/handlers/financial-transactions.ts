@@ -4,6 +4,7 @@ import {
   getSupabaseClient,
   handleErrorResponse,
   supabase as serviceRoleSupabase,
+  getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { createFinancialTransactionSchema } from "../utils/schemas.js";
 
@@ -123,6 +124,13 @@ export default async function handler(
   token: string,
 ) {
   const userSupabase = getSupabaseClient(token);
+
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  if (!userOrgAndPeriod) {
+    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+  }
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+
   try {
     const { type } = req.query;
     const tableName =
@@ -132,8 +140,10 @@ export default async function handler(
       const { data, error: dbError } = await serviceRoleSupabase
         .from(tableName)
         .select(
-          "id, description, amount, due_date, paid_date, is_paid, received_date, is_received",
+          "id, description, amount, due_date, paid_date, is_paid, received_date, is_received, organization_id, accounting_period_id",
         )
+        .eq("organization_id", organization_id)
+        .eq("accounting_period_id", active_accounting_period_id)
         .order("created_at", { ascending: false });
 
       if (dbError) throw dbError;
@@ -149,7 +159,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const newTransaction = { ...parsedBody.data, user_id };
+      const newTransaction = { ...parsedBody.data, user_id, organization_id, accounting_period_id: active_accounting_period_id };
 
       const { data: newFinancialTransaction, error: dbError } =
         await userSupabase

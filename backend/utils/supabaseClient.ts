@@ -36,3 +36,34 @@ export const handleErrorResponse = (
 ) => {
   res.status(statusCode).json({ error: message });
 };
+
+export async function getUserOrganizationAndPeriod(
+  user_id: string,
+  token: string,
+): Promise<{ organization_id: string; active_accounting_period_id: string } | null> {
+  const userSupabase = getSupabaseClient(token);
+  const { data, error } = await userSupabase
+    .from("profiles")
+    .select("organization_id, active_accounting_period_id")
+    .eq("id", user_id)
+    .single();
+
+  if (error) {
+    logger.error(
+      "Erro ao buscar organization_id e active_accounting_period_id para o usuário:",
+      user_id,
+      error,
+    );
+    return null;
+  }
+
+  if (!data) {
+    logger.warn("Perfil não encontrado para o usuário:", user_id);
+    return null;
+  }
+
+  return {
+    organization_id: data.organization_id,
+    active_accounting_period_id: data.active_accounting_period_id,
+  };
+}

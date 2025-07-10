@@ -1,20 +1,33 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { JournalEntry, EntryLine } from '../types/index'
+import type { JournalEntry, EntryLine, JournalEntryPayload } from '../types/index'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
+import { useAccountingPeriodStore } from './accountingPeriodStore'
+import { supabase } from '@/supabase'
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const toast = useToast()
+  const realtimeChannel = ref<any>(null);
+
+  const accountingPeriodStore = useAccountingPeriodStore();
 
   async function fetchJournalEntries() {
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
     try {
-      const entriesData = await api.get<JournalEntry[]>('/journal-entries')
+      if (!accountingPeriodStore.activeAccountingPeriod?.id) {
+        await accountingPeriodStore.fetchAccountingPeriods();
+      }
+      const entriesData = await api.get<JournalEntry[]>('/journal-entries', {
+        params: {
+          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
+        },
+      });
 
       if (!Array.isArray(entriesData)) {
         console.error('Dados da API não são um array:', entriesData);
@@ -26,8 +39,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         entriesData.map(async (entry) => {
           try {
             const linesData = await api.get<EntryLine[]>(
-              `/entry-lines?journal_entry_id=${entry.id}`,
-            )
+              `/entry-lines?journal_entry_id=${entry.id}&organization_id=${accountingPeriodStore.activeAccountingPeriod!.organization_id}&accounting_period_id=${accountingPeriodStore.activeAccountingPeriod!.id}`,
+            );
             const convertedLines: EntryLine[] = linesData.map((line) => ({
               account_id: line.account_id,
               type: line.debit && line.debit > 0 ? 'debit' : 'credit',
@@ -38,23 +51,80 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
               total_gross: line.total_gross || undefined,
               icms_value: line.icms_value || undefined,
               total_net: line.total_net || undefined,
-            }))
-            return { ...entry, lines: convertedLines }
+            }));
+            return { ...entry, lines: convertedLines };
           } catch (err: unknown) {
-            console.error('Erro ao buscar linhas do lançamento:', err)
-            return null
+            console.error('Erro ao buscar linhas do lançamento:', err);
+            return null;
           }
         }),
-      )
+      );
 
       journalEntries.value = entriesWithLines.filter(
         (entry): entry is JournalEntry => entry !== null,
-      )
+      );
+
+      // Subscribe to real-time updates after initial fetch
+      subscribeToRealtime();
+
     } catch (err: unknown) {
-      console.error('Erro ao buscar lançamentos:', err)
-      error.value = err instanceof Error ? err.message : 'Falha ao buscar lançamentos.'
+      console.error('Erro ao buscar lançamentos:', err);
+      error.value = err instanceof Error ? err.message : 'Falha ao buscar lançamentos.';
     } finally {
-      loading.value = false
+      loading.value = false;
+    }
+  }
+
+  function subscribeToRealtime() {
+    if (realtimeChannel.value) {
+      supabase.removeChannel(realtimeChannel.value);
+    }
+
+    const orgId = accountingPeriodStore.activeAccountingPeriod?.organization_id;
+    const periodId = accountingPeriodStore.activeAccountingPeriod?.id;
+
+    if (!orgId || !periodId) {
+      console.warn("Não é possível assinar o Realtime: organization_id ou accounting_period_id ausente.");
+      return;
+    }
+
+    realtimeChannel.value = supabase
+      .channel(`journal_entries_org_${orgId}_period_${periodId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'journal_entries',
+          filter: `organization_id=eq.${orgId},accounting_period_id=eq.${periodId}`,
+        },
+        (payload) => {
+          console.log('Realtime change received!', payload);
+          const newEntry = payload.new as JournalEntry;
+          const oldEntry = payload.old as JournalEntry;
+
+          if (payload.eventType === 'INSERT') {
+            // Check if the entry already exists to prevent duplicates from initial fetch + realtime
+            if (!journalEntries.value.some(entry => entry.id === newEntry.id)) {
+              journalEntries.value.push({ ...newEntry, lines: [] }); // Lines will be fetched on demand or updated separately
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const index = journalEntries.value.findIndex(entry => entry.id === newEntry.id);
+            if (index !== -1) {
+              journalEntries.value[index] = { ...journalEntries.value[index], ...newEntry };
+            }
+          } else if (payload.eventType === 'DELETE') {
+            journalEntries.value = journalEntries.value.filter(entry => entry.id !== oldEntry.id);
+          }
+        },
+      )
+      .subscribe();
+  }
+
+  function unsubscribeFromRealtime() {
+    if (realtimeChannel.value) {
+      supabase.removeChannel(realtimeChannel.value);
+      realtimeChannel.value = null;
     }
   }
 
@@ -65,22 +135,29 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   })
 
   async function addJournalEntry(entry: Omit<JournalEntry, 'id'>) {
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
     try {
-      const { lines, ...entryHeader } = entry
-      const newJournalEntry = await api.post<JournalEntry, Omit<JournalEntry, 'lines' | 'id'>>(
+      if (!accountingPeriodStore.activeAccountingPeriod?.id) {
+        throw new Error('Nenhum período contábil ativo selecionado.');
+      }
+      const { lines, ...entryHeader } = entry;
+      const newJournalEntry = await api.post<JournalEntry, JournalEntryPayload>(
         '/journal-entries',
-        entryHeader,
-      )
+        {
+          ...entryHeader,
+          organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
+        },
+      );
 
-      const newLines: EntryLine[] = []
+      const newLines: EntryLine[] = [];
       for (const line of lines) {
         if (line.amount <= 0) {
-          throw new Error('O valor do lançamento deve ser maior que zero.')
+          throw new Error('O valor do lançamento deve ser maior que zero.');
         }
         if (!['debit', 'credit'].includes(line.type)) {
-          throw new Error('O tipo de lançamento (débito/crédito) é inválido.')
+          throw new Error('O tipo de lançamento (débito/crédito) é inválido.');
         }
 
         const lineToSend = {
@@ -94,24 +171,26 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           total_gross: line.total_gross,
           icms_value: line.icms_value,
           total_net: line.total_net,
-        }
-        console.log('Sending line to API:', lineToSend)
-        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend)
+          organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
+        };
+        console.log('Sending line to API:', lineToSend);
+        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
         const processedNewLine: EntryLine = {
           ...newLine,
           amount: (newLine.debit || 0) > 0 ? newLine.debit || 0 : newLine.credit || 0,
-        }
-        newLines.push(processedNewLine)
+        };
+        newLines.push(processedNewLine);
       }
 
-      journalEntries.value.push({ ...newJournalEntry, lines: newLines })
-      return newJournalEntry
+      journalEntries.value.push({ ...newJournalEntry, lines: newLines });
+      return newJournalEntry;
     } catch (err: unknown) {
-      console.error('Erro ao adicionar lançamento:', err)
-      error.value = err instanceof Error ? err.message : 'Falha ao adicionar lançamento.'
-      throw err
+      console.error('Erro ao adicionar lançamento:', err);
+      error.value = err instanceof Error ? err.message : 'Falha ao adicionar lançamento.';
+      throw err;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
@@ -119,24 +198,34 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     loading.value = true
     error.value = null
     try {
-      const { lines, ...entryHeader } = updatedEntry
-      await api.put<JournalEntry, Omit<JournalEntry, 'lines'>>(
+      const { lines, ...entryHeader } = updatedEntry;
+      await api.put<JournalEntry, JournalEntryPayload>(
         `/journal-entries/${updatedEntry.id}`,
-        entryHeader,
-      )
+        {
+          ...entryHeader,
+          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
+        },
+      );
 
-      await api.delete(`/journal-entries/${updatedEntry.id}/lines`)
+      await api.delete(`/journal-entries/${updatedEntry.id}/lines`, {
+        params: {
+          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
+        },
+      });
 
-      const newLines: EntryLine[] = []
+      const newLines: EntryLine[] = [];
       for (const line of lines) {
         if (line.amount <= 0) {
-          throw new Error('O valor do lançamento deve ser maior que zero.')
+          throw new Error('O valor do lançamento deve ser maior que zero.');
         }
         if (!['debit', 'credit'].includes(line.type)) {
-          throw new Error('O tipo de lançamento (débito/crédito) é inválido.')
+          throw new Error('O tipo de lançamento (débito/crédito) é inválido.');
         }
 
         const lineToSend = {
+          journal_entry_id: updatedEntry.id,
           account_id: line.account_id,
           debit: line.type === 'debit' ? line.amount : 0,
           credit: line.type === 'credit' ? line.amount : 0,
@@ -146,14 +235,16 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           total_gross: line.total_gross,
           icms_value: line.icms_value,
           total_net: line.total_net,
-        }
-        console.log('Sending line to API:', lineToSend)
-        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend)
+          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
+        };
+        console.log('Sending line to API:', lineToSend);
+        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
         const processedNewLine: EntryLine = {
           ...newLine,
           amount: (newLine.debit || 0) > 0 ? newLine.debit || 0 : newLine.credit || 0,
-        }
-        newLines.push(processedNewLine)
+        };
+        newLines.push(processedNewLine);
       }
 
       const index = journalEntries.value.findIndex((entry) => entry.id === updatedEntry.id)
@@ -249,5 +340,6 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     reverseJournalEntry,
     loading,
     error,
+    unsubscribeFromRealtime,
   }
 })

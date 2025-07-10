@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import Toast from 'primevue/toast'
 import UserMenu from '@/components/UserMenu.vue'
+import AccountingPeriodSelector from '@/components/AccountingPeriodSelector.vue'
 
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
@@ -69,6 +70,7 @@ const logoSrc = computed(() => {
       </nav>
 
       <div class="flex justify-end items-center space-x-4">
+        <AccountingPeriodSelector />
         <div class="relative">
           <label for="search-input" class="sr-only">Faça uma busca</label>
           <input type="text" id="search-input" placeholder="Faça uma busca"
