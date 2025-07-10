@@ -40,7 +40,10 @@ export const handleErrorResponse = (
 export async function getUserOrganizationAndPeriod(
   user_id: string,
   token: string,
-): Promise<{ organization_id: string; active_accounting_period_id: string } | null> {
+): Promise<{
+  organization_id: string;
+  active_accounting_period_id: string;
+} | null> {
   const userSupabase = getSupabaseClient(token);
   const { data, error } = await userSupabase
     .from("profiles")

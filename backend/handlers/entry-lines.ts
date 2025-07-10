@@ -192,7 +192,11 @@ export default async function handler(
   const userSupabase = getSupabaseClient(token);
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
-    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+    return handleErrorResponse(
+      res,
+      403,
+      "Organização ou período contábil não encontrado para o usuário.",
+    );
   }
   const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
 
@@ -494,8 +498,6 @@ export default async function handler(
             "sale",
             user_id,
             token,
-            organization_id,
-            active_accounting_period_id,
           );
         }
       } else if (transaction_type === "purchase") {
@@ -565,8 +567,6 @@ export default async function handler(
             "purchase",
             user_id,
             token,
-            organization_id,
-            active_accounting_period_id,
           );
         }
       } else {
@@ -609,4 +609,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

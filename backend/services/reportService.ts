@@ -3,7 +3,7 @@ import type {
   Account,
   JournalEntry,
   LedgerAccount as FrontendLedgerAccount,
-} from "../../frontend/src/types/index.js";
+} from "../types/index.js";
 
 interface StockBalance {
   product_id: string;

@@ -127,7 +127,11 @@ export default async function handler(
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
-    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+    return handleErrorResponse(
+      res,
+      403,
+      "Organização ou período contábil não encontrado para o usuário.",
+    );
   }
   const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
 
@@ -159,7 +163,12 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const newTransaction = { ...parsedBody.data, user_id, organization_id, accounting_period_id: active_accounting_period_id };
+      const newTransaction = {
+        ...parsedBody.data,
+        user_id,
+        organization_id,
+        accounting_period_id: active_accounting_period_id,
+      };
 
       const { data: newFinancialTransaction, error: dbError } =
         await userSupabase

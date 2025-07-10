@@ -315,12 +315,24 @@ export const createFinancialTransactionSchema = z.object({
 export const updateFinancialTransactionSchema =
   createFinancialTransactionSchema.partial();
 
-export const updateProfileSchema = z.object({
-  username: z.string().min(1, "Nome de usuário é obrigatório.").max(100, "Nome de usuário muito longo.").optional(),
-  avatar_url: z.string().url("URL do avatar inválida.").optional().nullable(),
-  organization_id: z.string().uuid("ID da organização inválido. Deve ser um UUID válido.").optional(),
-  active_accounting_period_id: z.string().uuid("ID do período contábil ativo inválido. Deve ser um UUID válido.").optional(),
-}).partial();
+export const updateProfileSchema = z
+  .object({
+    username: z
+      .string()
+      .min(1, "Nome de usuário é obrigatório.")
+      .max(100, "Nome de usuário muito longo.")
+      .optional(),
+    avatar_url: z.string().url("URL do avatar inválida.").optional().nullable(),
+    organization_id: z
+      .string()
+      .uuid("ID da organização inválido. Deve ser um UUID válido.")
+      .optional(),
+    active_accounting_period_id: z
+      .string()
+      .uuid("ID do período contábil ativo inválido. Deve ser um UUID válido.")
+      .optional(),
+  })
+  .partial();
 
 export const yearEndClosingSchema = z.object({
   closingDate: z

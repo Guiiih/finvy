@@ -82,7 +82,11 @@ export default async function handler(
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
-    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+    return handleErrorResponse(
+      res,
+      403,
+      "Organização ou período contábil não encontrado para o usuário.",
+    );
   }
   const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
 
@@ -99,7 +103,9 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("products")
-        .select("id, name, description, unit_cost, current_stock, user_id, organization_id, accounting_period_id")
+        .select(
+          "id, name, description, unit_cost, current_stock, user_id, organization_id, accounting_period_id",
+        )
         .eq("user_id", user_id)
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
@@ -193,7 +199,17 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("products")
-        .insert([{ name, description, unit_cost, current_stock, user_id, organization_id, accounting_period_id: active_accounting_period_id }])
+        .insert([
+          {
+            name,
+            description,
+            unit_cost,
+            current_stock,
+            user_id,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          },
+        ])
         .select();
 
       if (dbError) throw dbError;
@@ -376,4 +392,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

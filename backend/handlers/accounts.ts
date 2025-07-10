@@ -81,7 +81,11 @@ export default async function handler(
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
-    return handleErrorResponse(res, 403, "Organização ou período contábil não encontrado para o usuário.");
+    return handleErrorResponse(
+      res,
+      403,
+      "Organização ou período contábil não encontrado para o usuário.",
+    );
   }
   const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
 
@@ -98,7 +102,9 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("accounts")
-        .select("id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id")
+        .select(
+          "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id",
+        )
         .eq("user_id", user_id)
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
@@ -108,60 +114,59 @@ export default async function handler(
       setCachedAccounts(user_id, data);
       return res.status(200).json(data);
     } else if (req.method === "POST") {
-
-    /**
-     * @swagger
-     * /accounts:
-     *   post:
-     *     summary: Cria uma nova conta.
-     *     description: Cria uma nova conta financeira para o usuário autenticado.
-     *     tags:
-     *       - Accounts
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             required:
-     *               - name
-     *               - type
-     *             properties:
-     *               name:
-     *                 type: string
-     *                 description: O nome da nova conta.
-     *               type:
-     *                 type: string
-     *                 description: O tipo da nova conta (e.g., 'Asset', 'Liability').
-     *     responses:
-     *       201:
-     *         description: Conta criada com sucesso.
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 id:
-     *                   type: string
-     *                   format: uuid
-     *                   description: O ID único da conta criada.
-     *                 name:
-     *                   type: string
-     *                   description: O nome da conta criada.
-     *                 type:
-     *                   type: string
-     *                   description: O tipo da conta criada.
-     *                 user_id:
-     *                   type: string
-     *                   format: uuid
-     *                   description: O ID do usuário ao qual a conta pertence.
-     *       400:
-     *         description: Requisição inválida. Dados fornecidos são inválidos.
-     *       401:
-     *         description: Não autorizado. Token de autenticação ausente ou inválido.
-     *       500:
-     *         description: Erro interno do servidor.
-     */
+      /**
+       * @swagger
+       * /accounts:
+       *   post:
+       *     summary: Cria uma nova conta.
+       *     description: Cria uma nova conta financeira para o usuário autenticado.
+       *     tags:
+       *       - Accounts
+       *     requestBody:
+       *       required: true
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             required:
+       *               - name
+       *               - type
+       *             properties:
+       *               name:
+       *                 type: string
+       *                 description: O nome da nova conta.
+       *               type:
+       *                 type: string
+       *                 description: O tipo da nova conta (e.g., 'Asset', 'Liability').
+       *     responses:
+       *       201:
+       *         description: Conta criada com sucesso.
+       *         content:
+       *           application/json:
+       *             schema:
+       *               type: object
+       *               properties:
+       *                 id:
+       *                   type: string
+       *                   format: uuid
+       *                   description: O ID único da conta criada.
+       *                 name:
+       *                   type: string
+       *                   description: O nome da conta criada.
+       *                 type:
+       *                   type: string
+       *                   description: O tipo da conta criada.
+       *                 user_id:
+       *                   type: string
+       *                   format: uuid
+       *                   description: O ID do usuário ao qual a conta pertence.
+       *       400:
+       *         description: Requisição inválida. Dados fornecidos são inválidos.
+       *       401:
+       *         description: Não autorizado. Token de autenticação ausente ou inválido.
+       *       500:
+       *         description: Erro interno do servidor.
+       */
       const parsedBody = createAccountSchema.safeParse(req.body);
       if (!parsedBody.success) {
         return handleErrorResponse(
@@ -174,73 +179,79 @@ export default async function handler(
 
       const { data, error: dbError } = await userSupabase
         .from("accounts")
-        .insert({ name, type, user_id, parent_account_id, organization_id, accounting_period_id: active_accounting_period_id })
+        .insert({
+          name,
+          type,
+          user_id,
+          parent_account_id,
+          organization_id,
+          accounting_period_id: active_accounting_period_id,
+        })
         .select();
       if (dbError) throw dbError;
       invalidateAccountsCache(user_id);
       return res.status(201).json(data[0]);
     } else if (req.method === "PUT") {
-
-    /**
-     * @swagger
-     * /accounts/{id}:
-     *   put:
-     *     summary: Atualiza uma conta existente.
-     *     description: Atualiza os detalhes de uma conta financeira específica pelo seu ID.
-     *     tags:
-     *       - Accounts
-     *     parameters:
-     *       - in: path
-     *         name: id
-     *         schema:
-     *           type: string
-     *           format: uuid
-     *         required: true
-     *         description: O ID da conta a ser atualizada.
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               name:
-     *                 type: string
-     *                 description: O novo nome da conta.
-     *               type:
-     *                 type: string
-     *                 description: O novo tipo da conta.
-     *     responses:
-     *       200:
-     *         description: Conta atualizada com sucesso.
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 id:
-     *                   type: string
-     *                   format: uuid
-     *                   description: O ID único da conta atualizada.
-     *                 name:
-     *                   type: string
-     *                   description: O nome da conta atualizada.
-     *                 type:
-     *                   type: string
-     *                   description: O tipo da conta atualizada.
-     *                 user_id:
-     *                   type: string
-     *                   format: uuid
-     *                   description: O ID do usuário ao qual a conta pertence.
-     *       400:
-     *         description: Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido.
-     *       401:
-     *         description: Não autorizado. Token de autenticação ausente ou inválido.
-     *       404:
-     *         description: Conta não encontrada ou você não tem permissão para atualizar esta conta.
-     *       500:
-     *         description: Erro interno do servidor.
-     */
+      /**
+       * @swagger
+       * /accounts/{id}:
+       *   put:
+       *     summary: Atualiza uma conta existente.
+       *     description: Atualiza os detalhes de uma conta financeira específica pelo seu ID.
+       *     tags:
+       *       - Accounts
+       *     parameters:
+       *       - in: path
+       *         name: id
+       *         schema:
+       *           type: string
+       *           format: uuid
+       *         required: true
+       *         description: O ID da conta a ser atualizada.
+       *     requestBody:
+       *       required: true
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             properties:
+       *               name:
+       *                 type: string
+       *                 description: O novo nome da conta.
+       *               type:
+       *                 type: string
+       *                 description: O novo tipo da conta.
+       *     responses:
+       *       200:
+       *         description: Conta atualizada com sucesso.
+       *         content:
+       *           application/json:
+       *             schema:
+       *               type: object
+       *               properties:
+       *                 id:
+       *                   type: string
+       *                   format: uuid
+       *                   description: O ID único da conta atualizada.
+       *                 name:
+       *                   type: string
+       *                   description: O nome da conta atualizada.
+       *                 type:
+       *                   type: string
+       *                   description: O tipo da conta atualizada.
+       *                 user_id:
+       *                   type: string
+       *                   format: uuid
+       *                   description: O ID do usuário ao qual a conta pertence.
+       *       400:
+       *         description: Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido.
+       *       401:
+       *         description: Não autorizado. Token de autenticação ausente ou inválido.
+       *       404:
+       *         description: Conta não encontrada ou você não tem permissão para atualizar esta conta.
+       *       500:
+       *         description: Erro interno do servidor.
+       */
       const id = req.url?.split("?")[0].split("/").pop() as string;
       const parsedBody = updateAccountSchema.safeParse(req.body);
       if (!parsedBody.success) {
@@ -279,35 +290,34 @@ export default async function handler(
       invalidateAccountsCache(user_id);
       return res.status(200).json(data[0]);
     } else if (req.method === "DELETE") {
-
-    /**
-     * @swagger
-     * /accounts/{id}:
-     *   delete:
-     *     summary: Deleta uma conta.
-     *     description: Deleta uma conta financeira específica pelo seu ID.
-     *     tags:
-     *       - Accounts
-     *     parameters:
-     *       - in: path
-     *         name: id
-     *         schema:
-     *           type: string
-     *           format: uuid
-     *         required: true
-     *         description: O ID da conta a ser deletada.
-     *     responses:
-     *       204:
-     *         description: Conta deletada com sucesso. Nenhuma resposta de conteúdo.
-     *       400:
-     *         description: Requisição inválida. ID da conta fornecido é inválido.
-     *       401:
-     *         description: Não autorizado. Token de autenticação ausente ou inválido.
-     *       404:
-     *         description: Conta não encontrada ou você não tem permissão para deletar esta conta.
-     *       500:
-     *         description: Erro interno do servidor.
-     */
+      /**
+       * @swagger
+       * /accounts/{id}:
+       *   delete:
+       *     summary: Deleta uma conta.
+       *     description: Deleta uma conta financeira específica pelo seu ID.
+       *     tags:
+       *       - Accounts
+       *     parameters:
+       *       - in: path
+       *         name: id
+       *         schema:
+       *           type: string
+       *           format: uuid
+       *         required: true
+       *         description: O ID da conta a ser deletada.
+       *     responses:
+       *       204:
+       *         description: Conta deletada com sucesso. Nenhuma resposta de conteúdo.
+       *       400:
+       *         description: Requisição inválida. ID da conta fornecido é inválido.
+       *       401:
+       *         description: Não autorizado. Token de autenticação ausente ou inválido.
+       *       404:
+       *         description: Conta não encontrada ou você não tem permissão para deletar esta conta.
+       *       500:
+       *         description: Erro interno do servidor.
+       */
       const id = req.url?.split("?")[0].split("/").pop() as string;
       const parsedId = uuidSchema.safeParse(id);
       if (!parsedId.success) {
@@ -347,4 +357,3 @@ export default async function handler(
     return handleErrorResponse(res, 500, message);
   }
 }
-

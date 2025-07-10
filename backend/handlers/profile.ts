@@ -133,7 +133,9 @@ export default async function handler(
         .from("profiles")
         .update(updateData)
         .eq("id", user_id)
-        .select("username, role, avatar_url, organization_id, active_accounting_period_id")
+        .select(
+          "username, role, avatar_url, organization_id, active_accounting_period_id",
+        )
         .single();
 
       if (dbError) throw dbError;
