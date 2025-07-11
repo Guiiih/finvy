@@ -13,11 +13,11 @@ CREATE TABLE public.user_organization_roles (
 ALTER TABLE public.user_organization_roles ENABLE ROW LEVEL SECURITY;
 
 -- Policies for user_organization_roles
-CREATE POLICY "Allow authenticated users to read their roles"
+CREATE POLICY "user_org_roles_read_self"
 ON public.user_organization_roles FOR SELECT
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Allow organization owners/admins to manage roles"
+CREATE POLICY "user_org_roles_manage_admin"
 ON public.user_organization_roles FOR ALL
 USING (
     EXISTS (
@@ -44,11 +44,11 @@ CREATE TABLE public.shared_accounting_periods (
 ALTER TABLE public.shared_accounting_periods ENABLE ROW LEVEL SECURITY;
 
 -- Policies for shared_accounting_periods
-CREATE POLICY "Allow authenticated users to read their shared periods"
+CREATE POLICY "shared_acct_periods_read_self"
 ON public.shared_accounting_periods FOR SELECT
 USING (auth.uid() = shared_with_user_id OR auth.uid() = shared_by_user_id);
 
-CREATE POLICY "Allow period owner/org admin to manage shared periods"
+CREATE POLICY "shared_acct_periods_manage_admin"
 ON public.shared_accounting_periods FOR ALL
 USING (
     EXISTS (

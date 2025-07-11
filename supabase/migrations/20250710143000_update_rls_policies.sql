@@ -1,50 +1,88 @@
+
+
+
 -- Drop existing RLS policies for tables that will be updated
 -- This is crucial to avoid conflicts when creating new policies with the same name or for the same operation.
 
 -- accounting_periods
-DROP POLICY IF EXISTS "Accounting periods can be viewed by organization members" ON public.accounting_periods;
-DROP POLICY IF EXISTS "Accounting periods can be inserted by organization members" ON public.accounting_periods;
-DROP POLICY IF EXISTS "Accounting periods can be updated by organization members" ON public.accounting_periods;
-DROP POLICY IF EXISTS "Accounting periods can be deleted by organization members" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_view" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_insert" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_update" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_delete" ON public.accounting_periods;
 
 -- accounts
-DROP POLICY IF EXISTS "Accounts can be viewed by organization members within their active period" ON public.accounts;
-DROP POLICY IF EXISTS "Accounts can be inserted by organization members" ON public.accounts;
-DROP POLICY IF EXISTS "Accounts can be updated by organization members" ON public.accounts;
-DROP POLICY IF EXISTS "Accounts can be deleted by organization members" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_view_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_insert_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_update_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_delete_by_org_period" ON public.accounts;
 
 -- products
-DROP POLICY IF EXISTS "Products can be viewed by organization members within their active period" ON public.products;
-DROP POLICY IF EXISTS "Products can be inserted by organization members" ON public.products;
-DROP POLICY IF EXISTS "Products can be updated by organization members" ON public.products;
-DROP POLICY IF EXISTS "Products can be deleted by organization members" ON public.products;
+DROP POLICY IF EXISTS "products_view_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_insert_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_update_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_delete_by_org_period" ON public.products;
 
 -- journal_entries
-DROP POLICY IF EXISTS "Journal entries can be viewed by organization members within their active period" ON public.journal_entries;
-DROP POLICY IF EXISTS "Journal entries can be inserted by organization members" ON public.journal_entries;
-DROP POLICY IF EXISTS "Journal entries can be updated by organization members" ON public.journal_entries;
-DROP POLICY IF EXISTS "Journal entries can be deleted by organization members" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_view_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_insert_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_update_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_delete_by_org_period" ON public.journal_entries;
 
 -- entry_lines
-DROP POLICY IF EXISTS "Entry lines can be viewed by organization members within their active period" ON public.entry_lines;
-DROP POLICY IF EXISTS "Entry lines can be inserted by organization members" ON public.entry_lines;
-DROP POLICY IF EXISTS "Entry lines can be updated by organization members" ON public.entry_lines;
-DROP POLICY IF EXISTS "Entry lines can be deleted by organization members" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_view_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_insert_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_update_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_delete_by_org_period" ON public.entry_lines;
 
--- financial_transactions
-DROP POLICY IF EXISTS "Financial transactions can be viewed by organization members within their active period" ON public.financial_transactions;
-DROP POLICY IF EXISTS "Financial transactions can be inserted by organization members" ON public.financial_transactions;
-DROP POLICY IF EXISTS "Financial transactions can be updated by organization members" ON public.financial_transactions;
-DROP POLICY IF EXISTS "Financial transactions can be deleted by organization members" ON public.financial_transactions;
+
 
 -- organizations
-DROP POLICY IF EXISTS "Organizations can be viewed by their members" ON public.organizations;
+DROP POLICY IF EXISTS "org_view_members" ON public.organizations;
+
+
+-- Drop existing RLS policies for tables that will be updated
+-- This is crucial to avoid conflicts when creating new policies with the same name or for the same operation.
+
+-- accounting_periods
+DROP POLICY IF EXISTS "org_acct_periods_view" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_insert" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_update" ON public.accounting_periods;
+DROP POLICY IF EXISTS "org_acct_periods_delete" ON public.accounting_periods;
+
+-- accounts
+DROP POLICY IF EXISTS "accounts_view_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_insert_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_update_by_org_period" ON public.accounts;
+DROP POLICY IF EXISTS "accounts_delete_by_org_period" ON public.accounts;
+
+-- products
+DROP POLICY IF EXISTS "products_view_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_insert_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_update_by_org_period" ON public.products;
+DROP POLICY IF EXISTS "products_delete_by_org_period" ON public.products;
+
+-- journal_entries
+DROP POLICY IF EXISTS "journal_entries_view_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_insert_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_update_by_org_period" ON public.journal_entries;
+DROP POLICY IF EXISTS "journal_entries_delete_by_org_period" ON public.journal_entries;
+
+-- entry_lines
+DROP POLICY IF EXISTS "entry_lines_view_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_insert_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_update_by_org_period" ON public.entry_lines;
+DROP POLICY IF EXISTS "entry_lines_delete_by_org_period" ON public.entry_lines;
+
+
+
+-- organizations
+DROP POLICY IF EXISTS "org_view_members" ON public.organizations;
 
 
 -- Re-create RLS policies with new logic
 
 -- Policy for accounting_periods
-CREATE POLICY "Allow users to view their organization's periods or explicitly shared periods"
+CREATE POLICY "acct_periods_view_shared"
 ON public.accounting_periods FOR SELECT
 USING (
   -- User has a role in the organization of the period
@@ -62,7 +100,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow organization members with write role to insert accounting periods"
+CREATE POLICY "acct_periods_insert_by_role"
 ON public.accounting_periods FOR INSERT
 WITH CHECK (
   EXISTS (
@@ -73,7 +111,7 @@ WITH CHECK (
   )
 );
 
-CREATE POLICY "Allow organization members with write role to update accounting periods"
+CREATE POLICY "acct_periods_update_by_role"
 ON public.accounting_periods FOR UPDATE
 USING (
   EXISTS (
@@ -84,7 +122,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow organization members with write role to delete accounting periods"
+CREATE POLICY "acct_periods_delete_by_role"
 ON public.accounting_periods FOR DELETE
 USING (
   EXISTS (
@@ -97,7 +135,7 @@ USING (
 
 
 -- Policies for organizations
-CREATE POLICY "Allow users to view organizations they are members of"
+CREATE POLICY "org_view_for_members"
 ON public.organizations FOR SELECT
 USING (
   EXISTS (
@@ -126,7 +164,7 @@ $$;
 -- These policies will be similar, checking both organization roles and shared periods.
 
 -- accounts
-CREATE POLICY "Allow users to view accounts in their organization or shared periods"
+CREATE POLICY "accounts_view_shared_org"
 ON public.accounts FOR SELECT
 USING (
   EXISTS (
@@ -144,7 +182,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow users to manage accounts in their organization or shared periods"
+CREATE POLICY "accounts_manage_shared_org"
 ON public.accounts FOR ALL -- INSERT, UPDATE, DELETE
 USING (
   EXISTS (
@@ -163,7 +201,7 @@ USING (
 );
 
 -- products
-CREATE POLICY "Allow users to view products in their organization or shared periods"
+CREATE POLICY "products_view_shared_org"
 ON public.products FOR SELECT
 USING (
   EXISTS (
@@ -181,7 +219,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow users to manage products in their organization or shared periods"
+CREATE POLICY "products_manage_shared_org"
 ON public.products FOR ALL -- INSERT, UPDATE, DELETE
 USING (
   EXISTS (
@@ -200,7 +238,7 @@ USING (
 );
 
 -- journal_entries
-CREATE POLICY "Allow users to view journal entries in their organization or shared periods"
+CREATE POLICY "journal_entries_view_shared_org"
 ON public.journal_entries FOR SELECT
 USING (
   EXISTS (
@@ -218,7 +256,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow users to manage journal entries in their organization or shared periods"
+CREATE POLICY "journal_entries_manage_shared_org"
 ON public.journal_entries FOR ALL -- INSERT, UPDATE, DELETE
 USING (
   EXISTS (
@@ -237,7 +275,7 @@ USING (
 );
 
 -- entry_lines
-CREATE POLICY "Allow users to view entry lines in their organization or shared periods"
+CREATE POLICY "entry_lines_view_shared_org"
 ON public.entry_lines FOR SELECT
 USING (
   EXISTS (
@@ -255,7 +293,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow users to manage entry lines in their organization or shared periods"
+CREATE POLICY "entry_lines_manage_shared_org"
 ON public.entry_lines FOR ALL -- INSERT, UPDATE, DELETE
 USING (
   EXISTS (
@@ -274,7 +312,7 @@ USING (
 );
 
 -- financial_transactions
-CREATE POLICY "Allow users to view financial transactions in their organization or shared periods"
+CREATE POLICY "financial_trans_view_shared_org"
 ON public.financial_transactions FOR SELECT
 USING (
   EXISTS (
@@ -292,7 +330,7 @@ USING (
   )
 );
 
-CREATE POLICY "Allow users to manage financial transactions in their organization or shared periods"
+CREATE POLICY "financial_trans_manage_shared_org"
 ON public.financial_transactions FOR ALL -- INSERT, UPDATE, DELETE
 USING (
   EXISTS (

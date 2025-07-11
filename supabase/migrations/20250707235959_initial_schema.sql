@@ -257,9 +257,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ALTER FUNCTION public.handle_new_user() SET search_path = public, pg_temp;
 
 -- Trigger para chamar a função handle_new_user após a inserção em auth.users
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS on_user_deleted ON auth.users;
-DROP FUNCTION IF EXISTS public.delete_user_data();
+
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

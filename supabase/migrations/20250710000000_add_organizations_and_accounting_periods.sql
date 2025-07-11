@@ -134,28 +134,28 @@ ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.accounting_periods ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de RLS para a tabela "organizations"
-CREATE POLICY "Organizations can be viewed by their members"
+CREATE POLICY "org_view_members"
 ON public.organizations FOR SELECT
 TO authenticated
 USING (id IN (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
 -- Políticas de RLS para a tabela "accounting_periods"
-CREATE POLICY "Accounting periods can be viewed by organization members"
+CREATE POLICY "org_acct_periods_view"
 ON public.accounting_periods FOR SELECT
 TO authenticated
 USING (organization_id IN (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
-CREATE POLICY "Accounting periods can be inserted by organization members"
+CREATE POLICY "org_acct_periods_insert"
 ON public.accounting_periods FOR INSERT
 TO authenticated
 WITH CHECK (organization_id IN (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
-CREATE POLICY "Accounting periods can be updated by organization members"
+CREATE POLICY "org_acct_periods_update"
 ON public.accounting_periods FOR UPDATE
 TO authenticated
 USING (organization_id IN (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
-CREATE POLICY "Accounting periods can be deleted by organization members"
+CREATE POLICY "org_acct_periods_delete"
 ON public.accounting_periods FOR DELETE
 TO authenticated
 USING (organization_id IN (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
@@ -188,76 +188,64 @@ END;
 $$;
 
 -- Atualizar políticas para accounts
-DROP POLICY IF EXISTS "Users can select their own accounts" ON public.accounts;
-CREATE POLICY "Accounts can be viewed by organization members within their active period"
+CREATE POLICY "accounts_view_by_org_period"
 ON public.accounts FOR SELECT
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can insert their own accounts" ON public.accounts;
-CREATE POLICY "Accounts can be inserted by organization members"
+CREATE POLICY "accounts_insert_by_org_period"
 ON public.accounts FOR INSERT
 TO authenticated
 WITH CHECK (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can update their own accounts" ON public.accounts;
-CREATE POLICY "Accounts can be updated by organization members"
+CREATE POLICY "accounts_update_by_org_period"
 ON public.accounts FOR UPDATE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can delete their own accounts" ON public.accounts;
-CREATE POLICY "Accounts can be deleted by organization members"
+CREATE POLICY "accounts_delete_by_org_period"
 ON public.accounts FOR DELETE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
 -- Atualizar políticas para products
-DROP POLICY IF EXISTS "Users can select their own products" ON public.products;
-CREATE POLICY "Products can be viewed by organization members within their active period"
+CREATE POLICY "products_view_by_org_period"
 ON public.products FOR SELECT
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can insert their own products" ON public.products;
-CREATE POLICY "Products can be inserted by organization members"
+CREATE POLICY "products_insert_by_org_period"
 ON public.products FOR INSERT
 TO authenticated
 WITH CHECK (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can update their own products" ON public.products;
-CREATE POLICY "Products can be updated by organization members"
+CREATE POLICY "products_update_by_org_period"
 ON public.products FOR UPDATE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can delete their own products" ON public.products;
-CREATE POLICY "Products can be deleted by organization members"
+CREATE POLICY "products_delete_by_org_period"
 ON public.products FOR DELETE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
 -- Atualizar políticas para journal_entries
-DROP POLICY IF EXISTS "Users can select their own journal entries" ON public.journal_entries;
-CREATE POLICY "Journal entries can be viewed by organization members within their active period"
+CREATE POLICY "journal_entries_view_by_org_period"
 ON public.journal_entries FOR SELECT
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can insert their own journal entries" ON public.journal_entries;
-CREATE POLICY "Journal entries can be inserted by organization members"
+CREATE POLICY "journal_entries_insert_by_org_period"
 ON public.journal_entries FOR INSERT
 TO authenticated
 WITH CHECK (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can update their own journal entries" ON public.journal_entries;
-CREATE POLICY "Journal entries can be updated by organization members"
+CREATE POLICY "journal_entries_update_by_org_period"
 ON public.journal_entries FOR UPDATE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-DROP POLICY IF EXISTS "Users can delete their own journal entries" ON public.journal_entries;
-CREATE POLICY "Journal entries can be deleted by organization members"
+CREATE POLICY "journal_entries_delete_by_org_period"
 ON public.journal_entries FOR DELETE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
@@ -265,22 +253,22 @@ USING (organization_id = public.get_user_organization_id() AND accounting_period
 -- Políticas para entry_lines (dependem de journal_entries, então herdam a organização e período)
 ALTER TABLE public.entry_lines ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Entry lines can be viewed by organization members within their active period"
+CREATE POLICY "entry_lines_view_by_org_period"
 ON public.entry_lines FOR SELECT
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Entry lines can be inserted by organization members"
+CREATE POLICY "entry_lines_insert_by_org_period"
 ON public.entry_lines FOR INSERT
 TO authenticated
 WITH CHECK (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Entry lines can be updated by organization members"
+CREATE POLICY "entry_lines_update_by_org_period"
 ON public.entry_lines FOR UPDATE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Entry lines can be deleted by organization members"
+CREATE POLICY "entry_lines_delete_by_org_period"
 ON public.entry_lines FOR DELETE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
@@ -288,22 +276,22 @@ USING (organization_id = public.get_user_organization_id() AND accounting_period
 -- Políticas para financial_transactions
 ALTER TABLE public.financial_transactions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Financial transactions can be viewed by organization members within their active period"
+CREATE POLICY "financial_trans_view_by_org_period"
 ON public.financial_transactions FOR SELECT
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Financial transactions can be inserted by organization members"
+CREATE POLICY "financial_trans_insert_by_org_period"
 ON public.financial_transactions FOR INSERT
 TO authenticated
 WITH CHECK (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Financial transactions can be updated by organization members"
+CREATE POLICY "financial_trans_update_by_org_period"
 ON public.financial_transactions FOR UPDATE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());
 
-CREATE POLICY "Financial transactions can be deleted by organization members"
+CREATE POLICY "financial_trans_delete_by_org_period"
 ON public.financial_transactions FOR DELETE
 TO authenticated
 USING (organization_id = public.get_user_organization_id() AND accounting_period_id = public.get_user_active_accounting_period_id());

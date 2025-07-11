@@ -1,4 +1,7 @@
-DROP POLICY IF EXISTS "Allow organization owners/admins to manage roles" ON public.user_organization_roles;
+
+
+
+DROP POLICY IF EXISTS "user_org_roles_read_self" ON public.user_organization_roles;
 
 CREATE POLICY "Owners/Admins can insert roles"
 ON public.user_organization_roles FOR INSERT
@@ -14,4 +17,10 @@ CREATE POLICY "Owners/Admins can delete roles"
 ON public.user_organization_roles FOR DELETE
 USING (
     can_manage_organization_role(auth.uid(), organization_id)
+);
+
+CREATE POLICY "Users can view their own roles"
+ON public.user_organization_roles FOR SELECT
+USING (
+    auth.uid() = user_id
 );

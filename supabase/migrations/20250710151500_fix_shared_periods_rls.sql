@@ -1,9 +1,9 @@
 -- Drop the problematic RLS policy that was FOR ALL
-DROP POLICY IF EXISTS "Allow period owner/org admin to manage shared periods" ON public.shared_accounting_periods;
+DROP POLICY IF EXISTS "shared_acct_periods_manage_admin" ON public.shared_accounting_periods;
 
 -- Recreate the policy specifically for INSERT, UPDATE, DELETE operations
 -- This policy allows organization owners/admins to manage shared periods for their organization's periods.
-CREATE POLICY "Allow period owner/org admin to manage shared periods (IUD)"
+CREATE POLICY "shared_acct_periods_manage_admin"
 ON public.shared_accounting_periods FOR ALL
 USING (
     EXISTS (

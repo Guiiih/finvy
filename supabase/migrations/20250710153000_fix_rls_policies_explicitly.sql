@@ -1,9 +1,7 @@
 -- Drop existing problematic policies (including FOR ALL ones)
-DROP POLICY IF EXISTS "Allow organization owners/admins to manage roles" ON public.user_organization_roles;
-DROP POLICY IF EXISTS "Allow organization owners/admins to manage roles (IUD)" ON public.user_organization_roles; -- If it exists from previous attempt
+DROP POLICY IF EXISTS "user_org_roles_manage_admin" ON public.user_organization_roles;
 
-DROP POLICY IF EXISTS "Allow period owner/org admin to manage shared periods" ON public.shared_accounting_periods;
-DROP POLICY IF EXISTS "Allow period owner/org admin to manage shared periods (IUD)" ON public.shared_accounting_periods; -- If it exists from previous attempt
+DROP POLICY IF EXISTS "shared_acct_periods_manage_admin" ON public.shared_accounting_periods;
 
 
 -- Policies for user_organization_roles
@@ -13,14 +11,14 @@ DROP POLICY IF EXISTS "Allow period owner/org admin to manage shared periods (IU
 -- USING (auth.uid() = user_id);
 
 -- INSERT policy for user_organization_roles
-CREATE POLICY "Allow organization owners/admins to insert roles"
+CREATE POLICY "user_org_roles_insert_admin"
 ON public.user_organization_roles FOR INSERT
 WITH CHECK (
     public.is_org_admin_or_owner(user_organization_roles.organization_id)
 );
 
 -- UPDATE policy for user_organization_roles
-CREATE POLICY "Allow organization owners/admins to update roles"
+CREATE POLICY "user_org_roles_update_admin"
 ON public.user_organization_roles FOR UPDATE
 USING (
     public.is_org_admin_or_owner(user_organization_roles.organization_id)
@@ -30,7 +28,7 @@ WITH CHECK (
 );
 
 -- DELETE policy for user_organization_roles
-CREATE POLICY "Allow organization owners/admins to delete roles"
+CREATE POLICY "user_org_roles_delete_admin"
 ON public.user_organization_roles FOR DELETE
 USING (
     public.is_org_admin_or_owner(user_organization_roles.organization_id)
@@ -44,7 +42,7 @@ USING (
 -- USING (auth.uid() = shared_with_user_id OR auth.uid() = shared_by_user_id);
 
 -- INSERT policy for shared_accounting_periods
-CREATE POLICY "Allow period owner/org admin to insert shared periods"
+CREATE POLICY "shared_acct_periods_insert_admin"
 ON public.shared_accounting_periods FOR INSERT
 WITH CHECK (
     EXISTS (
@@ -55,7 +53,7 @@ WITH CHECK (
 );
 
 -- UPDATE policy for shared_accounting_periods (less common, but for completeness)
-CREATE POLICY "Allow period owner/org admin to update shared periods"
+CREATE POLICY "shared_acct_periods_update_admin"
 ON public.shared_accounting_periods FOR UPDATE
 USING (
     EXISTS (
@@ -73,7 +71,7 @@ WITH CHECK (
 );
 
 -- DELETE policy for shared_accounting_periods
-CREATE POLICY "Allow period owner/org admin to delete shared periods"
+CREATE POLICY "shared_acct_periods_delete_admin"
 ON public.shared_accounting_periods FOR DELETE
 USING (
     EXISTS (

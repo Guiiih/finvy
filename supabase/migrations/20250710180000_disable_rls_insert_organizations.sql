@@ -6,7 +6,7 @@ ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
 -- Add a simple INSERT policy that always returns true for authenticated users
 -- This policy will be overridden by the backend logic.
-CREATE POLICY "Allow authenticated users to insert organizations"
+CREATE POLICY "org_insert_auth_users"
 ON public.organizations FOR INSERT
 TO authenticated
 WITH CHECK (true);
