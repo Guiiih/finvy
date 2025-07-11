@@ -1,1 +1,0 @@
--- Drop the INSERT policy for organizations table
