@@ -85,6 +85,21 @@
       <div class="mb-8 p-6 border rounded-lg bg-surface-50">
         <h2 class="text-2xl font-semibold text-surface-700 mb-4">Gerenciamento de Organização</h2>
 
+        <!-- Personal Workspace Section (if personal organization exists and is not active) -->
+        <div v-if="organizationSelectionStore.personalOrganization && organizationSelectionStore.activeOrganization?.id !== organizationSelectionStore.personalOrganization.id" class="mb-6 p-4 border rounded-lg bg-blue-50 border-blue-200">
+          <h3 class="text-xl font-semibold text-blue-800 mb-3">Seu Workspace Pessoal</h3>
+          <p class="text-blue-700 mb-4">
+            Você tem uma organização pessoal: <strong>{{ organizationSelectionStore.personalOrganization.name }}</strong>.
+            Use-a como seu espaço de trabalho individual.
+          </p>
+          <button
+            @click="setActivePersonalOrganization"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            Ativar Workspace Pessoal
+          </button>
+        </div>
+
         <div v-if="!organizationSelectionStore.activeOrganization" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
           <p class="font-bold">Nenhuma Organização Ativa</p>
           <p>Seu usuário não está associado a nenhuma organização ativa. Crie uma nova ou selecione uma existente.</p>
@@ -102,8 +117,8 @@
               @change="handleOrganizationChange"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             >
-              <option v-for="org in organizationSelectionStore.userOrganizations.filter(o => !o.is_personal)" :key="org.id" :value="org.id">
-                {{ org.name }}
+              <option v-for="org in organizationSelectionStore.accessibleOrganizations" :key="org.id" :value="org.id">
+                {{ org.name }} <span v-if="org.is_personal">(Pessoal)</span> <span v-if="org.is_shared">(Compartilhado por {{ org.shared_from_user_name }})</span>
               </option>
             </select>
           </div>
@@ -163,15 +178,40 @@
               <h4 class="text-xl font-semibold mb-4">{{ editingMember ? 'Editar Membro' : 'Adicionar Novo Membro' }}</h4>
               <form @submit.prevent="handleSubmitMember" class="space-y-4">
                 <div>
-                  <label for="memberUserId" class="block text-sm font-medium text-gray-700">ID do Usuário:</label>
-                  <input
-                    type="text"
-                    id="memberUserId"
-                    v-model="newMember.user_id"
-                    :disabled="!!editingMember"
-                    required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  />
+                  <label for="memberSearch" class="block text-sm font-medium text-gray-700">Buscar Usuário (Nome ou Email):</label>
+                  <div class="flex space-x-2">
+                    <input
+                      type="text"
+                      id="memberSearch"
+                      v-model="searchUserTerm"
+                      placeholder="Nome ou Email do Usuário"
+                      @input="debounceSearchUsers"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    />
+                    <button
+                      type="button"
+                      @click="searchUsers"
+                      :disabled="searchingUsers"
+                      class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    >
+                      {{ searchingUsers ? 'Buscando...' : 'Buscar' }}
+                    </button>
+                  </div>
+                  <div v-if="showSearchResults && searchResults.length > 0" class="mt-2 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto bg-white">
+                    <ul class="divide-y divide-gray-200">
+                      <li v-for="user in searchResults" :key="user.id" @click="selectUser(user)" class="p-3 hover:bg-gray-100 cursor-pointer">
+                        <p class="font-medium">{{ user.username || user.email }}</p>
+                        <p class="text-sm text-gray-500">{{ user.email }}</p>
+                      </li>
+                    </ul>
+                  </div>
+                  <div v-else-if="showSearchResults && !searchingUsers && searchResults.length === 0" class="mt-2 p-3 text-sm text-gray-500">
+                    Nenhum usuário encontrado.
+                  </div>
+                </div>
+                <div v-if="selectedUserForMembership">
+                  <label class="block text-sm font-medium text-gray-700">Usuário Selecionado:</label>
+                  <p class="mt-1 p-3 border border-gray-300 rounded-md bg-gray-100">{{ selectedUserForMembership.username || selectedUserForMembership.email }}</p>
                 </div>
                 <div>
                   <label for="memberRole" class="block text-sm font-medium text-gray-700">Papel:</label>
@@ -322,6 +362,7 @@ import { useLanguageStore } from '@/stores/languageStore'
 import { useOrganizationStore } from '@/stores/organizationStore' // Import organizationStore
 import { useOrganizationSelectionStore } from '@/stores/organizationSelectionStore' // Import organizationSelectionStore
 import { useToast } from 'primevue/usetoast'
+import { api } from '@/services/api';
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -330,7 +371,8 @@ import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
-import type { UserOrganizationRole, UserRoleInOrganization } from '@/types'; // Import types
+import type { UserOrganizationRole, UserRoleInOrganization, User } from '@/types'; // Import types
+
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
@@ -372,6 +414,12 @@ const newMember = ref({
   user_id: '',
   role: '' as UserRoleInOrganization,
 });
+
+const searchUserTerm = ref('');
+const searchResults = ref<any[]>([]);
+const showSearchResults = ref(false);
+const searchingUsers = ref(false);
+const selectedUserForMembership = ref<any | null>(null);
 
 const filteredMembers = computed(() => {
   const lowerCaseSearchTerm = memberSearchTerm.value.toLowerCase();
@@ -593,6 +641,17 @@ async function handleCreateOrganization() {
   }
 }
 
+async function setActivePersonalOrganization() {
+  if (organizationSelectionStore.personalOrganization) {
+    try {
+      await organizationSelectionStore.setActiveOrganization(organizationSelectionStore.personalOrganization.id);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Workspace pessoal ativado com sucesso!', life: 3000 });
+    } catch (err: any) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao ativar workspace pessoal.', life: 3000 });
+    }
+  }
+}
+
 async function handleOrganizationChange() {
   if (selectedOrganizationId.value) {
     try {
@@ -604,9 +663,47 @@ async function handleOrganizationChange() {
   }
 }
 
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+async function searchUsers() {
+  if (!searchUserTerm.value) {
+    searchResults.value = [];
+    showSearchResults.value = false;
+    return;
+  }
+
+  searchingUsers.value = true;
+  try {
+    const response = await api.get<User[]>(`/users?query=${searchUserTerm.value}`);
+    searchResults.value = response;
+    showSearchResults.value = true;
+  } catch (err: any) {
+    console.error('Erro ao buscar usuários:', err);
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao buscar usuários.', life: 3000 });
+    searchResults.value = [];
+    showSearchResults.value = false;
+  } finally {
+    searchingUsers.value = false;
+  }
+}
+
+function debounceSearchUsers() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchUsers();
+  }, 500); // Debounce por 500ms
+}
+
+function selectUser(user: any) {
+  selectedUserForMembership.value = user;
+  newMember.value.user_id = user.id; // Define o user_id real para o envio
+  searchUserTerm.value = user.username || user.email; // Exibe o nome/email no campo de busca
+  showSearchResults.value = false; // Esconde os resultados da busca
+}
+
 async function handleSubmitMember() {
-  if (!newMember.value.user_id || !newMember.value.role) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos.', life: 3000 });
+  if (!selectedUserForMembership.value || !newMember.value.role) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione um usuário e um papel.', life: 3000 });
     return;
   }
 
@@ -642,12 +739,20 @@ function startEdit(member: UserOrganizationRole) {
   newMember.value.user_id = member.user_id;
   newMember.value.role = member.role;
   showAddMemberForm.value = true;
+  // Pre-fill search term if editing
+  searchUserTerm.value = member.profiles?.username || member.profiles?.email || member.user_id;
+  selectedUserForMembership.value = member.profiles ? { ...member.profiles, id: member.user_id } : { id: member.user_id, username: member.user_id };
 }
 
 function resetMemberForm() {
   newMember.value = { user_id: '', role: '' as UserRoleInOrganization };
   editingMember.value = null;
   showAddMemberForm.value = false;
+  searchUserTerm.value = '';
+  searchResults.value = [];
+  showSearchResults.value = false;
+  searchingUsers.value = false;
+  selectedUserForMembership.value = null;
 }
 
 </script>

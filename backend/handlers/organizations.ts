@@ -7,6 +7,17 @@ import {
 import { z } from "zod";
 import { formatSupabaseError } from "../utils/errorUtils.js";
 import { getUserRoleInOrganization } from "./user-organization-roles.js"; // Import the helper
+import { Organization } from "../types/index.js"; // Import Organization type
+import { PostgrestResponse } from "@supabase/supabase-js"; // Import PostgrestResponse
+
+interface AccessibleOrganization {
+  id: string;
+  name: string;
+  created_at: string;
+  is_personal: boolean;
+  is_shared: boolean;
+  shared_from_user_name: string | null;
+}
 
 // Validation schema for creating an organization
 const createOrganizationSchema = z.object({
@@ -69,17 +80,16 @@ export default async function handler(
         message: "Organiza├º├úo e per├¡odo padr├úo criados com sucesso.",
       });
     } else if (req.method === "GET") {
-      logger.info(`[Organizations] Buscando organizações para user_id: ${user_id}`);
-      // The RLS policies on the 'organizations' table should ensure only accessible organizations are returned.
-      const { data, error: dbError } = await userSupabase
-        .from("organizations")
-        .select("id, name, created_at, is_personal"); // Include is_personal
+      logger.info(`[Organizations] Buscando organizações acessíveis para user_id: ${user_id}`);
+      const { data, error: rpcError } = await userSupabase.rpc<'get_user_accessible_organizations', AccessibleOrganization[]>('get_user_accessible_organizations', { p_user_id: user_id });
 
-      if (dbError) {
-        logger.error(`[Organizations] Erro ao buscar organizações: ${dbError.message}`);
-        throw dbError;
+      if (rpcError) {
+        logger.error(`[Organizations] Erro ao buscar organizações acessíveis: ${rpcError.message}`);
+        logger.error(`[Organizations] Detalhes do erro RPC:`, rpcError);
+        throw rpcError;
       }
-      logger.info(`[Organizations] Organizações encontradas: ${data.length}`);
+      logger.info(`[Organizations] Dados brutos da RPC:`, data);
+      logger.info(`[Organizations] Organizações encontradas: ${(data as AccessibleOrganization[]).length}`);
       return res.status(200).json(data);
     } else if (req.method === "DELETE") {
       const { id } = req.query; // This is the organization_id

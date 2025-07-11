@@ -105,9 +105,6 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     return handleErrorResponse(res, 400, "Caminho da URL inválido.");
   }
 
-  const finalUrlPath = urlPath.startsWith("/api")
-    ? urlPath.substring(4)
-    : urlPath;
   logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`);
 
   // For all other /api routes, apply the authentication middleware

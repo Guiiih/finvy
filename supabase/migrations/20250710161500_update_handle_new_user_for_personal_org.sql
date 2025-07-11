@@ -32,8 +32,8 @@ BEGIN
     RETURNING id INTO new_period_id;
 
     -- Insere o perfil do usuário
-    INSERT INTO public.profiles (id, username, role, avatar_url, organization_id, active_accounting_period_id)
-    VALUES (NEW.id, NEW.raw_user_meta_data->>'first_name', 'user', 'data:image/svg+xml;base64,' || encode(avatar_svg::bytea, 'base64'), new_org_id, new_period_id);
+    INSERT INTO public.profiles (id, username, email, role, avatar_url, organization_id, active_accounting_period_id)
+    VALUES (NEW.id, NEW.raw_user_meta_data->>'first_name', NEW.email, 'user', 'data:image/svg+xml;base64,' || encode(avatar_svg::bytea, 'base64'), new_org_id, new_period_id);
 
     -- ATRIBUI O PAPEL DE 'owner' AO NOVO USUÁRIO NA SUA NOVA ORGANIZAÇÃO
     INSERT INTO public.user_organization_roles (user_id, organization_id, role)

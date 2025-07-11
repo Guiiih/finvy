@@ -116,8 +116,10 @@ export interface AccountingPeriod {
 export interface Organization {
   id: string;
   name: string;
-  created_at: string;
+  created_at?: string; // Tornar opcional
   is_personal?: boolean; // Added is_personal property
+  is_shared?: boolean; // Indicates if this organization is accessed via a shared period
+  shared_from_user_name?: string; // Name of the user who shared the period
 }
 
 export type UserRoleInOrganization = 'owner' | 'admin' | 'member_read_write' | 'member_read_only';

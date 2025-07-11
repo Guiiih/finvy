@@ -77,11 +77,7 @@ export default async function handler(
         return handleErrorResponse(res, 404, "Período contábil ou organização não encontrado.");
       }
 
-      // Prevent sharing from personal organizations
-      if (periodData.organizations[0].is_personal) {
-        logger.warn(`[Sharing] Tentativa de compartilhar período de organização pessoal ${periodData.organization_id} por user ${user_id}.`);
-        return handleErrorResponse(res, 403, "Não é possível compartilhar períodos de organizações pessoais.");
-      }
+      
 
       // Check if the requesting user has owner/admin role in the period's organization
       const requestingUserRole = await getUserRoleInOrganization(
@@ -134,7 +130,7 @@ export default async function handler(
       // The RLS policies on shared_accounting_periods will handle access control.
       const { data, error: dbError } = await userSupabase
         .from("shared_accounting_periods")
-        .select("id, accounting_period_id, shared_with_user_id, permission_level, profiles(username)")
+        .select("id, accounting_period_id, shared_with_user_id, permission_level, profiles!fk_shared_accounting_periods_shared_with_profile(username)")
         .eq("accounting_period_id", accounting_period_id);
 
       if (dbError) {
@@ -179,11 +175,7 @@ export default async function handler(
         return handleErrorResponse(res, 404, "Período contábil associado ao compartilhamento ou organização não encontrado.");
       }
 
-      // Prevent unsharing from personal organizations
-      if (periodData.organizations[0].is_personal) {
-        logger.warn(`[Sharing] Tentativa de remover compartilhamento de organização pessoal ${periodData.organization_id} por user ${user_id}.`);
-        return handleErrorResponse(res, 403, "Não é possível remover compartilhamentos de períodos de organizações pessoais.");
-      }
+      
 
       // Check if the requesting user has owner/admin role in the period's organization
       const requestingUserRole = await getUserRoleInOrganization(

@@ -3,7 +3,6 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
   handleErrorResponse,
-  getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { formatSupabaseError } from "../utils/errorUtils.js";

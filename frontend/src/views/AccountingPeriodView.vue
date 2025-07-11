@@ -329,9 +329,9 @@ let searchTimeout: ReturnType<typeof setTimeout>;
 async function searchUsers() {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
-    if (userSearchQuery.value.length > 2) {
+    if (userSearchQuery.value.trim().length > 2) {
       try {
-        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value}`);
+        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value.trim()}`);
         searchResults.value = data;
       } catch (err) {
         console.error('Erro ao buscar usuários:', err);

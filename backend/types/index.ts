@@ -53,3 +53,12 @@ export interface LedgerAccount {
   credits: number
   finalBalance: number
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  created_at?: string;
+  is_personal?: boolean;
+  is_shared?: boolean;
+  shared_from_user_name?: string;
+}

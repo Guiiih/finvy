@@ -35,16 +35,11 @@ export default async function handler(
       }
 
       const { query } = parsedQuery.data;
-      const searchTerm = `%${query.toLowerCase()}%`;
 
       logger.info(`[Users] Buscando usuários com query: ${query}`);
 
-      // Search in profiles table for username or email
-      const { data, error: dbError } = await userSupabase
-        .from("profiles")
-        .select("id, username, email")
-        .or(`username.ilike.${searchTerm},email.ilike.${searchTerm}`)
-        .limit(10); // Limit results for performance
+      // Search using the search_users function
+      const { data, error: dbError } = await userSupabase.rpc('search_users', { search_term: query });
 
       if (dbError) {
         logger.error(`[Users] Erro ao buscar usuários: ${dbError.message}`);

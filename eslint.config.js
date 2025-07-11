@@ -14,6 +14,8 @@ export default [
       "*.js",
       "*.cjs",
       "*.mjs",
+      "html/",
+      "backend/html/",
     ],
   },
   pluginJs.configs.recommended,

@@ -9,7 +9,7 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
   const authStore = useAuthStore();
   const accountingPeriodStore = useAccountingPeriodStore();
 
-  const userOrganizations = ref<Organization[]>([]);
+  const accessibleOrganizations = ref<Organization[]>([]);
   const activeOrganization = ref<Organization | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -33,30 +33,37 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
       // For now, I'll assume it returns a list of organizations the user is a member of.
       // The RLS on the 'organizations' table should ensure only accessible organizations are returned.
       const data = await api.get<Organization[]>('/organizations'); // Assuming GET /organizations returns user's organizations
-      userOrganizations.value = data;
+      accessibleOrganizations.value = data;
 
-      // Set active organization based on user's profile or default to the first one
+      let targetActiveOrg: Organization | null = null;
+
+      // 1. Tenta definir a organização ativa com base na configuração do perfil do usuário
       if (authStore.userOrganizationId) {
-        const foundOrg = data.find(org => org.id === authStore.userOrganizationId);
-        if (foundOrg) {
-          activeOrganization.value = foundOrg;
-        } else if (data.length > 0) {
-          // If profile's org not found (e.g., deleted), default to first available
-          activeOrganization.value = data[0];
-          await setActiveOrganization(data[0].id); // Update profile in backend
-        }
-      } else if (data.length > 0) {
-        // If no organization set in profile, default to the first non-personal one, or the first one if all are personal
-        const nonPersonalOrg = data.find(org => !org.is_personal);
-        if (nonPersonalOrg) {
-          activeOrganization.value = nonPersonalOrg;
-          await setActiveOrganization(nonPersonalOrg.id);
-        } else {
-          activeOrganization.value = data[0];
-          await setActiveOrganization(data[0].id);
-        }
-      } else {
-        activeOrganization.value = null;
+        targetActiveOrg = data.find(org => org.id === authStore.userOrganizationId) || null;
+      }
+
+      // 2. Se nenhuma organização ativa for encontrada no perfil, ou se a organização do perfil for inválida/excluída,
+      //    tenta definir a organização pessoal do *próprio* usuário como ativa.
+      if (!targetActiveOrg) {
+        targetActiveOrg = data.find(org => org.is_personal && org.shared_from_user_name === null) || null;
+      }
+
+      // 3. Se ainda não houver organização ativa (por exemplo, novo usuário, nenhuma organização pessoal ainda, ou todas as organizações são compartilhadas),
+      //    define como padrão a primeira organização não pessoal, ou a primeira da lista se todas forem pessoais/compartilhadas.
+      if (!targetActiveOrg && data.length > 0) {
+        targetActiveOrg = data.find(org => !org.is_personal) || data[0];
+      }
+
+      activeOrganization.value = targetActiveOrg;
+
+      // Atualiza o backend se a organização ativa foi alterada/definida por padrão
+      if (targetActiveOrg && authStore.userOrganizationId !== targetActiveOrg.id) {
+        await setActiveOrganization(targetActiveOrg.id);
+      } else if (!targetActiveOrg && authStore.userOrganizationId) {
+        // Se nenhuma organização ativa for encontrada, mas o perfil ainda tiver uma, limpa-a
+        await api.put('/profile', { organization_id: null, active_accounting_period_id: null });
+        authStore.userOrganizationId = null;
+        authStore.userActiveAccountingPeriodId = null;
       }
 
       // After setting active organization, fetch accounting periods for it
@@ -76,7 +83,7 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     loading.value = true;
     error.value = null;
     try {
-      const orgToActivate = userOrganizations.value.find(org => org.id === organizationId);
+      const orgToActivate = accessibleOrganizations.value.find(org => org.id === organizationId);
       if (!orgToActivate) {
         throw new Error('Organização não encontrada.');
       }
@@ -111,7 +118,7 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     error.value = null;
     try {
       const newOrgData = await api.post<{ organization: Organization, accounting_period: AccountingPeriod }, { name: string }>('/organizations', { name });
-      userOrganizations.value.push(newOrgData.organization);
+      accessibleOrganizations.value.push(newOrgData.organization);
       // Automatically set the newly created organization as active
       await setActiveOrganization(newOrgData.organization.id);
       return newOrgData.organization;
@@ -129,17 +136,17 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     error.value = null;
     try {
       await api.delete(`/organizations?id=${organizationId}`);
-      userOrganizations.value = userOrganizations.value.filter(org => org.id !== organizationId);
+      accessibleOrganizations.value = accessibleOrganizations.value.filter(org => org.id !== organizationId);
       // If the deleted organization was the active one, try to set another one as active
       if (activeOrganization.value?.id === organizationId) {
         activeOrganization.value = null;
-        if (userOrganizations.value.length > 0) {
+        if (accessibleOrganizations.value.length > 0) {
           // Try to set the first non-personal organization as active, or the first one if all are personal
-          const nonPersonalOrg = userOrganizations.value.find(org => !org.is_personal);
+          const nonPersonalOrg = accessibleOrganizations.value.find(org => !org.is_personal);
           if (nonPersonalOrg) {
             await setActiveOrganization(nonPersonalOrg.id);
           } else {
-            await setActiveOrganization(userOrganizations.value[0].id);
+            await setActiveOrganization(accessibleOrganizations.value[0].id);
           }
         } else {
           // No organizations left, clear active organization in profile
@@ -157,8 +164,12 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     }
   }
 
+  const personalOrganization = computed(() => {
+    return accessibleOrganizations.value.find(org => org.is_personal);
+  });
+
   return {
-    userOrganizations,
+    accessibleOrganizations,
     activeOrganization,
     loading,
     error,
@@ -167,5 +178,6 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     setActiveOrganization,
     createOrganization,
     deleteOrganization,
+    personalOrganization,
   };
 });
