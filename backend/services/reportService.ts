@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "../utils/supabaseClient.js";
+import logger from "../utils/logger.js";
 import type {
   Account,
   JournalEntry,
@@ -19,7 +20,10 @@ async function getAccounts(user_id: string, token: string): Promise<Account[]> {
     .from("accounts")
     .select("id, name, type")
     .eq("user_id", user_id);
-  if (error) throw new Error(error.message || "Erro ao buscar dados.");
+  if (error) {
+    logger.error(`[getAccounts] Erro ao buscar contas: ${error.message}`);
+    throw new Error(error.message || "Erro ao buscar dados.");
+  }
   return data;
 }
 
@@ -70,8 +74,10 @@ async function getJournalEntries(
   }
 
   const { data, error } = await query;
-  if (error)
+  if (error) {
+    logger.error(`[getJournalEntries] Erro ao buscar lançamentos contábeis: ${error.message}`);
     throw new Error(error.message || "Erro ao buscar lançamentos contábeis.");
+  }
 
   return data.map((entry: SupabaseRawJournalEntry): JournalEntry => {
     const { entry_lines, ...restOfEntry } = entry;
@@ -302,8 +308,10 @@ async function getProductStockBalances(
     .from("products")
     .select("id, name, current_stock"); // Assuming 'name' is product name
 
-  if (error)
+  if (error) {
+    logger.error(`[getProductStockBalances] Erro ao buscar saldos de estoque de produtos: ${error.message}`);
     throw new Error(error.message || "Error fetching product stock balances.");
+  }
 
   return data.map((product) => ({
     product_id: product.id,

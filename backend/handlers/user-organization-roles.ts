@@ -142,15 +142,11 @@ export default async function handler(
         return handleErrorResponse(res, 403, "Admins não podem atribuir o papel de 'owner'.");
       }
 
-      const { data, error: dbError } = await userSupabase
-        .from("user_organization_roles")
-        .insert({
-          user_id: new_member_user_id,
-          organization_id: organization_id,
-          role: new_member_role,
-        })
-        .select()
-        .single();
+      const { error: dbError } = await userSupabase.rpc('create_user_organization_role', {
+        p_user_id: new_member_user_id,
+        p_organization_id: organization_id,
+        p_role: new_member_role,
+      });
 
       if (dbError) {
         logger.error(
@@ -161,7 +157,7 @@ export default async function handler(
       logger.info(
         `[UserOrgRoles] Membro ${new_member_user_id} adicionado com sucesso à organização ${organization_id}.`,
       );
-      return res.status(201).json(data);
+      return res.status(201).json({ message: "Membro adicionado com sucesso." });
     } else if (req.method === "PUT") {
       const { member_id } = req.query; // This is the user_organization_roles.id
       if (!member_id || typeof member_id !== "string") {

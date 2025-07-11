@@ -2,14 +2,7 @@ DROP POLICY IF EXISTS "Allow organization owners/admins to manage roles" ON publ
 
 CREATE POLICY "Owners/Admins can insert roles"
 ON public.user_organization_roles FOR INSERT
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.user_organization_roles uor_check
-        WHERE uor_check.user_id = auth.uid()
-        AND uor_check.organization_id = organization_id
-        AND uor_check.role IN ('owner', 'admin')
-    )
-);
+WITH CHECK (FALSE);
 
 CREATE POLICY "Owners/Admins can update roles"
 ON public.user_organization_roles FOR UPDATE
