@@ -60,6 +60,184 @@
         </div>
       </div>
 
+      <!-- Seção de Criação de Organização -->
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Criar Nova Organização</h2>
+        <form @submit.prevent="handleCreateOrganization" class="space-y-4">
+          <div>
+            <label for="newOrganizationName" class="block text-sm font-medium text-gray-700">Nome da Organização:</label>
+            <input
+              type="text"
+              id="newOrganizationName"
+              v-model="newOrganizationName"
+              placeholder="Nome da Organização"
+              required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" :disabled="organizationSelectionStore.loading">
+            {{ organizationSelectionStore.loading ? 'Criando...' : 'Criar Organização' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Seção de Gerenciamento de Organização -->
+      <div class="mb-8 p-6 border rounded-lg bg-surface-50">
+        <h2 class="text-2xl font-semibold text-surface-700 mb-4">Gerenciamento de Organização</h2>
+
+        <div v-if="!organizationSelectionStore.activeOrganization" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
+          <p class="font-bold">Nenhuma Organização Ativa</p>
+          <p>Seu usuário não está associado a nenhuma organização ativa. Crie uma nova ou selecione uma existente.</p>
+        </div>
+
+        <div v-else>
+          <h3 class="text-xl font-semibold mb-3">Organização Atual: {{ organizationSelectionStore.activeOrganization.name }} <span v-if="organizationSelectionStore.activeOrganization.is_personal">(Pessoal)</span></h3>
+
+          <!-- Seletor de Organização -->
+          <div class="mb-4">
+            <label for="selectOrganization" class="block text-sm font-medium text-gray-700">Selecionar Organização:</label>
+            <select
+              id="selectOrganization"
+              v-model="selectedOrganizationId"
+              @change="handleOrganizationChange"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option v-for="org in organizationSelectionStore.userOrganizations.filter(o => !o.is_personal)" :key="org.id" :value="org.id">
+                {{ org.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Botão para Excluir Organização (apenas se não for pessoal) -->
+          <div v-if="organizationSelectionStore.activeOrganization && !organizationSelectionStore.activeOrganization.is_personal" class="mb-4">
+            <button
+              @click="confirmDeleteOrganization(organizationSelectionStore.activeOrganization.id)"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+            >
+              Excluir Organização Atual
+            </button>
+          </div>
+
+          <!-- Gerenciamento de Membros -->
+          <h3 class="text-xl font-semibold mb-3 mt-6">Membros da Organização</h3>
+          <div v-if="organizationSelectionStore.activeOrganization.is_personal" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
+            <p>Organizações pessoais não permitem gerenciamento de membros.</p>
+          </div>
+          <div v-else-if="!organizationStore.isCurrentUserOwnerOrAdmin" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p class="font-bold">Acesso Negado</p>
+            <p>Você não tem permissão para gerenciar membros desta organização.</p>
+          </div>
+          <div v-else>
+            <div class="mb-6 flex items-center space-x-4">
+              <div class="relative flex-grow">
+                <input
+                  type="text"
+                  v-model="memberSearchTerm"
+                  placeholder="Buscar membro por nome ou email"
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <svg
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+              </div>
+              <button
+                @click="showAddMemberForm = !showAddMemberForm; editingMember = null"
+                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md transition duration-300 ease-in-out"
+              >
+                {{ showAddMemberForm ? 'Fechar Formulário' : 'Adicionar Membro' }}
+              </button>
+            </div>
+
+            <div v-if="showAddMemberForm" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
+              <h4 class="text-xl font-semibold mb-4">{{ editingMember ? 'Editar Membro' : 'Adicionar Novo Membro' }}</h4>
+              <form @submit.prevent="handleSubmitMember" class="space-y-4">
+                <div>
+                  <label for="memberUserId" class="block text-sm font-medium text-gray-700">ID do Usuário:</label>
+                  <input
+                    type="text"
+                    id="memberUserId"
+                    v-model="newMember.user_id"
+                    :disabled="!!editingMember"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  />
+                </div>
+                <div>
+                  <label for="memberRole" class="block text-sm font-medium text-gray-700">Papel:</label>
+                  <select
+                    id="memberRole"
+                    v-model="newMember.role"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  >
+                    <option value="">Selecione um papel</option>
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="member_read_write">Membro (Leitura/Escrita)</option>
+                    <option value="member_read_only">Membro (Somente Leitura)</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  :disabled="organizationStore.loading"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                >
+                  {{ organizationStore.loading ? 'Processando...' : (editingMember ? 'Atualizar Membro' : 'Adicionar Membro') }}
+                </button>
+              </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm">
+              <h4 class="text-xl font-semibold mb-3">Membros Atuais</h4>
+              <p v-if="organizationStore.loading" class="text-gray-600">Carregando membros...</p>
+              <p v-else-if="organizationStore.error" class="text-red-500">
+                Erro ao carregar membros: {{ organizationStore.error }}
+              </p>
+              <ul v-else-if="filteredMembers.length > 0" class="space-y-3">
+                <li
+                  v-for="member in filteredMembers"
+                  :key="member.id"
+                  class="flex items-center justify-between p-3 border rounded-md bg-gray-50"
+                >
+                  <div>
+                    <p class="font-medium">{{ member.profiles?.username || member.profiles?.email || member.user_id }}</p>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-200 text-indigo-800">
+                      {{ member.role }}
+                    </span>
+                  </div>
+                  <div class="space-x-2">
+                    <button
+                      @click="startEdit(member)"
+                      class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      @click="removeMember(member.id)"
+                      class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </li>
+              </ul>
+              <p v-else class="text-gray-600">Nenhum membro encontrado nesta organização.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Seção de Exclusão de Conta -->
       <div class="p-6 border rounded-lg bg-red-50 border-red-200">
         <h2 class="text-2xl font-semibold text-red-700 mb-4">Excluir Conta</h2>
@@ -79,6 +257,20 @@
       <template #footer>
         <Button label="Cancelar" icon="pi pi-times" @click="showDeleteModal = false" class="p-button-text" />
         <Button label="Excluir" icon="pi pi-check" @click="handleDeleteAccount" :loading="loadingDelete" class="p-button-danger" />
+      </template>
+    </Dialog>
+
+    <!-- Modal de Confirmação de Exclusão de Organização -->
+    <Dialog header="Confirmar Exclusão da Organização" v-model:visible="showDeleteOrganizationModal" :modal="true" :style="{ width: '450px' }" class="p-dialog-confirm">
+      <div class="flex items-center p-4">
+        <i class="pi pi-exclamation-triangle mr-3 text-red-500" style="font-size: 2rem;"></i>
+        <span class="text-surface-700">
+          Você tem certeza que deseja excluir esta organização? Esta ação é irreversível e todos os dados associados a ela serão removidos.
+        </span>
+      </div>
+      <template #footer>
+        <Button label="Cancelar" icon="pi pi-times" @click="showDeleteOrganizationModal = false" class="p-button-text" />
+        <Button label="Excluir Organização" icon="pi pi-check" @click="handleDeleteOrganization" :loading="organizationSelectionStore.loading" class="p-button-danger" />
       </template>
     </Dialog>
 
@@ -122,11 +314,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useLanguageStore } from '@/stores/languageStore'
+import { useOrganizationStore } from '@/stores/organizationStore' // Import organizationStore
+import { useOrganizationSelectionStore } from '@/stores/organizationSelectionStore' // Import organizationSelectionStore
 import { useToast } from 'primevue/usetoast'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -136,10 +330,13 @@ import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
+import type { UserOrganizationRole, UserRoleInOrganization } from '@/types'; // Import types
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const languageStore = useLanguageStore()
+const organizationStore = useOrganizationStore() // Initialize organizationStore
+const organizationSelectionStore = useOrganizationSelectionStore() // Initialize organizationSelectionStore
 const toast = useToast()
 const router = useRouter()
 
@@ -151,6 +348,8 @@ const loadingProfile = ref(false)
 const loadingPassword = ref(false)
 const loadingDelete = ref(false)
 const showDeleteModal = ref(false)
+const showDeleteOrganizationModal = ref(false); // New state for organization deletion modal
+const organizationToDeleteId = ref<string | null>(null); // New state to store ID of org to delete
 
 // Avatar Cropper
 const showCropperModal = ref(false)
@@ -162,6 +361,26 @@ const croppedImagePreviewUrl = ref<string | null>(null)
 const croppedBlobToSave = ref<Blob | null>(null)
 
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// Organization Management State
+const newOrganizationName = ref('');
+const selectedOrganizationId = ref<string | null>(null);
+const memberSearchTerm = ref('');
+const showAddMemberForm = ref(false);
+const editingMember = ref<UserOrganizationRole | null>(null);
+const newMember = ref({
+  user_id: '',
+  role: '' as UserRoleInOrganization,
+});
+
+const filteredMembers = computed(() => {
+  const lowerCaseSearchTerm = memberSearchTerm.value.toLowerCase();
+  return organizationStore.organizationMembers.filter(member =>
+    member.profiles?.username?.toLowerCase().includes(lowerCaseSearchTerm) ||
+    member.profiles?.email?.toLowerCase().includes(lowerCaseSearchTerm) ||
+    member.user_id.toLowerCase().includes(lowerCaseSearchTerm)
+  );
+});
 
 // Theme options
 const themeOptions = ref([
@@ -175,11 +394,28 @@ const languageOptions = ref([
   { name: 'English', code: 'en-US' }
 ])
 
-onMounted(() => {
+onMounted(async () => {
   fullName.value = authStore.username || ''
   console.log('UserConfigurationView mounted. authStore.avatarUrl:', authStore.avatarUrl)
   console.log('authStore.user:', authStore.user)
-})
+
+  // Fetch organizations and members on mount
+  await organizationSelectionStore.fetchUserOrganizations();
+  if (organizationSelectionStore.activeOrganization) {
+    selectedOrganizationId.value = organizationSelectionStore.activeOrganization.id;
+    await organizationStore.fetchOrganizationMembers();
+  }
+});
+
+// Watch for changes in active organization to refetch members
+watch(() => organizationSelectionStore.activeOrganization, async (newOrg) => {
+  if (newOrg) {
+    selectedOrganizationId.value = newOrg.id;
+    await organizationStore.fetchOrganizationMembers();
+  } else {
+    organizationStore.organizationMembers = []; // Clear members if no active organization
+  }
+});
 
 const handleAvatarSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -299,6 +535,11 @@ const confirmDeleteAccount = () => {
   showDeleteModal.value = true
 }
 
+const confirmDeleteOrganization = (orgId: string) => {
+  organizationToDeleteId.value = orgId;
+  showDeleteOrganizationModal.value = true;
+};
+
 const handleDeleteAccount = async () => {
   loadingDelete.value = true
   const success = await authStore.deleteUserAccount()
@@ -312,6 +553,22 @@ const handleDeleteAccount = async () => {
   loadingDelete.value = false
 }
 
+async function handleDeleteOrganization() {
+  if (!organizationToDeleteId.value) return;
+
+  try {
+    await organizationSelectionStore.deleteOrganization(organizationToDeleteId.value);
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização excluída com sucesso!', life: 3000 });
+    showDeleteOrganizationModal.value = false;
+    organizationToDeleteId.value = null;
+    // After deletion, re-fetch organizations and potentially redirect or set a new active org
+    await organizationSelectionStore.fetchUserOrganizations();
+    router.push('/settings'); // Stay on settings or redirect to a dashboard
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao excluir organização.', life: 3000 });
+  }
+}
+
 const changeTheme = (event: { value: { value: string } }) => {
   themeStore.setTheme(event.value.value);
 }
@@ -319,4 +576,82 @@ const changeTheme = (event: { value: { value: string } }) => {
 const changeLanguage = (event: { value: string }) => {
   languageStore.setLanguage(event.value)
 }
+
+// Organization Management Functions
+async function handleCreateOrganization() {
+  if (!newOrganizationName.value) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'O nome da organização é obrigatório.', life: 3000 });
+    return;
+  }
+
+  try {
+    await organizationSelectionStore.createOrganization(newOrganizationName.value);
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização criada com sucesso!', life: 3000 });
+    newOrganizationName.value = ''; // Clear form
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao criar organização.', life: 3000 });
+  }
+}
+
+async function handleOrganizationChange() {
+  if (selectedOrganizationId.value) {
+    try {
+      await organizationSelectionStore.setActiveOrganization(selectedOrganizationId.value);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização ativa alterada com sucesso!', life: 3000 });
+    } catch (err: any) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao alterar organização ativa.', life: 3000 });
+    }
+  }
+}
+
+async function handleSubmitMember() {
+  if (!newMember.value.user_id || !newMember.value.role) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos.', life: 3000 });
+    return;
+  }
+
+  try {
+    if (editingMember.value) {
+      // Update existing member
+      await organizationStore.updateOrganizationMemberRole(editingMember.value.id, newMember.value.role);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Papel do membro atualizado com sucesso!', life: 3000 });
+    } else {
+      // Add new member
+      await organizationStore.addOrganizationMember(newMember.value.user_id, newMember.value.role);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro adicionado com sucesso!', life: 3000 });
+    }
+    resetMemberForm();
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha na operação.', life: 3000 });
+  }
+}
+
+async function removeMember(memberRoleId: string) {
+  if (confirm('Tem certeza que deseja remover este membro da organização?')) {
+    try {
+      await organizationStore.removeOrganizationMember(memberRoleId);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro removido com sucesso!', life: 3000 });
+    } catch (err: any) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao remover membro.', life: 3000 });
+    }
+  }
+}
+
+function startEdit(member: UserOrganizationRole) {
+  editingMember.value = { ...member };
+  newMember.value.user_id = member.user_id;
+  newMember.value.role = member.role;
+  showAddMemberForm.value = true;
+}
+
+function resetMemberForm() {
+  newMember.value = { user_id: '', role: '' as UserRoleInOrganization };
+  editingMember.value = null;
+  showAddMemberForm.value = false;
+}
+
 </script>
+
+<style scoped>
+/* Adicione estilos específicos se necessário */
+</style>

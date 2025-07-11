@@ -112,3 +112,47 @@ export interface AccountingPeriod {
   is_active: boolean;
   created_at: string;
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  created_at: string;
+  is_personal?: boolean; // Added is_personal property
+}
+
+export type UserRoleInOrganization = 'owner' | 'admin' | 'member_read_write' | 'member_read_only';
+
+export interface UserOrganizationRole {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  role: UserRoleInOrganization;
+  created_at: string;
+  updated_at: string;
+  profiles?: { // Nested profile data from Supabase join
+    username: string;
+    email: string;
+  };
+}
+
+export interface User {
+  id: string;
+  email: string;
+  username?: string;
+}
+
+export type SharedPermissionLevel = 'read' | 'write';
+
+export interface SharedAccountingPeriod {
+  id: string;
+  accounting_period_id: string;
+  shared_with_user_id: string;
+  permission_level: SharedPermissionLevel;
+  shared_by_user_id?: string;
+  created_at: string;
+  updated_at: string;
+  profiles?: { // Nested profile data for the shared_with_user
+    username: string;
+    email: string;
+  };
+}

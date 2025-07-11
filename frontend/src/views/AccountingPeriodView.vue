@@ -125,10 +125,93 @@
             >
               Excluir
             </button>
+            <button
+              @click="openShareModal(period)"
+              class="px-3 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50"
+            >
+              Compartilhar
+            </button>
           </div>
         </li>
       </ul>
       <p v-else class="text-gray-600">Nenhum período contábil encontrado. Crie um novo acima.</p>
+    </div>
+
+    <!-- Share Period Modal -->
+    <div v-if="showShareModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" @click.self="closeShareModal">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Compartilhar Período: {{ sharingPeriod?.name }}</h3>
+        <div class="mt-2">
+          <div class="mb-4">
+            <label for="shareUserSearch" class="block text-sm font-medium text-gray-700">Buscar Usuário (Email ou Nome):</label>
+            <input
+              type="text"
+              id="shareUserSearch"
+              v-model="userSearchQuery"
+              @input="searchUsers"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              placeholder="Digite email ou nome"
+            />
+            <ul v-if="searchResults.length > 0" class="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white">
+              <li
+                v-for="user in searchResults"
+                :key="user.id"
+                @click="selectUserForSharing(user)"
+                class="p-2 cursor-pointer hover:bg-gray-100"
+              >
+                {{ user.username || user.email }}
+              </li>
+            </ul>
+            <p v-if="sharingUser" class="mt-2 text-sm text-gray-600">
+              Usuário selecionado: <span class="font-semibold">{{ sharingUser.username || sharingUser.email }}</span>
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <label for="permissionLevel" class="block text-sm font-medium text-gray-700">Nível de Permissão:</label>
+            <select
+              id="permissionLevel"
+              v-model="sharingPermissionLevel"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="read">Leitura</option>
+              <option value="write">Escrita</option>
+            </select>
+          </div>
+
+          <div class="flex justify-end space-x-2">
+            <button
+              @click="sharePeriod"
+              :disabled="!sharingUser || !sharingPermissionLevel || sharingStore.loading"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              {{ sharingStore.loading ? 'Compartilhando...' : 'Compartilhar' }}
+            </button>
+            <button
+              @click="closeShareModal"
+              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div class="mt-6">
+            <h4 class="text-md font-semibold mb-2">Compartilhado com:</h4>
+            <p v-if="sharedUsers.length === 0" class="text-sm text-gray-600">Nenhum usuário.</p>
+            <ul v-else class="space-y-2">
+              <li v-for="shared in sharedUsers" :key="shared.id" class="flex justify-between items-center p-2 border rounded-md bg-gray-50">
+                <span>{{ shared.profiles?.username || shared.profiles?.email }} ({{ shared.permission_level }})</span>
+                <button
+                  @click="unsharePeriod(shared.id)"
+                  class="px-2 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600"
+                >
+                  Remover
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -137,9 +220,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore';
+import { useSharingStore } from '@/stores/sharingStore';
 import { useToast } from 'primevue/usetoast';
+import { api } from '@/services/api';
+import type { AccountingPeriod, User, SharedPermissionLevel, SharedAccountingPeriod } from '@/types';
 
 const accountingPeriodStore = useAccountingPeriodStore();
+const sharingStore = useSharingStore();
 const { accountingPeriods, loading, error } = storeToRefs(accountingPeriodStore);
 const toast = useToast();
 
@@ -151,6 +238,15 @@ const newPeriod = ref({
 
 const searchTerm = ref('');
 const showCreatePeriodForm = ref(false);
+
+// Sharing Modal State
+const showShareModal = ref(false);
+const sharingPeriod = ref<AccountingPeriod | null>(null);
+const userSearchQuery = ref('');
+const searchResults = ref<User[]>([]);
+const sharingUser = ref<User | null>(null);
+const sharingPermissionLevel = ref<SharedPermissionLevel>('read');
+const sharedUsers = ref<SharedAccountingPeriod[]>([]);
 
 const filteredAccountingPeriods = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase();
@@ -211,4 +307,92 @@ const formatDate = (dateString: string) => {
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString('pt-BR', options);
 };
+
+// Sharing Modal Functions
+async function openShareModal(period: AccountingPeriod) {
+  sharingPeriod.value = period;
+  showShareModal.value = true;
+  await fetchSharedUsers(period.id);
+}
+
+function closeShareModal() {
+  showShareModal.value = false;
+  sharingPeriod.value = null;
+  userSearchQuery.value = '';
+  searchResults.value = [];
+  sharingUser.value = null;
+  sharingPermissionLevel.value = 'read';
+  sharedUsers.value = [];
+}
+
+let searchTimeout: ReturnType<typeof setTimeout>;
+async function searchUsers() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    if (userSearchQuery.value.length > 2) {
+      try {
+        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value}`);
+        searchResults.value = data;
+      } catch (err) {
+        console.error('Erro ao buscar usuários:', err);
+        searchResults.value = [];
+      }
+    } else {
+      searchResults.value = [];
+    }
+  }, 300);
+}
+
+function selectUserForSharing(user: User) {
+  sharingUser.value = user;
+  searchResults.value = []; // Clear search results after selection
+  userSearchQuery.value = user.username || user.email || ''; // Display selected user
+}
+
+async function sharePeriod() {
+  if (!sharingPeriod.value || !sharingUser.value || !sharingPermissionLevel.value) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione um usuário e um nível de permissão.', life: 3000 });
+    return;
+  }
+
+  try {
+    await sharingStore.shareAccountingPeriod(
+      sharingPeriod.value.id,
+      sharingUser.value.id,
+      sharingPermissionLevel.value,
+    );
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período compartilhado com sucesso!', life: 3000 });
+    await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
+    sharingUser.value = null; // Clear selected user
+    userSearchQuery.value = ''; // Clear search query
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao compartilhar período.', life: 3000 });
+  }
+}
+
+async function unsharePeriod(sharingId: string) {
+  if (confirm('Tem certeza que deseja remover este compartilhamento?')) {
+    try {
+      await sharingStore.unshareAccountingPeriod(sharingId);
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Compartilhamento removido com sucesso!', life: 3000 });
+      if (sharingPeriod.value) {
+        await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
+      }
+    } catch (err: any) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao remover compartilhamento.', life: 3000 });
+    }
+  }
+}
+
+async function fetchSharedUsers(periodId: string) {
+  try {
+    // Assuming you'll add a GET endpoint to /sharing to list shared users for a period
+    // For now, this is a placeholder. You'll need to implement this backend endpoint.
+    const data = await api.get<SharedAccountingPeriod[]>(`/sharing?accounting_period_id=${periodId}`);
+    sharedUsers.value = data;
+  } catch (err) {
+    console.error('Erro ao buscar usuários compartilhados:', err);
+    sharedUsers.value = [];
+  }
+}
 </script>

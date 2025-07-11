@@ -16,6 +16,8 @@ export const useAuthStore = defineStore(
     const userRole = ref<string | null>(null)
     const username = ref<string | null>(null)
     const avatarUrl = ref<string | null>(null)
+    const userOrganizationId = ref<string | null>(null)
+    const userActiveAccountingPeriodId = ref<string | null>(null)
 
     const isLoggedIn = computed(() => !!user.value)
     const token = computed(() => session.value?.access_token || null)
@@ -25,19 +27,26 @@ export const useAuthStore = defineStore(
       if (!user.value) {
         userRole.value = null;
         username.value = null;
+        avatarUrl.value = null;
+        userOrganizationId.value = null;
+        userActiveAccountingPeriodId.value = null;
         return;
       }
       try {
-        const response = await api.get<{ username: string; role: string; avatar_url: string }>('/profile');
+        const response = await api.get<{ username: string; role: string; avatar_url: string; organization_id: string; active_accounting_period_id: string }>('/profile');
         userRole.value = response.role;
         username.value = response.username;
         avatarUrl.value = response.avatar_url;
+        userOrganizationId.value = response.organization_id;
+        userActiveAccountingPeriodId.value = response.active_accounting_period_id;
         console.log('fetchUserProfile: avatarUrl', avatarUrl.value);
       } catch (err: unknown) {
         console.error('Erro ao buscar perfil do usuário:', err);
         userRole.value = null;
         username.value = null;
         avatarUrl.value = null;
+        userOrganizationId.value = null;
+        userActiveAccountingPeriodId.value = null;
       }
     }
 
@@ -67,6 +76,8 @@ export const useAuthStore = defineStore(
             userRole.value = null;
             username.value = null;
             avatarUrl.value = null;
+            userOrganizationId.value = null;
+            userActiveAccountingPeriodId.value = null;
           }
         })
       } catch (err: unknown) {
@@ -151,6 +162,9 @@ export const useAuthStore = defineStore(
         session.value = null
         userRole.value = null;
         username.value = null;
+        avatarUrl.value = null;
+        userOrganizationId.value = null;
+        userActiveAccountingPeriodId.value = null;
         
         // Unsubscribe from Realtime updates
         const journalEntryStore = useJournalEntryStore();
@@ -317,7 +331,9 @@ export const useAuthStore = defineStore(
         session.value = null
         userRole.value = null
         username.value = null
-        avatarUrl.value = null
+        avatarUrl.value = null;
+        userOrganizationId.value = null;
+        userActiveAccountingPeriodId.value = null;
         console.log('Conta de usuário excluída com sucesso.')
         return true
       } catch (err: unknown) {
@@ -344,6 +360,8 @@ export const useAuthStore = defineStore(
       isAdmin,
       username,
       avatarUrl,
+      userOrganizationId,
+      userActiveAccountingPeriodId,
       initAuthListener,
       signIn,
       signUp,

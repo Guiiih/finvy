@@ -15,6 +15,10 @@ import consolidatedReportsHandler from "../backend/handlers/reports/consolidated
 import yearEndClosingHandler from "../backend/handlers/year-end-closing.js";
 import profileHandler from "../backend/handlers/profile.js";
 import accountingPeriodsHandler from "../backend/handlers/accounting-periods.js";
+import userOrganizationRolesHandler from "../backend/handlers/user-organization-roles.js";
+import sharingHandler from "../backend/handlers/sharing.js";
+import usersHandler from "../backend/handlers/users.js";
+import organizationsHandler from "../backend/handlers/organizations.js";
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -70,6 +74,18 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith("/accounting-periods")) {
     return accountingPeriodsHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/user-organization-roles")) {
+    return userOrganizationRolesHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/sharing")) {
+    return sharingHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/users")) {
+    return usersHandler(req, res, user_id, token);
+  }
+  if (finalUrlPath.startsWith("/organizations")) {
+    return organizationsHandler(req, res, user_id, token);
   }
 
   return handleErrorResponse(res, 404, "Endpoint protegido não encontrado.");
