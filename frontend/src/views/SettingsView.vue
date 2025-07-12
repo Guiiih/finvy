@@ -718,6 +718,7 @@ async function handleSubmitMember() {
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro adicionado com sucesso!', life: 3000 });
     }
     resetMemberForm();
+    await organizationStore.fetchOrganizationMembers(); // Refresh the list
   } catch (err: any) {
     toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha na operação.', life: 3000 });
   }
@@ -728,6 +729,7 @@ async function removeMember(memberRoleId: string) {
     try {
       await organizationStore.removeOrganizationMember(memberRoleId);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro removido com sucesso!', life: 3000 });
+      await organizationStore.fetchOrganizationMembers(); // Refresh the list
     } catch (err: any) {
       toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao remover membro.', life: 3000 });
     }

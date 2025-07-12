@@ -515,6 +515,12 @@ USING (
     auth.uid() = user_id
 );
 
+CREATE POLICY "Owners/Admins can view all organization members"
+ON public.user_organization_roles FOR SELECT
+USING (
+    public.can_manage_organization_role(auth.uid(), organization_id)
+);
+
 CREATE POLICY "Owners/Admins can insert roles"
 ON public.user_organization_roles FOR INSERT
 WITH CHECK (
