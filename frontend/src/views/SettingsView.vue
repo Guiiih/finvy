@@ -345,6 +345,7 @@
 </template>
 
 <script setup lang="ts">
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
@@ -674,9 +675,9 @@ async function searchUsers() {
     const response = await api.get<User[]>(`/users?query=${searchUserTerm.value}`);
     searchResults.value = response;
     showSearchResults.value = true;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Erro ao buscar usuários:', err);
-    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao buscar usuários.', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao buscar usuários.', life: 3000 });
     searchResults.value = [];
     showSearchResults.value = false;
   } finally {
@@ -696,7 +697,7 @@ function debounceSearchUsers() {
   }, 500); // Debounce por 500ms
 }
 
-function selectUser(user: any) {
+function selectUser(user: User) {
   selectedUserForMembership.value = user;
   newMember.value.user_id = user.id; // Define o user_id real para o envio
   searchUserTerm.value = user.username || user.email; // Exibe o nome/email no campo de busca
@@ -721,8 +722,8 @@ async function handleSubmitMember() {
     }
     resetMemberForm();
     await organizationStore.fetchOrganizationMembers(); // Refresh the list
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha na operação.', life: 3000 });
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha na operação.', life: 3000 });
   }
 }
 
@@ -732,9 +733,9 @@ async function removeMember(memberRoleId: string) {
       await organizationStore.removeOrganizationMember(memberRoleId);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro removido com sucesso!', life: 3000 });
       await organizationStore.fetchOrganizationMembers(); // Refresh the list
-    } catch (err: any) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao remover membro.', life: 3000 });
-    }
+    } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao remover membro.', life: 3000 });
+  }
   }
 }
 

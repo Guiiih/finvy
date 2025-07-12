@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
 import type { AccountingPeriod } from '@/types';
-import { useAuthStore } from './authStore';
 import { useOrganizationSelectionStore } from './organizationSelectionStore'; // Import new store
 
 type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'>;
@@ -13,7 +12,6 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const authStore = useAuthStore();
   const organizationSelectionStore = useOrganizationSelectionStore(); // Initialize new store
 
   const getAllAccountingPeriods = computed(() => accountingPeriods.value);

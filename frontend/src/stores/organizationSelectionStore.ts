@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
-import type { Organization, AccountingPeriod, UserOrganizationRole } from '@/types';
+import type { Organization, AccountingPeriod } from '@/types';
 import { useAuthStore } from './authStore';
 import { useAccountingPeriodStore } from './accountingPeriodStore';
 

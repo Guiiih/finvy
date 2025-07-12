@@ -225,7 +225,7 @@ import type { AccountingPeriod, User, SharedPermissionLevel, SharedAccountingPer
 
 const accountingPeriodStore = useAccountingPeriodStore();
 const sharingStore = useSharingStore();
-const { accountingPeriods, loading, error } = storeToRefs(accountingPeriodStore);
+const { accountingPeriods } = storeToRefs(accountingPeriodStore);
 const toast = useToast();
 
 const newPeriod = ref({
@@ -276,8 +276,8 @@ const handleCreatePeriod = async () => {
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil criado e ativado com sucesso!', life: 3000 });
     newPeriod.value = { name: '', start_date: null, end_date: null }; // Limpa o formulário
     showCreatePeriodForm.value = false; // Fecha o formulário após a criação
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao criar período contábil.', life: 3000 });
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao criar período contábil.', life: 3000 });
   }
 };
 
@@ -285,8 +285,8 @@ const setActive = async (id: string) => {
   try {
     await accountingPeriodStore.setActivePeriod(id);
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil definido como ativo!', life: 3000 });
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao definir período como ativo.', life: 3000 });
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao definir período como ativo.', life: 3000 });
   }
 };
 
@@ -295,8 +295,8 @@ const deletePeriod = async (id: string) => {
     try {
       await accountingPeriodStore.deleteAccountingPeriod(id);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil excluído com sucesso!', life: 3000 });
-    } catch (err: any) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao excluir período contábil.', life: 3000 });
+    } catch (err: unknown) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao excluir período contábil.', life: 3000 });
     }
   }
 };
@@ -363,8 +363,8 @@ async function sharePeriod() {
     await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
     sharingUser.value = null; // Clear selected user
     userSearchQuery.value = ''; // Clear search query
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao compartilhar período.', life: 3000 });
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao compartilhar período.', life: 3000 });
   }
 }
 
@@ -376,8 +376,8 @@ async function unsharePeriod(sharingId: string) {
       if (sharingPeriod.value) {
         await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
       }
-    } catch (err: any) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao remover compartilhamento.', life: 3000 });
+    } catch (err: unknown) {
+      toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao remover compartilhamento.', life: 3000 });
     }
   }
 }

@@ -5,13 +5,14 @@ import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
 import { supabase } from '@/supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const toast = useToast()
-  const realtimeChannel = ref<any>(null);
+  const realtimeChannel = ref<RealtimeChannel | null>(null);
 
   const accountingPeriodStore = useAccountingPeriodStore();
 
@@ -77,7 +78,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
   function subscribeToRealtime() {
     if (realtimeChannel.value) {
-      supabase.removeChannel(realtimeChannel.value);
+      supabase.removeChannel(realtimeChannel.value as RealtimeChannel);
     }
 
     const orgId = accountingPeriodStore.activeAccountingPeriod?.organization_id;
@@ -123,7 +124,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
   function unsubscribeFromRealtime() {
     if (realtimeChannel.value) {
-      supabase.removeChannel(realtimeChannel.value);
+      supabase.removeChannel(realtimeChannel.value as RealtimeChannel);
       realtimeChannel.value = null;
     }
   }
