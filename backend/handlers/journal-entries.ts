@@ -60,7 +60,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const userSupabase = getSupabaseClient(token);
+  
   logger.info(
     `Journal Entries Handler: Recebendo requisição ${req.method} para ${req.url}`,
   );

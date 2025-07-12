@@ -1,7 +1,6 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
-  getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
@@ -12,26 +11,12 @@ import {
   uuidSchema,
 } from "../utils/schemas.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
-
-// Cache em memória para as contas
-const accountsCache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_DURATION_MS = 5 * 60 * 1000;
-
-function getCachedAccounts(userId: string) {
-  const cached = accountsCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.data;
-  }
-  return null;
-}
-
-function setCachedAccounts(userId: string, data: unknown) {
-  accountsCache.set(userId, { data, timestamp: Date.now() });
-}
-
-function invalidateAccountsCache(userId: string) {
-  accountsCache.delete(userId);
-}
+import {
+  getAccounts,
+  createAccount,
+  updateAccount,
+  deleteAccount,
+} from "../services/accountService.js";
 
 /**
  * @swagger
@@ -77,7 +62,7 @@ export default async function handler(
   token: string,
 ) {
   logger.info("Accounts Handler: user_id recebido:", user_id);
-  const userSupabase = getSupabaseClient(token);
+  
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
@@ -91,27 +76,7 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const cachedData = getCachedAccounts(user_id);
-      if (cachedData) {
-        logger.info(
-          "Accounts Handler: Retornando contas do cache para user_id:",
-          user_id,
-        );
-        return res.status(200).json(cachedData);
-      }
-
-      const { data, error: dbError } = await userSupabase
-        .from("accounts")
-        .select(
-          "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id",
-        )
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .order("name", { ascending: true });
-
-      if (dbError) throw dbError;
-      setCachedAccounts(user_id, data);
+      const data = await getAccounts(user_id, organization_id, active_accounting_period_id, token);
       return res.status(200).json(data);
     } else if (req.method === "POST") {
       /**
@@ -177,20 +142,9 @@ export default async function handler(
       }
       const { name, type, parent_account_id } = parsedBody.data;
 
-      const { data, error: dbError } = await userSupabase
-        .from("accounts")
-        .insert({
-          name,
-          type,
-          user_id,
-          parent_account_id,
-          organization_id,
-          accounting_period_id: active_accounting_period_id,
-        })
-        .select();
-      if (dbError) throw dbError;
-      invalidateAccountsCache(user_id);
-      return res.status(201).json(data[0]);
+      const newAccount = { name, type, parent_account_id };
+      const createdAccount = await createAccount(newAccount, user_id, organization_id, active_accounting_period_id, token);
+      return res.status(201).json(createdAccount);
     } else if (req.method === "PUT") {
       /**
        * @swagger
@@ -271,24 +225,15 @@ export default async function handler(
         );
       }
 
-      const { data, error: dbError } = await userSupabase
-        .from("accounts")
-        .update(updateData)
-        .eq("id", id)
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .select();
-      if (dbError) throw dbError;
-      if (!data || data.length === 0) {
+      const updatedAccount = await updateAccount(id, updateData, user_id, organization_id, active_accounting_period_id, token);
+      if (!updatedAccount) {
         return handleErrorResponse(
           res,
           404,
           "Conta não encontrada ou você não tem permissão para atualizar esta conta.",
         );
       }
-      invalidateAccountsCache(user_id);
-      return res.status(200).json(data[0]);
+      return res.status(200).json(updatedAccount);
     } else if (req.method === "DELETE") {
       /**
        * @swagger
@@ -329,23 +274,15 @@ export default async function handler(
             .join(", "),
         );
       }
-      const { error: dbError, count } = await userSupabase
-        .from("accounts")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id);
+      const deleted = await deleteAccount(id, user_id, organization_id, active_accounting_period_id, token);
 
-      if (dbError) throw dbError;
-      if (count === 0) {
+      if (!deleted) {
         return handleErrorResponse(
           res,
           404,
           "Conta não encontrada ou você não tem permissão para deletar esta conta.",
         );
       }
-      invalidateAccountsCache(user_id);
       return res.status(204).send("");
     } else {
       res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);

@@ -75,16 +75,12 @@ export const createEntryLineSchema = z
     account_id: z
       .string()
       .uuid({ message: "Account ID inválido. Deve ser um UUID válido." }),
-    debit: z
+    type: z.enum(["debit", "credit"], {
+      message: "Tipo de lançamento inválido. Deve ser 'debit' ou 'credit'.",
+    }),
+    amount: z
       .number()
-      .nonnegative("Débito deve ser um valor não negativo.")
-      .nullable()
-      .optional(),
-    credit: z
-      .number()
-      .nonnegative("Crédito deve ser um valor não negativo.")
-      .nullable()
-      .optional(),
+      .positive("Valor do lançamento deve ser um número positivo."),
     product_id: z
       .string()
       .uuid({ message: "Product ID inválido. Deve ser um UUID válido." })
@@ -148,10 +144,6 @@ export const createEntryLineSchema = z
         message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
       })
       .optional(),
-  })
-  .refine((data) => data.debit !== undefined || data.credit !== undefined, {
-    message: "Pelo menos um dos campos (debit ou credit) é obrigatório.",
-    path: ["debit", "credit"],
   });
 
 export const updateEntryLineSchema = z

@@ -1,12 +1,14 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
-  getSupabaseClient,
   handleErrorResponse,
-  supabase as serviceRoleSupabase,
   getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { createFinancialTransactionSchema } from "../utils/schemas.js";
+import {
+  getFinancialTransactions,
+  createFinancialTransaction,
+} from "../services/financialTransactionService.js";
 
 /**
  * @swagger
@@ -123,7 +125,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const userSupabase = getSupabaseClient(token);
+  
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
@@ -141,16 +143,10 @@ export default async function handler(
       type === "payable" ? "accounts_payable" : "accounts_receivable";
 
     if (req.method === "GET") {
-      const { data, error: dbError } = await serviceRoleSupabase
-        .from(tableName)
-        .select(
-          "id, description, amount, due_date, paid_date, is_paid, received_date, is_received, organization_id, accounting_period_id",
-        )
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .order("created_at", { ascending: false });
-
-      if (dbError) throw dbError;
+      const data = await getFinancialTransactions(type as "payable" | "receivable", user_id, organization_id, active_accounting_period_id, token);
+      if (!data) {
+        return handleErrorResponse(res, 404, "Transações financeiras não encontradas.");
+      }
       return res.status(200).json(data);
     }
 
@@ -163,23 +159,11 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const newTransaction = {
-        ...parsedBody.data,
-        user_id,
-        organization_id,
-        accounting_period_id: active_accounting_period_id,
-      };
+      const newTransaction = parsedBody.data;
 
-      const { data: newFinancialTransaction, error: dbError } =
-        await userSupabase
-          .from(tableName)
-          .insert([newTransaction])
-          .select()
-          .single();
+      const createdTransaction = await createFinancialTransaction(type as "payable" | "receivable", newTransaction, user_id, organization_id, active_accounting_period_id, token);
 
-      if (dbError) throw dbError;
-
-      return res.status(201).json(newFinancialTransaction);
+      return res.status(201).json(createdTransaction);
     }
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);

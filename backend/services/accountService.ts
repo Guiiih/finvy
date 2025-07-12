@@ -1,0 +1,145 @@
+import { getSupabaseClient } from "../utils/supabaseClient.js";
+import logger from "../utils/logger.js";
+import { Account } from "../types/index.js";
+
+const accountsCache = new Map<string, { data: Account[]; timestamp: number }>();
+const CACHE_DURATION_MS = 5 * 60 * 1000;
+
+function getCachedAccounts(userId: string): Account[] | null {
+  const cached = accountsCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedAccounts(userId: string, data: Account[]) {
+  accountsCache.set(userId, { data, timestamp: Date.now() });
+}
+
+export function invalidateAccountsCache(userId: string) {
+  accountsCache.delete(userId);
+}
+
+export async function getAccounts(
+  user_id: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<Account[] | null> {
+  const userSupabase = getSupabaseClient(token);
+
+  const cachedData = getCachedAccounts(user_id);
+  if (cachedData) {
+    logger.info("Accounts Service: Retornando contas do cache.");
+    return cachedData;
+  }
+
+  const { data, error: dbError } = await userSupabase
+    .from("accounts")
+    .select(
+      "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id",
+    )
+    .eq("user_id", user_id)
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", active_accounting_period_id)
+    .order("name", { ascending: true });
+
+  if (dbError) {
+    logger.error("Accounts Service: Erro ao buscar contas:", dbError);
+    throw dbError;
+  }
+
+  setCachedAccounts(user_id, data as Account[]);
+  return data as Account[];
+}
+
+export async function createAccount(
+  newAccount: Omit<Account, "id">,
+  user_id: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<Account | null> {
+  const userSupabase = getSupabaseClient(token);
+
+  const { data, error: dbError } = await userSupabase
+    .from("accounts")
+    .insert({
+      ...newAccount,
+      user_id,
+      organization_id,
+      accounting_period_id: active_accounting_period_id,
+    })
+    .select();
+
+  if (dbError) {
+    logger.error("Accounts Service: Erro ao criar conta:", dbError);
+    throw dbError;
+  }
+
+  invalidateAccountsCache(user_id);
+  return data[0] as Account;
+}
+
+export async function updateAccount(
+  id: string,
+  updateData: Partial<Account>,
+  user_id: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<Account | null> {
+  const userSupabase = getSupabaseClient(token);
+
+  const { data, error: dbError } = await userSupabase
+    .from("accounts")
+    .update(updateData)
+    .eq("id", id)
+    .eq("user_id", user_id)
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", active_accounting_period_id)
+    .select();
+
+  if (dbError) {
+    logger.error("Accounts Service: Erro ao atualizar conta:", dbError);
+    throw dbError;
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  invalidateAccountsCache(user_id);
+  return data[0] as Account;
+}
+
+export async function deleteAccount(
+  id: string,
+  user_id: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<boolean> {
+  const userSupabase = getSupabaseClient(token);
+
+  const { error: dbError, count } = await userSupabase
+    .from("accounts")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user_id)
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", active_accounting_period_id);
+
+  if (dbError) {
+    logger.error("Accounts Service: Erro ao deletar conta:", dbError);
+    throw dbError;
+  }
+
+  if (count === 0) {
+    return false;
+  }
+
+  invalidateAccountsCache(user_id);
+  return true;
+}
