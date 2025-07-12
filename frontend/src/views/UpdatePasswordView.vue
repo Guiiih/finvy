@@ -6,7 +6,7 @@
         <label for="password">Nova Senha:</label>
         <input type="password" id="password" v-model="password" required />
       </div>
-      <button type="submit">Atualizar Senha</button>
+      <button type="submit" class="w-full p-4 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Atualizar Senha</button>
     </form>
   </div>
 </template>
@@ -79,21 +79,5 @@ input[type='password'] {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #138496;
 }
 </style>

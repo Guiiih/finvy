@@ -81,19 +81,19 @@ const exportReport = async (reportType: string) => {
       <input type="date" id="startDate" v-model="startDate" />
       <label for="endDate">Data Final:</label>
       <input type="date" id="endDate" v-model="endDate" />
-      <button @click="navigateToReport('dre')">Ver DRE</button>
-      <button @click="navigateToReport('balance-sheet')">Ver Balanço</button>
-      <button @click="navigateToReport('dfc')">Ver DFC</button>
+      <button @click="navigateToReport('dre')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver DRE</button>
+      <button @click="navigateToReport('balance-sheet')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver Balanço</button>
+      <button @click="navigateToReport('dfc')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver DFC</button>
       <label for="exportFormat">Formato:</label>
       <select id="exportFormat" v-model="selectedFormat">
         <option value="csv">CSV</option>
         <option value="xlsx">XLSX</option>
         <option value="pdf">PDF</option>
       </select>
-      <button @click="exportReport('trialBalance')">Exportar Balancete</button>
-      <button @click="exportReport('dre')">Exportar DRE</button>
-      <button @click="exportReport('balanceSheet')">Exportar Balanço</button>
-      <button @click="exportReport('ledgerDetails')">Exportar Razão Detalhado</button>
+      <button @click="exportReport('trialBalance')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Balancete</button>
+      <button @click="exportReport('dre')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar DRE</button>
+      <button @click="exportReport('balanceSheet')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Balanço</button>
+      <button @click="exportReport('ledgerDetails')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Razão Detalhado</button>
     </div>
 
     <p v-if="reportStore.loading" class="loading-message">Gerando relatórios...</p>
@@ -143,21 +143,6 @@ h1 {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
-}
-
-.date-filter-section button {
-  padding: 8px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.2s;
-}
-
-.date-filter-section button:hover {
-  background-color: #0056b3;
 }
 
 .loading-message,

@@ -75,7 +75,7 @@
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
           </div>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" :disabled="organizationSelectionStore.loading">
+          <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50" :disabled="organizationSelectionStore.loading">
             {{ organizationSelectionStore.loading ? 'Criando...' : 'Criar Organização' }}
           </button>
         </form>
@@ -94,7 +94,7 @@
           </p>
           <button
             @click="setActivePersonalOrganization"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
           >
             Ativar Workspace Pessoal
           </button>
@@ -166,7 +166,7 @@
               <button
                 v-if="organizationStore.isCurrentUserOwnerOrAdmin"
                 @click="showAddMemberForm = !showAddMemberForm; editingMember = null"
-                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md transition duration-300 ease-in-out"
+                class="px-4 py-2 bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-md transition duration-300 ease-in-out"
               >
                 {{ showAddMemberForm ? 'Fechar Formulário' : 'Adicionar Membro' }}
               </button>
@@ -177,25 +177,15 @@
               <h4 class="text-xl font-semibold mb-4">{{ editingMember ? 'Editar Membro' : 'Adicionar Novo Membro' }}</h4>
               <form @submit.prevent="handleSubmitMember" class="space-y-4">
                 <div>
-                  <label for="memberSearch" class="block text-sm font-medium text-gray-700">Buscar Usuário (Nome ou Email):</label>
-                  <div class="flex space-x-2">
-                    <input
+                  <label for="memberSearch" class="block text-sm font-medium text-gray-700">Buscar Usuário (Email):</label>
+                  <input
                       type="text"
                       id="memberSearch"
                       v-model="searchUserTerm"
-                      placeholder="Nome ou Email do Usuário"
+                      placeholder="Email do Usuário"
                       @input="debounceSearchUsers"
                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     />
-                    <button
-                      type="button"
-                      @click="searchUsers"
-                      :disabled="searchingUsers"
-                      class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                    >
-                      {{ searchingUsers ? 'Buscando...' : 'Buscar' }}
-                    </button>
-                  </div>
                   <div v-if="showSearchResults && searchResults.length > 0" class="mt-2 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto bg-white">
                     <ul class="divide-y divide-gray-200">
                       <li v-for="user in searchResults" :key="user.id" @click="selectUser(user)" class="p-3 hover:bg-gray-100 cursor-pointer">
@@ -204,8 +194,11 @@
                       </li>
                     </ul>
                   </div>
-                  <div v-else-if="showSearchResults && !searchingUsers && searchResults.length === 0" class="mt-2 p-3 text-sm text-gray-500">
-                    Nenhum usuário encontrado.
+                  <div v-else-if="showSearchResults && !searchingUsers && searchResults.length === 0 && searchUserTerm.length > 0" class="mt-2 p-3 text-sm text-gray-500">
+                    Nenhum usuário encontrado com este email.
+                  </div>
+                  <div v-else-if="searchUserTerm.length > 0 && !isValidEmail" class="mt-2 p-3 text-sm text-red-500">
+                    Por favor, insira um email válido para buscar.
                   </div>
                 </div>
                 <div v-if="selectedUserForMembership">
@@ -223,14 +216,14 @@
                     <option value="">Selecione um papel</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
-                    <option value="member_read_write">Membro (Leitura/Escrita)</option>
-                    <option value="member_read_only">Membro (Somente Leitura)</option>
+                    <option value="member">Membro</option>
+                    <option value="guest">Convidado</option>
                   </select>
                 </div>
                 <button
                   type="submit"
                   :disabled="organizationStore.loading"
-                  class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
                 >
                   {{ organizationStore.loading ? 'Processando...' : (editingMember ? 'Atualizar Membro' : 'Adicionar Membro') }}
                 </button>
@@ -260,19 +253,12 @@
                       </span>
                     </div>
                   </div>
-                  <!-- Admin actions -->
-                  <div v-if="organizationStore.isCurrentUserOwnerOrAdmin" class="space-x-2">
-                    <button
-                      @click="startEdit(member)"
-                      class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      @click="removeMember(member.id)"
-                      class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
-                    >
-                      Remover
+                  <div v-if="organizationStore.isCurrentUserOwnerOrAdmin" class="flex items-center space-x-2">
+                    <button @click="startEdit(member)" class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out" title="Editar">
+                        <i class="pi pi-pencil w-5 h-5"></i>
+                      </button>
+                    <button @click="removeMember(member.id)" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out" v-tooltip.top="'Remover'" >
+                      <i class="pi pi-trash w-5 h-5"></i>
                     </button>
                   </div>
                 </li>
@@ -670,8 +656,14 @@ async function handleOrganizationChange() {
 
 let searchTimeout: ReturnType<typeof setTimeout>;
 
+const isValidEmail = computed(() => {
+  // Basic email validation regex
+  const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,4}$/;
+  return emailRegex.test(searchUserTerm.value);
+});
+
 async function searchUsers() {
-  if (!searchUserTerm.value) {
+  if (!searchUserTerm.value || !isValidEmail.value) {
     searchResults.value = [];
     showSearchResults.value = false;
     return;
@@ -695,7 +687,12 @@ async function searchUsers() {
 function debounceSearchUsers() {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    searchUsers();
+    if (isValidEmail.value) {
+      searchUsers();
+    } else {
+      searchResults.value = [];
+      showSearchResults.value = false;
+    }
   }, 500); // Debounce por 500ms
 }
 

@@ -286,9 +286,9 @@ onMounted(() => {
         </div>
         
         <button
-          @click="toggleNewEntryForm"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
+            @click="toggleNewEntryForm"
+            class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+          >
           {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
         </button>
         <button
@@ -446,7 +446,7 @@ onMounted(() => {
             <button
               type="submit"
               :disabled="journalEntryStore.loading || totalDebits !== totalCredits"
-              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+              class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
             >
               <ProgressSpinner v-if="journalEntryStore.loading" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
               <span v-else>{{ editingEntryId ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}</span>

@@ -36,7 +36,7 @@
           </div>
           <button
             type="submit"
-            class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853] disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+            class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
             :disabled="!email"
           >
             Enviar

@@ -35,8 +35,8 @@ export async function getUserRoleInOrganization(
 const validRoles = z.enum([
   "owner",
   "admin",
-  "member_read_write",
-  "member_read_only",
+  "member",
+  "guest",
 ]);
 
 const addMemberSchema = z.object({

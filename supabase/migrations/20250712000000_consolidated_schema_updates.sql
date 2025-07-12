@@ -49,7 +49,7 @@ CREATE TABLE public.user_organization_roles (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
-    role text NOT NULL, -- e.g., 'owner', 'admin', 'member_read_write', 'member_read_only'
+    role text NOT NULL, -- e.g., 'owner', 'admin', 'member', 'guest'
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     UNIQUE (user_id, organization_id)
@@ -218,7 +218,6 @@ BEGIN
   FROM
     profiles AS p
   WHERE
-    p.username ILIKE '%' || search_term || '%' OR
     p.email ILIKE '%' || search_term || '%'
   LIMIT 10;
 END;
@@ -496,7 +495,7 @@ WITH CHECK (
     SELECT 1 FROM public.user_organization_roles uor
     WHERE uor.user_id = auth.uid()
     AND uor.organization_id = accounting_periods.organization_id
-    AND uor.role IN ('owner', 'admin', 'member_read_write')
+    AND uor.role IN ('owner', 'admin', 'member')
   )
 );
 
@@ -507,7 +506,7 @@ USING (
     SELECT 1 FROM public.user_organization_roles uor
     WHERE uor.user_id = auth.uid()
     AND uor.organization_id = accounting_periods.organization_id
-    AND uor.role IN ('owner', 'admin', 'member_read_write')
+    AND uor.role IN ('owner', 'admin', 'member')
   )
 );
 
@@ -518,7 +517,7 @@ USING (
     SELECT 1 FROM public.user_organization_roles uor
     WHERE uor.user_id = auth.uid()
     AND uor.organization_id = accounting_periods.organization_id
-    AND uor.role IN ('owner', 'admin', 'member_read_write')
+    AND uor.role IN ('owner', 'admin', 'member')
   )
 );
 

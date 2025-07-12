@@ -27,7 +27,7 @@
       </div>
       <button
         @click="showCreatePeriodForm = !showCreatePeriodForm"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
       >
         {{ showCreatePeriodForm ? 'Fechar Formulário' : 'Novo Período' }}
       </button>
@@ -72,9 +72,7 @@
         </div>
         <div class="md:col-span-3 flex justify-end">
           <button
-            type="submit"
-            :disabled="accountingPeriodStore.loading"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50
           >
             {{ accountingPeriodStore.loading ? 'Criando...' : 'Criar Período' }}
           </button>
@@ -183,7 +181,7 @@
             <button
               @click="sharePeriod"
               :disabled="!sharingUser || !sharingPermissionLevel || sharingStore.loading"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
             >
               {{ sharingStore.loading ? 'Compartilhando...' : 'Compartilhar' }}
             </button>

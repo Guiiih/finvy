@@ -8,7 +8,7 @@
       <p class="text-lg text-gray-400 mb-10 leading-relaxed">
         Agora você faz parte da plataforma do Finvy. Tenha uma ótima experiência.
       </p>
-      <button @click="goToLogin" class="px-8 py-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853]">
+      <button @click="goToLogin" class="px-8 py-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500">
         Voltar ao login
       </button>
     </div>

@@ -105,7 +105,7 @@ watchEffect(() => {
             required
           />
         </div>
-        <button type="submit">Adicionar Produto</button>
+        <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Adicionar Produto</button>
       </form>
     </div>
 
@@ -125,7 +125,7 @@ watchEffect(() => {
       >
         <template #cell(icms_rate)="{ value }"> {{ (value as number).toFixed(2) }}% </template>
         <template #cell(actions)="{ item }">
-          <button @click="handleDeleteProduct(item.id as string)" class="delete-button">
+          <button @click="handleDeleteProduct(item.id as string)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
             Excluir
           </button>
         </template>
@@ -184,33 +184,6 @@ h2 {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
-}
-
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-  margin-right: 10px;
-}
-
-button[type='submit'] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type='submit']:hover {
-  background-color: #0056b3;
-}
-
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
 }
 
 .error-message {

@@ -122,7 +122,7 @@ export interface Organization {
   shared_from_user_name?: string; // Name of the user who shared the period
 }
 
-export type UserRoleInOrganization = 'owner' | 'admin' | 'member_read_write' | 'member_read_only';
+export type UserRoleInOrganization = 'owner' | 'admin' | 'member' | 'guest';
 
 export interface UserOrganizationRole {
   id: string;

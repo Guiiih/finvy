@@ -39,8 +39,8 @@
             :required="newAccount.is_received"
           />
         </div>
-        <button type="submit">{{ isEditing ? 'Atualizar' : 'Adicionar' }}</button>
-        <button type="button" @click="resetForm" v-if="isEditing">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">{{ isEditing ? 'Atualizar' : 'Adicionar' }}</button>
+        <button type="button" @click="resetForm" v-if="isEditing" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Cancelar</button>
       </form>
     </div>
 
@@ -65,11 +65,11 @@
             <td>R$ {{ account.amount.toFixed(2) }}</td>
             <td>{{ account.due_date }}</td>
             <td>
-              <button @click="startEdit(account)">Editar</button>
-              <button @click="markAsReceived(account.id)" v-if="!account.is_received">
+              <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
+              <button @click="markAsReceived(account.id)" v-if="!account.is_received" class="px-3 py-1 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">
                 Marcar como Recebida
               </button>
-              <button @click="handleDeleteAccountReceivable(account.id)" class="delete-button">
+              <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
                 Excluir
               </button>
             </td>
@@ -96,8 +96,8 @@
             <td>{{ account.due_date }}</td>
             <td>{{ account.received_date }}</td>
             <td>
-              <button @click="startEdit(account)">Editar</button>
-              <button @click="handleDeleteAccountReceivable(account.id)" class="delete-button">
+              <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
+              <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
                 Excluir
               </button>
             </td>
@@ -278,24 +278,6 @@ h2 {
 
 .form-group input[type='checkbox'] {
   margin-top: 8px;
-}
-
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-  margin-right: 10px;
-}
-
-button[type='submit'] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type='submit']:hover {
-  background-color: #0056b3;
 }
 
 .delete-button {

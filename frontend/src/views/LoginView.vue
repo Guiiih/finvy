@@ -54,7 +54,7 @@
               >Esqueci minha senha</router-link
             >
           </div>
-          <button type="submit" class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853]" :disabled="loading" :aria-busy="loading" aria-live="assertive">
+          <button type="submit" class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500" :disabled="loading" :aria-busy="loading" aria-live="assertive">
             <span v-if="loading" class="pi pi-spin pi-spinner"></span>
             <span v-else>Entrar</span>
           </button>

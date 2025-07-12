@@ -70,7 +70,7 @@
               <span v-else>🙉</span>
             </span>
           </div>
-          <button type="submit" class="w-full p-4 bg-[#00e676] text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-[#00c853]">
+          <button type="submit" class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500">
             Concluir cadastro
           </button>
         </form>

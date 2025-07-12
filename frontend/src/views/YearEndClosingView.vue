@@ -14,7 +14,7 @@
         <input type="date" id="closingDate" v-model="closingDate" required />
       </div>
 
-      <button @click="handleYearEndClosing" :disabled="loading">
+      <button @click="handleYearEndClosing" :disabled="loading" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed">
         {{ loading ? 'Processando...' : 'Realizar Fechamento' }}
       </button>
 
@@ -109,26 +109,6 @@ h1 {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
-}
-
-button {
-  padding: 12px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1.1em;
-  transition: background-color 0.2s;
-}
-
-button:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
 }
 
 .success-message {
