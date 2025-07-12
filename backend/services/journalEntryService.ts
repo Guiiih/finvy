@@ -2,13 +2,13 @@ import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
 import { JournalEntry } from "../types/index.js";
 
-const journalEntriesCache = new Map<
+export const journalEntriesCache = new Map<
   string,
   { data: JournalEntry[]; timestamp: number }
 >();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCachedJournalEntries(userId: string): JournalEntry[] | null {
+export function getCachedJournalEntries(userId: string): JournalEntry[] | null {
   const cached = journalEntriesCache.get(userId);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
     return cached.data;
@@ -16,7 +16,7 @@ function getCachedJournalEntries(userId: string): JournalEntry[] | null {
   return null;
 }
 
-function setCachedJournalEntries(userId: string, data: JournalEntry[]) {
+export function setCachedJournalEntries(userId: string, data: JournalEntry[]) {
   journalEntriesCache.set(userId, { data, timestamp: Date.now() });
 }
 

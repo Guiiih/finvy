@@ -1,10 +1,12 @@
-<script setup lang="ts">
+'''<script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
 import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
+import { setToast } from '@/services/notificationService'
 import UserMenu from '@/components/UserMenu.vue'
 
 import FinvyLogo from './assets/FinvyLogo.svg'
@@ -14,6 +16,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const accountingPeriodStore = useAccountingPeriodStore()
+const toast = useToast()
 
 const showUserMenu = ref(false)
 
@@ -26,6 +29,7 @@ const closeUserMenu = () => {
 }
 
 onMounted(() => {
+  setToast(toast)
   authStore.initAuthListener()
   window.addEventListener('click', closeUserMenu)
 })
@@ -41,7 +45,7 @@ const shouldHideNavbar = computed(() => {
 const logoSrc = computed(() => {
   return themeStore.theme === 'dark' ? FinvyLogo : FinvyLogoBlack
 })
-</script>
+</script>'''
 
 <template>
   <Toast aria-live="polite" />

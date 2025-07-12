@@ -1,14 +1,17 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
-
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
     vue(),
-    tailwindcss() as any,
+    tailwindcss(),
+    visualizer({
+      filename: 'bundle-analysis.html',
+      open: true,
+    }),
   ],
   resolve: {
     alias: {
