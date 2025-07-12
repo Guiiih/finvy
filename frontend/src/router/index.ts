@@ -158,6 +158,32 @@ const router = createRouter({
       component: () => import('../views/AccountingPeriodView.vue'),
       meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
     },
+    {
+      path: '/docs/project',
+      name: 'project-docs',
+      component: () => import('../views/ProjectDocsView.vue'),
+      meta: { requiresAuth: true, title: 'Documentação do Projeto' },
+
+    },
+    {
+      path: '/docs/api',
+      name: 'api-docs',
+      component: () => import('../views/ApiDocsView.vue'),
+      meta: { requiresAuth: true, title: 'Documentação da API' },
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: () => import('../views/FaqView.vue'),
+      meta: { requiresAuth: true, title: 'FAQ' },
+    },
+
+    {
+      path: '/support',
+      name: 'support',
+      component: () => import('../views/SupportView.vue'),
+      meta: { requiresAuth: true, title: 'Suporte' },
+    },
   ],
 })
 
