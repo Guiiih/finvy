@@ -165,6 +165,20 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION is_member_of_any_organization(p_user_id UUID, p_organization_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_organization_roles
+    WHERE user_id = p_user_id
+    AND organization_id = p_organization_id
+  );
+END;
+$$;
+
 -- From 20250711140000_get_personal_organization_id_function.sql
 CREATE OR REPLACE FUNCTION get_personal_organization_id(p_user_id UUID)
 RETURNS UUID
@@ -519,6 +533,12 @@ CREATE POLICY "Owners/Admins can view all organization members"
 ON public.user_organization_roles FOR SELECT
 USING (
     public.can_manage_organization_role(auth.uid(), organization_id)
+);
+
+CREATE POLICY "All members can view organization members"
+ON public.user_organization_roles FOR SELECT
+USING (
+    public.is_member_of_any_organization(auth.uid(), organization_id)
 );
 
 CREATE POLICY "Owners/Admins can insert roles"

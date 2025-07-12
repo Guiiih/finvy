@@ -138,11 +138,8 @@
           <div v-if="organizationSelectionStore.activeOrganization.is_personal" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
             <p>Organizações pessoais não permitem gerenciamento de membros.</p>
           </div>
-          <div v-else-if="!organizationStore.isCurrentUserOwnerOrAdmin" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-            <p class="font-bold">Acesso Negado</p>
-            <p>Você não tem permissão para gerenciar membros desta organização.</p>
-          </div>
           <div v-else>
+            <!-- Search and Add Member Button -->
             <div class="mb-6 flex items-center space-x-4">
               <div class="relative flex-grow">
                 <input
@@ -167,6 +164,7 @@
                 </svg>
               </div>
               <button
+                v-if="organizationStore.isCurrentUserOwnerOrAdmin"
                 @click="showAddMemberForm = !showAddMemberForm; editingMember = null"
                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md transition duration-300 ease-in-out"
               >
@@ -174,7 +172,8 @@
               </button>
             </div>
 
-            <div v-if="showAddMemberForm" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
+            <!-- Add/Edit Member Form (for Owners/Admins) -->
+            <div v-if="showAddMemberForm && organizationStore.isCurrentUserOwnerOrAdmin" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
               <h4 class="text-xl font-semibold mb-4">{{ editingMember ? 'Editar Membro' : 'Adicionar Novo Membro' }}</h4>
               <form @submit.prevent="handleSubmitMember" class="space-y-4">
                 <div>
@@ -238,6 +237,7 @@
               </form>
             </div>
 
+            <!-- Member List (for all members) -->
             <div class="bg-white p-4 rounded-lg shadow-sm">
               <h4 class="text-xl font-semibold mb-3">Membros Atuais</h4>
               <p v-if="organizationStore.loading" class="text-gray-600">Carregando membros...</p>
@@ -256,7 +256,8 @@
                       {{ member.role }}
                     </span>
                   </div>
-                  <div class="space-x-2">
+                  <!-- Admin actions -->
+                  <div v-if="organizationStore.isCurrentUserOwnerOrAdmin" class="space-x-2">
                     <button
                       @click="startEdit(member)"
                       class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
@@ -741,9 +742,15 @@ function startEdit(member: UserOrganizationRole) {
   newMember.value.user_id = member.user_id;
   newMember.value.role = member.role;
   showAddMemberForm.value = true;
-  // Pre-fill search term if editing
-  searchUserTerm.value = member.profiles?.username || member.profiles?.email || member.user_id;
-  selectedUserForMembership.value = member.profiles ? { ...member.profiles, id: member.user_id } : { id: member.user_id, username: member.user_id };
+
+  // Pre-fill search term and selected user information consistently
+  const displayName = member.profiles?.username || member.profiles?.email || member.user_id;
+  searchUserTerm.value = displayName;
+  selectedUserForMembership.value = {
+    id: member.user_id,
+    username: member.profiles?.username,
+    email: member.profiles?.email,
+  };
 }
 
 function resetMemberForm() {

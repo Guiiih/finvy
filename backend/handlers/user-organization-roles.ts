@@ -82,31 +82,31 @@ export default async function handler(
       return handleErrorResponse(res, 403, "Não é possível gerenciar membros de uma organização pessoal.");
     }
 
-    // Check if the requesting user has permission to manage roles in this organization
     const requestingUserRole = await getUserRoleInOrganization(
       user_id,
       organization_id,
       token,
     );
 
-    if (!requestingUserRole || !["owner", "admin"].includes(requestingUserRole)) {
-      logger.warn(
-        `[UserOrgRoles] Usuário ${user_id} não tem permissão para gerenciar papéis na organização ${organization_id}. Papel: ${requestingUserRole}`,
-      );
-      return handleErrorResponse(
-        res,
-        403,
-        "Você não tem permissão para gerenciar papéis nesta organização.",
-      );
-    }
-
+    // Any member of the organization can view the list of members.
     if (req.method === "GET") {
+      if (!requestingUserRole) {
+        logger.warn(
+          `[UserOrgRoles] Usuário ${user_id} não é membro da organização ${organization_id} e tentou listar membros.`,
+        );
+        return handleErrorResponse(
+          res,
+          403,
+          "Você não tem permissão para ver os membros desta organização.",
+        );
+      }
+
       logger.info(
         `[UserOrgRoles] Buscando membros para organization_id: ${organization_id}`,
       );
       const { data, error: dbError } = await userSupabase
         .from("user_organization_roles")
-        .select("id, user_id, role, profiles(username)") // Fetch user details
+        .select("id, user_id, role, profiles(username, email)")
         .eq("organization_id", organization_id);
 
       if (dbError) {
@@ -119,7 +119,21 @@ export default async function handler(
         `[UserOrgRoles] Membros encontrados para organização ${organization_id}: ${data.length}`,
       );
       return res.status(200).json(data);
-    } else if (req.method === "POST") {
+    }
+
+    // For POST, PUT, DELETE, only owners and admins can manage roles.
+    if (!requestingUserRole || !["owner", "admin"].includes(requestingUserRole)) {
+      logger.warn(
+        `[UserOrgRoles] Usuário ${user_id} não tem permissão para gerenciar papéis na organização ${organization_id}. Papel: ${requestingUserRole}`,
+      );
+      return handleErrorResponse(
+        res,
+        403,
+        "Você não tem permissão para gerenciar papéis nesta organização.",
+      );
+    }
+
+    if (req.method === "POST") {
       logger.info(
         `[UserOrgRoles] Adicionando novo membro à organization_id: ${organization_id}`,
       );
