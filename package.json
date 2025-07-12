@@ -14,7 +14,7 @@
     "supabase": "^2.30.4"
   },
   "scripts": {
-    "test": "vitest",
+    "test": "npm test --workspace backend",
     "lint:frontend": "npm run lint --workspace frontend",
     "format:frontend": "npm run format --workspace frontend",
     "lint:backend": "eslint \"api/**/*.ts\" \"backend/**/*.ts\" --fix",
