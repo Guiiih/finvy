@@ -134,6 +134,7 @@ export interface UserOrganizationRole {
   profiles?: { // Nested profile data from Supabase join
     username: string;
     email: string;
+    avatar_url?: string; // Add avatar_url as optional
   };
 }
 

@@ -2,6 +2,7 @@ import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
+  getSupabaseAdmin,
   handleErrorResponse,
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
@@ -104,9 +105,10 @@ export default async function handler(
       logger.info(
         `[UserOrgRoles] Buscando membros para organization_id: ${organization_id}`,
       );
-      const { data, error: dbError } = await userSupabase
+      const adminSupabase = getSupabaseAdmin();
+      const { data, error: dbError } = await adminSupabase
         .from("user_organization_roles")
-        .select("id, user_id, role, profiles(username, email)")
+        .select("id, user_id, role, profiles(username, email, avatar_url)")
         .eq("organization_id", organization_id);
 
       if (dbError) {

@@ -248,13 +248,17 @@
                 <li
                   v-for="member in filteredMembers"
                   :key="member.id"
-                  class="flex items-center justify-between p-3 border rounded-md bg-gray-50"
+                  class="flex items-center justify-between p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
-                  <div>
-                    <p class="font-medium">{{ member.profiles?.username || member.profiles?.email || member.user_id }}</p>
-                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-200 text-indigo-800">
-                      {{ member.role }}
-                    </span>
+                  <div class="flex items-center space-x-4">
+                    <img :src="member.profiles?.avatar_url || undefined" alt="Avatar" class="h-12 w-12 rounded-full object-cover bg-surface-200 shadow-sm" />
+                    <div>
+                      <p class="font-semibold text-lg text-gray-800">{{ member.profiles?.username || member.user_id }}</p>
+                      <p class="text-sm text-gray-500">{{ member.profiles?.email }}</p>
+                      <span class="mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-200 text-indigo-800">
+                        {{ member.role }}
+                      </span>
+                    </div>
                   </div>
                   <!-- Admin actions -->
                   <div v-if="organizationStore.isCurrentUserOwnerOrAdmin" class="space-x-2">
