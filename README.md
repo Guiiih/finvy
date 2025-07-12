@@ -1,5 +1,9 @@
 # **Finvy**
 
+[![Status do Projeto](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)](https://github.com/guilhermecardoso94/finvy)
+
+[**Experimente o Finvy Online!**](https://finvy.vercel.app/) (Link para a demonstração ao vivo)
+
 ## **Visão Geral**
 
 O Finvy é um Micro SaaS em desenvolvimento, concebido para ser uma ferramenta poderosa e intuitiva para a resolução de exercícios práticos de contabilidade. A sua génese reside na necessidade de transcender as limitações das folhas de cálculo, que, embora flexíveis, são propensas a erros de fórmula, carecem de integridade de dados e não são escaláveis.
@@ -52,24 +56,24 @@ O projeto Finvy é organizado como um monorepo, contendo o frontend, o backend e
 
 ```
 finvy/
-├── 📂 api/                  # Funções Serverless para a API (Vercel Functions)
+├──  api/                  # Funções Serverless para a API (Vercel Functions)
 │   └── index.ts             # Ponto de entrada da API
-├── 📂 backend/              # Lógica de negócio do backend
-│   ├── 📂 handlers/         # Manipuladores de requisições da API
-│   ├── 📂 services/         # Serviços de negócio
-│   └── 📂 utils/            # Utilitários e configurações do backend
-├── 📂 frontend/             # Aplicação web frontend
-│   ├── 📂 public/           # Ativos estáticos
-│   └── 📂 src/              # Código fonte do frontend
-│       ├── 📂 assets/       # Imagens, ícones, CSS global
-│       ├── 📂 components/   # Componentes Vue reutilizáveis
-│       ├── 📂 router/       # Configuração de rotas do Vue Router
-│       ├── 📂 services/     # Serviços de comunicação com a API
-│       ├── 📂 stores/       # Gerenciamento de estado (Pinia)
-│       ├── 📂 types/        # Definições de tipos TypeScript
-│       └── 📂 views/        # Páginas/visualizações da aplicação
-├── 📂 supabase/             # Configurações e migrações do Supabase
-│   ├── 📂 migrations/       # Arquivos de migração do banco de dados
+├──  backend/              # Lógica de negócio do backend
+│   ├──  handlers/         # Manipuladores de requisições da API
+│   ├──  services/         # Serviços de negócio
+│   └──  utils/            # Utilitários e configurações do backend
+├──  frontend/             # Aplicação web frontend
+│   ├──  public/           # Ativos estáticos
+│   └──  src/              # Código fonte do frontend
+│       ├──  assets/       # Imagens, ícones, CSS global
+│       ├──  components/   # Componentes Vue reutilizáveis
+│       ├──  router/       # Configuração de rotas do Vue Router
+│       ├──  services/     # Serviços de comunicação com a API
+│       ├──  stores/       # Gerenciamento de estado (Pinia)
+│       ├──  types/        # Definições de tipos TypeScript
+│       └──  views/        # Páginas/visualizações da aplicação
+├──  supabase/             # Configurações e migrações do Supabase
+│   ├──  migrations/       # Arquivos de migração do banco de dados
 │   ├── config.toml          # Configuração do projeto Supabase
 │   └── .gitignore           # Ignorar arquivos gerados pelo Supabase
 ├── .gitignore               # Arquivos e diretórios ignorados pelo Git
@@ -203,3 +207,7 @@ Contribuições são bem-vindas! Por favor, siga o fluxo padrão do GitHub (Fork
 ## **Licença**
 
 Este projeto está licenciado sob a Licença MIT.
+
+## **Contato e Suporte**
+
+Para dúvidas, sugestões ou suporte, por favor, abra uma [Issue no GitHub](https://github.com/guilhermecardoso94/finvy/issues) ou entre em contato através do email: [seu.email@example.com](mailto:seu.email@example.com).
