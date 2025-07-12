@@ -2,12 +2,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
+import { useJournalEntryStore } from '@/stores/journalEntryStore' // Importar o store
 import type { EntryLine } from '@/types'
 
 const emit = defineEmits(['submit'])
 
 const accountStore = useAccountStore()
 const productStore = useProductStore()
+const journalEntryStore = useJournalEntryStore() // Instanciar o store
 
 const newEntryDate = ref(new Date().toISOString().split('T')[0])
 const newEntryDescription = ref('')
@@ -114,7 +116,10 @@ onMounted(() => {
       </p>
     </div>
 
-    <button type="submit" :disabled="!isBalanced">Registrar Lançamento</button>
+    <button type="submit" :disabled="!isBalanced || journalEntryStore.loading">
+      <span v-if="journalEntryStore.loading">Registrando...</span>
+      <span v-else>Registrar Lançamento</span>
+    </button>
   </form>
 </template>
 

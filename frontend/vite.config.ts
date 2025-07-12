@@ -17,6 +17,7 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         
@@ -42,6 +43,9 @@ export default defineConfig({
             }
             if (id.includes('vee-validate')) {
               return 'vee-validate';
+            }
+            if (id.includes('@supabase/supabase-js')) {
+              return 'supabase';
             }
             return 'vendor'; // Agrupa outras dependências em um chunk 'vendor'
           }

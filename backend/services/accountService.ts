@@ -2,10 +2,10 @@ import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
 import { Account } from "../types/index.js";
 
-const accountsCache = new Map<string, { data: Account[]; timestamp: number }>();
+export const accountsCache = new Map<string, { data: Account[]; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCachedAccounts(userId: string): Account[] | null {
+export function getCachedAccounts(userId: string): Account[] | null {
   const cached = accountsCache.get(userId);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
     return cached.data;
@@ -13,7 +13,7 @@ function getCachedAccounts(userId: string): Account[] | null {
   return null;
 }
 
-function setCachedAccounts(userId: string, data: Account[]) {
+export function setCachedAccounts(userId: string, data: Account[]) {
   accountsCache.set(userId, { data, timestamp: Date.now() });
 }
 

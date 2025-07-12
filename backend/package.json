@@ -23,10 +23,5 @@
     "@types/pdfkit": "^0.14.0",
     "swagger-jsdoc": "^6.2.8",
     "vitest": "^3.2.4"
-  },
-  "overrides": {
-    "esbuild": "^0.25.6",
-    "path-to-regexp": "^8.2.0",
-    "undici": "^7.11.0"
   }
 }

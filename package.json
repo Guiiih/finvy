@@ -25,5 +25,10 @@
   "workspaces": [
     "frontend",
     "backend"
-  ]
+  ],
+  "overrides": {
+    "esbuild": "^0.25.0",
+    "path-to-regexp": "^8.2.0",
+    "undici": "^7.11.0"
+  }
 }
