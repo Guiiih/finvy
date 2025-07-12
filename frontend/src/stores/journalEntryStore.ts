@@ -6,6 +6,7 @@ import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
 import { supabase } from '@/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { createEntryLine, deleteEntryLinesByJournalEntryId } from '@/services/entryLineService';
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([])
@@ -164,6 +165,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         const lineToSend = {
           journal_entry_id: newJournalEntry.id,
           account_id: line.account_id,
+          type: line.type,
+          amount: line.amount,
           debit: line.type === 'debit' ? line.amount : 0,
           credit: line.type === 'credit' ? line.amount : 0,
           product_id: line.product_id,
@@ -176,7 +179,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
         };
         console.log('Sending line to API:', lineToSend);
-        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
+        const newLine = await createEntryLine(lineToSend);
         const processedNewLine: EntryLine = {
           ...newLine,
           amount: (newLine.debit || 0) > 0 ? newLine.debit || 0 : newLine.credit || 0,
@@ -209,12 +212,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         },
       );
 
-      await api.delete(`/journal-entries/${updatedEntry.id}/lines`, {
-        params: {
-          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
-          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
-        },
-      });
+      await deleteEntryLinesByJournalEntryId(updatedEntry.id, accountingPeriodStore.activeAccountingPeriod!.organization_id, accountingPeriodStore.activeAccountingPeriod!.id);
 
       const newLines: EntryLine[] = [];
       for (const line of lines) {
@@ -228,6 +226,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         const lineToSend = {
           journal_entry_id: updatedEntry.id,
           account_id: line.account_id,
+          type: line.type,
+          amount: line.amount,
           debit: line.type === 'debit' ? line.amount : 0,
           credit: line.type === 'credit' ? line.amount : 0,
           product_id: line.product_id,
@@ -240,7 +240,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
         };
         console.log('Sending line to API:', lineToSend);
-        const newLine = await api.post<EntryLine, typeof lineToSend>('/entry-lines', lineToSend);
+        const newLine = await createEntryLine(lineToSend);
         const processedNewLine: EntryLine = {
           ...newLine,
           amount: (newLine.debit || 0) > 0 ? newLine.debit || 0 : newLine.credit || 0,

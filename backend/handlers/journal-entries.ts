@@ -1,7 +1,6 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
-  getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
@@ -10,28 +9,12 @@ import {
   updateJournalEntrySchema,
 } from "../utils/schemas.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
-
-const journalEntriesCache = new Map<
-  string,
-  { data: unknown; timestamp: number }
->();
-const CACHE_DURATION_MS = 5 * 60 * 1000;
-
-function getCachedJournalEntries(userId: string) {
-  const cached = journalEntriesCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.data;
-  }
-  return null;
-}
-
-function setCachedJournalEntries(userId: string, data: unknown) {
-  journalEntriesCache.set(userId, { data, timestamp: Date.now() });
-}
-
-function invalidateJournalEntriesCache(userId: string) {
-  journalEntriesCache.delete(userId);
-}
+import {
+  getJournalEntries,
+  createJournalEntry,
+  updateJournalEntry,
+  deleteJournalEntry,
+} from "../services/journalEntryService.js";
 
 /**
  * @swagger
@@ -94,27 +77,7 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const cachedData = getCachedJournalEntries(user_id);
-      if (cachedData) {
-        logger.info(
-          "Journal Entries Handler: Retornando lançamentos do cache para user_id:",
-          user_id,
-        );
-        return res.status(200).json(cachedData);
-      }
-
-      const { data, error: dbError } = await userSupabase
-        .from("journal_entries")
-        .select(
-          "id, entry_date, description, user_id, organization_id, accounting_period_id",
-        )
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .order("entry_date", { ascending: false });
-
-      if (dbError) throw dbError;
-      setCachedJournalEntries(user_id, data);
+      const data = await getJournalEntries(user_id, organization_id, active_accounting_period_id, token);
       return res.status(200).json(data);
     }
 
@@ -191,23 +154,10 @@ export default async function handler(
       }
       const { entry_date, description } = parsedBody.data;
 
-      const { data, error: dbError } = await userSupabase
-        .from("journal_entries")
-        .insert([
-          {
-            entry_date,
-            description,
-            user_id,
-            organization_id,
-            accounting_period_id: active_accounting_period_id,
-          },
-        ])
-        .select();
-
-      if (dbError) throw dbError;
-      invalidateJournalEntriesCache(user_id);
+      const newEntry = { entry_date, description };
+      const createdEntry = await createJournalEntry(newEntry, user_id, organization_id, active_accounting_period_id, token);
       logger.info("Journal Entries Handler: Lançamento criado com sucesso.");
-      return res.status(201).json(data[0]);
+      return res.status(201).json(createdEntry);
     }
 
     /**
@@ -302,19 +252,11 @@ export default async function handler(
         );
       }
 
-      const { data, error: dbError } = await userSupabase
-        .from("journal_entries")
-        .update(updateData)
-        .eq("id", id)
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .select();
+      const updatedEntry = await updateJournalEntry(id, updateData, user_id, organization_id, active_accounting_period_id, token);
 
-      if (dbError) throw dbError;
-      if (!data || data.length === 0) {
+      if (!updatedEntry) {
         logger.warn(
-          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`,
+          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para atualizar.`, 
         );
         return handleErrorResponse(
           res,
@@ -322,11 +264,10 @@ export default async function handler(
           "Lançamento não encontrado ou você não tem permissão para atualizar.",
         );
       }
-      invalidateJournalEntriesCache(user_id);
       logger.info(
-        `Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`,
+        `Journal Entries Handler: Lançamento ${id} atualizado com sucesso.`, 
       );
-      return res.status(200).json(data[0]);
+      return res.status(200).json(updatedEntry);
     }
 
     /**
@@ -363,49 +304,11 @@ export default async function handler(
         `Journal Entries Handler: Processando DELETE para lançamento ${id}.`,
       );
 
-      // First, delete all associated entry_lines
-      logger.info(
-        `Journal Entries Handler: Deletando linhas de lançamento para ${id}.`,
-      );
-      const { error: deleteLinesError } = await userSupabase
-        .from("entry_lines")
-        .delete()
-        .eq("journal_entry_id", id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id);
+      const deleted = await deleteJournalEntry(id, user_id, organization_id, active_accounting_period_id, token);
 
-      if (deleteLinesError) {
-        logger.error(
-          `Journal Entries Handler: Erro ao deletar linhas de lançamento para ${id}:`,
-          deleteLinesError,
-        );
-        throw deleteLinesError;
-      }
-      logger.info(
-        `Journal Entries Handler: Linhas de lançamento para ${id} deletadas com sucesso.`,
-      );
-
-      logger.info(
-        `Journal Entries Handler: Deletando lançamento principal ${id}.`,
-      );
-      const { error: dbError, count } = await userSupabase
-        .from("journal_entries")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id);
-
-      if (dbError) {
-        logger.error(
-          `Journal Entries Handler: Erro ao deletar lançamento principal ${id}:`,
-          dbError,
-        );
-        throw dbError;
-      }
-      if (count === 0) {
+      if (!deleted) {
         logger.warn(
-          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`,
+          `Journal Entries Handler: Lançamento ${id} não encontrado ou sem permissão para deletar.`, 
         );
         return handleErrorResponse(
           res,
@@ -413,9 +316,8 @@ export default async function handler(
           "Lançamento não encontrado ou você não tem permissão para deletar.",
         );
       }
-      invalidateJournalEntriesCache(user_id);
       logger.info(
-        `Journal Entries Handler: Lançamento ${id} deletado com sucesso.`,
+        `Journal Entries Handler: Lançamento ${id} deletado com sucesso.`, 
       );
       return res.status(204).end();
     }

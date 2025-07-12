@@ -21,14 +21,44 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Install dependencies
+    - name: Cache Node.js modules
+      uses: actions/cache@v4
+      with:
+        path: | 
+          ~/.npm
+          node_modules
+          frontend/node_modules
+          backend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install root dependencies
       run: npm install
+
+    - name: Install frontend dependencies
+      run: npm install --workspace frontend
+
+    - name: Install backend dependencies
+      run: npm install --workspace backend
 
     - name: Run Lint
       run: npm run lint
 
-    - name: Run Tests
-      run: npm run test
+    - name: Run Tests (Backend)
+      run: npm test --workspace backend
+
+    - name: Run Tests (Frontend)
+      run: npm test --workspace frontend
 
     - name: Run Type Check (Frontend)
       run: npm run type-check --workspace frontend
+
+    - name: Run Type Check (Backend)
+      run: npx tsc --noEmit --project backend/tsconfig.json
+
+    - name: Build Frontend
+      run: npm run build --workspace frontend
+
+    - name: Build Backend
+      run: npm run build --workspace backend
