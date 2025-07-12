@@ -1,12 +1,13 @@
 import axios from 'axios'
 
+import { useAuthStore } from '@/stores/authStore';
+
 const apiClient = axios.create({
   baseURL: '/api',
 })
 
 apiClient.interceptors.request.use(
-  async (config) => {
-    const { useAuthStore } = await import('@/stores/authStore');
+  (config) => {
     const authStore = useAuthStore();
     const token = authStore.token;
 
