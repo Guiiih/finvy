@@ -19,6 +19,7 @@ import userOrganizationRolesHandler from "../backend/handlers/user-organization-
 import sharingHandler from "../backend/handlers/sharing.js";
 import usersHandler from "../backend/handlers/users.js";
 import organizationsHandler from "../backend/handlers/organizations.js";
+import swaggerDocsHandler from "../backend/handlers/swagger-docs.js";
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -107,11 +108,16 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
   logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`);
 
-  // For all other /api routes, apply the authentication middleware
+  // Rota para a documentação da API (não protegida por autenticação)
+  if (urlPath === "/api/docs") {
+    return await swaggerDocsHandler(req, res);
+  }
+
+  // Para todas as outras rotas /api, aplicar o middleware de autenticação
   if (urlPath.startsWith("/api/")) {
     return await withAuth(protectedRoutesHandler)(req, res);
   }
 
-  // Fallback for any other requests that might slip through
+  // Fallback para quaisquer outras requisições que possam passar
   return handleErrorResponse(res, 404, "Endpoint não encontrado.");
 }

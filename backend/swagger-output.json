@@ -1,0 +1,1347 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Finvy Backend API",
+    "version": "1.0.0",
+    "description": "Documentação da API do backend Finvy, gerada automaticamente com Swagger/OpenAPI."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Servidor de Desenvolvimento/Produção"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/accounts": {
+      "get": {
+        "summary": "Retorna todas as contas do usuário autenticado.",
+        "description": "Retorna uma lista de todas as contas financeiras associadas ao usuário autenticado. Os dados são cacheados por 5 minutos.",
+        "tags": [
+          "Accounts"
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de contas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID único da conta."
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "O nome da conta."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "O tipo da conta (e.g., 'Asset', 'Liability')."
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID do usuário ao qual a conta pertence."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria uma nova conta.",
+        "description": "Cria uma nova conta financeira para o usuário autenticado.",
+        "tags": [
+          "Accounts"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O nome da nova conta."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "O tipo da nova conta (e.g., 'Asset', 'Liability')."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Conta criada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único da conta criada."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome da conta criada."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "O tipo da conta criada."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual a conta pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "put": {
+        "summary": "Atualiza uma conta existente.",
+        "description": "Atualiza os detalhes de uma conta financeira específica pelo seu ID.",
+        "tags": [
+          "Accounts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da conta a ser atualizada."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O novo nome da conta."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "O novo tipo da conta."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conta atualizada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único da conta atualizada."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome da conta atualizada."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "O tipo da conta atualizada."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual a conta pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Conta não encontrada ou você não tem permissão para atualizar esta conta."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta uma conta.",
+        "description": "Deleta uma conta financeira específica pelo seu ID.",
+        "tags": [
+          "Accounts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da conta a ser deletada."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Conta deletada com sucesso. Nenhuma resposta de conteúdo."
+          },
+          "400": {
+            "description": "Requisição inválida. ID da conta fornecido é inválido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Conta não encontrada ou você não tem permissão para deletar esta conta."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/entry-lines": {
+      "get": {
+        "summary": "Retorna as linhas de um lançamento de diário.",
+        "description": "Retorna todas as linhas de lançamento associadas a um `journal_entry_id` específico ou todas as linhas do usuário se nenhum ID for fornecido.",
+        "tags": [
+          "Entry Lines"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "journal_entry_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "description": "O ID do lançamento de diário para filtrar as linhas."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de linhas de lançamento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "journal_entry_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "debit": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "credit": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "product_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "quantity": {
+                        "type": "integer"
+                      },
+                      "unit_cost": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "total_gross": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "icms_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "ipi_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "pis_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "cofins_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "icms_st_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "total_net": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria uma ou mais linhas de lançamento.",
+        "description": "Cria novas linhas de lançamento para um lançamento de diário existente, tratando a lógica de impostos e estoque para vendas e compras.",
+        "tags": [
+          "Entry Lines"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "journal_entry_id",
+                  "account_id"
+                ],
+                "properties": {
+                  "journal_entry_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do lançamento de diário ao qual a linha pertence."
+                  },
+                  "account_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID da conta principal (e.g., Clientes para venda, Fornecedores para compra)."
+                  },
+                  "debit": {
+                    "type": "number",
+                    "description": "Valor do débito. Pelo menos um entre débito e crédito deve ser fornecido."
+                  },
+                  "credit": {
+                    "type": "number",
+                    "description": "Valor do crédito. Pelo menos um entre débito e crédito deve ser fornecido."
+                  },
+                  "product_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do produto (opcional, para transações de estoque)."
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "description": "Quantidade do produto (opcional)."
+                  },
+                  "unit_cost": {
+                    "type": "number",
+                    "description": "Custo unitário do produto (opcional)."
+                  },
+                  "total_gross": {
+                    "type": "number",
+                    "description": "Valor total bruto da transação (base para impostos)."
+                  },
+                  "icms_rate": {
+                    "type": "number",
+                    "description": "Alíquota de ICMS (%)."
+                  },
+                  "ipi_rate": {
+                    "type": "number",
+                    "description": "Alíquota de IPI (%)."
+                  },
+                  "pis_rate": {
+                    "type": "number",
+                    "description": "Alíquota de PIS (%)."
+                  },
+                  "cofins_rate": {
+                    "type": "number",
+                    "description": "Alíquota de COFINS (%)."
+                  },
+                  "mva_rate": {
+                    "type": "number",
+                    "description": "Alíquota de MVA para ICMS-ST (%)."
+                  },
+                  "total_net": {
+                    "type": "number",
+                    "description": "Valor líquido total da nota (usado em compras). Se não fornecido em vendas, é calculado."
+                  },
+                  "transaction_type": {
+                    "type": "string",
+                    "enum": [
+                      "sale",
+                      "purchase"
+                    ],
+                    "description": "Tipo de transação para determinar a lógica contábil."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Linhas de lançamento criadas com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "journal_entry_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "debit": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "credit": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Permissão negada para adicionar linhas a este lançamento."
+          },
+          "500": {
+            "description": "Erro interno do servidor, possivelmente por falta de contas contábeis."
+          }
+        }
+      }
+    },
+    "/financial-transactions": {
+      "get": {
+        "summary": "Retorna contas a pagar ou a receber.",
+        "description": "Retorna uma lista de todas as contas a pagar ou a receber para o usuário, dependendo do parâmetro 'type'.",
+        "tags": [
+          "Financial Transactions"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "payable",
+                "receivable"
+              ]
+            },
+            "required": true,
+            "description": "O tipo de transação a ser retornado."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de transações financeiras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "due_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "is_paid": {
+                        "type": "boolean"
+                      },
+                      "paid_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "is_received": {
+                        "type": "boolean"
+                      },
+                      "received_date": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria uma nova conta a pagar ou a receber.",
+        "description": "Cria uma nova transação financeira (conta a pagar ou a receber) para o usuário.",
+        "tags": [
+          "Financial Transactions"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "payable",
+                "receivable"
+              ]
+            },
+            "required": true,
+            "description": "O tipo de transação a ser criada."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description",
+                  "amount",
+                  "due_date"
+                ],
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição da transação."
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "O valor da transação."
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de vencimento."
+                  },
+                  "paid_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de pagamento (para contas a pagar)."
+                  },
+                  "is_paid": {
+                    "type": "boolean",
+                    "description": "Status de pagamento."
+                  },
+                  "received_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de recebimento (para contas a receber)."
+                  },
+                  "is_received": {
+                    "type": "boolean",
+                    "description": "Status de recebimento."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transação criada com sucesso."
+          },
+          "400": {
+            "description": "Requisição inválida."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/journal-entries": {
+      "get": {
+        "summary": "Retorna todos os lançamentos de diário do usuário autenticado.",
+        "description": "Retorna uma lista de todos os lançamentos de diário associados ao usuário autenticado. Os dados são cacheados por 5 minutos.",
+        "tags": [
+          "Journal Entries"
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de lançamentos de diário.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID único do lançamento de diário."
+                      },
+                      "entry_date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "A data do lançamento."
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "A descrição do lançamento."
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID do usuário ao qual o lançamento pertence."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria um novo lançamento de diário.",
+        "description": "Cria um novo lançamento de diário para o usuário autenticado.",
+        "tags": [
+          "Journal Entries"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "entry_date",
+                  "description"
+                ],
+                "properties": {
+                  "entry_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "A data do lançamento."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A descrição do lançamento."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lançamento de diário criado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único do lançamento de diário criado."
+                    },
+                    "entry_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "A data do lançamento criado."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "A descrição do lançamento criado."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual o lançamento pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/journal-entries/{id}": {
+      "put": {
+        "summary": "Atualiza um lançamento de diário existente.",
+        "description": "Atualiza os detalhes de um lançamento de diário específico pelo seu ID.",
+        "tags": [
+          "Journal Entries"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID do lançamento de diário a ser atualizado."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entry_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "A nova data do lançamento."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A nova descrição do lançamento."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lançamento de diário atualizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único do lançamento de diário atualizado."
+                    },
+                    "entry_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "A data do lançamento atualizado."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "A descrição do lançamento atualizado."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual o lançamento pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Lançamento de diário não encontrado ou você não tem permissão para atualizar este lançamento."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta um lançamento de diário.",
+        "description": "Deleta um lançamento de diário específico pelo seu ID, incluindo todas as suas linhas de lançamento associadas.",
+        "tags": [
+          "Journal Entries"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID do lançamento de diário a ser deletado."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Lançamento de diário e suas linhas associadas deletados com sucesso. Nenhuma resposta de conteúdo."
+          },
+          "400": {
+            "description": "Requisição inválida. ID do lançamento de diário fornecido é inválido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Lançamento de diário não encontrado ou você não tem permissão para deletar este lançamento."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Retorna todos os produtos do usuário autenticado.",
+        "description": "Retorna uma lista de todos os produtos associados ao usuário autenticado. Os dados são cacheados por 5 minutos.",
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de produtos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID único do produto."
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "O nome do produto."
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "A descrição do produto."
+                      },
+                      "unit_cost": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "O custo unitário do produto."
+                      },
+                      "current_stock": {
+                        "type": "number",
+                        "format": "integer",
+                        "description": "O estoque atual do produto."
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID do usuário ao qual o produto pertence."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria um novo produto.",
+        "description": "Cria um novo produto para o usuário autenticado.",
+        "tags": [
+          "Products"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "unit_cost",
+                  "current_stock"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O nome do novo produto."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A descrição do produto (opcional)."
+                  },
+                  "unit_cost": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "O custo unitário do produto."
+                  },
+                  "current_stock": {
+                    "type": "number",
+                    "format": "integer",
+                    "description": "O estoque inicial do produto."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único do produto criado."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome do produto criado."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "A descrição do produto criado."
+                    },
+                    "unit_cost": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "O custo unitário do produto criado."
+                    },
+                    "current_stock": {
+                      "type": "number",
+                      "format": "integer",
+                      "description": "O estoque atual do produto criado."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual o produto pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "put": {
+        "summary": "Atualiza um produto existente.",
+        "description": "Atualiza os detalhes de um produto específico pelo seu ID.",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID do produto a ser atualizado."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O novo nome do produto."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A nova descrição do produto."
+                  },
+                  "unit_cost": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "O novo custo unitário do produto."
+                  },
+                  "current_stock": {
+                    "type": "number",
+                    "format": "integer",
+                    "description": "O novo estoque atual do produto."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto atualizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único do produto atualizado."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome do produto atualizado."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "A descrição do produto atualizado."
+                    },
+                    "unit_cost": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "O custo unitário do produto atualizado."
+                    },
+                    "current_stock": {
+                      "type": "number",
+                      "format": "integer",
+                      "description": "O estoque atual do produto atualizado."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual o produto pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Produto não encontrado ou você não tem permissão para atualizar este produto."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta um produto.",
+        "description": "Deleta um produto específico pelo seu ID.",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID do produto a ser deletado."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Produto deletado com sucesso. Nenhuma resposta de conteúdo."
+          },
+          "400": {
+            "description": "Requisição inválida. ID do produto fornecido é inválido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Produto não encontrado ou você não tem permissão para deletar este produto."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Retorna o perfil do usuário autenticado.",
+        "description": "Retorna informações do perfil, como nome de usuário, função e URL do avatar.",
+        "tags": [
+          "Profile"
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil do usuário.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "avatar_url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "404": {
+            "description": "Perfil não encontrado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta o perfil do usuário autenticado.",
+        "description": "Deleta permanentemente o usuário e todos os seus dados associados do sistema.",
+        "tags": [
+          "Profile"
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário excluído com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/year-end-closing": {
+      "post": {
+        "summary": "Executa o fechamento de exercício.",
+        "description": "Processa os lançamentos contábeis para o encerramento do ano fiscal, calcula o resultado (lucro ou prejuízo) e prepara as contas para o próximo período.",
+        "tags": [
+          "Year-End Closing"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "closingDate"
+                ],
+                "properties": {
+                  "closingDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "A data final para o fechamento do exercício (YYYY-MM-DD)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fechamento de exercício realizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data de fechamento não fornecida."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

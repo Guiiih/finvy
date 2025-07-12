@@ -189,7 +189,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const userSupabase = getSupabaseClient(token);
+  
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!userOrgAndPeriod) {
     return handleErrorResponse(
@@ -205,7 +205,8 @@ export default async function handler(
       const { journal_entry_id } = req.query;
 
       if (journal_entry_id) {
-        const { data, error: dbError } = await serviceRoleSupabase
+        const userSupabase = getSupabaseClient(token);
+        const { data, error: dbError } = await userSupabase
           .from("entry_lines")
           .select(
             "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, organization_id, accounting_period_id",
@@ -219,7 +220,8 @@ export default async function handler(
       } else {
         // This branch should ideally not be used if RLS is properly set up to filter by organization and period
         // However, for completeness, we'll add the filters here as well.
-        const { data, error: dbError } = await serviceRoleSupabase
+        const userSupabase = getSupabaseClient(token);
+        const { data, error: dbError } = await userSupabase
           .from("entry_lines")
           .select(
             "id, journal_entry_id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, icms_st_value, total_net, journal_entry_id(user_id), organization_id, accounting_period_id",
@@ -245,8 +247,8 @@ export default async function handler(
       const {
         journal_entry_id,
         account_id, // This will be the main account (e.g., Clients or Suppliers)
-        debit,
-        credit,
+        type, // Adicionado
+        amount, // Adicionado
         product_id,
         quantity,
         unit_cost,
@@ -259,6 +261,9 @@ export default async function handler(
         transaction_type,
         total_net, // total_net from input
       } = parsedBody.data;
+
+      const debit = type === "debit" ? amount : null; // Derivado
+      const credit = type === "credit" ? amount : null; // Derivado
 
       const {
         calculated_icms_value,
@@ -278,7 +283,7 @@ export default async function handler(
         total_net,
       });
 
-      const { data: journalEntry } = await userSupabase
+      const { data: journalEntry } = await getSupabaseClient(token)
         .from("journal_entries")
         .select("id")
         .eq("id", journal_entry_id)
@@ -299,7 +304,7 @@ export default async function handler(
 
       if (transaction_type === "sale") {
         // Fetch required account IDs for sales
-        const { data: accounts, error: accountsError } = await userSupabase
+        const { data: accounts, error: accountsError } = await getSupabaseClient(token)
           .from("accounts")
           .select("id, name")
           .eq("organization_id", organization_id)
@@ -502,7 +507,7 @@ export default async function handler(
         }
       } else if (transaction_type === "purchase") {
         // Fetch required account IDs for purchases
-        const { data: accounts, error: accountsError } = await userSupabase
+        const { data: accounts, error: accountsError } = await getSupabaseClient(token)
           .from("accounts")
           .select("id, name")
           .eq("organization_id", organization_id)
@@ -574,8 +579,8 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id,
-          debit,
-          credit,
+          debit: debit,
+          credit: credit,
           product_id,
           quantity,
           unit_cost,
@@ -591,7 +596,7 @@ export default async function handler(
         });
       }
 
-      const { data: newLines, error: insertError } = await userSupabase
+      const { data: newLines, error: insertError } = await getSupabaseClient(token)
         .from("entry_lines")
         .insert(entryLinesToInsert)
         .select();

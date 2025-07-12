@@ -137,44 +137,25 @@ export async function deleteJournalEntry(
 ): Promise<boolean> {
   const userSupabase = getSupabaseClient(token);
 
-  // First, delete all associated entry_lines
-  const { error: deleteLinesError } = await userSupabase
-    .from("entry_lines")
-    .delete()
-    .eq("journal_entry_id", id)
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id);
-
-  if (deleteLinesError) {
-    logger.error(
-      `Journal Entries Service: Erro ao deletar linhas de lançamento para ${id}:`,
-      deleteLinesError,
-    );
-    throw deleteLinesError;
-  }
-
-  const { error: dbError, count } = await userSupabase
-    .from("journal_entries")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user_id)
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id);
+  const { data, error: dbError } = await userSupabase.rpc(
+    "delete_journal_entry_and_lines",
+    {
+      p_journal_entry_id: id,
+      p_user_id: user_id,
+      p_organization_id: organization_id,
+      p_accounting_period_id: active_accounting_period_id,
+    },
+  );
 
   if (dbError) {
     logger.error(
-      `Journal Entries Service: Erro ao deletar lançamento principal ${id}:`,
+      `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`,
       dbError,
     );
     throw dbError;
   }
 
-  if (count === 0) {
-    return false;
-  }
-
-  invalidateJournalEntriesCache(user_id);
-  return true;
+  return data; // A função RPC retorna TRUE se deletado, FALSE caso contrário
 }
 
 export async function checkDoubleEntryBalance(
