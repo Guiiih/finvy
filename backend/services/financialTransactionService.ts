@@ -1,5 +1,6 @@
 import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
+import { FinancialTransaction } from "../types/index.js";
 
 export async function getFinancialTransactions(
   type: "payable" | "receivable",
@@ -29,7 +30,7 @@ export async function getFinancialTransactions(
 
 export async function createFinancialTransaction(
   type: "payable" | "receivable",
-  newTransaction: any, // Use um tipo mais específico se disponível
+  newTransaction: FinancialTransaction,
   user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
@@ -37,6 +38,8 @@ export async function createFinancialTransaction(
 ) {
   const userSupabase = getSupabaseClient(token);
   const tableName = type === "payable" ? "accounts_payable" : "accounts_receivable";
+
+  
 
   const transactionToInsert = {
     ...newTransaction,

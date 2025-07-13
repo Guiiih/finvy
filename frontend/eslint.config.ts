@@ -9,7 +9,7 @@ export default defineConfigWithVueTs(
     files: ['**/*.{ts,mts,tsx,vue}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'html/**']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'html/**', 'src/types/swagger-ui-dist.d.ts']),
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,

@@ -136,3 +136,29 @@ export interface Organization {
   /** The name of the user from whom this organization was shared. */
   shared_from_user_name?: string
 }
+
+/**
+ * Represents a financial transaction, either payable or receivable.
+ */
+export interface FinancialTransaction {
+  /** The unique identifier for the financial transaction. */
+  id?: string;
+  /** A description of the financial transaction. */
+  description: string;
+  /** The monetary amount of the financial transaction. */
+  amount: number;
+  /** The due date of the financial transaction. */
+  due_date: string;
+  /** The date the financial transaction was paid (if applicable). */
+  paid_date?: string | null;
+  /** Indicates if the financial transaction has been paid. */
+  is_paid?: boolean;
+  /** The date the financial transaction was received (if applicable). */
+  received_date?: string | null;
+  /** Indicates if the financial transaction has been received. */
+  is_received?: boolean;
+  /** The ID of the organization this financial transaction belongs to. */
+  organization_id?: string;
+  /** The ID of the accounting period this financial transaction belongs to. */
+  accounting_period_id?: string;
+}

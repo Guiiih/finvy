@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useAuthStore } from './authStore';
-import { supabase } from '@/supabase';
+import { supabase, User, Session, AuthError } from '@/supabase';
 import { api } from '@/services/api';
-import { useJournalEntryStore } from './journalEntryStore';
+
 
 // Mock Supabase
 vi.mock('@/supabase', () => ({
@@ -39,13 +39,7 @@ vi.mock('@/services/api', () => ({
   },
 }));
 
-// Mock JournalEntryStore
-const mockUnsubscribeFromRealtime = vi.fn();
-vi.mock('./journalEntryStore', () => ({
-  useJournalEntryStore: vi.fn(() => ({
-    unsubscribeFromRealtime: mockUnsubscribeFromRealtime,
-  })),
-}));
+
 
 describe('Auth Store', () => {
   beforeEach(() => {
@@ -72,7 +66,7 @@ describe('Auth Store', () => {
       const mockSession = { access_token: 'mock-token' };
       const mockProfile = { username: 'testuser', role: 'user', avatar_url: 'avatar.jpg', organization_id: 'org-id', active_accounting_period_id: 'period-id' };
 
-      (supabase.auth.signInWithPassword as vi.Mock).mockResolvedValueOnce({
+      (supabase.auth.signInWithPassword as vi.Mock<{ data: { user: User | null, session: Session | null }, error: AuthError | null }>).mockResolvedValueOnce({
         data: { user: mockUser, session: mockSession },
         error: null,
       });
@@ -96,7 +90,7 @@ describe('Auth Store', () => {
       const authStore = useAuthStore();
       const mockError = { message: 'Invalid credentials' };
 
-      (supabase.auth.signInWithPassword as vi.Mock).mockResolvedValueOnce({
+      (supabase.auth.signInWithPassword as vi.Mock<{ data: { user: User | null, session: Session | null }, error: AuthError | null }>).mockResolvedValueOnce({
         data: { user: null, session: null },
         error: mockError,
       });
@@ -118,12 +112,12 @@ describe('Auth Store', () => {
     it('should sign out a user successfully', async () => {
       const authStore = useAuthStore();
       // Set initial state to logged in
-      authStore.user = { id: 'user-id', email: 'test@example.com' } as any;
-      authStore.session = { access_token: 'mock-token' } as any;
+      authStore.user = { id: 'user-id', email: 'test@example.com' } as User;
+      authStore.session = { access_token: 'mock-token' } as Session;
       authStore.username = 'testuser';
       authStore.userRole = 'user';
 
-      (supabase.auth.signOut as vi.Mock).mockResolvedValueOnce({ error: null });
+      (supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({ error: null });
 
       const result = await authStore.signOut();
 
@@ -136,17 +130,17 @@ describe('Auth Store', () => {
       expect(authStore.userRole).toBeNull();
       expect(authStore.loading).toBe(false);
       expect(authStore.error).toBeNull();
-      expect(mockUnsubscribeFromRealtime).toHaveBeenCalled(); // Adjusted assertion
+      
     });
 
     it('should handle sign out failure', async () => {
       const authStore = useAuthStore();
       // Set initial state to logged in
-      authStore.user = { id: 'user-id', email: 'test@example.com' } as any;
-      authStore.session = { access_token: 'mock-token' } as any;
+      authStore.user = { id: 'user-id', email: 'test@example.com' } as User;
+      authStore.session = { access_token: 'mock-token' } as Session;
       const mockError = { message: 'Logout failed' };
 
-      (supabase.auth.signOut as vi.Mock).mockResolvedValueOnce({ error: mockError });
+      (supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({ error: mockError });
 
       const result = await authStore.signOut();
 

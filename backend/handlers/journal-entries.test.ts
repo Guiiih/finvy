@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, checkDoubleEntryBalance, invalidateJournalEntriesCache, getCachedJournalEntries, setCachedJournalEntries } from '../services/journalEntryService';
-import { getSupabaseClient } from '../utils/supabaseClient';
 
 // Mocking a Supabase client with chainable methods
 const mockSupabaseClient = {
@@ -52,7 +51,7 @@ describe('Journal Entry Service', () => {
 
     it('should return cached journal entries if available', async () => {
       const cachedEntries = [{ id: 'cached-1', description: 'Cached Entry' }];
-      setCachedJournalEntries(mockUserId, cachedEntries as any);
+      setCachedJournalEntries(mockUserId, cachedEntries as JournalEntry[]);
 
       const result = await getJournalEntries(mockUserId, mockOrgId, mockPeriodId, mockToken);
 
@@ -67,9 +66,9 @@ describe('Journal Entry Service', () => {
       const createdEntry = { ...newEntry, id: '3' };
       mockSupabaseClient.select.mockResolvedValue({ data: [createdEntry], error: null });
 
-      setCachedJournalEntries(mockUserId, [{ id: 'pre-cache', description: 'Old data' } as any]);
+      setCachedJournalEntries(mockUserId, [{ id: 'pre-cache', description: 'Old data' }] as JournalEntry[]);
 
-      const result = await createJournalEntry(newEntry as any, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await createJournalEntry(newEntry as JournalEntry, mockUserId, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.insert).toHaveBeenCalledWith([expect.objectContaining(newEntry)]);
       expect(result).toEqual(createdEntry);
@@ -84,7 +83,7 @@ describe('Journal Entry Service', () => {
       const updatedEntry = { id: entryId, ...updateData };
       mockSupabaseClient.select.mockResolvedValue({ data: [updatedEntry], error: null });
 
-      setCachedJournalEntries(mockUserId, [{ id: entryId, description: 'Original data' } as any]);
+      setCachedJournalEntries(mockUserId, [{ id: entryId, description: 'Original data' }] as JournalEntry[]);
 
       const result = await updateJournalEntry(entryId, updateData, mockUserId, mockOrgId, mockPeriodId, mockToken);
 

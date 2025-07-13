@@ -1,6 +1,6 @@
 # **Finvy**
 
-[![Status do Projeto](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)](https://github.com/guilhermecardoso94/finvy)
+[![Status do Projeto](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)](https://github.com/Guiiih/finvy)
 
 [**Experimente o Finvy Online!**](https://finvy.vercel.app/) (Link para a demonstração ao vivo)
 

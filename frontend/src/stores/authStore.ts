@@ -4,7 +4,8 @@ import { supabase } from '@/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 import { AuthApiError } from '@supabase/supabase-js'
 import { api } from '@/services/api'
-import { useJournalEntryStore } from './journalEntryStore'
+
+
 
 export const useAuthStore = defineStore(
   'auth',
@@ -166,9 +167,7 @@ export const useAuthStore = defineStore(
         userOrganizationId.value = null;
         userActiveAccountingPeriodId.value = null;
         
-        // Unsubscribe from Realtime updates
-        const journalEntryStore = useJournalEntryStore();
-        journalEntryStore.unsubscribeFromRealtime();
+        
 
         console.log('Logout bem-sucedido.')
         return true

@@ -16,7 +16,7 @@ export default async function handler(
     const swaggerDoc = fs.readFileSync(swaggerPath, "utf8");
     res.setHeader("Content-Type", "application/json");
     res.status(200).send(swaggerDoc);
-  } catch (error) {
+  } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
     return handleErrorResponse(res, 500, "Erro ao carregar a documentação da API.");
   }
 }

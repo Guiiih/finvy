@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAccountsCache, getCachedAccounts, setCachedAccounts } from './accountService';
-import { getSupabaseClient } from '../utils/supabaseClient';
+
 
 // Mocking a Supabase client with chainable methods
 const mockSupabaseClient = {
@@ -52,7 +52,7 @@ describe('Account Service', () => {
 
     it('should return cached accounts if available', async () => {
       const cachedAccounts = [{ id: 'cached-1', name: 'Cached Account' }];
-      setCachedAccounts(mockUserId, cachedAccounts as any);
+      setCachedAccounts(mockUserId, cachedAccounts as Account[]);
 
       const result = await getAccounts(mockUserId, mockOrgId, mockPeriodId, mockToken);
 
@@ -67,9 +67,9 @@ describe('Account Service', () => {
       const createdAccount = { ...newAccount, id: '3' };
       mockSupabaseClient.select.mockResolvedValue({ data: [createdAccount], error: null });
 
-      setCachedAccounts(mockUserId, [{ id: 'pre-cache', name: 'Old data' } as any]);
+      setCachedAccounts(mockUserId, [{ id: 'pre-cache', name: 'Old data' }] as Account[]);
 
-      const result = await createAccount(newAccount as any, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await createAccount(newAccount as Account, mockUserId, mockOrgId, mockPeriodId, mockToken);
       
       expect(mockSupabaseClient.insert).toHaveBeenCalledWith(expect.objectContaining(newAccount));
       expect(result).toEqual(createdAccount);
@@ -84,7 +84,7 @@ describe('Account Service', () => {
       const updatedAccount = { id: accountId, ...updateData };
       mockSupabaseClient.select.mockResolvedValue({ data: [updatedAccount], error: null });
 
-      setCachedAccounts(mockUserId, [{ id: accountId, name: 'Original data' } as any]);
+      setCachedAccounts(mockUserId, [{ id: accountId, name: 'Original data' }] as Account[]);
 
       const result = await updateAccount(accountId, updateData, mockUserId, mockOrgId, mockPeriodId, mockToken);
 

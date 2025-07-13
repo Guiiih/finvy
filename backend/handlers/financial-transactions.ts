@@ -139,8 +139,7 @@ export default async function handler(
 
   try {
     const { type } = req.query;
-    const tableName =
-      type === "payable" ? "accounts_payable" : "accounts_receivable";
+    
 
     if (req.method === "GET") {
       const data = await getFinancialTransactions(type as "payable" | "receivable", user_id, organization_id, active_accounting_period_id, token);

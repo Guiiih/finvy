@@ -3,6 +3,10 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/authStore';
 import { showToast } from './notificationService';
 
+interface ApiError {
+  message: string;
+}
+
 const apiClient = axios.create({
   baseURL: '/api',
 })
@@ -40,8 +44,10 @@ apiClient.interceptors.response.use(
         showToast('error', 'Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.');
         await authStore.signOut();
         window.location.href = '/login';
+      
+
       } else if (status === 422 && data.errors) {
-        const errorMessages = data.errors.map((err: any) => err.message).join('\n');
+        const errorMessages = data.errors.map((err: ApiError) => err.message).join('\n');
         showToast('error', 'Erro de Validação', errorMessages);
       } else if (status >= 500) {
         showToast('error', 'Erro no Servidor', 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.');

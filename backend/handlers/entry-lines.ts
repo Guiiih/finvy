@@ -3,7 +3,6 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   getSupabaseClient,
   handleErrorResponse,
-  supabase as serviceRoleSupabase,
   getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
