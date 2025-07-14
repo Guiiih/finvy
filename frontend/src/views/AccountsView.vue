@@ -27,21 +27,21 @@ const accountSchema = toTypedSchema(
     name: z
       .string({ required_error: 'O nome é obrigatório' })
       .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-    type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense'], {
-      required_error: 'Por favor, selecione um tipo.',
-    }),
+    parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
   }),
 )
 
 const filteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  return accountStore.accounts.filter(
-    (account) =>
-      account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      account.code?.toString().includes(lowerCaseSearchTerm) ||
-      account.type.toLowerCase().includes(lowerCaseSearchTerm),
-  )
-})
+  return accountStore.accounts
+    .filter(
+      (account) =>
+        account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+        account.code?.toString().includes(lowerCaseSearchTerm) ||
+        account.type.toLowerCase().includes(lowerCaseSearchTerm),
+    )
+    .sort((a, b) => (a.code || '').localeCompare(b.code || '', undefined, { numeric: true, sensitivity: 'base' }));
+});
 
 const paginatedAccounts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
@@ -62,39 +62,64 @@ function goToPage(page: number) {
 
 
 async function handleSubmit(
-  values: Omit<Account, 'id'> | Partial<Account>,
+  values: any,
   { resetForm }: { resetForm: () => void },
 ) {
   try {
     if (isEditing.value && editingAccount.value) {
-      await accountStore.updateAccount(editingAccount.value.id, values as Omit<Account, 'id'>)
+      // Logic for editing an account
+      const updatedAccount: Partial<Account> = {
+        name: values.name,
+        parent_account_id: values.parent_account_id,
+      };
+      await accountStore.updateAccount(editingAccount.value.id, updatedAccount as Omit<Account, 'id'>);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
         detail: 'Conta atualizada com sucesso!',
         life: 3000,
-      })
-      isEditing.value = false
-      editingAccount.value = null
+      });
+      isEditing.value = false;
+      editingAccount.value = null;
     } else {
-      await accountStore.addAccount(values as Omit<Account, 'id'>)
+      // Logic for adding a new account
+      const parentAccount = accountStore.accounts.find(a => a.id === values.parent_account_id);
+      if (!parentAccount) {
+        throw new Error('Conta pai não encontrada!');
+      }
+
+      const children = accountStore.accounts.filter(a => a.parent_account_id === values.parent_account_id);
+      const lastChildCode = children.length > 0 ? Math.max(...children.map(c => parseInt(c.code.split('.').pop() || '0'))) : 0;
+      const nextCode = `${parentAccount.code}.${lastChildCode + 1}`;
+
+      const newAccount: Omit<Account, 'id'> = {
+        name: values.name,
+        parent_account_id: values.parent_account_id,
+        code: nextCode,
+        type: parentAccount.type,
+        user_id: '', // This will be set by the backend
+        organization_id: '', // This will be set by the backend
+        accounting_period_id: '', // This will be set by the backend
+      };
+
+      await accountStore.addAccount(newAccount);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
         detail: 'Conta adicionada com sucesso!',
         life: 3000,
-      })
+      });
     }
-    resetForm()
+    resetForm();
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
-    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
   }
 }
 
 function startEdit(account: Account) {
-  isEditing.value = true
-  editingAccount.value = { ...account }
+  isEditing.value = true;
+  editingAccount.value = { ...account };
 }
 
 
@@ -170,6 +195,21 @@ onMounted(() => {
           class="space-y-4"
         >
           <div class="flex flex-col">
+            <label for="parentAccount" class="text-surface-700 font-medium mb-1">Conta Pai:</label>
+            <Field
+              name="parent_account_id"
+              as="select"
+              id="parentAccount"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              <option value="" disabled>Selecione...</option>
+              <option v-for="account in accountStore.accounts" :key="account.id" :value="account.id">
+                {{ account.code }} - {{ account.name }}
+              </option>
+            </Field>
+            <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
             <label for="accountName" class="text-surface-700 font-medium mb-1">Nome da Conta:</label>
             <Field
               name="name"
@@ -178,23 +218,6 @@ onMounted(() => {
               class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
             <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col">
-            <label for="accountType" class="text-surface-700 font-medium mb-1">Tipo:</label>
-            <Field
-              name="type"
-              as="select"
-              id="accountType"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              <option value="" disabled>Selecione...</option>
-              <option value="asset">Ativo</option>
-              <option value="liability">Passivo</option>
-              <option value="equity">Patrimônio Líquido</option>
-              <option value="revenue">Receita</option>
-              <option value="expense">Despesa</option>
-            </Field>
-            <ErrorMessage name="type" class="text-red-500 text-sm mt-1" />
           </div>
           <div class="flex space-x-4">
             <button
@@ -265,6 +288,7 @@ onMounted(() => {
                   @click="startEdit(account)"
                   class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
                   title="Editar"
+                  v-if="!account.is_protected"
                 >
                   <i class="pi pi-pencil w-5 h-5"></i>
                 </button>
@@ -272,6 +296,7 @@ onMounted(() => {
                   @click="handleDeleteAccount(account.id)"
                   class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
                   title="Excluir"
+                  v-if="!account.is_protected"
                 >
                   <i class="pi pi-trash w-5 h-5"></i>
                 </button>

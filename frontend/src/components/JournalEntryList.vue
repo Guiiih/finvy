@@ -26,7 +26,7 @@ function getAccountName(accountId: string): string {
   return accountStore.getAccountById(accountId)?.name || 'Conta Desconhecida'
 }
 
-function getAccountCode(accountId: string): number | undefined {
+function getAccountCode(accountId: string): string | undefined {
   return accountStore.getAccountById(accountId)?.code
 }
 

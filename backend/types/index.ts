@@ -23,11 +23,13 @@ export interface Account {
   /** The ID of the user who owns this account (if applicable). */
   user_id?: string
   /** The numerical code assigned to the account. */
-  code?: number
+  code?: string | null
   /** The ID of the organization this account belongs to. */
   organization_id?: string
   /** The ID of the accounting period this account is associated with. */
   accounting_period_id?: string
+  /** Indicates if the account is protected and cannot be deleted. */
+  is_protected?: boolean
 }
 
 /**

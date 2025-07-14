@@ -140,9 +140,13 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { name, type, parent_account_id } = parsedBody.data;
+      const { name, type, parent_account_id, code } = parsedBody.data;
 
-      const newAccount = { name, type, parent_account_id };
+      if (!type) {
+        return handleErrorResponse(res, 400, "Tipo de conta inválido.");
+      }
+
+      const newAccount = { name, type, parent_account_id, code };
       const createdAccount = await createAccount(newAccount, user_id, organization_id, active_accounting_period_id, token);
       return res.status(201).json(createdAccount);
     } else if (req.method === "PUT") {

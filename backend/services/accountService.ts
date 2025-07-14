@@ -38,7 +38,7 @@ export async function getAccounts(
   const { data, error: dbError } = await userSupabase
     .from("accounts")
     .select(
-      "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id",
+      "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id, is_protected",
     )
     .eq("user_id", user_id)
     .eq("organization_id", organization_id)
@@ -122,6 +122,25 @@ export async function deleteAccount(
   token: string,
 ): Promise<boolean> {
   const userSupabase = getSupabaseClient(token);
+
+  // Primeiro, verifique se a conta está protegida
+  const { data: accountData, error: fetchError } = await userSupabase
+    .from("accounts")
+    .select("is_protected")
+    .eq("id", id)
+    .eq("user_id", user_id)
+    .eq("organization_id", organization_id)
+    .single();
+
+  if (fetchError) {
+    logger.error("Accounts Service: Erro ao buscar conta para verificar proteção:", fetchError);
+    throw fetchError;
+  }
+
+  if (accountData?.is_protected) {
+    logger.warn(`Accounts Service: Tentativa de deletar conta protegida com ID: ${id}`);
+    throw new Error("Esta conta está protegida e não pode ser deletada.");
+  }
 
   const { error: dbError, count } = await userSupabase
     .from("accounts")

@@ -4,11 +4,12 @@ export interface Account {
   id: string
   name: string
   type: AccountType
-  parentId?: string | null
+  parent_account_id?: string | null
   user_id?: string
-  code?: number
+  code: string
   organization_id?: string
   accounting_period_id?: string
+  is_protected?: boolean
 }
 
 export interface Product {
