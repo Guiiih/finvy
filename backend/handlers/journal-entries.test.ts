@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, checkDoubleEntryBalance } from '../services/journalEntryService';
-import type { JournalEntry } from '../types';
 
 // Mocking a Supabase client with chainable methods
 const mockSupabaseClient = {
