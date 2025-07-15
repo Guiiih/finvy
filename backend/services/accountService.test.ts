@@ -1,3 +1,4 @@
+import { Account } from '../types';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAccountsCache, getCachedAccounts, setCachedAccounts, accountsCache } from './accountService';
 
@@ -6,6 +7,7 @@ import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAcc
 const mockQueryBuilder = {
   select: vi.fn(),
   eq: vi.fn(),
+  is: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
@@ -35,6 +37,7 @@ describe('Account Service', () => {
     // Configure the mock to be chainable by default
     mockQueryBuilder.select.mockReturnThis();
     mockQueryBuilder.eq.mockReturnThis();
+    mockQueryBuilder.is.mockReturnThis();
     mockQueryBuilder.insert.mockReturnThis();
     mockQueryBuilder.update.mockReturnThis();
     mockQueryBuilder.delete.mockReturnThis();
@@ -69,18 +72,37 @@ describe('Account Service', () => {
   });
 
   describe('createAccount', () => {
-    it('should create an account and invalidate cache', async () => {
-      const newAccount = { name: 'New Account', type: 'asset' };
-      const createdAccount = { ...newAccount, id: '3' };
-      mockQueryBuilder.insert.mockReturnThis();
-      mockQueryBuilder.select.mockResolvedValue({ data: [createdAccount], error: null });
+    it('should create a top-level account and invalidate cache', async () => {
+      const newAccountData = { name: 'New Account' };
+      const createdAccount = { ...newAccountData, id: '3', code: '1', type: 'asset' };
 
-      setCachedAccounts(mockUserId, [{ id: 'pre-cache', name: 'Old data' }] as Account[]);
+      // 1. Mock the call to get top-level accounts. Assume none exist.
+      // Chain: from -> select -> is -> eq -> eq -> order
+      mockQueryBuilder.order.mockResolvedValueOnce({ data: [], error: null });
 
-      const result = await createAccount(newAccount as Account, mockUserId, mockOrgId, mockPeriodId, mockToken);
-      
-      expect(mockSupabaseClient.from('accounts').insert).toHaveBeenCalledWith(expect.objectContaining(newAccount));
+      // 2. Mock the insert call, which is followed by a select.
+      // Chain: from -> insert -> select
+      const mockSelectAfterInsert = vi.fn().mockResolvedValue({ data: [createdAccount], error: null });
+      mockQueryBuilder.insert.mockReturnValue({ select: mockSelectAfterInsert });
+
+      // Pre-populate cache to verify invalidation
+      setCachedAccounts(mockOrgId, mockPeriodId, [{ id: 'pre-cache', name: 'Old data' }] as Account[]);
+
+      const result = await createAccount(newAccountData, mockOrgId, mockPeriodId, mockToken);
+
+      // Verify the insert was called with the correct, generated data
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'New Account',
+        code: '1', // First top-level account
+        type: 'asset', // Default type for first top-level
+        organization_id: mockOrgId,
+        accounting_period_id: mockPeriodId,
+      }));
+
+      // Verify the final result
       expect(result).toEqual(createdAccount);
+
+      // Verify cache was invalidated
       expect(getCachedAccounts(mockOrgId, mockPeriodId)).toBeNull();
     });
   });

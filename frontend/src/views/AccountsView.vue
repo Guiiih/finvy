@@ -22,14 +22,16 @@ const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-const accountSchema = toTypedSchema(
-  z.object({
-    name: z
-      .string({ required_error: 'O nome é obrigatório' })
-      .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-    parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
-  }),
-);
+const zodSchema = z.object({
+  name: z
+    .string({ required_error: 'O nome é obrigatório' })
+    .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+  parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
+});
+
+const accountSchema = toTypedSchema(zodSchema);
+
+type AccountFormValues = z.infer<typeof zodSchema>;
 
 const filteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
@@ -61,8 +63,10 @@ function goToPage(page: number) {
 
 
 
+
+
 async function handleSubmit(
-  values: any,
+  values: AccountFormValues,
   { resetForm }: { resetForm: () => void },
 ) {
   try {
@@ -198,7 +202,7 @@ onMounted(() => {
       <div v-if="isEditing" class="bg-surface-50 p-6 rounded-lg shadow-inner mb-6">
         <h2 class="text-2xl font-semibold text-surface-700 mb-4">{{ editingAccount ? 'Editar Conta' : 'Adicionar Conta' }}</h2>
         <Form
-          @submit="handleSubmit"
+          @submit="handleSubmit as any"
           :validation-schema="accountSchema"
           :initial-values="editingAccount || {}"
           v-slot="{ isSubmitting }"
