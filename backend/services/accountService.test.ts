@@ -1,4 +1,4 @@
-import { Account } from '../types';
+import type { Account } from '../types';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAccounts, createAccount, updateAccount, deleteAccount } from './accountService';
 
