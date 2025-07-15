@@ -286,7 +286,7 @@ export default async function handler(
         .from("journal_entries")
         .select("id")
         .eq("id", journal_entry_id)
-        .eq("user_id", user_id)
+        
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
         .single();
