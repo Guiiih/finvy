@@ -5,31 +5,37 @@ import { Account } from "../types/index.js";
 export const accountsCache = new Map<string, { data: Account[]; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-export function getCachedAccounts(userId: string): Account[] | null {
-  const cached = accountsCache.get(userId);
+function getCacheKey(organizationId: string, accountingPeriodId: string): string {
+  return `${organizationId}-${accountingPeriodId}`;
+}
+
+export function getCachedAccounts(organizationId: string, accountingPeriodId: string): Account[] | null {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  const cached = accountsCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
     return cached.data;
   }
   return null;
 }
 
-export function setCachedAccounts(userId: string, data: Account[]) {
-  accountsCache.set(userId, { data, timestamp: Date.now() });
+export function setCachedAccounts(organizationId: string, accountingPeriodId: string, data: Account[]) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  accountsCache.set(key, { data, timestamp: Date.now() });
 }
 
-export function invalidateAccountsCache(userId: string) {
-  accountsCache.delete(userId);
+export function invalidateAccountsCache(organizationId: string, accountingPeriodId: string) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  accountsCache.delete(key);
 }
 
 export async function getAccounts(
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
 ): Promise<Account[] | null> {
   const userSupabase = getSupabaseClient(token);
 
-  const cachedData = getCachedAccounts(user_id);
+  const cachedData = getCachedAccounts(organization_id, active_accounting_period_id);
   if (cachedData) {
     logger.info("Accounts Service: Retornando contas do cache.");
     return cachedData;
@@ -38,9 +44,8 @@ export async function getAccounts(
   const { data, error: dbError } = await userSupabase
     .from("accounts")
     .select(
-      "id, name, type, user_id, code, parent_account_id, organization_id, accounting_period_id, is_protected",
+      "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
     )
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
     .order("name", { ascending: true });
@@ -50,13 +55,12 @@ export async function getAccounts(
     throw dbError;
   }
 
-  setCachedAccounts(user_id, data as Account[]);
+  setCachedAccounts(organization_id, active_accounting_period_id, data as Account[]);
   return data as Account[];
 }
 
 export async function createAccount(
   newAccount: Omit<Account, "id">,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -67,7 +71,6 @@ export async function createAccount(
     .from("accounts")
     .insert({
       ...newAccount,
-      user_id,
       organization_id,
       accounting_period_id: active_accounting_period_id,
     })
@@ -78,14 +81,13 @@ export async function createAccount(
     throw dbError;
   }
 
-  invalidateAccountsCache(user_id);
+  invalidateAccountsCache(organization_id, active_accounting_period_id);
   return data[0] as Account;
 }
 
 export async function updateAccount(
   id: string,
   updateData: Partial<Account>,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -96,7 +98,6 @@ export async function updateAccount(
     .from("accounts")
     .update(updateData)
     .eq("id", id)
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
     .select();
@@ -110,13 +111,12 @@ export async function updateAccount(
     return null;
   }
 
-  invalidateAccountsCache(user_id);
+  invalidateAccountsCache(organization_id, active_accounting_period_id);
   return data[0] as Account;
 }
 
 export async function deleteAccount(
   id: string,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -128,7 +128,6 @@ export async function deleteAccount(
     .from("accounts")
     .select("is_protected")
     .eq("id", id)
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .single();
 
@@ -146,7 +145,6 @@ export async function deleteAccount(
     .from("accounts")
     .delete()
     .eq("id", id)
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id);
 
@@ -159,6 +157,6 @@ export async function deleteAccount(
     return false;
   }
 
-  invalidateAccountsCache(user_id);
+  invalidateAccountsCache(organization_id, active_accounting_period_id);
   return true;
 }

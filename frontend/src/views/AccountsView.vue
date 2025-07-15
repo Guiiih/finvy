@@ -118,14 +118,33 @@ async function handleSubmit(
 }
 
 function startEdit(account: Account) {
+  if (account.is_protected) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Aviso',
+      detail: 'Esta conta é protegida e não pode ser editada.',
+      life: 3000,
+    });
+    return;
+  }
   isEditing.value = true;
   editingAccount.value = { ...account };
 }
 
 
 
-async function handleDeleteAccount(id: string | undefined) {
-  if (!id) {
+async function handleDeleteAccount(account: Account) {
+  if (account.is_protected) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Aviso',
+      detail: 'Esta conta é protegida e não pode ser excluída.',
+      life: 3000,
+    });
+    return;
+  }
+
+  if (!account.id) {
     toast.add({
       severity: 'warn',
       summary: 'Aviso',
@@ -138,7 +157,7 @@ async function handleDeleteAccount(id: string | undefined) {
 
   if (confirm('Tem certeza de que deseja excluir esta conta?')) {
     try {
-      await accountStore.deleteAccount(id);
+      await accountStore.deleteAccount(account.id);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -286,17 +305,21 @@ onMounted(() => {
               <div class="md:col-span-2 flex justify-center items-center space-x-2">
                 <button
                   @click="startEdit(account)"
-                  class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
+                  :class="[
+                    'p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out',
+                    { 'opacity-50 cursor-not-allowed': account.is_protected },
+                  ]"
                   title="Editar"
-                  v-if="!account.is_protected"
                 >
                   <i class="pi pi-pencil w-5 h-5"></i>
                 </button>
                 <button
-                  @click="handleDeleteAccount(account.id)"
-                  class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
+                  @click="handleDeleteAccount(account)"
+                  :class="[
+                    'p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out',
+                    { 'opacity-50 cursor-not-allowed': account.is_protected },
+                  ]"
                   title="Excluir"
-                  v-if="!account.is_protected"
                 >
                   <i class="pi pi-trash w-5 h-5"></i>
                 </button>

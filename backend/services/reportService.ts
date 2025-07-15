@@ -1,5 +1,6 @@
-import { getSupabaseClient } from "../utils/supabaseClient.js";
+import { getSupabaseClient, getUserOrganizationAndPeriod } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
+import { getAccounts } from "../services/accountService.js";
 import type {
   Account,
   JournalEntry,
@@ -13,19 +14,6 @@ interface StockBalance {
 }
 
 type LedgerAccount = FrontendLedgerAccount;
-
-async function getAccounts(user_id: string, token: string): Promise<Account[]> {
-  const userSupabase = getSupabaseClient(token);
-  const { data, error } = await userSupabase
-    .from("accounts")
-    .select("id, name, type")
-    .eq("user_id", user_id);
-  if (error) {
-    logger.error(`[getAccounts] Erro ao buscar contas: ${error.message}`);
-    throw new Error(error.message || "Erro ao buscar dados.");
-  }
-  return data;
-}
 
 interface SupabaseRawJournalEntry {
   id: string;
@@ -326,11 +314,21 @@ export async function generateReports(
   startDate?: string,
   endDate?: string,
 ) {
+  const orgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  if (!orgAndPeriod) {
+    throw new Error("Organization and period not found for the user.");
+  }
+  const { organization_id, active_accounting_period_id } = orgAndPeriod;
+
   const [accounts, journalEntries, productStockBalances] = await Promise.all([
-    getAccounts(user_id, token),
+    getAccounts(organization_id, active_accounting_period_id, token),
     getJournalEntries(user_id, token, startDate, endDate),
     getProductStockBalances(user_id, token), // Fetch product stock balances
   ]);
+
+  if (!accounts) {
+    throw new Error("No accounts found for the given organization and period.");
+  }
 
   const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
 

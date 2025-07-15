@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { JournalEntry, EntryLine, JournalEntryPayload } from '../types/index'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
@@ -17,6 +17,17 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
   const accountingPeriodStore = useAccountingPeriodStore();
 
+  watch(
+    () => accountingPeriodStore.activeAccountingPeriod,
+    (newPeriod, oldPeriod) => {
+      if (newPeriod && newPeriod.id !== oldPeriod?.id) {
+        unsubscribeFromRealtime();
+        fetchJournalEntries();
+      }
+    },
+    { deep: true }
+  );
+
   async function fetchJournalEntries() {
     loading.value = true;
     error.value = null;
@@ -24,10 +35,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         await accountingPeriodStore.fetchAccountingPeriods();
       }
+      const orgId = accountingPeriodStore.activeAccountingPeriod!.organization_id;
+      const periodId = accountingPeriodStore.activeAccountingPeriod!.id;
+
       const entriesData = await api.get<JournalEntry[]>('/journal-entries', {
         params: {
-          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
-          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
+          organization_id: orgId,
+          accounting_period_id: periodId,
         },
       });
 
@@ -41,7 +55,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         entriesData.map(async (entry) => {
           try {
             const linesData = await api.get<EntryLine[]>(
-              `/entry-lines?journal_entry_id=${entry.id}&organization_id=${accountingPeriodStore.activeAccountingPeriod!.organization_id}&accounting_period_id=${accountingPeriodStore.activeAccountingPeriod!.id}`,
+              `/entry-lines?journal_entry_id=${entry.id}&organization_id=${orgId}&accounting_period_id=${periodId}`,
             );
             const convertedLines: EntryLine[] = linesData.map((line) => ({
               account_id: line.account_id,
@@ -66,8 +80,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         (entry): entry is JournalEntry => entry !== null,
       );
 
-      // Subscribe to real-time updates after initial fetch
-      subscribeToRealtime();
+      subscribeToRealtime(orgId, periodId);
 
     } catch (err: unknown) {
       console.error('Erro ao buscar lançamentos:', err);
@@ -77,13 +90,10 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
   }
 
-  function subscribeToRealtime() {
+  function subscribeToRealtime(orgId: string, periodId: string) {
     if (realtimeChannel.value) {
       supabase.removeChannel(realtimeChannel.value as RealtimeChannel);
     }
-
-    const orgId = accountingPeriodStore.activeAccountingPeriod?.organization_id;
-    const periodId = accountingPeriodStore.activeAccountingPeriod?.id;
 
     if (!orgId || !periodId) {
       console.warn("Não é possível assinar o Realtime: organization_id ou accounting_period_id ausente.");
@@ -106,9 +116,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           const oldEntry = payload.old as JournalEntry;
 
           if (payload.eventType === 'INSERT') {
-            // Check if the entry already exists to prevent duplicates from initial fetch + realtime
             if (!journalEntries.value.some(entry => entry.id === newEntry.id)) {
-              journalEntries.value.push({ ...newEntry, lines: [] }); // Lines will be fetched on demand or updated separately
+              journalEntries.value.push({ ...newEntry, lines: [] });
             }
           } else if (payload.eventType === 'UPDATE') {
             const index = journalEntries.value.findIndex(entry => entry.id === newEntry.id);

@@ -46,7 +46,7 @@ import {
  *                   type:
  *                     type: string
  *                     description: O tipo da conta (e.g., 'Asset', 'Liability').
- *                   user_id:
+ *
  *                     type: string
  *                     format: uuid
  *                     description: O ID do usuário ao qual a conta pertence.
@@ -76,7 +76,7 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const data = await getAccounts(user_id, organization_id, active_accounting_period_id, token);
+      const data = await getAccounts(organization_id, active_accounting_period_id, token);
       return res.status(200).json(data);
     } else if (req.method === "POST") {
       /**
@@ -147,7 +147,7 @@ export default async function handler(
       }
 
       const newAccount = { name, type, parent_account_id, code };
-      const createdAccount = await createAccount(newAccount, user_id, organization_id, active_accounting_period_id, token);
+      const createdAccount = await createAccount(newAccount, organization_id, active_accounting_period_id, token);
       return res.status(201).json(createdAccount);
     } else if (req.method === "PUT") {
       /**
@@ -229,7 +229,7 @@ export default async function handler(
         );
       }
 
-      const updatedAccount = await updateAccount(id, updateData, user_id, organization_id, active_accounting_period_id, token);
+      const updatedAccount = await updateAccount(id, updateData, organization_id, active_accounting_period_id, token);
       if (!updatedAccount) {
         return handleErrorResponse(
           res,
@@ -278,7 +278,7 @@ export default async function handler(
             .join(", "),
         );
       }
-      const deleted = await deleteAccount(id, user_id, organization_id, active_accounting_period_id, token);
+      const deleted = await deleteAccount(id, organization_id, active_accounting_period_id, token);
 
       if (!deleted) {
         return handleErrorResponse(
