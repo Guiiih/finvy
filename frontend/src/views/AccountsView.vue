@@ -9,7 +9,7 @@ import Skeleton from 'primevue/skeleton'
 
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { z, type infer as zInfer } from 'zod'
+import { z } from 'zod'
 
 import { useToast } from 'primevue/usetoast'
 
@@ -29,7 +29,7 @@ const accountSchema = toTypedSchema(
       .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
     parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
   }),
-)
+);
 
 const filteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
@@ -62,7 +62,7 @@ function goToPage(page: number) {
 
 
 async function handleSubmit(
-  values: zInfer<typeof accountSchema>,
+  values: any,
   { resetForm }: { resetForm: () => void },
 ) {
   try {

@@ -65,7 +65,7 @@ const logoSrc = computed(() => {
   <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-surface-100">
     <!-- Desktop Header (hidden on small screens) -->
     <header
-      class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50 bg-surface-100 hidden md:grid"
+            class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50 bg-surface-100 hidden lg:grid"
       style="grid-template-columns: 180px 1fr auto"
     >
       <div class="flex items-center">
@@ -75,37 +75,37 @@ const logoSrc = computed(() => {
       <nav class="flex justify-start space-x-6 whitespace-nowrap">
         <RouterLink
           to="/"
-          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600 text-sm xl:text-base"
           >Home</RouterLink
         >
         <RouterLink
           to="/accounts"
-          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600 text-sm xl:text-base"
           >Plano de Contas</RouterLink
         >
         <RouterLink
           to="/journal-entries"
-          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600 text-sm xl:text-base"
           >Lançamentos Contábeis</RouterLink
         >
         <RouterLink
           to="/products"
-          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600 text-sm xl:text-base"
           >Produtos</RouterLink
         >
         <RouterLink
           to="/stock-control"
-          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium whitespace-nowrap router-link-active:text-blue-600 text-sm xl:text-base"
           >Controle de Estoque</RouterLink
         >
         <RouterLink
           to="/ledger"
-          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600 text-sm xl:text-base"
           >Razão</RouterLink
         >
         <RouterLink
           to="/reports"
-          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600"
+          class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600 text-sm xl:text-base"
           >Relatórios</RouterLink
         >
       </nav>
@@ -144,7 +144,7 @@ const logoSrc = computed(() => {
       </header>
 
     <!-- Mobile Header (visible on small screens) -->
-    <header v-if="authStore.isLoggedIn && !shouldHideNavbar" class="md:hidden flex items-center justify-between p-4 bg-surface-100 shadow-md sticky top-0 z-50">
+    <header v-if="authStore.isLoggedIn && !shouldHideNavbar" class="flex items-center justify-between p-4 bg-surface-100 shadow-md sticky top-0 z-50 lg:hidden">
       <button @click="toggleMobileMenu" class="text-surface-600 focus:outline-none mobile-menu-toggle">
         <i class="pi pi-bars text-2xl"></i>
       </button>
