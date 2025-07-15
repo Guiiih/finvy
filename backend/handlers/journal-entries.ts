@@ -304,7 +304,7 @@ export default async function handler(
         `Journal Entries Handler: Processando DELETE para lançamento ${id}.`,
       );
 
-      const deleted = await deleteJournalEntry(id, organization_id, active_accounting_period_id, token);
+      const deleted = await deleteJournalEntry(id, organization_id, active_accounting_period_id, token, user_id);
 
       if (!deleted) {
         logger.warn(

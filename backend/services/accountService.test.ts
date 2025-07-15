@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAccountsCache, getCachedAccounts, setCachedAccounts } from './accountService';
+import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAccountsCache, getCachedAccounts, setCachedAccounts, accountsCache } from './accountService';
 
 
 // Mocking a Supabase client with chainable methods
@@ -30,6 +30,7 @@ describe('Account Service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    accountsCache.clear();
     
     // Configure the mock to be chainable by default
     mockQueryBuilder.select.mockReturnThis();
@@ -42,7 +43,7 @@ describe('Account Service', () => {
 
     mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 
-    invalidateAccountsCache(mockUserId);
+    invalidateAccountsCache(mockOrgId, mockPeriodId);
   });
 
   describe('getAccounts', () => {
@@ -50,7 +51,7 @@ describe('Account Service', () => {
       const mockAccounts = [{ id: '1', name: 'Cash' }];
       mockQueryBuilder.order.mockResolvedValue({ data: mockAccounts, error: null });
 
-      const result = await getAccounts(mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await getAccounts(mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('accounts');
       expect(result).toEqual(mockAccounts);
@@ -58,9 +59,9 @@ describe('Account Service', () => {
 
     it('should return cached accounts if available', async () => {
       const cachedAccounts = [{ id: 'cached-1', name: 'Cached Account' }];
-      setCachedAccounts(mockUserId, cachedAccounts as Account[]);
+      setCachedAccounts(mockOrgId, mockPeriodId, cachedAccounts as Account[]);
 
-      const result = await getAccounts(mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await getAccounts(mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from).not.toHaveBeenCalled();
       expect(result).toEqual(cachedAccounts);
@@ -80,7 +81,7 @@ describe('Account Service', () => {
       
       expect(mockSupabaseClient.from('accounts').insert).toHaveBeenCalledWith(expect.objectContaining(newAccount));
       expect(result).toEqual(createdAccount);
-      expect(getCachedAccounts(mockUserId)).toBeNull();
+      expect(getCachedAccounts(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
@@ -98,27 +99,18 @@ describe('Account Service', () => {
 
       expect(mockSupabaseClient.from('accounts').update).toHaveBeenCalledWith(updateData);
       expect(result).toEqual(updatedAccount);
-      expect(getCachedAccounts(mockUserId)).toBeNull();
+      expect(getCachedAccounts(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
   describe('deleteAccount', () => {
     it('should delete an account if it is not protected', async () => {
       const accountId = '1';
-      const mockEqResult = {
-        single: vi.fn().mockResolvedValue({ data: { is_protected: false }, error: null }),
-      };
-      const mockSelectResult = {
-        eq: vi.fn(() => mockEqResult),
-      };
-      mockQueryBuilder.select.mockReturnValue(mockSelectResult);
+      mockQueryBuilder.select.mockReturnThis();
+      mockQueryBuilder.eq.mockReturnThis();
+      mockQueryBuilder.single.mockResolvedValue({ data: { is_protected: false }, error: null });
       mockQueryBuilder.delete.mockReturnThis();
-      mockQueryBuilder.eq.mockImplementation((key, value) => {
-        if (key === "accounting_period_id") {
-          return mockQueryBuilder.eq.mockResolvedValue({ error: null, count: 1 });
-        }
-        return mockQueryBuilder;
-      });
+      mockQueryBuilder.eq.mockReturnThis();
 
       const result = await deleteAccount(accountId, mockUserId, mockOrgId, mockPeriodId, mockToken);
 
@@ -130,13 +122,9 @@ describe('Account Service', () => {
 
     it('should not delete an account if it is protected', async () => {
       const accountId = 'protected-1';
-      const mockEqResult = {
-        single: vi.fn().mockResolvedValue({ data: { is_protected: true }, error: null }),
-      };
-      const mockSelectResult = {
-        eq: vi.fn(() => mockEqResult),
-      };
-      mockQueryBuilder.select.mockReturnValue(mockSelectResult);
+      mockQueryBuilder.select.mockReturnThis();
+      mockQueryBuilder.eq.mockReturnThis();
+      mockQueryBuilder.single.mockResolvedValue({ data: { is_protected: true }, error: null });
 
       await expect(deleteAccount(accountId, mockUserId, mockOrgId, mockPeriodId, mockToken)).rejects.toThrow("Esta conta está protegida e não pode ser deletada.");
       expect(mockQueryBuilder.delete).not.toHaveBeenCalled();

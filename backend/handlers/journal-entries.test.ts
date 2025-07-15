@@ -41,19 +41,20 @@ describe('Journal Entry Service', () => {
       const mockEntries = [{ id: '1', description: 'Test Entry' }];
       mockSupabaseClient.order.mockResolvedValue({ data: mockEntries, error: null });
 
-      const result = await getJournalEntries(mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('journal_entries');
       expect(mockSupabaseClient.select).toHaveBeenCalledWith(expect.any(String));
-      expect(mockSupabaseClient.eq).toHaveBeenCalledWith('user_id', mockUserId);
+      expect(mockSupabaseClient.eq).toHaveBeenCalledWith('organization_id', mockOrgId);
+      expect(mockSupabaseClient.eq).toHaveBeenCalledWith('accounting_period_id', mockPeriodId);
       expect(result).toEqual(mockEntries);
     });
 
     it('should return cached journal entries if available', async () => {
       const cachedEntries = [{ id: 'cached-1', description: 'Cached Entry' }];
-      setCachedJournalEntries(mockUserId, cachedEntries as JournalEntry[]);
+      setCachedJournalEntries(mockOrgId, mockPeriodId, cachedEntries as JournalEntry[]);
 
-      const result = await getJournalEntries(mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from).not.toHaveBeenCalled();
       expect(result).toEqual(cachedEntries);
@@ -66,13 +67,13 @@ describe('Journal Entry Service', () => {
       const createdEntry = { ...newEntry, id: '3' };
       mockSupabaseClient.select.mockResolvedValue({ data: [createdEntry], error: null });
 
-      setCachedJournalEntries(mockUserId, [{ id: 'pre-cache', description: 'Old data' }] as JournalEntry[]);
+      setCachedJournalEntries(mockOrgId, mockPeriodId, [{ id: 'pre-cache', description: 'Old data' }] as JournalEntry[]);
 
-      const result = await createJournalEntry(newEntry as JournalEntry, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await createJournalEntry(newEntry as JournalEntry, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.insert).toHaveBeenCalledWith([expect.objectContaining(newEntry)]);
       expect(result).toEqual(createdEntry);
-      expect(getCachedJournalEntries(mockUserId)).toBeNull();
+      expect(getCachedJournalEntries(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
@@ -83,14 +84,14 @@ describe('Journal Entry Service', () => {
       const updatedEntry = { id: entryId, ...updateData };
       mockSupabaseClient.select.mockResolvedValue({ data: [updatedEntry], error: null });
 
-      setCachedJournalEntries(mockUserId, [{ id: entryId, description: 'Original data' }] as JournalEntry[]);
+      setCachedJournalEntries(mockOrgId, mockPeriodId, [{ id: entryId, description: 'Original data' }] as JournalEntry[]);
 
-      const result = await updateJournalEntry(entryId, updateData, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await updateJournalEntry(entryId, updateData, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.update).toHaveBeenCalledWith(updateData);
       expect(mockSupabaseClient.eq).toHaveBeenCalledWith('id', entryId);
       expect(result).toEqual(updatedEntry);
-      expect(getCachedJournalEntries(mockUserId)).toBeNull();
+      expect(getCachedJournalEntries(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
@@ -99,9 +100,14 @@ describe('Journal Entry Service', () => {
       const entryId = '1';
       mockSupabaseClient.rpc.mockResolvedValue({ data: true, error: null });
 
-      const result = await deleteJournalEntry(entryId, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await deleteJournalEntry(entryId, mockOrgId, mockPeriodId, mockToken, mockUserId);
 
-      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith('delete_journal_entry_and_lines', expect.any(Object));
+      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith('delete_journal_entry_and_lines', expect.objectContaining({
+        p_journal_entry_id: entryId,
+        p_organization_id: mockOrgId,
+        p_accounting_period_id: mockPeriodId,
+        p_user_id: mockUserId,
+      }));
       expect(result).toBe(true);
     });
   });
@@ -116,7 +122,7 @@ describe('Journal Entry Service', () => {
       ];
       mockSupabaseClient.eq.mockResolvedValue({ data: lines, error: null });
 
-      const isBalanced = await checkDoubleEntryBalance(entryId, mockUserId, mockToken);
+      const isBalanced = await checkDoubleEntryBalance(entryId, mockToken);
 
       expect(isBalanced).toBe(true);
     });
@@ -129,7 +135,7 @@ describe('Journal Entry Service', () => {
       ];
       mockSupabaseClient.eq.mockResolvedValue({ data: lines, error: null });
 
-      const isBalanced = await checkDoubleEntryBalance(entryId, mockUserId, mockToken);
+      const isBalanced = await checkDoubleEntryBalance(entryId, mockToken);
 
       expect(isBalanced).toBe(false);
     });
@@ -138,7 +144,7 @@ describe('Journal Entry Service', () => {
       const entryId = 'no-lines-entry';
       mockSupabaseClient.eq.mockResolvedValue({ data: [], error: null });
 
-      const isBalanced = await checkDoubleEntryBalance(entryId, mockUserId, mockToken);
+      const isBalanced = await checkDoubleEntryBalance(entryId, mockToken);
 
       expect(isBalanced).toBe(true);
     });

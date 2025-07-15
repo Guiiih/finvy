@@ -134,6 +134,7 @@ export async function deleteJournalEntry(
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
+  user_id: string,
 ): Promise<boolean> {
   const userSupabase = getSupabaseClient(token);
 
@@ -143,6 +144,7 @@ export async function deleteJournalEntry(
       p_journal_entry_id: id,
       p_organization_id: organization_id,
       p_accounting_period_id: active_accounting_period_id,
+      p_user_id: user_id,
     },
   );
 
