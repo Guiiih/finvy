@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, checkDoubleEntryBalance, invalidateJournalEntriesCache, getCachedJournalEntries, setCachedJournalEntries } from '../services/journalEntryService';
+import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, checkDoubleEntryBalance } from '../services/journalEntryService';
 import { JournalEntry } from '../types';
 
 // Mocking a Supabase client with chainable methods
@@ -11,6 +11,7 @@ const mockSupabaseClient = {
   eq: vi.fn(),
   order: vi.fn(),
   rpc: vi.fn(),
+  range: vi.fn(), // Add range for pagination
 };
 
 vi.mock('../utils/supabaseClient', () => ({
@@ -33,66 +34,54 @@ describe('Journal Entry Service', () => {
     mockSupabaseClient.update.mockReturnThis();
     mockSupabaseClient.eq.mockReturnThis();
     mockSupabaseClient.order.mockReturnThis();
-
-    invalidateJournalEntriesCache(mockOrgId, mockPeriodId);
+    mockSupabaseClient.range.mockReturnThis(); // Mock range for pagination
   });
 
   describe('getJournalEntries', () => {
-    it('should fetch journal entries from Supabase when cache is empty', async () => {
+    it('should fetch journal entries from Supabase with pagination', async () => {
       const mockEntries = [{ id: '1', description: 'Test Entry' }];
-      mockSupabaseClient.order.mockResolvedValue({ data: mockEntries, error: null });
+      mockSupabaseClient.select.mockResolvedValue({ data: mockEntries, count: 1, error: null });
 
-      const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken);
+      const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken, 1, 10);
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('journal_entries');
-      expect(mockSupabaseClient.select).toHaveBeenCalledWith(expect.any(String));
+      expect(mockSupabaseClient.select).toHaveBeenCalledWith(
+        "id, entry_date, description, organization_id, accounting_period_id",
+        { count: 'exact' }
+      );
       expect(mockSupabaseClient.eq).toHaveBeenCalledWith('organization_id', mockOrgId);
       expect(mockSupabaseClient.eq).toHaveBeenCalledWith('accounting_period_id', mockPeriodId);
-      expect(result).toEqual(mockEntries);
-    });
-
-    it('should return cached journal entries if available', async () => {
-      const cachedEntries = [{ id: 'cached-1', description: 'Cached Entry' }];
-      setCachedJournalEntries(mockOrgId, mockPeriodId, cachedEntries as JournalEntry[]);
-
-      const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken);
-
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-      expect(result).toEqual(cachedEntries);
+      expect(mockSupabaseClient.order).toHaveBeenCalledWith("entry_date", { ascending: false });
+      expect(mockSupabaseClient.range).toHaveBeenCalledWith(0, 9);
+      expect(result).toEqual({ data: mockEntries, count: 1 });
     });
   });
 
   describe('createJournalEntry', () => {
-    it('should create a journal entry and invalidate cache', async () => {
+    it('should create a journal entry', async () => {
       const newEntry = { description: 'New Entry', entry_date: new Date().toISOString() };
       const createdEntry = { ...newEntry, id: '3' };
       mockSupabaseClient.select.mockResolvedValue({ data: [createdEntry], error: null });
-
-      setCachedJournalEntries(mockOrgId, mockPeriodId, [{ id: 'pre-cache', description: 'Old data' }] as JournalEntry[]);
 
       const result = await createJournalEntry(newEntry, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.insert).toHaveBeenCalledWith([expect.objectContaining(newEntry)]);
       expect(result).toEqual(createdEntry);
-      expect(getCachedJournalEntries(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
   describe('updateJournalEntry', () => {
-    it('should update a journal entry and invalidate cache', async () => {
+    it('should update a journal entry', async () => {
       const entryId = '1';
       const updateData = { description: 'Updated Description' };
       const updatedEntry = { id: entryId, ...updateData };
       mockSupabaseClient.select.mockResolvedValue({ data: [updatedEntry], error: null });
-
-      setCachedJournalEntries(mockOrgId, mockPeriodId, [{ id: entryId, description: 'Original data' }] as JournalEntry[]);
 
       const result = await updateJournalEntry(entryId, updateData, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.update).toHaveBeenCalledWith(updateData);
       expect(mockSupabaseClient.eq).toHaveBeenCalledWith('id', entryId);
       expect(result).toEqual(updatedEntry);
-      expect(getCachedJournalEntries(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 

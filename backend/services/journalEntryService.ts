@@ -2,34 +2,7 @@ import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
 import { JournalEntry } from "../types/index.js";
 
-export const journalEntriesCache = new Map<
-  string,
-  { data: JournalEntry[]; timestamp: number }
->();
-const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCacheKey(organizationId: string, accountingPeriodId: string): string {
-  return `${organizationId}-${accountingPeriodId}`;
-}
-
-export function getCachedJournalEntries(organizationId: string, accountingPeriodId: string): JournalEntry[] | null {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  const cached = journalEntriesCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.data;
-  }
-  return null;
-}
-
-export function setCachedJournalEntries(organizationId: string, accountingPeriodId: string, data: JournalEntry[]) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  journalEntriesCache.set(key, { data, timestamp: Date.now() });
-}
-
-export function invalidateJournalEntriesCache(organizationId: string, accountingPeriodId: string) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  journalEntriesCache.delete(key);
-}
 
 export async function getJournalEntries(
   organization_id: string,
@@ -37,7 +10,7 @@ export async function getJournalEntries(
   token: string,
   page: number = 1,
   limit: number = 10,
-): Promise<{ data: JournalEntry[]; count: number } | null> {
+): Promise<{ data: JournalEntry[]; count: number }> {
   const userSupabase = getSupabaseClient(token);
 
   const offset = (page - 1) * limit;
@@ -91,7 +64,7 @@ export async function createJournalEntry(
     throw dbError;
   }
 
-  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
+  
   return data[0] as JournalEntry;
 }
 
@@ -124,7 +97,7 @@ export async function updateJournalEntry(
     return null;
   }
 
-  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
+  
   return data[0] as JournalEntry;
 }
 
@@ -155,7 +128,7 @@ export async function deleteJournalEntry(
     throw dbError;
   }
 
-  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
+  
   return data; // A função RPC retorna TRUE se deletado, FALSE caso contrário
 }
 

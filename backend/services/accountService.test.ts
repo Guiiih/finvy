@@ -1,6 +1,6 @@
 import { Account } from '../types';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAccounts, createAccount, updateAccount, deleteAccount, invalidateAccountsCache, getCachedAccounts, setCachedAccounts, accountsCache } from './accountService';
+import { getAccounts, createAccount, updateAccount, deleteAccount } from './accountService';
 
 
 // Mocking a Supabase client with chainable methods
@@ -13,6 +13,7 @@ const mockQueryBuilder = {
   delete: vi.fn(),
   order: vi.fn(),
   single: vi.fn(),
+  range: vi.fn(), // Add range for pagination
 };
 
 const mockSupabaseClient = {
@@ -31,7 +32,6 @@ describe('Account Service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    accountsCache.clear();
     
     // Configure the mock to be chainable by default
     mockQueryBuilder.select.mockReturnThis();
@@ -41,37 +41,35 @@ describe('Account Service', () => {
     mockQueryBuilder.update.mockReturnThis();
     mockQueryBuilder.delete.mockReturnThis();
     mockQueryBuilder.order.mockReturnThis();
+    mockQueryBuilder.range.mockReturnThis(); // Mock range for pagination
     mockQueryBuilder.single.mockReset(); // Reset single mock
 
     mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 
-    invalidateAccountsCache(mockOrgId, mockPeriodId);
   });
 
   describe('getAccounts', () => {
-    it('should fetch accounts from Supabase when cache is empty', async () => {
+    it('should fetch accounts from Supabase with pagination', async () => {
       const mockAccounts = [{ id: '1', name: 'Cash' }];
-      mockQueryBuilder.order.mockResolvedValue({ data: mockAccounts, error: null });
+      mockQueryBuilder.select.mockResolvedValue({ data: mockAccounts, count: 1, error: null });
 
-      const result = await getAccounts(mockOrgId, mockPeriodId, mockToken);
+      const result = await getAccounts(mockOrgId, mockPeriodId, mockToken, 1, 10);
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('accounts');
-      expect(result).toEqual(mockAccounts);
-    });
-
-    it('should return cached accounts if available', async () => {
-      const cachedAccounts = [{ id: 'cached-1', name: 'Cached Account' }];
-      setCachedAccounts(mockOrgId, mockPeriodId, cachedAccounts as Account[]);
-
-      const result = await getAccounts(mockOrgId, mockPeriodId, mockToken);
-
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-      expect(result).toEqual(cachedAccounts);
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith(
+        "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
+        { count: 'exact' }
+      );
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith("organization_id", mockOrgId);
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith("accounting_period_id", mockPeriodId);
+      expect(mockQueryBuilder.order).toHaveBeenCalledWith("name", { ascending: true });
+      expect(mockQueryBuilder.range).toHaveBeenCalledWith(0, 9);
+      expect(result).toEqual({ data: mockAccounts, count: 1 });
     });
   });
 
   describe('createAccount', () => {
-    it('should create a top-level account and invalidate cache', async () => {
+    it('should create a top-level account', async () => {
       const newAccountData = { name: 'New Account' };
       const createdAccount = { ...newAccountData, id: '3', code: '1', type: 'asset' };
 
@@ -83,9 +81,6 @@ describe('Account Service', () => {
       // Chain: from -> insert -> select
       const mockSelectAfterInsert = vi.fn().mockResolvedValue({ data: [createdAccount], error: null });
       mockQueryBuilder.insert.mockReturnValue({ select: mockSelectAfterInsert });
-
-      // Pre-populate cache to verify invalidation
-      setCachedAccounts(mockOrgId, mockPeriodId, [{ id: 'pre-cache', name: 'Old data' }] as Account[]);
 
       const result = await createAccount(newAccountData, mockOrgId, mockPeriodId, mockToken);
 
@@ -100,27 +95,21 @@ describe('Account Service', () => {
 
       // Verify the final result
       expect(result).toEqual(createdAccount);
-
-      // Verify cache was invalidated
-      expect(getCachedAccounts(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
   describe('updateAccount', () => {
-    it('should update an account and invalidate cache', async () => {
+    it('should update an account', async () => {
       const accountId = '1';
       const updateData = { name: 'Updated Name' };
       const updatedAccount = { id: accountId, ...updateData };
       mockQueryBuilder.update.mockReturnThis();
       mockQueryBuilder.select.mockResolvedValue({ data: [updatedAccount], error: null });
 
-      setCachedAccounts(mockOrgId, mockPeriodId, [{ id: accountId, name: 'Original data' }] as Account[]);
-
       const result = await updateAccount(accountId, updateData, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from('accounts').update).toHaveBeenCalledWith(updateData);
       expect(result).toEqual(updatedAccount);
-      expect(getCachedAccounts(mockOrgId, mockPeriodId)).toBeNull();
     });
   });
 
@@ -150,5 +139,5 @@ describe('Account Service', () => {
       await expect(deleteAccount(accountId, mockOrgId, mockPeriodId, mockToken)).rejects.toThrow("Esta conta está protegida e não pode ser deletada.");
       expect(mockQueryBuilder.delete).not.toHaveBeenCalled();
     });
-  });;
+  });
 });

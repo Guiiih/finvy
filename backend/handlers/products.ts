@@ -8,31 +8,7 @@ import {
 import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
 
-const productsCache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCacheKey(organizationId: string, accountingPeriodId: string): string {
-  return `${organizationId}-${accountingPeriodId}`;
-}
-
-function getCachedProducts(organizationId: string, accountingPeriodId: string) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  const cached = productsCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.data;
-  }
-  return null;
-}
-
-function setCachedProducts(organizationId: string, accountingPeriodId: string, data: unknown) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  productsCache.set(key, { data, timestamp: Date.now() });
-}
-
-function invalidateProductsCache(organizationId: string, accountingPeriodId: string) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  productsCache.delete(key);
-}
 
 /**
  * @swagger
@@ -227,7 +203,7 @@ export default async function handler(
         .select();
 
       if (dbError) throw dbError;
-      invalidateProductsCache(organization_id, active_accounting_period_id);
+
       return res.status(201).json(data[0]);
     }
 
@@ -343,7 +319,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para atualizar.",
         );
       }
-      invalidateProductsCache(organization_id, active_accounting_period_id);
+
       return res.status(200).json(data[0]);
     }
 
@@ -392,7 +368,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para deletar.",
         );
       }
-      invalidateProductsCache(organization_id, active_accounting_period_id);
+
       return res.status(204).end();
     }
 

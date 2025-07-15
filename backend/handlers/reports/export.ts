@@ -9,6 +9,7 @@ import {
   calculateLedgerDetails,
 } from "../../services/reportService.js";
 import { exportReportSchema } from "../../utils/schemas.js";
+import type { Account, JournalEntry } from "../../types/index.js";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 
@@ -337,7 +338,7 @@ export default async function handler(
       token,
       startDate,
       endDate,
-    );
+    ) as { accounts: { data: Account[], count: number }, journalEntries: JournalEntry[] };
 
     let reportData:
       | TrialBalanceData[]
@@ -352,19 +353,19 @@ export default async function handler(
 
     switch (reportType) {
       case "trialBalance":
-        reportData = calculateTrialBalance(accounts, journalEntries);
+        reportData = calculateTrialBalance(accounts.data, journalEntries);
         filename = "balancete_de_verificacao";
         break;
       case "dre":
-        reportData = calculateDreData(accounts, journalEntries);
+        reportData = calculateDreData(accounts.data, journalEntries);
         filename = "demonstrativo_de_resultado";
         break;
       case "balanceSheet":
-        reportData = calculateBalanceSheetData(accounts, journalEntries);
+        reportData = calculateBalanceSheetData(accounts.data, journalEntries);
         filename = "balanco_patrimonial";
         break;
       case "ledgerDetails":
-        reportData = calculateLedgerDetails(accounts, journalEntries);
+        reportData = calculateLedgerDetails(accounts.data, journalEntries);
         filename = "razao_detalhado";
         break;
       default:

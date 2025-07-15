@@ -9,6 +9,7 @@ import { createEntryLineSchema } from "../utils/schemas.js";
 import { updateProductStockAndCost } from "../services/productService.js";
 import { calculateTaxes } from "../services/taxService.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
+import { getTaxSettings } from "../services/taxSettingService.js";
 
 /**
  * @swagger
@@ -522,8 +523,7 @@ export default async function handler(
             500,
             "Contas contábeis essenciais para compras não encontradas. Verifique se todas as contas necessárias existem.",
           );
-        );
-        }
+        };
 
         // Retailer Purchase Scenario
         // Debit Estoque de Mercadorias, Credit Fornecedores

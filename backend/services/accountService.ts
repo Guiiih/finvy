@@ -2,31 +2,7 @@ import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
 import { Account } from "../types/index.js";
 
-export const accountsCache = new Map<string, { data: Account[]; timestamp: number }>();
-const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCacheKey(organizationId: string, accountingPeriodId: string): string {
-  return `${organizationId}-${accountingPeriodId}`;
-}
-
-export function getCachedAccounts(organizationId: string, accountingPeriodId: string): Account[] | null {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  const cached = accountsCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.data;
-  }
-  return null;
-}
-
-export function setCachedAccounts(organizationId: string, accountingPeriodId: string, data: Account[]) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  accountsCache.set(key, { data, timestamp: Date.now() });
-}
-
-export function invalidateAccountsCache(organizationId: string, accountingPeriodId: string) {
-  const key = getCacheKey(organizationId, accountingPeriodId);
-  accountsCache.delete(key);
-}
 
 export async function getAccounts(
   organization_id: string,
@@ -34,7 +10,7 @@ export async function getAccounts(
   token: string,
   page: number = 1,
   limit: number = 10,
-): Promise<{ data: Account[]; count: number } | null> {
+): Promise<{ data: Account[]; count: number }> {
   const userSupabase = getSupabaseClient(token);
 
   const offset = (page - 1) * limit;
@@ -164,7 +140,7 @@ export async function createAccount(
     throw dbError;
   }
 
-  invalidateAccountsCache(organization_id, active_accounting_period_id);
+  
   return data[0] as Account;
 }
 
@@ -194,7 +170,7 @@ export async function updateAccount(
     return null;
   }
 
-  invalidateAccountsCache(organization_id, active_accounting_period_id);
+  
   return data[0] as Account;
 }
 
@@ -240,6 +216,6 @@ export async function deleteAccount(
     return false;
   }
 
-  invalidateAccountsCache(organization_id, active_accounting_period_id);
+  
   return true;
 }

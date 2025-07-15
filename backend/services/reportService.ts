@@ -335,12 +335,12 @@ export async function generateReports(
     throw new Error("No accounts found for the given organization and period.");
   }
 
-  const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
+  const ledgerAccountsList = calculateTrialBalance(accounts.data, journalEntries);
 
-  const dreData = calculateDreData(accounts, journalEntries);
-  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries);
-  const dfcData = calculateDfcData(accounts, journalEntries);
-  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries);
+  const dreData = calculateDreData(accounts.data, journalEntries);
+  const balanceSheetData = calculateBalanceSheetData(accounts.data, journalEntries);
+  const dfcData = calculateDfcData(accounts.data, journalEntries);
+  const ledgerDetails = calculateLedgerDetails(accounts.data, journalEntries);
   const stockBalances: StockBalance[] = productStockBalances; // Populate stockBalances
 
   return {
