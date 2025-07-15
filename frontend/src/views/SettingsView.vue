@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 min-h-screen">
+  <div class="p-4 sm:p-6 min-h-screen">
     <div class="max-w-4xl mx-auto p-8">
       <h1 class="text-3xl font-bold text-surface-800 mb-8 border-b pb-4">Configurações da Conta</h1>
 
@@ -768,6 +768,3 @@ function resetMemberForm() {
 
 </script>
 
-<style scoped>
-/* Adicione estilos específicos se necessário */
-</style>

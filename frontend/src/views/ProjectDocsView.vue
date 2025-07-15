@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col lg:flex-row p-6 bg-gray-50 min-h-screen">
-    <aside class="w-full lg:w-1/4 h-screen lg:sticky lg:top-6 lg:mr-6 mb-6 lg:mb-0">
+  <div class="flex flex-col md:flex-row p-6 sm:p-4 md:p-6 bg-gray-50 min-h-screen">
+    <aside class="w-full md:w-1/4 lg:w-1/4 h-screen md:sticky md:top-6 md:mr-6 mb-6 md:mb-0">
       <div class="p-4 bg-gray-900 rounded-lg shadow-md text-gray-300">
         <h2 class="text-xl font-bold mb-4 text-white">Tópicos</h2>
         <nav class="relative">
@@ -161,7 +161,7 @@
       </div>
     </aside>
 
-    <main class="w-full lg:w-3/4 p-6 bg-white rounded-lg shadow-md">
+    <main class="w-full md:w-3/4 lg:w-3/4 p-6 bg-white rounded-lg shadow-md">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">Documentação do Projeto Finvy</h1>
 
       <!-- Introdução ao Finvy -->

@@ -77,21 +77,3 @@ const handleForgotPassword = async () => {
 }
 </script>
 
-<style scoped>
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-  -webkit-text-fill-color: #4a4a4a !important;
-  transition: background-color 50000s ease-in-out 0s !important;
-  border-color: transparent !important;
-}
-
-input:focus,
-input:-webkit-autofill:focus {
-  border-left: 4px solid #1a1a1a !important;
-  padding-left: calc(1rem - 1px) !important;
-  border-color: transparent !important;
-  outline: none !important;
-}
-</style>

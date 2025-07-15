@@ -1,5 +1,5 @@
 <template>
-  <div ref="swaggerContainer" class="swagger-container"></div>
+  <div ref="swaggerContainer" class="p-4 sm:p-6 min-h-screen"></div>
 </template>
 
 <script setup lang="ts">
@@ -38,9 +38,3 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-.swagger-container {
-  padding: 20px;
-  min-height: 800px; /* Garante que o container tenha altura suficiente */
-}
-</style>

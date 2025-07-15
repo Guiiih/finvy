@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
+  <div class="p-4 sm:p-6 bg-gray-50 min-h-screen">
     <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Perguntas Frequentes (FAQ)</h1>
 
     <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">

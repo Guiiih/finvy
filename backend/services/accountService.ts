@@ -60,20 +60,102 @@ export async function getAccounts(
 }
 
 export async function createAccount(
-  newAccount: Omit<Account, "id">,
+  accountData: { name: string; parent_account_id?: string | null },
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
 ): Promise<Account | null> {
   const userSupabase = getSupabaseClient(token);
 
+  let parentAccount: Account | null = null;
+  let newAccountCode: string;
+  let newAccountType: Account['type'];
+
+  // ATENÇÃO: Para garantir atomicidade em ambientes de alta concorrência,
+  // esta lógica de geração de código e tipo deve idealmente ser implementada
+  // como uma função de banco de dados (stored procedure) no PostgreSQL/Supabase.
+  // A implementação atual é sequencial e pode levar a condições de corrida.
+  // Isso é crucial para evitar a duplicação de códigos de conta em cenários de múltiplos usuários criando contas simultaneamente.
+
+  if (accountData.parent_account_id) {
+    // 1. Buscar conta pai
+    const { data: fetchedParent, error: parentError } = await userSupabase
+      .from("accounts")
+      .select("id, code, type")
+      .eq("id", accountData.parent_account_id)
+      .eq("organization_id", organization_id)
+      .eq("accounting_period_id", active_accounting_period_id)
+      .single();
+
+    if (parentError || !fetchedParent) {
+      logger.error("Accounts Service: Erro ao buscar conta pai:", parentError);
+      throw new Error("Conta pai não encontrada ou inacessível.");
+    }
+    parentAccount = fetchedParent as Account;
+    newAccountType = parentAccount.type; // Herda o tipo da conta pai
+
+    // 2. Encontrar o maior código de conta filha existente para o pai
+    const { data: children, error: childrenError } = await userSupabase
+      .from("accounts")
+      .select("code")
+      .eq("parent_account_id", parentAccount.id)
+      .eq("organization_id", organization_id)
+      .eq("accounting_period_id", active_accounting_period_id)
+      .order("code", { ascending: false }); // Ordena para pegar o maior código
+
+    if (childrenError) {
+      logger.error("Accounts Service: Erro ao buscar contas filhas:", childrenError);
+      throw childrenError;
+    }
+
+    let lastChildNumber = 0;
+    if (children && children.length > 0) {
+      const lastChildCode = children[0].code;
+      const parts = lastChildCode.split('.');
+      lastChildNumber = parseInt(parts[parts.length - 1]) || 0;
+    }
+    newAccountCode = `${parentAccount.code}.${lastChildNumber + 1}`;
+  } else {
+    // Conta de nível superior (sem pai)
+    // 1. Encontrar o maior código de conta de nível superior existente
+    const { data: topLevelAccounts, error: topLevelError } = await userSupabase
+      .from("accounts")
+      .select("code, type")
+      .is("parent_account_id", null)
+      .eq("organization_id", organization_id)
+      .eq("accounting_period_id", active_accounting_period_id)
+      .order("code", { ascending: false });
+
+    if (topLevelError) {
+      logger.error("Accounts Service: Erro ao buscar contas de nível superior:", topLevelError);
+      throw topLevelError;
+    }
+
+    let lastTopLevelNumber = 0;
+    if (topLevelAccounts && topLevelAccounts.length > 0) {
+      const lastTopLevelCode = topLevelAccounts[0].code;
+      lastTopLevelNumber = parseInt(lastTopLevelCode) || 0;
+      newAccountType = topLevelAccounts[0].type; // Assume o tipo da conta de nível superior existente
+    } else {
+      // Se for a primeira conta de nível superior, define um tipo padrão.
+      // Isso pode precisar ser mais configurável ou inferido de outra forma.
+      newAccountType = 'asset'; // Tipo padrão para a primeira conta de nível superior
+    }
+    newAccountCode = `${lastTopLevelNumber + 1}`;
+  }
+
+  const accountToInsert = {
+    name: accountData.name,
+    parent_account_id: accountData.parent_account_id,
+    code: newAccountCode,
+    type: newAccountType,
+    organization_id,
+    accounting_period_id: active_accounting_period_id,
+  };
+
   const { data, error: dbError } = await userSupabase
     .from("accounts")
-    .insert({
-      ...newAccount,
-      organization_id,
-      accounting_period_id: active_accounting_period_id,
-    })
+    .insert(accountToInsert)
     .select();
 
   if (dbError) {

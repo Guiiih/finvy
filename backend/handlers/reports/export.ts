@@ -124,7 +124,8 @@ function convertToCsv(
 async function convertToXlsx(
   data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData,
   reportType: string,
-): Promise<Buffer> {
+  res: VercelResponse,
+): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(reportType);
 
@@ -197,20 +198,20 @@ async function convertToXlsx(
     worksheet.addRow(row);
   });
 
-  return workbook.xlsx.writeBuffer() as Promise<Buffer>;
+  await workbook.xlsx.write(res);
 }
 
 async function convertToPdf(
   data: TrialBalanceData[] | DreData | BalanceSheetData | LedgerDetailsData,
   reportType: string,
-): Promise<Buffer> {
+  res: VercelResponse,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
-    const buffers: Buffer[] = [];
+    doc.pipe(res);
 
-    doc.on("data", buffers.push.bind(buffers));
     doc.on("end", () => {
-      resolve(Buffer.concat(buffers));
+      resolve();
     });
     doc.on("error", reject);
 
@@ -345,7 +346,9 @@ export default async function handler(
       | LedgerDetailsData;
     let filename = "report";
     let contentType = "";
-    let fileBuffer: Buffer | string;
+
+    // Considerar jobs em segundo plano para exports muito grandes para evitar timeouts
+    // em ambientes serverless como o Vercel. O usuário seria notificado quando o relatório estivesse pronto.
 
     switch (reportType) {
       case "trialBalance":
@@ -369,25 +372,28 @@ export default async function handler(
     }
 
     if (format === "xlsx") {
-      fileBuffer = await convertToXlsx(reportData, reportType);
       contentType =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       filename += ".xlsx";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      await convertToXlsx(reportData, reportType, res);
     } else if (format === "csv") {
-      fileBuffer = convertToCsv(reportData, reportType);
+      const fileBuffer = convertToCsv(reportData, reportType);
       contentType = "text/csv";
       filename += ".csv";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.status(200).send(fileBuffer);
     } else if (format === "pdf") {
-      fileBuffer = await convertToPdf(reportData, reportType);
       contentType = "application/pdf";
       filename += ".pdf";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      await convertToPdf(reportData, reportType, res);
     } else {
       return handleErrorResponse(res, 400, "Formato de exportação inválido.");
     }
-
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.status(200).send(fileBuffer);
   } catch (error: unknown) {
     logger.error("Erro ao exportar relatório:", error);
     const message =

@@ -73,34 +73,40 @@ const exportReport = async (reportType: string) => {
 </script>
 
 <template>
-  <div class="reports-container">
-    <h1>Relatórios Financeiros</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Relatórios Financeiros</h1>
 
-    <div class="date-filter-section">
-      <label for="startDate">Data Inicial:</label>
-      <input type="date" id="startDate" v-model="startDate" />
-      <label for="endDate">Data Final:</label>
-      <input type="date" id="endDate" v-model="endDate" />
+    <div class="flex flex-wrap items-center justify-center gap-4 mb-6 p-4 bg-surface-50 rounded-lg shadow-md">
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <label for="startDate" class="font-medium text-surface-700">Data Inicial:</label>
+        <input type="date" id="startDate" v-model="startDate" class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+      </div>
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <label for="endDate" class="font-medium text-surface-700">Data Final:</label>
+        <input type="date" id="endDate" v-model="endDate" class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+      </div>
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <label for="exportFormat" class="font-medium text-surface-700">Formato:</label>
+        <select id="exportFormat" v-model="selectedFormat" class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          <option value="csv">CSV</option>
+          <option value="xlsx">XLSX</option>
+          <option value="pdf">PDF</option>
+        </select>
+      </div>
       <button @click="navigateToReport('dre')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver DRE</button>
       <button @click="navigateToReport('balance-sheet')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver Balanço</button>
       <button @click="navigateToReport('dfc')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Ver DFC</button>
-      <label for="exportFormat">Formato:</label>
-      <select id="exportFormat" v-model="selectedFormat">
-        <option value="csv">CSV</option>
-        <option value="xlsx">XLSX</option>
-        <option value="pdf">PDF</option>
-      </select>
       <button @click="exportReport('trialBalance')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Balancete</button>
       <button @click="exportReport('dre')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar DRE</button>
       <button @click="exportReport('balanceSheet')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Balanço</button>
       <button @click="exportReport('ledgerDetails')" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Exportar Razão Detalhado</button>
     </div>
 
-    <p v-if="reportStore.loading" class="loading-message">Gerando relatórios...</p>
-    <p v-else-if="reportStore.error" class="error-message">
+    <p v-if="reportStore.loading" class="text-center p-4 bg-surface-100 border border-surface-200 rounded-lg text-surface-600 italic mt-4">Gerando relatórios...</p>
+    <p v-else-if="reportStore.error" class="text-center p-4 bg-red-100 border border-red-200 rounded-lg text-red-700 mt-4">
       Erro ao gerar relatórios: {{ reportStore.error }}
     </p>
-    <p v-else class="info-message">
+    <p v-else class="text-center p-4 bg-surface-100 border border-surface-200 rounded-lg text-surface-600 italic mt-4">
       Selecione um período e o tipo de relatório para visualizar os dados.
     </p>
 
@@ -108,92 +114,3 @@ const exportReport = async (reportType: string) => {
   </div>
 </template>
 
-<style scoped>
-.reports-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.date-filter-section {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 20px;
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.date-filter-section label {
-  font-weight: bold;
-  color: #555;
-}
-
-.date-filter-section input[type='date'] {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-.loading-message,
-.error-message,
-.info-message {
-  text-align: center;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px dashed #ddd;
-  border-radius: 8px;
-  color: #666;
-  font-style: italic;
-  margin-top: 20px;
-}
-
-.error-message {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-color: #f5c6cb;
-}
-
-.reports-generated-section {
-  margin-top: 30px;
-}
-
-.reports-generated-section h2 {
-  color: #333;
-  margin-bottom: 15px;
-}
-
-.reports-generated-section ul {
-  list-style: none;
-  padding: 0;
-}
-
-.reports-generated-section li {
-  margin-bottom: 10px;
-}
-
-.reports-generated-section a {
-  display: block;
-  padding: 10px 15px;
-  background-color: #e9ecef;
-  border-radius: 5px;
-  text-decoration: none;
-  color: #007bff;
-  font-weight: bold;
-  transition: background-color 0.2s;
-}
-
-.reports-generated-section a:hover {
-  background-color: #dee2e6;
-}
-</style>

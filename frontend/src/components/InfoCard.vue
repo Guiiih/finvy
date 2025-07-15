@@ -35,53 +35,11 @@ const formattedValue = computed(() => {
 </script>
 
 <template>
-  <div class="info-card">
-    <h3 class="card-title">{{ title }}</h3>
-    <p class="card-value" :class="valueClass">
+  <div class="bg-white border border-surface-200 rounded-lg shadow-md p-5 text-center flex flex-col justify-center items-center min-h-[120px]">
+    <h3 class="text-lg text-surface-600 uppercase font-bold mb-2 card-title">{{ title }}</h3>
+    <p class="text-3xl font-bold m-0 card-value" :class="valueClass">
       {{ formattedValue }}
     </p>
   </div>
 </template>
 
-<style scoped>
-.info-card {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 120px;
-}
-
-.card-title {
-  font-size: 1.1em;
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-.card-value {
-  font-size: 1.8em;
-  font-weight: bold;
-  margin: 0;
-}
-
-.neutral-value {
-  color: #333;
-}
-
-.positive-value {
-  color: #28a745;
-}
-
-.negative-value {
-  color: #dc3545;
-}
-</style>

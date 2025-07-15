@@ -1,18 +1,19 @@
 <template>
-  <div class="accounts-receivable-container">
-    <h1>Contas a Receber</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Contas a Receber</h1>
 
-    <div class="form-section">
-      <h2>{{ isEditing ? 'Editar Conta a Receber' : 'Adicionar Nova Conta a Receber' }}</h2>
+    <div class="bg-surface-50 p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-3 text-surface-700 border-b border-surface-200 pb-2">{{ isEditing ? 'Editar Conta a Receber' : 'Adicionar Nova Conta a Receber' }}</h2>
       <form
         @submit.prevent="isEditing ? handleUpdateAccountReceivable() : handleAddAccountReceivable()"
+        class="space-y-4"
       >
-        <div class="form-group">
-          <label for="description">Descrição:</label>
-          <input type="text" id="description" v-model="newAccount.description" required />
+        <div class="flex flex-col">
+          <label for="description" class="block text-sm font-medium text-surface-700">Descrição:</label>
+          <input type="text" id="description" v-model="newAccount.description" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
         </div>
-        <div class="form-group">
-          <label for="amount">Valor:</label>
+        <div class="flex flex-col">
+          <label for="amount" class="block text-sm font-medium text-surface-700">Valor:</label>
           <input
             type="number"
             id="amount"
@@ -20,91 +21,99 @@
             step="0.01"
             min="0"
             required
+            class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2"
           />
         </div>
-        <div class="form-group">
-          <label for="dueDate">Data de Vencimento:</label>
-          <input type="date" id="dueDate" v-model="newAccount.due_date" required />
+        <div class="flex flex-col">
+          <label for="dueDate" class="block text-sm font-medium text-surface-700">Data de Vencimento:</label>
+          <input type="date" id="dueDate" v-model="newAccount.due_date" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
         </div>
-        <div class="form-group">
-          <label for="isReceived">Recebida:</label>
-          <input type="checkbox" id="isReceived" v-model="newAccount.is_received" />
+        <div class="flex items-center">
+          <input type="checkbox" id="isReceived" v-model="newAccount.is_received" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-surface-300 rounded" />
+          <label for="isReceived" class="ml-2 block text-sm text-surface-900">Recebida:</label>
         </div>
-        <div class="form-group" v-if="newAccount.is_received">
-          <label for="receivedDate">Data de Recebimento:</label>
+        <div class="flex flex-col" v-if="newAccount.is_received">
+          <label for="receivedDate" class="block text-sm font-medium text-surface-700">Data de Recebimento:</label>
           <input
             type="date"
             id="receivedDate"
             v-model="newAccount.received_date"
             :required="newAccount.is_received"
+            class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2"
           />
         </div>
-        <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">{{ isEditing ? 'Atualizar' : 'Adicionar' }}</button>
-        <button type="button" @click="resetForm" v-if="isEditing" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Cancelar</button>
+        <div class="flex space-x-2">
+          <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">{{ isEditing ? 'Atualizar' : 'Adicionar' }}</button>
+          <button type="button" @click="resetForm" v-if="isEditing" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Cancelar</button>
+        </div>
       </form>
     </div>
 
-    <div class="accounts-list-section">
-      <h2>Contas Pendentes</h2>
-      <p v-if="financialTransactionsStore.loading">Carregando contas...</p>
-      <p v-else-if="financialTransactionsStore.error" class="error-message">
+    <div class="bg-surface-50 p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-3 text-surface-700 border-b border-surface-200 pb-2">Contas Pendentes</h2>
+      <p v-if="financialTransactionsStore.loading" class="text-surface-600">Carregando contas...</p>
+      <p v-else-if="financialTransactionsStore.error" class="text-red-500 text-center mt-4">
         {{ financialTransactionsStore.error }}
       </p>
-      <table v-else-if="financialTransactionsStore.getUnreceivedAccounts.length > 0">
-        <thead>
-          <tr>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Vencimento</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="account in financialTransactionsStore.getUnreceivedAccounts" :key="account.id">
-            <td>{{ account.description }}</td>
-            <td>R$ {{ account.amount.toFixed(2) }}</td>
-            <td>{{ account.due_date }}</td>
-            <td>
-              <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
-              <button @click="markAsReceived(account.id)" v-if="!account.is_received" class="px-3 py-1 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">
-                Marcar como Recebida
-              </button>
-              <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
-                Excluir
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-else>Nenhuma conta a receber pendente.</p>
+      <div class="overflow-x-auto" v-else-if="financialTransactionsStore.getUnreceivedAccounts.length > 0">
+        <table class="min-w-full divide-y divide-surface-200">
+          <thead class="bg-surface-100">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Descrição</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Valor</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Vencimento</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-surface-200">
+            <tr v-for="account in financialTransactionsStore.getUnreceivedAccounts" :key="account.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ account.description }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">R$ {{ account.amount.toFixed(2) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ account.due_date }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
+                <button @click="markAsReceived(account.id)" v-if="!account.is_received" class="px-3 py-1 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">
+                  Marcar como Recebida
+                </button>
+                <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="text-surface-600 mt-4">Nenhuma conta a receber pendente.</p>
 
-      <h2>Contas Recebidas</h2>
-      <table v-if="financialTransactionsStore.getReceivedAccounts.length > 0">
-        <thead>
-          <tr>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Vencimento</th>
-            <th>Recebimento</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="account in financialTransactionsStore.getReceivedAccounts" :key="account.id">
-            <td>{{ account.description }}</td>
-            <td>R$ {{ account.amount.toFixed(2) }}</td>
-            <td>{{ account.due_date }}</td>
-            <td>{{ account.received_date }}</td>
-            <td>
-              <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
-              <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
-                Excluir
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-else>Nenhuma conta a receber recebida.</p>
+      <h2 class="text-xl font-semibold mb-3 text-surface-700 border-b border-surface-200 pb-2 mt-6">Contas Recebidas</h2>
+      <div class="overflow-x-auto" v-if="financialTransactionsStore.getReceivedAccounts.length > 0">
+        <table class="min-w-full divide-y divide-surface-200">
+          <thead class="bg-surface-100">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Descrição</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Valor</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Vencimento</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Recebimento</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-surface-200">
+            <tr v-for="account in financialTransactionsStore.getReceivedAccounts" :key="account.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ account.description }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">R$ {{ account.amount.toFixed(2) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ account.due_date }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ account.received_date }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <button @click="startEdit(account)" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Editar</button>
+                <button @click="handleDeleteAccountReceivable(account.id)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="text-surface-600 mt-4">Nenhuma conta a receber recebida.</p>
     </div>
   </div>
 </template>
@@ -223,92 +232,3 @@ function resetForm() {
 }
 </script>
 
-<style scoped>
-.accounts-receivable-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.form-section,
-.accounts-list-section {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-h2 {
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #666;
-  font-weight: bold;
-}
-
-.form-group input[type='text'],
-.form-group input[type='number'],
-.form-group input[type='date'] {
-  width: calc(100% - 22px);
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-.form-group input[type='checkbox'] {
-  margin-top: 8px;
-}
-
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-.error-message {
-  color: #dc3545;
-  text-align: center;
-  margin-top: 10px;
-}
-</style>

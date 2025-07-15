@@ -255,13 +255,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="p-4 sm:p-6">
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center">
 
       </div>
 
-      <div class="mb-6 flex items-center space-x-4">
+      <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
           <input
             type="text"
@@ -382,7 +382,7 @@ onMounted(() => {
             </div>
           </div>
           
-          <div class="p-4 rounded-lg flex justify-around items-center">
+          <div class="p-4 rounded-lg flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0">
             <p class="text-lg">
               Total Débitos:
               <span class="font-bold text-green-400">{{ formatCurrency(totalDebits) }}</span>

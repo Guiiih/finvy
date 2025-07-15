@@ -41,130 +41,74 @@ function calculateTotal(lines: EntryLine[], type: 'debit' | 'credit'): number {
 </script>
 
 <template>
-  <div class="list-section">
-    <h2>Lançamentos Registrados</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Descrição</th>
-          <th>Débitos</th>
-          <th>Créditos</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-if="sortedEntries.length > 0">
-          <template v-for="entry in sortedEntries" :key="entry.id">
-            <tr class="entry-summary">
-              <td>{{ entry.entry_date }}</td>
-              <td>{{ entry.description }}</td>
-              <td>R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
-              <td>R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
-              <td>
-                <button
-                  @click="emit('reverse', entry.id)"
-                  class="action-btn reverse-btn"
-                  title="Estornar este lançamento"
-                >
-                  Estornar
-                </button>
-                <button @click="toggleDetails(entry.id)" class="action-btn details-btn">
-                  {{ showDetails[entry.id] ? 'Ocultar' : 'Detalhes' }}
-                </button>
-              </td>
-            </tr>
-            <tr v-if="showDetails[entry.id]" class="entry-details">
-              <td colspan="5">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Conta</th>
-                      <th>Cód. Conta</th>
-                      <th>Tipo</th>
-                      <th>Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
-                      <td>{{ getAccountName(line.account_id) }}</td>
-                      <td>{{ getAccountCode(line.account_id) }}</td>
-                      <td>{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
-                      <td>R$ {{ line.amount.toFixed(2) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold text-surface-700 mb-4">Lançamentos Registrados</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-surface-200">
+        <thead class="bg-surface-100">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Data</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Descrição</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Débitos</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Créditos</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-surface-200">
+          <template v-if="sortedEntries.length > 0">
+            <template v-for="entry in sortedEntries" :key="entry.id">
+              <tr class="hover:bg-surface-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ entry.entry_date }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ entry.description }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">R$ {{ calculateTotal(entry.lines, 'debit').toFixed(2) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">R$ {{ calculateTotal(entry.lines, 'credit').toFixed(2) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  <button
+                    @click="emit('reverse', entry.id)"
+                    class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+                    title="Estornar este lançamento"
+                  >
+                    Estornar
+                  </button>
+                  <button @click="toggleDetails(entry.id)" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
+                    {{ showDetails[entry.id] ? 'Ocultar' : 'Detalhes' }}
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="showDetails[entry.id]" class="bg-surface-100">
+                <td colspan="5" class="p-4">
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-surface-200">
+                      <thead class="bg-surface-200">
+                        <tr>
+                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Conta</th>
+                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Cód. Conta</th>
+                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Tipo</th>
+                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody class="bg-white divide-y divide-surface-200">
+                        <tr v-for="(line, lineIndex) in entry.lines" :key="lineIndex">
+                          <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ getAccountName(line.account_id) }}</td>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ getAccountCode(line.account_id) }}</td>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">{{ line.type === 'debit' ? 'Débito' : 'Crédito' }}</td>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm text-surface-900">R$ {{ line.amount.toFixed(2) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </template>
+          <template v-else>
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-surface-500 italic">Nenhum lançamento encontrado.</td>
             </tr>
           </template>
-        </template>
-        <template v-else>
-          <tr>
-            <td colspan="5" class="no-entries">Nenhum lançamento encontrado.</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
-<style scoped>
-.list-section h2 {
-  color: #333;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-}
-th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-  color: #333;
-}
-.entry-summary td {
-  background-color: #ffffff;
-}
-.no-entries {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  padding: 20px;
-}
-.action-btn {
-  padding: 6px 10px;
-  margin-right: 5px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
-}
-.reverse-btn {
-  background-color: #ffc107;
-}
-.details-btn {
-  background-color: #6c757d;
-}
-
-.entry-details td {
-  background-color: #f0f8ff;
-  padding: 10px 20px;
-}
-.entry-details table {
-  width: 100%;
-  margin: 0;
-  box-shadow: none;
-}
-.entry-details th,
-.entry-details td {
-  padding: 8px;
-  font-size: 0.9em;
-}
-</style>

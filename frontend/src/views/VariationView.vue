@@ -24,26 +24,30 @@ const variationData = computed(() => reportStore.variationData)
 </script>
 
 <template>
-  <div class="variation-container">
-    <h1>Demonstrativo de Variações</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Demonstrativo de Variações</h1>
 
-    <div class="date-filter-section">
-      <label for="startDate">Data Inicial:</label>
-      <input type="date" id="startDate" v-model="startDate" @change="fetchVariationData" />
-      <label for="endDate">Data Final:</label>
-      <input type="date" id="endDate" v-model="endDate" @change="fetchVariationData" />
+    <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 p-4 bg-surface-50 rounded-lg shadow-md">
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <label for="startDate" class="font-medium text-surface-700">Data Inicial:</label>
+        <input type="date" id="startDate" v-model="startDate" @change="fetchVariationData" class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+      </div>
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <label for="endDate" class="font-medium text-surface-700">Data Final:</label>
+        <input type="date" id="endDate" v-model="endDate" @change="fetchVariationData" class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+      </div>
     </div>
 
     <p
       v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
-      class="no-entries-message"
+      class="text-center p-4 bg-surface-100 border border-surface-200 rounded-lg text-surface-600 italic mt-4"
     >
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos
       Contábeis" para gerar a DFC.
     </p>
 
-    <div v-else class="variation-table">
-      <div class="header-row">
+    <div v-else class="overflow-x-auto bg-white rounded-lg shadow-md">
+      <div class="grid grid-cols-5 gap-4 p-3 font-bold text-surface-500 uppercase text-sm border-b border-surface-200 bg-surface-100">
         <span>Descrição</span>
         <span>Valor</span>
         <span>Tipo</span>
@@ -61,13 +65,12 @@ const variationData = computed(() => reportStore.variationData)
             entry.description === 'Lucro Líquido do Exercício'
           "
           :class="{
-            'variation-row': true,
-            'main-category': entry.isMainCategory,
-            'sub-total': entry.isSubtotal,
-            'positive-var': entry.signedVariationValue >= 0,
-            'negative-var': entry.signedVariationValue < 0,
-            'no-border-bottom': entry.isMainCategory,
-            indented:
+            'grid grid-cols-5 gap-4 p-3 items-center border-b border-surface-200': true,
+            'font-bold bg-surface-200': entry.isMainCategory,
+            'font-semibold bg-surface-100': entry.isSubtotal,
+            'text-emerald-600': entry.signedVariationValue >= 0,
+            'text-red-600': entry.signedVariationValue < 0,
+            'pl-8':
               !entry.isMainCategory &&
               !entry.isSubtotal &&
               (entry.description === 'Disponibilidades' ||
@@ -86,7 +89,7 @@ const variationData = computed(() => reportStore.variationData)
                 entry.description === 'BCM - Bradesco' ||
                 entry.description === 'Caixa' ||
                 entry.description === 'Imobilizado'),
-            'double-indented': [
+            'pl-16': [
               'Caixa',
               'BCM - CEF',
               'BCM - Itau',
@@ -105,7 +108,7 @@ const variationData = computed(() => reportStore.variationData)
           <span>R$ {{ entry.value.toFixed(2) }}</span>
           <span>{{ entry.type }}</span>
           <span
-            >{{ entry.signedVariationValue >= 0 ? 'R$' : '-R$' }}
+            >{{ entry.signedVariationValue >= 0 ? 'R$ ' : '-R$ ' }}
             {{ Math.abs(entry.signedVariationValue).toFixed(2) }}</span
           >
           <span>{{ entry.activity }}</span>
@@ -115,83 +118,3 @@ const variationData = computed(() => reportStore.variationData)
   </div>
 </template>
 
-<style scoped>
-.variation-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.variation-table {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.header-row,
-.variation-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.2fr 1.5fr;
-  padding: 10px 15px;
-  border-bottom: 1px solid #eee;
-  align-items: center;
-}
-
-.header-row {
-  background-color: #f0f0f0;
-  font-weight: bold;
-  color: #222;
-  border-bottom: 2px solid #ccc;
-}
-
-.variation-row {
-  background-color: #fff;
-  color: #333;
-}
-
-.variation-row:nth-child(even) {
-  background-color: #f8f8f8;
-}
-
-.main-category {
-  font-weight: bold;
-  background-color: #e9ecef;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
-  font-size: 1.1em;
-}
-
-.sub-total {
-  font-weight: bold;
-  background-color: #f3f3f3;
-  border-top: 1px dashed #ddd;
-}
-
-.indented {
-  padding-left: 20px;
-}
-
-.double-indented {
-  padding-left: 40px;
-}
-
-.positive-var {
-  color: #28a745;
-}
-
-.negative-var {
-  color: #dc3545;
-}
-</style>

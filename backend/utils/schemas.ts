@@ -15,15 +15,14 @@ export const createAccountSchema = z.object({
     .max(100, "Nome da conta muito longo."),
   type: z.enum(["asset", "liability", "equity", "revenue", "expense"], {
     message: "Tipo de conta inválido.",
-  }).optional(),
+  }),
+  code: z
+    .string()
+    .min(1, "Código da conta é obrigatório.")
+    .max(20, "Código da conta muito longo."),
   parent_account_id: z
     .string()
     .uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." })
-    .optional()
-    .nullable(),
-  code: z
-    .string()
-    .max(20, "Código da conta muito longo.")
     .optional()
     .nullable(),
 });

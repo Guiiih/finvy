@@ -60,165 +60,70 @@ const dfcData = computed(() => {
 </script>
 
 <template>
-  <div class="dfc-container">
-    <h1>Demonstração do Fluxo de Caixa</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">Demonstração do Fluxo de Caixa</h1>
 
     <p
       v-if="!reportStore.reports || reportStore.reports.ledgerAccounts.length === 0"
-      class="no-entries-message"
+      class="text-center p-4 bg-surface-100 border border-surface-200 rounded-lg text-surface-600 italic mt-4"
     >
       Nenhum lançamento contábil registrado. Por favor, adicione lançamentos na tela "Lançamentos
       Contábeis" para gerar a DFC.
     </p>
 
-    <div v-else class="dfc-report">
-      <div class="header-row">
+    <div v-else class="flex flex-col border border-surface-200 rounded-lg overflow-hidden">
+      <div class="grid grid-cols-2 gap-4 bg-surface-100 font-bold p-3 border-b-2 border-surface-300 text-surface-700">
         <span>Descrição</span>
-        <span>Valor</span>
+        <span class="text-right">Valor</span>
       </div>
 
-      <div class="dfc-line subheader">
+      <div class="grid grid-cols-2 gap-4 p-3 bg-surface-200 font-bold border-b border-surface-300">
         <span>(=) Lucro do Exercício</span>
-        <span>R$ {{ dfcData.lucroLiquidoExercicio.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.lucroLiquidoExercicio.toFixed(2) }}</span>
       </div>
 
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(+) Var. Fornecedores</span>
-        <span>R$ {{ dfcData.varFornecedores.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.varFornecedores.toFixed(2) }}</span>
       </div>
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(+) Var. Impostos</span>
-        <span>R$ {{ dfcData.varImpostosAPagar.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.varImpostosAPagar.toFixed(2) }}</span>
       </div>
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(-) Var. Clientes</span>
-        <span>-R$ {{ Math.abs(dfcData.varClientes).toFixed(2) }}</span>
+        <span class="text-right">-R$ {{ Math.abs(dfcData.varClientes).toFixed(2) }}</span>
       </div>
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(-) Var. Estoque</span>
-        <span>-R$ {{ Math.abs(dfcData.varEstoque).toFixed(2) }}</span>
+        <span class="text-right">-R$ {{ Math.abs(dfcData.varEstoque).toFixed(2) }}</span>
       </div>
 
-      <div class="dfc-total">
+      <div class="grid grid-cols-2 gap-4 p-3 font-bold border-t border-surface-400 bg-surface-200">
         <span>(=) Atv. Operacional</span>
-        <span>R$ {{ dfcData.fluxoOperacional.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.fluxoOperacional.toFixed(2) }}</span>
       </div>
 
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(-) Var. Imobilizado</span>
-        <span>-R$ {{ Math.abs(dfcData.varImobilizado).toFixed(2) }}</span>
+        <span class="text-right">-R$ {{ Math.abs(dfcData.varImobilizado).toFixed(2) }}</span>
       </div>
-      <div class="dfc-line item">
+      <div class="grid grid-cols-2 gap-4 p-3 border-b border-surface-200">
         <span>(+) Var. Capital Social</span>
-        <span>R$ {{ dfcData.varCapitalSocial.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.varCapitalSocial.toFixed(2) }}</span>
       </div>
 
-      <div class="dfc-total">
+      <div class="grid grid-cols-2 gap-4 p-3 font-bold border-t border-surface-400 bg-surface-200">
         <span>(=) Atv. Investimento</span>
-        <span>R$ {{ dfcData.fluxoInvestimento.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.fluxoInvestimento.toFixed(2) }}</span>
       </div>
 
-      <div class="dfc-total final-total">
+      <div class="grid grid-cols-2 gap-4 p-3 font-bold border-t-2 border-surface-500 bg-emerald-100 text-emerald-800">
         <span>(=) Sld Final de Caixa</span>
-        <span>R$ {{ dfcData.sldFinalCaixa.toFixed(2) }}</span>
+        <span class="text-right">R$ {{ dfcData.sldFinalCaixa.toFixed(2) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.dfc-container {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.no-entries-message {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  margin-top: 50px;
-}
-
-.dfc-report {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.header-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  background-color: #f0f0f0;
-  font-weight: bold;
-  padding: 10px 15px;
-  border-bottom: 2px solid #ccc;
-  color: #222;
-}
-
-.dfc-line {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  padding: 8px 15px;
-  border-bottom: 1px dashed #eee;
-  align-items: center;
-  font-size: 0.95em;
-  color: #333;
-}
-
-.dfc-line:last-of-type {
-  border-bottom: none;
-}
-
-.dfc-line.subheader {
-  font-weight: bold;
-  background-color: #e9ecef;
-}
-
-.dfc-line.item {
-}
-
-.dfc-total {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  font-weight: bold;
-  border-top: 1px solid #999;
-  padding: 10px 15px;
-  margin-top: 5px;
-  background-color: #e9ecef;
-  font-size: 1em;
-}
-
-.dfc-total span:last-child {
-  text-align: right;
-}
-
-.dfc-total.final-total {
-  border-top: 2px solid #333;
-  background-color: #d4edda;
-  font-size: 1.1em;
-  color: #155724;
-}
-
-span:last-child {
-  text-align: right;
-  font-weight: normal;
-}
-
-.dfc-line.subheader span:last-child,
-.dfc-total span:last-child {
-  font-weight: bold;
-}
-</style>

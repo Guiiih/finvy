@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useReportStore, type LedgerAccount } from '@/stores/reportStore'
+import { useReportStore } from '@/stores/reportStore'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 
@@ -24,9 +24,7 @@ onMounted(async () => {
   await accountStore.fetchAccounts()
 })
 
-const ledgerAccounts = computed(() =>
-  reportStore.ledgerAccounts.filter((account) => account.finalBalance !== 0),
-)
+
 
 interface TAccountEntry {
   journalEntryId: string
@@ -133,11 +131,11 @@ function getBalanceClass(account: TAccount) {
 </script>
 
 <template>
-  <div>
+  <div class="p-4 sm:p-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold text-surface-800 mb-6 text-center">Razão (Ledger)</h1>
 
-      <div class="mb-6 flex items-center space-x-4">
+      <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="flex-grow">
           <label for="startDate" class="text-surface-700 font-medium mb-1">Data Inicial:</label>
           <input

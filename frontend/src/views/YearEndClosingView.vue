@@ -1,26 +1,28 @@
 <template>
-  <div class="year-end-closing-container">
-    <h1>Fechamento de Exercício</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Fechamento de Exercício</h1>
 
-    <div class="closing-form-section">
-      <p>
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <p class="text-surface-700 mb-4">
         O fechamento de exercício zera as contas de receita e despesa, transferindo o resultado para
         o Patrimônio Líquido.
       </p>
-      <p>Selecione a data de fechamento. Todos os lançamentos até esta data serão considerados.</p>
+      <p class="text-surface-700 mb-4">Selecione a data de fechamento. Todos os lançamentos até esta data serão considerados.</p>
 
-      <div class="form-group">
-        <label for="closingDate">Data de Fechamento:</label>
-        <input type="date" id="closingDate" v-model="closingDate" required />
+      <div class="space-y-4">
+        <div class="flex flex-col">
+          <label for="closingDate" class="block text-sm font-medium text-surface-700 mb-1">Data de Fechamento:</label>
+          <input type="date" id="closingDate" v-model="closingDate" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
+        </div>
+
+        <button @click="handleYearEndClosing" :disabled="loading" class="w-full p-3 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 disabled:bg-surface-300 disabled:cursor-not-allowed">
+          {{ loading ? 'Processando...' : 'Realizar Fechamento' }}
+        </button>
+
+        <p v-if="message" :class="{ 'bg-green-100 text-green-700 border-green-200': !error, 'bg-red-100 text-red-700 border-red-200': error }" class="p-3 rounded-md border text-center mt-4">
+          {{ message }}
+        </p>
       </div>
-
-      <button @click="handleYearEndClosing" :disabled="loading" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed">
-        {{ loading ? 'Processando...' : 'Realizar Fechamento' }}
-      </button>
-
-      <p v-if="message" :class="{ 'success-message': !error, 'error-message': error }">
-        {{ message }}
-      </p>
     </div>
   </div>
 </template>
@@ -63,71 +65,3 @@ async function handleYearEndClosing() {
 }
 </script>
 
-<style scoped>
-.year-end-closing-container {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.closing-form-section {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-.closing-form-section p {
-  margin-bottom: 15px;
-  line-height: 1.5;
-  color: #555;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-  color: #333;
-}
-
-.form-group input[type='date'] {
-  width: calc(100% - 22px);
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-.success-message {
-  color: #28a745;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.error-message {
-  color: #dc3545;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 20px;
-  text-align: center;
-}
-</style>

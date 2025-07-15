@@ -9,7 +9,7 @@ import Skeleton from 'primevue/skeleton'
 
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { z } from 'zod'
+import { z, type infer as zInfer } from 'zod'
 
 import { useToast } from 'primevue/usetoast'
 
@@ -62,7 +62,7 @@ function goToPage(page: number) {
 
 
 async function handleSubmit(
-  values: any,
+  values: zInfer<typeof accountSchema>,
   { resetForm }: { resetForm: () => void },
 ) {
   try {
@@ -83,26 +83,17 @@ async function handleSubmit(
       editingAccount.value = null;
     } else {
       // Logic for adding a new account
-      const parentAccount = accountStore.accounts.find(a => a.id === values.parent_account_id);
-      if (!parentAccount) {
-        throw new Error('Conta pai não encontrada!');
-      }
-
-      const children = accountStore.accounts.filter(a => a.parent_account_id === values.parent_account_id);
-      const lastChildCode = children.length > 0 ? Math.max(...children.map(c => parseInt(c.code.split('.').pop() || '0'))) : 0;
-      const nextCode = `${parentAccount.code}.${lastChildCode + 1}`;
-
-      const newAccount: Omit<Account, 'id'> = {
+      const newAccount: Omit<Account, 'id' | 'code' | 'type'> = {
         name: values.name,
         parent_account_id: values.parent_account_id,
-        code: nextCode,
-        type: parentAccount.type,
+      };
+
+      await accountStore.addAccount({
+        ...newAccount,
         user_id: '', // This will be set by the backend
         organization_id: '', // This will be set by the backend
         accounting_period_id: '', // This will be set by the backend
-      };
-
-      await accountStore.addAccount(newAccount);
+      } as Omit<Account, 'id'>);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -178,13 +169,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="p-4 sm:p-6">
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center">
         
       </div>
 
-      <div class="mb-6 flex items-center space-x-4">
+      <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
           <input
             type="text"
@@ -327,7 +318,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
+      <div class="flex flex-wrap justify-center mt-6 space-x-2" v-if="totalPages > 1">
           <button
             @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"

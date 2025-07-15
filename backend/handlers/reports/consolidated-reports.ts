@@ -130,8 +130,8 @@ export default async function handler(
         "Content-Disposition",
         `attachment; filename="relatorio_consolidado_${reportType}.xlsx"`,
       );
-      const buffer = await workbook.xlsx.writeBuffer();
-      return res.status(200).send(buffer);
+      await workbook.xlsx.write(res);
+      return;
     } else if (format === "csv") {
       let csvContent = "";
       for (const month of sortedMonths) {

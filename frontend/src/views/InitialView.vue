@@ -21,10 +21,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <h1>Visão Geral do Finvy</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Visão Geral do Finvy</h1>
 
-    <div class="info-cards-grid">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <InfoCard title="Total do Ativo" :value="totalAtivo" currency="R$" :is-positive="true" />
       <InfoCard
         title="Lucro Líquido"
@@ -37,24 +37,3 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
-.dashboard-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.info-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
-  margin-bottom: 40px;
-}
-</style>

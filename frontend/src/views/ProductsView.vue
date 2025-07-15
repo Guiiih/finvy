@@ -84,18 +84,18 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="products-container">
-    <h1>Gerenciar Produtos</h1>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Gerenciar Produtos</h1>
 
-    <div class="form-section">
-      <h2>Adicionar Novo Produto</h2>
-      <form @submit.prevent="handleAddProduct">
-        <div class="form-group">
-          <label for="product-name">Nome do Produto:</label>
-          <input type="text" id="product-name" v-model="newProductName" required />
+    <div class="bg-surface-50 p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-3 text-surface-700 border-b border-surface-200 pb-2">Adicionar Novo Produto</h2>
+      <form @submit.prevent="handleAddProduct" class="space-y-4">
+        <div class="flex flex-col">
+          <label for="product-name" class="block text-sm font-medium text-surface-700">Nome do Produto:</label>
+          <input type="text" id="product-name" v-model="newProductName" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
         </div>
-        <div class="form-group">
-          <label for="icms-rate">Alíquota de ICMS (%):</label>
+        <div class="flex flex-col">
+          <label for="icms-rate" class="block text-sm font-medium text-surface-700">Alíquota de ICMS (%):</label>
           <input
             type="number"
             id="icms-rate"
@@ -103,20 +103,21 @@ watchEffect(() => {
             step="0.01"
             min="0"
             required
+            class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2"
           />
         </div>
         <button type="submit" class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Adicionar Produto</button>
       </form>
     </div>
 
-    <div class="products-list-section">
-      <h2>Produtos Existentes</h2>
+    <div class="bg-surface-50 p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-3 text-surface-700 border-b border-surface-200 pb-2">Produtos Existentes</h2>
       <div v-if="productStore.loading">
         <Skeleton height="2rem" class="mb-2"></Skeleton>
         <Skeleton height="2rem" class="mb-2"></Skeleton>
         <Skeleton height="2rem"></Skeleton>
       </div>
-      <p v-else-if="productStore.error" class="error-message">{{ productStore.error }}</p>
+      <p v-else-if="productStore.error" class="text-red-500 text-center mt-4">{{ productStore.error }}</p>
       <BaseTable
         v-else
         :headers="headers"
@@ -134,61 +135,3 @@ watchEffect(() => {
   </div>
 </template>
 
-<style scoped>
-.products-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.form-section,
-.products-list-section {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-h2 {
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #666;
-  font-weight: bold;
-}
-
-.form-group input[type='text'],
-.form-group input[type='number'] {
-  width: calc(100% - 22px);
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-.error-message {
-  color: #dc3545;
-  text-align: center;
-  margin-top: 10px;
-}
-</style>

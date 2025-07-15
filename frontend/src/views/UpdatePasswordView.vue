@@ -1,13 +1,15 @@
 <template>
-  <div class="update-password-container">
-    <h2>Atualizar Senha</h2>
-    <form @submit.prevent="handleUpdatePassword">
-      <div class="form-group">
-        <label for="password">Nova Senha:</label>
-        <input type="password" id="password" v-model="password" required />
-      </div>
-      <button type="submit" class="w-full p-4 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Atualizar Senha</button>
-    </form>
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 sm:p-6">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6 text-center text-surface-800">Atualizar Senha</h2>
+      <form @submit.prevent="handleUpdatePassword" class="space-y-4">
+        <div class="flex flex-col">
+          <label for="password" class="block text-sm font-medium text-surface-700 mb-1">Nova Senha:</label>
+          <input type="password" id="password" v-model="password" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
+        </div>
+        <button type="submit" class="w-full p-3 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50">Atualizar Senha</button>
+      </form>
+    </div>
   </div>
 </template>
 
