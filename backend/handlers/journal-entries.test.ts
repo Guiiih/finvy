@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, checkDoubleEntryBalance, invalidateJournalEntriesCache, getCachedJournalEntries, setCachedJournalEntries } from '../services/journalEntryService';
+import { JournalEntry } from '../types';
 
 // Mocking a Supabase client with chainable methods
 const mockSupabaseClient = {
@@ -33,7 +34,7 @@ describe('Journal Entry Service', () => {
     mockSupabaseClient.eq.mockReturnThis();
     mockSupabaseClient.order.mockReturnThis();
 
-    invalidateJournalEntriesCache(mockUserId);
+    invalidateJournalEntriesCache(mockOrgId, mockPeriodId);
   });
 
   describe('getJournalEntries', () => {
@@ -63,13 +64,13 @@ describe('Journal Entry Service', () => {
 
   describe('createJournalEntry', () => {
     it('should create a journal entry and invalidate cache', async () => {
-      const newEntry = { description: 'New Entry', entry_date: new Date() };
+      const newEntry = { description: 'New Entry', entry_date: new Date().toISOString() };
       const createdEntry = { ...newEntry, id: '3' };
       mockSupabaseClient.select.mockResolvedValue({ data: [createdEntry], error: null });
 
       setCachedJournalEntries(mockOrgId, mockPeriodId, [{ id: 'pre-cache', description: 'Old data' }] as JournalEntry[]);
 
-      const result = await createJournalEntry(newEntry as JournalEntry, mockOrgId, mockPeriodId, mockToken);
+      const result = await createJournalEntry(newEntry, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.insert).toHaveBeenCalledWith([expect.objectContaining(newEntry)]);
       expect(result).toEqual(createdEntry);

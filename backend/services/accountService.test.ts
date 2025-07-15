@@ -115,9 +115,9 @@ describe('Account Service', () => {
       mockQueryBuilder.update.mockReturnThis();
       mockQueryBuilder.select.mockResolvedValue({ data: [updatedAccount], error: null });
 
-      setCachedAccounts(mockUserId, [{ id: accountId, name: 'Original data' }] as Account[]);
+      setCachedAccounts(mockOrgId, mockPeriodId, [{ id: accountId, name: 'Original data' }] as Account[]);
 
-      const result = await updateAccount(accountId, updateData, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await updateAccount(accountId, updateData, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from('accounts').update).toHaveBeenCalledWith(updateData);
       expect(result).toEqual(updatedAccount);
@@ -134,7 +134,7 @@ describe('Account Service', () => {
       mockQueryBuilder.delete.mockReturnThis();
       mockQueryBuilder.eq.mockReturnThis();
 
-      const result = await deleteAccount(accountId, mockUserId, mockOrgId, mockPeriodId, mockToken);
+      const result = await deleteAccount(accountId, mockOrgId, mockPeriodId, mockToken);
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('accounts');
       expect(mockQueryBuilder.delete).toHaveBeenCalled();
@@ -148,7 +148,7 @@ describe('Account Service', () => {
       mockQueryBuilder.eq.mockReturnThis();
       mockQueryBuilder.single.mockResolvedValue({ data: { is_protected: true }, error: null });
 
-      await expect(deleteAccount(accountId, mockUserId, mockOrgId, mockPeriodId, mockToken)).rejects.toThrow("Esta conta está protegida e não pode ser deletada.");
+      await expect(deleteAccount(accountId, mockOrgId, mockPeriodId, mockToken)).rejects.toThrow("Esta conta está protegida e não pode ser deletada.");
       expect(mockQueryBuilder.delete).not.toHaveBeenCalled();
     });
   });;
