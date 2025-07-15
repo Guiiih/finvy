@@ -164,3 +164,19 @@ export interface FinancialTransaction {
   /** The ID of the accounting period this financial transaction belongs to. */
   accounting_period_id?: string;
 }
+
+/**
+ * Represents tax rate settings for an organization.
+ */
+export interface TaxSetting {
+  id: string;
+  organization_id: string;
+  effective_date: string;
+  icms_rate: number;
+  ipi_rate: number;
+  pis_rate: number;
+  cofins_rate: number;
+  mva_rate: number;
+  created_at?: string;
+  updated_at?: string;
+}

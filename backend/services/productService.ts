@@ -13,71 +13,30 @@ export async function updateProductStockAndCost(
   const userSupabase = getSupabaseClient(token);
 
   try {
-    // 1. Fetch current product data
-    const { data: product, error: fetchError } = await userSupabase
-      .from("products")
-      .select("id, name, unit_cost, current_stock")
-      .eq("id", product_id)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", accounting_period_id)
-      .single();
+    const { data: updatedProduct, error: rpcError } = await userSupabase.rpc(
+      "update_product_stock_and_cost",
+      {
+        p_product_id: product_id,
+        p_quantity: quantity,
+        p_transaction_unit_cost: transaction_unit_cost,
+        p_transaction_type: transaction_type,
+        p_organization_id: organization_id,
+        p_accounting_period_id: accounting_period_id,
+      },
+    );
 
-    if (fetchError || !product) {
+    if (rpcError) {
       logger.error(
-        `Product not found or fetch error for product_id: ${product_id}, organization_id: ${organization_id}, accounting_period_id: ${accounting_period_id}`,
-        fetchError,
+        `Error calling RPC update_product_stock_and_cost for product_id: ${product_id}`,
+        rpcError,
       );
       throw new Error(
-        `Product not found or fetch error: ${fetchError?.message || "Unknown error"}`,
-      );
-    }
-
-    let new_current_stock = product.current_stock;
-    let new_unit_cost = product.unit_cost;
-
-    if (transaction_type === "purchase") {
-      new_current_stock = product.current_stock + quantity;
-      if (new_current_stock === 0) {
-        new_unit_cost = 0; // Avoid division by zero if stock was 0 and quantity is 0
-      } else {
-        new_unit_cost =
-          (product.current_stock * product.unit_cost +
-            quantity * transaction_unit_cost) /
-          new_current_stock;
-      }
-    } else if (transaction_type === "sale") {
-      if (product.current_stock < quantity) {
-        throw new Error(
-          `Insufficient stock for product ${product.name}. Available: ${product.current_stock}, Requested: ${quantity}`,
-        );
-      }
-      new_current_stock = product.current_stock - quantity;
-      // For sales, the unit_cost of the product itself doesn't change, only the stock
-      // The cost of goods sold will be based on the current average unit_cost
-    }
-
-    // 2. Update product stock and unit_cost (average cost)
-    const { data: updatedProduct, error: updateError } = await userSupabase
-      .from("products")
-      .update({ current_stock: new_current_stock, unit_cost: new_unit_cost })
-      .eq("id", product_id)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", accounting_period_id)
-      .select()
-      .single();
-
-    if (updateError || !updatedProduct) {
-      logger.error(
-        `Error updating product stock and cost for product_id: ${product_id}, organization_id: ${organization_id}, accounting_period_id: ${accounting_period_id}`,
-        updateError,
-      );
-      throw new Error(
-        `Error updating product: ${updateError?.message || "Unknown error"}`,
+        `Error updating product stock and cost: ${rpcError.message}`,
       );
     }
 
     logger.info(
-      `Product ${product.name} (ID: ${product_id}) stock updated to ${new_current_stock}, unit_cost updated to ${new_unit_cost}`,
+      `Product (ID: ${product_id}) stock and cost updated via RPC.`,
     );
     return updatedProduct;
   } catch (error: unknown) {

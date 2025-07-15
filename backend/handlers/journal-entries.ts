@@ -49,6 +49,20 @@ import {
  *                     type: string
  *                     format: uuid
  *                     description: O ID do usuário ao qual o lançamento pertence.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: O número da página a ser retornada (começa em 1).
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: O número máximo de itens por página (padrão: 10, máximo: 100).
  *       401:
  *         description: Não autorizado. Token de autenticação ausente ou inválido.
  *       500:
@@ -77,8 +91,10 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const data = await getJournalEntries(organization_id, active_accounting_period_id, token);
-      return res.status(200).json(data);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const { data, count } = await getJournalEntries(organization_id, active_accounting_period_id, token, page, limit);
+      return res.status(200).json({ data, count });
     }
 
     /**

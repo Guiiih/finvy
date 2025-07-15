@@ -74,6 +74,20 @@ function invalidateProductsCache(organizationId: string, accountingPeriodId: str
  *                     type: string
  *                     format: uuid
  *                     description: O ID do usuário ao qual o produto pertence.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: O número da página a ser retornada (começa em 1).
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: O número máximo de itens por página (padrão: 10, máximo: 100).
  *       401:
  *         description: Não autorizado. Token de autenticação ausente ou inválido.
  *       500:
@@ -99,27 +113,22 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const cachedData = getCachedProducts(organization_id, active_accounting_period_id);
-      if (cachedData) {
-        logger.info(
-          "Products Handler: Retornando produtos do cache para organization_id:",
-          organization_id,
-        );
-        return res.status(200).json(cachedData);
-      }
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
 
-      const { data, error: dbError } = await userSupabase
+      // No cache for paginated results, as cache key would be too granular
+      const { data, count } = await userSupabase
         .from("products")
         .select(
           "id, name, description, unit_cost, current_stock, organization_id, accounting_period_id",
+          { count: 'exact' }
         )
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
-        .order("name", { ascending: true });
+        .order("name", { ascending: true })
+        .range((page - 1) * limit, page * limit - 1);
 
-      if (dbError) throw dbError;
-      setCachedProducts(organization_id, active_accounting_period_id, data);
-      return res.status(200).json(data);
+      return res.status(200).json({ data, count });
     }
 
     /**

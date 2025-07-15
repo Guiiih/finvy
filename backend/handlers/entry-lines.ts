@@ -126,21 +126,6 @@ import { formatSupabaseError } from "../utils/errorUtils.js";
  *               total_gross:
  *                 type: number
  *                 description: Valor total bruto da transação (base para impostos).
- *               icms_rate:
- *                 type: number
- *                 description: Alíquota de ICMS (%).
- *               ipi_rate:
- *                 type: number
- *                 description: Alíquota de IPI (%).
- *               pis_rate:
- *                 type: number
- *                 description: Alíquota de PIS (%).
- *               cofins_rate:
- *                 type: number
- *                 description: Alíquota de COFINS (%).
- *               mva_rate:
- *                 type: number
- *                 description: Alíquota de MVA para ICMS-ST (%).
  *               total_net:
  *                 type: number
  *                 description: Valor líquido total da nota (usado em compras). Se não fornecido em vendas, é calculado.
@@ -252,17 +237,22 @@ export default async function handler(
         quantity,
         unit_cost,
         total_gross,
-        icms_rate,
-        ipi_rate,
-        pis_rate,
-        cofins_rate,
-        mva_rate,
         transaction_type,
         total_net, // total_net from input
       } = parsedBody.data;
 
       const debit = type === "debit" ? amount : null; // Derivado
       const credit = type === "credit" ? amount : null; // Derivado
+
+      const taxSettings = await getTaxSettings(organization_id, token);
+
+      if (!taxSettings) {
+        return handleErrorResponse(
+          res,
+          500,
+          "Configurações de impostos não encontradas para a organização.",
+        );
+      }
 
       const {
         calculated_icms_value,
@@ -273,11 +263,11 @@ export default async function handler(
         final_total_net,
       } = calculateTaxes({
         total_gross,
-        icms_rate,
-        ipi_rate,
-        pis_rate,
-        cofins_rate,
-        mva_rate,
+        icms_rate: taxSettings.icms_rate,
+        ipi_rate: taxSettings.ipi_rate,
+        pis_rate: taxSettings.pis_rate,
+        cofins_rate: taxSettings.cofins_rate,
+        mva_rate: taxSettings.mva_rate,
         transaction_type,
         total_net,
       });
@@ -359,7 +349,7 @@ export default async function handler(
         // Main transaction line (Debit Clients/Cash, Credit Revenue + Taxes)
         entryLinesToInsert.push({
           journal_entry_id,
-          account_id, // This is the account_id passed in the request (e.g., Clients or Cash)
+          account_id,
           debit: final_total_net,
           credit: null,
           product_id,
@@ -532,6 +522,7 @@ export default async function handler(
             500,
             "Contas contábeis essenciais para compras não encontradas. Verifique se todas as contas necessárias existem.",
           );
+        );
         }
 
         // Retailer Purchase Scenario

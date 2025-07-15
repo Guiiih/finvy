@@ -32,31 +32,32 @@ export async function getAccounts(
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
-): Promise<Account[] | null> {
+  page: number = 1,
+  limit: number = 10,
+): Promise<{ data: Account[]; count: number } | null> {
   const userSupabase = getSupabaseClient(token);
 
-  const cachedData = getCachedAccounts(organization_id, active_accounting_period_id);
-  if (cachedData) {
-    logger.info("Accounts Service: Retornando contas do cache.");
-    return cachedData;
-  }
+  const offset = (page - 1) * limit;
 
-  const { data, error: dbError } = await userSupabase
+  // No cache for paginated results, as cache key would be too granular
+
+  const { data, error: dbError, count } = await userSupabase
     .from("accounts")
     .select(
       "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
+      { count: 'exact' }
     )
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
-    .order("name", { ascending: true });
+    .order("name", { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (dbError) {
     logger.error("Accounts Service: Erro ao buscar contas:", dbError);
     throw dbError;
   }
 
-  setCachedAccounts(organization_id, active_accounting_period_id, data as Account[]);
-  return data as Account[];
+  return { data: data as Account[], count: count || 0 };
 }
 
 export async function createAccount(

@@ -35,23 +35,23 @@ export async function getJournalEntries(
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
-): Promise<JournalEntry[] | null> {
+  page: number = 1,
+  limit: number = 10,
+): Promise<{ data: JournalEntry[]; count: number } | null> {
   const userSupabase = getSupabaseClient(token);
 
-  const cachedData = getCachedJournalEntries(organization_id, active_accounting_period_id);
-  if (cachedData) {
-    logger.info("Journal Entries Service: Retornando lançamentos do cache.");
-    return cachedData;
-  }
+  const offset = (page - 1) * limit;
 
-  const { data, error: dbError } = await userSupabase
+  const { data, error: dbError, count } = await userSupabase
     .from("journal_entries")
     .select(
       "id, entry_date, description, organization_id, accounting_period_id",
+      { count: 'exact' }
     )
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
-    .order("entry_date", { ascending: false });
+    .order("entry_date", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (dbError) {
     logger.error(
@@ -61,8 +61,7 @@ export async function getJournalEntries(
     throw dbError;
   }
 
-  setCachedJournalEntries(organization_id, active_accounting_period_id, data as JournalEntry[]);
-  return data as JournalEntry[];
+  return { data: data as JournalEntry[], count: count || 0 };
 }
 
 export async function createJournalEntry(
