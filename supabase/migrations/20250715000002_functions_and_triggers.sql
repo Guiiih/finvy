@@ -1,21 +1,195 @@
--- Desabilitar RLS temporariamente para fazer alterações estruturais se necessário
--- ALTER TABLE public.accounts DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.organizations DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.user_organization_roles DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.accounting_periods DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.journal_entries DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.entry_lines DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.financial_transactions DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.shared_accounting_periods DISABLE ROW LEVEL SECURITY;
 
--- 1. Correção: Novas Organizações Não Recebem um Plano de Contas
--- 1.1. Remover a coluna user_id da tabela accounts (Correção 4 também)
-ALTER TABLE public.accounts DROP COLUMN user_id;
+-- Migration: Create functions and triggers
 
--- 1.2. Alterar a função create_default_chart_of_accounts para aceitar organization_id e accounting_period_id
--- e não ser mais um trigger.
+-- Helper functions
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_organization_id()
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN (SELECT organization_id FROM public.profiles WHERE id = auth.uid());
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_active_accounting_period_id()
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN (SELECT active_accounting_period_id FROM public.profiles WHERE id = auth.uid());
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_organization_id_from_period(p_accounting_period_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN (SELECT organization_id FROM public.accounting_periods WHERE id = p_accounting_period_id);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_org_admin_or_owner(p_organization_id UUID)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_organization_roles
+    WHERE user_id = auth.uid()
+    AND organization_id = p_organization_id
+    AND role IN ('owner', 'admin')
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION can_manage_organization_role(p_user_id UUID, p_organization_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_organization_roles
+    WHERE user_id = p_user_id
+    AND organization_id = p_organization_id
+    AND role IN ('owner', 'admin')
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION is_member_of_any_organization(p_user_id UUID, p_organization_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_organization_roles
+    WHERE user_id = p_user_id
+    AND organization_id = p_organization_id
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_personal_organization_id(p_user_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  personal_org_id UUID;
+BEGIN
+  SELECT o.id INTO personal_org_id
+  FROM organizations o
+  JOIN user_organization_roles uor ON o.id = uor.organization_id
+  WHERE uor.user_id = p_user_id AND o.is_personal = TRUE
+  LIMIT 1;
+
+  RETURN personal_org_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION search_users(search_term TEXT)
+RETURNS TABLE (
+  id UUID,
+  username TEXT,
+  email TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    p.id,
+    p.username,
+    p.email
+  FROM
+    profiles AS p
+  WHERE
+    p.email ILIKE '%' || search_term || '%'
+  LIMIT 10;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_user_accessible_organizations(p_user_id UUID)
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  created_at TIMESTAMP WITH TIME ZONE,
+  is_personal BOOLEAN,
+  is_shared BOOLEAN,
+  shared_from_user_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $BODY$
+BEGIN
+  RETURN QUERY
+  -- 1. Organizações das quais o usuário é membro direto
+  SELECT
+    o.id,
+    o.name::TEXT,
+    o.created_at,
+    o.is_personal,
+    FALSE AS is_shared,
+    NULL::TEXT AS shared_from_user_name
+  FROM
+    organizations o
+  JOIN
+    user_organization_roles uor ON o.id = uor.organization_id
+  WHERE
+    uor.user_id = p_user_id
+
+  UNION
+
+  -- 2. Organizações de períodos compartilhados com o usuário
+  SELECT
+    o.id,
+    o.name::TEXT,
+    o.created_at,
+    o.is_personal,
+    TRUE AS is_shared,
+    p.username::TEXT AS shared_from_user_name
+  FROM
+    organizations o
+  JOIN
+    accounting_periods ap ON o.id = ap.organization_id
+  JOIN
+    shared_accounting_periods sap ON ap.id = sap.accounting_period_id
+  JOIN
+    profiles p ON sap.shared_by_user_id = p.id
+  WHERE
+    sap.shared_with_user_id = p_user_id
+    AND NOT EXISTS ( -- Excluir organizações já cobertas por papéis diretos
+        SELECT 1
+        FROM user_organization_roles uor_check
+        WHERE uor_check.user_id = p_user_id
+        AND uor_check.organization_id = o.id
+    );
+END;
+$BODY$;
+
 CREATE OR REPLACE FUNCTION public.create_default_chart_of_accounts(
     p_organization_id UUID,
     p_accounting_period_id UUID
@@ -49,7 +223,7 @@ BEGIN
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Passivo Circulante', 'liability', '2.1', v_passivo_id, p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_passivo_circ_id;
 
     -- Nível 3: Contas do Ativo Circulante
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa e Equivalentes de Caixa', 'asset', '1.1.1', v_caixa_equiv_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_caixa_equiv_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa e Equivalentes de Caixa', 'asset', '1.1.1', v_ativo_circ_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_caixa_equiv_id;
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Clientes', 'asset', '1.1.2', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Estoques', 'asset', '1.1.3', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Impostos a Recuperar', 'asset', '1.1.4', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
@@ -87,10 +261,121 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 1.3. Remover o trigger on_profile_created
-DROP TRIGGER IF EXISTS on_profile_created ON public.profiles;
+CREATE OR REPLACE FUNCTION public.create_organization_and_assign_owner(
+    p_organization_name TEXT,
+    p_user_id UUID
+)
+RETURNS TABLE (
+    organization_id UUID,
+    organization_name TEXT,
+    accounting_period_id UUID,
+    accounting_period_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    new_org_id UUID;
+    new_period_id UUID;
+    current_year INT;
+    default_period_name TEXT;
+    default_start_date DATE;
+    default_end_date DATE;
+BEGIN
+    -- Create the organization
+    INSERT INTO public.organizations (name, is_personal)
+    VALUES (p_organization_name, FALSE)
+    RETURNING id, name INTO new_org_id, organization_name;
 
--- 1.4. Modificar handle_new_user para chamar create_default_chart_of_accounts
+    -- Assign 'owner' role to the creating user for this new organization
+    INSERT INTO public.user_organization_roles (user_id, organization_id, role)
+    VALUES (p_user_id, new_org_id, 'owner');
+
+    -- Create a default accounting period for the new organization
+    current_year := EXTRACT(YEAR FROM NOW());
+    default_period_name := current_year::TEXT || ' Fiscal Year';
+    default_start_date := (current_year::TEXT || '-01-01')::DATE;
+    default_end_date := (current_year::TEXT || '-12-31')::DATE;
+
+    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date, is_active)
+    VALUES (new_org_id, default_period_name, default_start_date, default_end_date, TRUE)
+    RETURNING id, name INTO new_period_id, accounting_period_name;
+
+    -- Update the user's profile to set this new organization and period as active
+    UPDATE public.profiles
+    SET organization_id = new_org_id, active_accounting_period_id = new_period_id
+    WHERE id = p_user_id;
+
+    -- Chamar a função para criar o plano de contas padrão
+    PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
+
+    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, accounting_period_name;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION create_user_organization_role(
+    p_user_id UUID,
+    p_organization_id UUID,
+    p_role TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Check if the current user is allowed to perform this action
+    IF auth.uid() = p_user_id THEN
+        -- Allow user to create their own role (e.g., when creating a new organization)
+        INSERT INTO public.user_organization_roles (user_id, organization_id, role)
+        VALUES (p_user_id, p_organization_id, p_role);
+    ELSIF can_manage_organization_role(auth.uid(), p_organization_id) THEN
+        -- Allow owner/admin to add other members
+        INSERT INTO public.user_organization_roles (user_id, organization_id, role)
+        VALUES (p_user_id, p_organization_id, p_role);
+    ELSE
+        RAISE EXCEPTION 'Permissão negada: Você não tem permissão para adicionar este papel de organização.';
+    END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION delete_journal_entry_and_lines(
+    p_journal_entry_id UUID,
+    p_user_id UUID,
+    p_organization_id UUID,
+    p_accounting_period_id UUID
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    deleted_entries_count INT;
+BEGIN
+    -- Delete associated entry_lines first
+    DELETE FROM public.entry_lines
+    WHERE
+        journal_entry_id = p_journal_entry_id AND
+        organization_id = p_organization_id AND
+        accounting_period_id = p_accounting_period_id;
+
+    -- Delete the journal entry
+    DELETE FROM public.journal_entries
+    WHERE
+        id = p_journal_entry_id AND
+        organization_id = p_organization_id AND
+        accounting_period_id = p_accounting_period_id
+    RETURNING 1 INTO deleted_entries_count;
+
+    -- Check if the journal entry was actually deleted
+    IF deleted_entries_count > 0 THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant usage to authenticated role (or appropriate role)
+GRANT EXECUTE ON FUNCTION delete_journal_entry_and_lines TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -133,164 +418,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 1.5. Modificar create_organization_and_assign_owner para chamar create_default_chart_of_accounts
-CREATE OR REPLACE FUNCTION public.create_organization_and_assign_owner(
-    p_organization_name TEXT,
-    p_user_id UUID
-)
-RETURNS TABLE (
-    organization_id UUID,
-    organization_name TEXT,
-    accounting_period_id UUID,
-    accounting_period_name TEXT
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-DECLARE
-    new_org_id UUID;
-    new_period_id UUID;
-    current_year INT;
-    default_period_name TEXT;
-    default_start_date DATE;
-    default_end_date DATE;
-BEGIN
-    -- Create the organization
-    INSERT INTO public.organizations (name, is_personal)
-    VALUES (p_organization_name, FALSE)
-    RETURNING id, name INTO new_org_id, organization_name;
-
-    -- Assign 'owner' role to the creating user for this new organization
-    INSERT INTO public.user_organization_roles (user_id, organization_id, role)
-    VALUES (p_user_id, new_org_id, 'owner');
-
-    -- Create a default accounting period for the new organization
-    current_year := EXTRACT(YEAR FROM NOW());
-    default_period_name := current_year::TEXT || ' Fiscal Year';
-    default_start_date := (current_year::TEXT || '-01-01')::DATE;
-    default_end_date := (current_year::TEXT || '-12-31')::DATE;
-
-    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date, is_active)
-    VALUES (new_org_id, default_period_name, default_start_date, default_end_date, TRUE)
-    RETURNING id INTO new_period_id, accounting_period_name;
-
-    -- Update the user's profile to set this new organization and period as active
-    UPDATE public.profiles
-    SET organization_id = new_org_id, active_accounting_period_id = new_period_id
-    WHERE id = p_user_id;
-
-    -- Chamar a função para criar o plano de contas padrão
-    PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
-
-    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, accounting_period_name;
-END;
-$$;
-
--- 2. Correção: Políticas de Visualização de Dados (RLS) Excessivamente Restritivas
--- Remover as políticas existentes para recriá-las com a nova lógica
-DO $$
-DECLARE
-  policy_name TEXT;
-  table_name TEXT;
-BEGIN
-  FOREACH table_name IN ARRAY ARRAY['accounts', 'products', 'journal_entries', 'entry_lines', 'financial_transactions']
-  LOOP
-    policy_name := table_name || '_view_org_personal_shared';
-    EXECUTE 'DROP POLICY IF EXISTS "' || policy_name || '" ON public.' || table_name || ';';
-    policy_name := table_name || '_insert_org_personal';
-    EXECUTE 'DROP POLICY IF EXISTS "' || policy_name || '" ON public.' || table_name || ';';
-    policy_name := table_name || '_update_org_personal';
-    EXECUTE 'DROP POLICY IF EXISTS "' || policy_name || '" ON public.' || table_name || ';';
-    policy_name := table_name || '_delete_org_personal';
-    EXECUTE 'DROP POLICY IF EXISTS "' || policy_name || '" ON public.' || table_name || ';';
-  END LOOP;
-END
-$$;
-
--- Recriar as políticas RLS para tabelas financeiras
-DO $$
-DECLARE
-  table_name TEXT;
-BEGIN
-  FOREACH table_name IN ARRAY ARRAY['accounts', 'products', 'journal_entries', 'entry_lines', 'financial_transactions']
-  LOOP
-    -- Política de SELECT: Permite ver dados de qualquer organização da qual é membro
-    -- ou qualquer período contábil compartilhado.
-    EXECUTE format('
-CREATE POLICY "%s_view_for_members_and_shared"
-ON public.%s FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.user_organization_roles uor
-    WHERE uor.user_id = auth.uid()
-    AND uor.organization_id = %I.organization_id
-  )
-  OR
-  EXISTS (
-    SELECT 1 FROM public.shared_accounting_periods sap
-    WHERE sap.shared_with_user_id = auth.uid()
-    AND sap.accounting_period_id = %I.accounting_period_id
-  )
-);
-', table_name, table_name, table_name, table_name);
-
-    -- Políticas de INSERT, UPDATE, DELETE: Mantêm a restrição à organização ativa do usuário
-    -- ou à sua organização pessoal, para garantir que o usuário só possa modificar dados
-    -- dentro do contexto de sua organização principal ou pessoal.
-    EXECUTE format('
-CREATE POLICY "%s_insert_org_active_personal"
-ON public.%s FOR INSERT
-TO authenticated
-WITH CHECK (
-  %I.organization_id = public.get_user_organization_id()
-  OR
-  %I.organization_id = public.get_personal_organization_id(auth.uid())
-);
-', table_name, table_name, table_name, table_name);
-
-    EXECUTE format('
-CREATE POLICY "%s_update_org_active_personal"
-ON public.%s FOR UPDATE
-TO authenticated
-USING (
-  %I.organization_id = public.get_user_organization_id()
-  OR
-  %I.organization_id = public.get_personal_organization_id(auth.uid())
-)
-WITH CHECK (
-  %I.organization_id = public.get_user_organization_id()
-  OR
-  %I.organization_id = public.get_personal_organization_id(auth.uid())
-);
-', table_name, table_name, table_name, table_name, table_name, table_name);
-
-    EXECUTE format('
-CREATE POLICY "%s_delete_org_active_personal"
-ON public.%s FOR DELETE
-TO authenticated
-USING (
-  %I.organization_id = public.get_user_organization_id()
-  OR
-  %I.organization_id = public.get_personal_organization_id(auth.uid())
-);
-', table_name, table_name, table_name, table_name);
-  END LOOP;
-END
-$$;
-
--- 3. Correção: Lógica de Exclusão de Usuário Falha
--- 3.1. Remover o índice idx_accounts_user_id, pois user_id será removido
-DROP INDEX IF EXISTS idx_accounts_user_id;
--- 3.2. Remover o índice idx_products_user_id, pois user_id será removido
-DROP INDEX IF EXISTS idx_products_user_id;
--- 3.3. Remover o índice idx_financial_transactions_user_id, pois user_id será removido
-DROP INDEX IF EXISTS idx_financial_transactions_user_id;
--- 3.4. Remover o índice idx_journal_entries_user_id_entry_date, pois user_id será removido
-DROP INDEX IF EXISTS idx_journal_entries_user_id_entry_date;
-
--- 3.5. Modificar a função delete_user_data
 CREATE OR REPLACE FUNCTION public.delete_user_data()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -312,10 +439,6 @@ BEGIN
 
         -- Deletar dados associados a esta organização para o usuário
         DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
-        -- Adicione aqui outras exclusões de dados específicos do usuário dentro desta organização, se houver
-        -- Por exemplo, se houver dados que são exclusivamente do usuário e não compartilhados com outros membros da organização.
-        -- No esquema atual, accounts, products, journal_entries, financial_transactions não têm user_id,
-        -- então a exclusão é baseada em organization_id e accounting_period_id, que não devem ser deletados aqui.
     END LOOP;
 
     -- Deletar o perfil do usuário
@@ -325,42 +448,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 4. Correção: user_id Não Convencional na Tabela accounts
--- Já tratada no ponto 1.1, com a remoção da coluna user_id da tabela accounts.
+-- Trigger para chamar a função handle_new_user após a inserção em auth.users
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
 
--- Re-criar índices sem a coluna user_id
+-- Cria um trigger que executa a função delete_user_data ANTES de um usuário ser deletado da auth.users
+CREATE TRIGGER on_user_deleted
+  BEFORE DELETE ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.delete_user_data();
+
+-- Otimização de Performance: Adiciona índices para acelerar consultas comuns.
 CREATE INDEX IF NOT EXISTS idx_products_org_period ON public.products(organization_id, accounting_period_id);
 CREATE INDEX IF NOT EXISTS idx_financial_transactions_org_period ON public.financial_transactions(organization_id, accounting_period_id);
 CREATE INDEX IF NOT EXISTS idx_journal_entries_org_period_entry_date ON public.journal_entries(organization_id, accounting_period_id, entry_date);
-
--- Re-criar o índice para entry_lines, se necessário, sem user_id
--- O índice original idx_entry_lines_journal_entry_id já está ok, pois não usava user_id.
-
--- Re-criar o índice para email na tabela de perfis
+CREATE INDEX IF NOT EXISTS idx_entry_lines_journal_entry_id ON public.entry_lines(journal_entry_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
-
--- Re-criar o trigger on_auth_user_created (se foi removido ou alterado)
--- No caso, handle_new_user foi alterado, mas o trigger permanece o mesmo.
--- CREATE TRIGGER on_auth_user_created
---   AFTER INSERT ON auth.users
---   FOR EACH ROW
---   EXECUTE FUNCTION public.handle_new_user();
-
--- Re-criar o trigger on_user_deleted
--- No caso, delete_user_data foi alterado, mas o trigger permanece o mesmo.
--- CREATE TRIGGER on_user_deleted
---   BEFORE DELETE ON auth.users
---   FOR EACH ROW
---   EXECUTE FUNCTION public.delete_user_data();
-
--- Re-habilitar RLS
--- ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.user_organization_roles ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.accounting_periods ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.journal_entries ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.entry_lines ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.financial_transactions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.shared_accounting_periods ENABLE ROW LEVEL SECURITY;

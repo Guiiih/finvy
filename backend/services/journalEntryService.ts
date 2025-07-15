@@ -8,31 +8,37 @@ export const journalEntriesCache = new Map<
 >();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-export function getCachedJournalEntries(userId: string): JournalEntry[] | null {
-  const cached = journalEntriesCache.get(userId);
+function getCacheKey(organizationId: string, accountingPeriodId: string): string {
+  return `${organizationId}-${accountingPeriodId}`;
+}
+
+export function getCachedJournalEntries(organizationId: string, accountingPeriodId: string): JournalEntry[] | null {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  const cached = journalEntriesCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
     return cached.data;
   }
   return null;
 }
 
-export function setCachedJournalEntries(userId: string, data: JournalEntry[]) {
-  journalEntriesCache.set(userId, { data, timestamp: Date.now() });
+export function setCachedJournalEntries(organizationId: string, accountingPeriodId: string, data: JournalEntry[]) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  journalEntriesCache.set(key, { data, timestamp: Date.now() });
 }
 
-export function invalidateJournalEntriesCache(userId: string) {
-  journalEntriesCache.delete(userId);
+export function invalidateJournalEntriesCache(organizationId: string, accountingPeriodId: string) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  journalEntriesCache.delete(key);
 }
 
 export async function getJournalEntries(
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
 ): Promise<JournalEntry[] | null> {
   const userSupabase = getSupabaseClient(token);
 
-  const cachedData = getCachedJournalEntries(user_id);
+  const cachedData = getCachedJournalEntries(organization_id, active_accounting_period_id);
   if (cachedData) {
     logger.info("Journal Entries Service: Retornando lançamentos do cache.");
     return cachedData;
@@ -41,9 +47,8 @@ export async function getJournalEntries(
   const { data, error: dbError } = await userSupabase
     .from("journal_entries")
     .select(
-      "id, entry_date, description, user_id, organization_id, accounting_period_id",
+      "id, entry_date, description, organization_id, accounting_period_id",
     )
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
     .order("entry_date", { ascending: false });
@@ -56,13 +61,12 @@ export async function getJournalEntries(
     throw dbError;
   }
 
-  setCachedJournalEntries(user_id, data as JournalEntry[]);
+  setCachedJournalEntries(organization_id, active_accounting_period_id, data as JournalEntry[]);
   return data as JournalEntry[];
 }
 
 export async function createJournalEntry(
   newEntry: Omit<JournalEntry, "id" | "lines">,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -74,7 +78,6 @@ export async function createJournalEntry(
     .insert([
       {
         ...newEntry,
-        user_id,
         organization_id,
         accounting_period_id: active_accounting_period_id,
       },
@@ -89,14 +92,13 @@ export async function createJournalEntry(
     throw dbError;
   }
 
-  invalidateJournalEntriesCache(user_id);
+  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
   return data[0] as JournalEntry;
 }
 
 export async function updateJournalEntry(
   id: string,
   updateData: Partial<Omit<JournalEntry, "id" | "lines">>,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -107,7 +109,6 @@ export async function updateJournalEntry(
     .from("journal_entries")
     .update(updateData)
     .eq("id", id)
-    .eq("user_id", user_id)
     .eq("organization_id", organization_id)
     .eq("accounting_period_id", active_accounting_period_id)
     .select();
@@ -124,13 +125,12 @@ export async function updateJournalEntry(
     return null;
   }
 
-  invalidateJournalEntriesCache(user_id);
+  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
   return data[0] as JournalEntry;
 }
 
 export async function deleteJournalEntry(
   id: string,
-  user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -141,7 +141,6 @@ export async function deleteJournalEntry(
     "delete_journal_entry_and_lines",
     {
       p_journal_entry_id: id,
-      p_user_id: user_id,
       p_organization_id: organization_id,
       p_accounting_period_id: active_accounting_period_id,
     },
@@ -155,12 +154,12 @@ export async function deleteJournalEntry(
     throw dbError;
   }
 
+  invalidateJournalEntriesCache(organization_id, active_accounting_period_id);
   return data; // A função RPC retorna TRUE se deletado, FALSE caso contrário
 }
 
 export async function checkDoubleEntryBalance(
   journal_entry_id: string,
-  user_id: string,
   token: string,
 ): Promise<boolean> {
   const userSupabase = getSupabaseClient(token);

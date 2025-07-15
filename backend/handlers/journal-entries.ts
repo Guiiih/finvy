@@ -77,7 +77,7 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const data = await getJournalEntries(user_id, organization_id, active_accounting_period_id, token);
+      const data = await getJournalEntries(organization_id, active_accounting_period_id, token);
       return res.status(200).json(data);
     }
 
@@ -155,7 +155,7 @@ export default async function handler(
       const { entry_date, description } = parsedBody.data;
 
       const newEntry = { entry_date, description };
-      const createdEntry = await createJournalEntry(newEntry, user_id, organization_id, active_accounting_period_id, token);
+      const createdEntry = await createJournalEntry(newEntry, organization_id, active_accounting_period_id, token);
       logger.info("Journal Entries Handler: Lançamento criado com sucesso.");
       return res.status(201).json(createdEntry);
     }
@@ -252,7 +252,7 @@ export default async function handler(
         );
       }
 
-      const updatedEntry = await updateJournalEntry(id, updateData, user_id, organization_id, active_accounting_period_id, token);
+      const updatedEntry = await updateJournalEntry(id, updateData, organization_id, active_accounting_period_id, token);
 
       if (!updatedEntry) {
         logger.warn(
@@ -304,7 +304,7 @@ export default async function handler(
         `Journal Entries Handler: Processando DELETE para lançamento ${id}.`,
       );
 
-      const deleted = await deleteJournalEntry(id, user_id, organization_id, active_accounting_period_id, token);
+      const deleted = await deleteJournalEntry(id, organization_id, active_accounting_period_id, token);
 
       if (!deleted) {
         logger.warn(

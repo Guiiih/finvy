@@ -41,7 +41,8 @@ interface SupabaseRawJournalEntry {
 }
 
 async function getJournalEntries(
-  user_id: string,
+  organization_id: string,
+  accounting_period_id: string,
   token: string,
   startDate?: string,
   endDate?: string,
@@ -52,7 +53,8 @@ async function getJournalEntries(
     .select(
       "id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)",
     )
-    .eq("user_id", user_id);
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", accounting_period_id);
 
   if (startDate) {
     query = query.gte("entry_date", startDate);
@@ -288,13 +290,16 @@ export function calculateDfcData(
 }
 
 async function getProductStockBalances(
-  user_id: string,
+  organization_id: string,
+  accounting_period_id: string,
   token: string,
 ): Promise<StockBalance[]> {
   const userSupabase = getSupabaseClient(token);
   const { data, error } = await userSupabase
     .from("products")
-    .select("id, name, current_stock"); // Assuming 'name' is product name
+    .select("id, name, current_stock")
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", accounting_period_id);
 
   if (error) {
     logger.error(`[getProductStockBalances] Erro ao buscar saldos de estoque de produtos: ${error.message}`);
@@ -322,8 +327,8 @@ export async function generateReports(
 
   const [accounts, journalEntries, productStockBalances] = await Promise.all([
     getAccounts(organization_id, active_accounting_period_id, token),
-    getJournalEntries(user_id, token, startDate, endDate),
-    getProductStockBalances(user_id, token), // Fetch product stock balances
+    getJournalEntries(organization_id, active_accounting_period_id, token, startDate, endDate),
+    getProductStockBalances(organization_id, active_accounting_period_id, token), // Fetch product stock balances
   ]);
 
   if (!accounts) {

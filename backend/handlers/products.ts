@@ -11,20 +11,27 @@ import { formatSupabaseError } from "../utils/errorUtils.js";
 const productsCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
-function getCachedProducts(userId: string) {
-  const cached = productsCache.get(userId);
+function getCacheKey(organizationId: string, accountingPeriodId: string): string {
+  return `${organizationId}-${accountingPeriodId}`;
+}
+
+function getCachedProducts(organizationId: string, accountingPeriodId: string) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  const cached = productsCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
     return cached.data;
   }
   return null;
 }
 
-function setCachedProducts(userId: string, data: unknown) {
-  productsCache.set(userId, { data, timestamp: Date.now() });
+function setCachedProducts(organizationId: string, accountingPeriodId: string, data: unknown) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  productsCache.set(key, { data, timestamp: Date.now() });
 }
 
-function invalidateProductsCache(userId: string) {
-  productsCache.delete(userId);
+function invalidateProductsCache(organizationId: string, accountingPeriodId: string) {
+  const key = getCacheKey(organizationId, accountingPeriodId);
+  productsCache.delete(key);
 }
 
 /**
@@ -54,7 +61,7 @@ function invalidateProductsCache(userId: string) {
  *                     description: O nome do produto.
  *                   description:
  *                     type: string
- *                     description: A descrição do produto.
+ *                     description: A descrição do produto (opcional).
  *                   unit_cost:
  *                     type: number
  *                     format: float
@@ -92,11 +99,11 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const cachedData = getCachedProducts(user_id);
+      const cachedData = getCachedProducts(organization_id, active_accounting_period_id);
       if (cachedData) {
         logger.info(
-          "Products Handler: Retornando produtos do cache para user_id:",
-          user_id,
+          "Products Handler: Retornando produtos do cache para organization_id:",
+          organization_id,
         );
         return res.status(200).json(cachedData);
       }
@@ -104,15 +111,14 @@ export default async function handler(
       const { data, error: dbError } = await userSupabase
         .from("products")
         .select(
-          "id, name, description, unit_cost, current_stock, user_id, organization_id, accounting_period_id",
+          "id, name, description, unit_cost, current_stock, organization_id, accounting_period_id",
         )
-        .eq("user_id", user_id)
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
         .order("name", { ascending: true });
 
       if (dbError) throw dbError;
-      setCachedProducts(user_id, data);
+      setCachedProducts(organization_id, active_accounting_period_id, data);
       return res.status(200).json(data);
     }
 
@@ -205,7 +211,6 @@ export default async function handler(
             description,
             unit_cost,
             current_stock,
-            user_id,
             organization_id,
             accounting_period_id: active_accounting_period_id,
           },
@@ -213,7 +218,7 @@ export default async function handler(
         .select();
 
       if (dbError) throw dbError;
-      invalidateProductsCache(user_id);
+      invalidateProductsCache(organization_id, active_accounting_period_id);
       return res.status(201).json(data[0]);
     }
 
@@ -317,7 +322,6 @@ export default async function handler(
         .from("products")
         .update(updateData)
         .eq("id", id)
-        .eq("user_id", user_id)
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id)
         .select();
@@ -330,7 +334,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para atualizar.",
         );
       }
-      invalidateProductsCache(user_id);
+      invalidateProductsCache(organization_id, active_accounting_period_id);
       return res.status(200).json(data[0]);
     }
 
@@ -368,7 +372,6 @@ export default async function handler(
         .from("products")
         .delete()
         .eq("id", id)
-        .eq("user_id", user_id)
         .eq("organization_id", organization_id)
         .eq("accounting_period_id", active_accounting_period_id);
 
@@ -380,7 +383,7 @@ export default async function handler(
           "Produto não encontrado ou você não tem permissão para deletar.",
         );
       }
-      invalidateProductsCache(user_id);
+      invalidateProductsCache(organization_id, active_accounting_period_id);
       return res.status(204).end();
     }
 

@@ -500,7 +500,8 @@ export default async function handler(
             quantity,
             unit_cost || 0,
             "sale",
-            user_id,
+            organization_id,
+            active_accounting_period_id,
             token,
           );
         }
@@ -569,7 +570,8 @@ export default async function handler(
             quantity,
             unit_cost,
             "purchase",
-            user_id,
+            organization_id,
+            active_accounting_period_id,
             token,
           );
         }

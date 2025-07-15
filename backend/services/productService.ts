@@ -6,7 +6,8 @@ export async function updateProductStockAndCost(
   quantity: number,
   transaction_unit_cost: number,
   transaction_type: "purchase" | "sale",
-  user_id: string,
+  organization_id: string,
+  accounting_period_id: string,
   token: string,
 ) {
   const userSupabase = getSupabaseClient(token);
@@ -17,12 +18,13 @@ export async function updateProductStockAndCost(
       .from("products")
       .select("id, name, unit_cost, current_stock")
       .eq("id", product_id)
-      .eq("user_id", user_id)
+      .eq("organization_id", organization_id)
+      .eq("accounting_period_id", accounting_period_id)
       .single();
 
     if (fetchError || !product) {
       logger.error(
-        `Product not found or fetch error for product_id: ${product_id}, user_id: ${user_id}`,
+        `Product not found or fetch error for product_id: ${product_id}, organization_id: ${organization_id}, accounting_period_id: ${accounting_period_id}`,
         fetchError,
       );
       throw new Error(
@@ -59,13 +61,14 @@ export async function updateProductStockAndCost(
       .from("products")
       .update({ current_stock: new_current_stock, unit_cost: new_unit_cost })
       .eq("id", product_id)
-      .eq("user_id", user_id)
+      .eq("organization_id", organization_id)
+      .eq("accounting_period_id", accounting_period_id)
       .select()
       .single();
 
     if (updateError || !updatedProduct) {
       logger.error(
-        `Error updating product stock and cost for product_id: ${product_id}, user_id: ${user_id}`,
+        `Error updating product stock and cost for product_id: ${product_id}, organization_id: ${organization_id}, accounting_period_id: ${accounting_period_id}`,
         updateError,
       );
       throw new Error(
