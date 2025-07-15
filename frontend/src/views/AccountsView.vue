@@ -274,7 +274,7 @@ onMounted(() => {
           v-else-if="paginatedAccounts.length === 0"
           class="text-surface-400 text-center p-8"
         >
-          Nenhuma conta encontrada. Adicione uma nova conta acima.
+          Nenhuma conta encontrada.
         </p>
 
         <div v-else>
