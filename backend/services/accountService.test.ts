@@ -25,7 +25,6 @@ vi.mock('../utils/supabaseClient', () => ({
 }));
 
 describe('Account Service', () => {
-  const mockUserId = 'user-123';
   const mockOrgId = 'org-456';
   const mockPeriodId = 'period-789';
   const mockToken = 'mock-token';
