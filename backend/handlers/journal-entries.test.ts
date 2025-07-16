@@ -10,7 +10,8 @@ const mockSupabaseClient = {
   eq: vi.fn(),
   order: vi.fn(),
   rpc: vi.fn(),
-  range: vi.fn(), // Add range for pagination
+  range: vi.fn(),
+  single: vi.fn(), // Adicionar single para o caso de .single() ser usado
 };
 
 vi.mock('../utils/supabaseClient', () => ({
@@ -33,13 +34,16 @@ describe('Journal Entry Service', () => {
     mockSupabaseClient.update.mockReturnThis();
     mockSupabaseClient.eq.mockReturnThis();
     mockSupabaseClient.order.mockReturnThis();
-    mockSupabaseClient.range.mockReturnThis(); // Mock range for pagination
+    mockSupabaseClient.range.mockReturnThis();
+    mockSupabaseClient.rpc.mockReturnThis();
+    mockSupabaseClient.single.mockReturnThis();
   });
 
   describe('getJournalEntries', () => {
     it('should fetch journal entries from Supabase with pagination', async () => {
       const mockEntries = [{ id: '1', description: 'Test Entry' }];
-      mockSupabaseClient.select.mockResolvedValue({ data: mockEntries, count: 1, error: null });
+      // Mover mockResolvedValue para o final da cadeia de chamadas
+      mockSupabaseClient.range.mockResolvedValue({ data: mockEntries, count: 1, error: null });
 
       const result = await getJournalEntries(mockOrgId, mockPeriodId, mockToken, 1, 10);
 

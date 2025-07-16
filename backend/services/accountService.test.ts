@@ -50,7 +50,8 @@ describe('Account Service', () => {
   describe('getAccounts', () => {
     it('should fetch accounts from Supabase with pagination', async () => {
       const mockAccounts = [{ id: '1', name: 'Cash' }];
-      mockQueryBuilder.select.mockResolvedValue({ data: mockAccounts, count: 1, error: null });
+      // Mover mockResolvedValue para o final da cadeia de chamadas
+      mockQueryBuilder.range.mockResolvedValue({ data: mockAccounts, count: 1, error: null });
 
       const result = await getAccounts(mockOrgId, mockPeriodId, mockToken, 1, 10);
 
