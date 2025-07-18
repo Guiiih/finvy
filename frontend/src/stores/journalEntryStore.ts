@@ -38,12 +38,14 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const orgId = accountingPeriodStore.activeAccountingPeriod!.organization_id;
       const periodId = accountingPeriodStore.activeAccountingPeriod!.id;
 
-      const entriesData = await api.get<JournalEntry[]>('/journal-entries', {
+      const response = await api.get<{ data: JournalEntry[] }>('/journal-entries', {
         params: {
           organization_id: orgId,
           accounting_period_id: periodId,
         },
       });
+
+      const entriesData = response.data;
 
       if (!Array.isArray(entriesData)) {
         console.error('Dados da API não são um array:', entriesData);

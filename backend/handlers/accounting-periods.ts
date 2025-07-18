@@ -26,7 +26,7 @@ const createAccountingPeriodSchema = z.object({
       /^\d{4}-\d{2}-\d{2}$/,
       "Formato de data de fim inválido. Use YYYY-MM-DD.",
     ),
-  is_active: z.boolean().optional().default(false),
+  
 });
 
 const updateAccountingPeriodSchema = z
@@ -50,7 +50,7 @@ const updateAccountingPeriodSchema = z
         "Formato de data de fim inválido. Use YYYY-MM-DD.",
       )
       .optional(),
-    is_active: z.boolean().optional(),
+    
   })
   .partial();
 
@@ -104,14 +104,7 @@ export default async function handler(
       const { organization_id } = profile;
       const newPeriodData = { ...parsedBody.data, organization_id };
 
-      if (newPeriodData.is_active) {
-        logger.info(`[Accounting Periods] Desativando períodos contábeis ativos existentes para organization_id: ${organization_id}`);
-        await userSupabase
-          .from("accounting_periods")
-          .update({ is_active: false })
-          .eq("organization_id", organization_id)
-          .eq("is_active", true);
-      }
+      
 
       logger.info(`[Accounting Periods] Inserindo novo período contábil para organization_id: ${organization_id}`);
       const { data, error: dbError } = await userSupabase
@@ -144,7 +137,7 @@ export default async function handler(
         logger.info(`[Accounting Periods] Buscando períodos contábeis para organization_id: ${organization_id}`);
         const { data, error: dbError } = await userSupabase
           .from("accounting_periods")
-          .select("id, name, start_date, end_date, is_active")
+          .select("id, name, start_date, end_date")
           .eq("organization_id", organization_id)
           .order("start_date", { ascending: false });
 
@@ -177,14 +170,7 @@ export default async function handler(
           );
         }
 
-        if (updateData.is_active) {
-          logger.info(`[Accounting Periods] Desativando outros períodos ativos para organization_id: ${organization_id} antes de ativar ${id}`);
-          await userSupabase
-            .from("accounting_periods")
-            .update({ is_active: false })
-            .eq("organization_id", organization_id)
-            .eq("is_active", true);
-        }
+        
 
         const { data, error: dbError } = await userSupabase
           .from("accounting_periods")

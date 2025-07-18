@@ -2,7 +2,8 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
 import type { AccountingPeriod } from '@/types';
-import { useOrganizationSelectionStore } from './organizationSelectionStore'; // Import new store
+import { useOrganizationSelectionStore } from './organizationSelectionStore';
+import { useAuthStore } from './authStore';
 
 type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'>;
 
@@ -12,7 +13,8 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const organizationSelectionStore = useOrganizationSelectionStore(); // Initialize new store
+  const organizationSelectionStore = useOrganizationSelectionStore();
+  const authStore = useAuthStore();
 
   const getAllAccountingPeriods = computed(() => accountingPeriods.value);
   const getActiveAccountingPeriod = computed(() => activeAccountingPeriod.value);
@@ -22,24 +24,31 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
     error.value = null;
     try {
       const data = await api.get<AccountingPeriod[]>('/accounting-periods');
-      accountingPeriods.value = data;
-      // Tenta encontrar o período ativo, se não encontrar, define o primeiro como ativo
-      const active = data.find(period => period.is_active);
+      const userActivePeriodId = authStore.userActiveAccountingPeriodId;
+
+      // Garante que cada período tenha a propriedade is_active definida corretamente
+      const periodsWithStatus = data.map(period => ({
+        ...period,
+        is_active: period.id === userActivePeriodId,
+      }));
+
+      accountingPeriods.value = periodsWithStatus;
+
+      const active = periodsWithStatus.find(period => period.is_active);
+
       if (active) {
         activeAccountingPeriod.value = active;
-        // Update active period in authStore via organizationSelectionStore
-        if (organizationSelectionStore.activeOrganization?.id) {
-          await api.put('/profile', { active_accounting_period_id: active.id });
-        }
       } else if (data.length > 0) {
-        // Se não houver período ativo, define o primeiro como ativo (ou o mais recente)
-        activeAccountingPeriod.value = data[0];
-        // Update active period in authStore via organizationSelectionStore
-        if (organizationSelectionStore.activeOrganization?.id) {
-          await api.put('/profile', { active_accounting_period_id: data[0].id });
+        // Se nenhum período ativo for encontrado, define o primeiro como ativo
+        const firstPeriod = data[0];
+        activeAccountingPeriod.value = { ...firstPeriod, is_active: true };
+        accountingPeriods.value[0].is_active = true;
+        
+        // E atualiza o perfil do usuário no backend
+        if (authStore.user?.id) {
+          await api.put('/profile', { active_accounting_period_id: firstPeriod.id });
+          authStore.userActiveAccountingPeriodId = firstPeriod.id;
         }
-        // Opcional: Chamar API para definir este como ativo no backend
-        await updateAccountingPeriod(data[0].id, { is_active: true });
       }
     } catch (err: unknown) {
       console.error('Erro ao buscar períodos contábeis:', err);
@@ -55,17 +64,7 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
     try {
       const addedPeriod = await api.post<AccountingPeriod, NewAccountingPeriodPayload>('/accounting-periods', newPeriod);
       accountingPeriods.value.push(addedPeriod);
-      if (addedPeriod.is_active) {
-        activeAccountingPeriod.value = addedPeriod;
-        // Update active period in authStore via organizationSelectionStore
-        if (organizationSelectionStore.activeOrganization?.id) {
-          await api.put('/profile', { active_accounting_period_id: addedPeriod.id });
-        }
-        // Desativar outros períodos no frontend, se houver
-        accountingPeriods.value.forEach(p => {
-          if (p.id !== addedPeriod.id) p.is_active = false;
-        });
-      }
+      // Não define automaticamente como ativo aqui, use setActivePeriod para isso
       return addedPeriod;
     } catch (err: unknown) {
       console.error('Erro ao adicionar período contábil:', err);
@@ -84,16 +83,9 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
       const index = accountingPeriods.value.findIndex(p => p.id === id);
       if (index !== -1) {
         accountingPeriods.value[index] = { ...accountingPeriods.value[index], ...response };
-        if (response.is_active) {
-          activeAccountingPeriod.value = response;
-          // Update active period in authStore via organizationSelectionStore
-          if (organizationSelectionStore.activeOrganization?.id) {
-            await api.put('/profile', { active_accounting_period_id: response.id });
-          }
-          // Desativar outros períodos no frontend, se houver
-          accountingPeriods.value.forEach(p => {
-            if (p.id !== response.id) p.is_active = false;
-          });
+        // Se o período atualizado for o período ativo, atualiza o store
+        if (activeAccountingPeriod.value?.id === id) {
+          activeAccountingPeriod.value = { ...activeAccountingPeriod.value, ...response };
         }
       }
       return response;
@@ -115,7 +107,7 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
       if (activeAccountingPeriod.value?.id === id) {
         activeAccountingPeriod.value = null; // O período ativo foi deletado
         // Reset active period in authStore via organizationSelectionStore
-        if (organizationSelectionStore.activeOrganization?.id) {
+        if (authStore.user?.id) { // Usar user.id do authStore para garantir que o usuário está logado
           await api.put('/profile', { active_accounting_period_id: null });
         }
       }
@@ -129,10 +121,32 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   }
 
   async function setActivePeriod(periodId: string) {
-    const periodToActivate = accountingPeriods.value.find(p => p.id === periodId);
-    if (periodToActivate && !periodToActivate.is_active) {
-      await updateAccountingPeriod(periodId, { is_active: true });
-      // O updateAccountingPeriod já atualiza activeAccountingPeriod.value e desativa outros no frontend
+    loading.value = true;
+    error.value = null;
+    try {
+      const periodToActivate = accountingPeriods.value.find(p => p.id === periodId);
+      if (periodToActivate) {
+        // Atualiza o perfil do usuário no backend
+        if (authStore.user?.id) {
+          await api.put('/profile', { active_accounting_period_id: periodId });
+          
+          // Atualiza o estado local para refletir a mudança
+          accountingPeriods.value.forEach(p => {
+            p.is_active = p.id === periodId;
+          });
+          
+          activeAccountingPeriod.value = { ...periodToActivate, is_active: true };
+          
+          // Atualiza o estado do usuário no authStore
+          authStore.userActiveAccountingPeriodId = periodId;
+        }
+      }
+    } catch (err: unknown) {
+      console.error('Erro ao definir período ativo:', err);
+      error.value = err instanceof Error ? err.message : 'Falha ao definir período ativo.';
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 

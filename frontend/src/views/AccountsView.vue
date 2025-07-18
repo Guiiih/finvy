@@ -34,6 +34,9 @@ const accountSchema = toTypedSchema(zodSchema);
 type AccountFormValues = z.infer<typeof zodSchema>;
 
 const filteredAccounts = computed(() => {
+  if (!Array.isArray(accountStore.accounts)) {
+    return [];
+  }
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
   return accountStore.accounts
     .filter(
@@ -322,7 +325,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      <div class="flex flex-wrap justify-center mt-6 space-x-2" v-if="totalPages > 1">
+        <div class="flex flex-wrap justify-center mt-6 space-x-2" v-if="totalPages > 1">
           <button
             @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"

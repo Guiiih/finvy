@@ -38,13 +38,13 @@ export const useAccountStore = defineStore('account', () => {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         await accountingPeriodStore.fetchAccountingPeriods();
       }
-      const data = await api.get<Account[]>('/accounts', {
+      const response = await api.get<{ data: Account[] }>('/accounts', {
         params: {
           organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
         },
       });
-      accounts.value = data;
+      accounts.value = Array.isArray(response.data) ? response.data : [];
     } catch (err: unknown) {
       console.error('Erro ao buscar contas:', err);
       if (err instanceof Error) {
