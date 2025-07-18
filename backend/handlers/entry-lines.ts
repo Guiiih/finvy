@@ -245,33 +245,41 @@ export default async function handler(
       const debit = type === "debit" ? amount : null; // Derivado
       const credit = type === "credit" ? amount : null; // Derivado
 
-      const taxSettings = await getTaxSettings(organization_id, token);
+      let calculated_icms_value = 0;
+      let calculated_ipi_value = 0;
+      let calculated_pis_value = 0;
+      let calculated_cofins_value = 0;
+      let calculated_icms_st_value = 0;
+      let final_total_net = total_net || total_gross || 0;
 
-      if (!taxSettings) {
-        return handleErrorResponse(
-          res,
-          500,
-          "Configurações de impostos não encontradas para a organização.",
-        );
+      if (transaction_type === "sale" || transaction_type === "purchase") {
+        const taxSettings = await getTaxSettings(organization_id, token);
+        if (!taxSettings) {
+          return handleErrorResponse(
+            res,
+            500,
+            "Configurações de impostos não encontradas para a organização.",
+          );
+        }
+
+        const taxResults = calculateTaxes({
+          total_gross,
+          icms_rate: taxSettings.icms_rate,
+          ipi_rate: taxSettings.ipi_rate,
+          pis_rate: taxSettings.pis_rate,
+          cofins_rate: taxSettings.cofins_rate,
+          mva_rate: taxSettings.mva_rate,
+          transaction_type,
+          total_net,
+        });
+
+        calculated_icms_value = taxResults.calculated_icms_value;
+        calculated_ipi_value = taxResults.calculated_ipi_value;
+        calculated_pis_value = taxResults.calculated_pis_value;
+        calculated_cofins_value = taxResults.calculated_cofins_value;
+        calculated_icms_st_value = taxResults.calculated_icms_st_value;
+        final_total_net = taxResults.final_total_net;
       }
-
-      const {
-        calculated_icms_value,
-        calculated_ipi_value,
-        calculated_pis_value,
-        calculated_cofins_value,
-        calculated_icms_st_value,
-        final_total_net,
-      } = calculateTaxes({
-        total_gross,
-        icms_rate: taxSettings.icms_rate,
-        ipi_rate: taxSettings.ipi_rate,
-        pis_rate: taxSettings.pis_rate,
-        cofins_rate: taxSettings.cofins_rate,
-        mva_rate: taxSettings.mva_rate,
-        transaction_type,
-        total_net,
-      });
 
       const { data: journalEntry } = await getSupabaseClient(token)
         .from("journal_entries")

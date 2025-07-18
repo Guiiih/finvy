@@ -198,7 +198,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         newLines.push(processedNewLine);
       }
 
-      journalEntries.value.push({ ...newJournalEntry, lines: newLines });
+      await fetchJournalEntries(); // Re-fetch all entries to get the complete new entry with lines
+
       return newJournalEntry;
     } catch (err: unknown) {
       console.error('Erro ao adicionar lançamento:', err);

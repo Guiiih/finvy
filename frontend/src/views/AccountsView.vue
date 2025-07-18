@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { Account } from '@/types'
 
@@ -33,30 +33,58 @@ const accountSchema = toTypedSchema(zodSchema);
 
 type AccountFormValues = z.infer<typeof zodSchema>;
 
-const filteredAccounts = computed(() => {
-  if (!Array.isArray(accountStore.accounts)) {
-    return [];
+const groupedAndFilteredAccounts = computed(() => {
+  const lowerCaseSearchTerm = searchTerm.value.toLowerCase();
+  const filtered = accountStore.accounts.filter(account => 
+    !account.is_protected &&
+    (account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+     account.code?.toString().includes(lowerCaseSearchTerm) ||
+     account.type.toLowerCase().includes(lowerCaseSearchTerm))
+  );
+
+  const grouped = filtered.reduce((acc, account) => {
+    const type = account.type;
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(account);
+    return acc;
+  }, {} as Record<string, Account[]>);
+
+  for (const type in grouped) {
+    grouped[type].sort((a, b) => (a.code || '').localeCompare(b.code || '', undefined, { numeric: true, sensitivity: 'base' }));
   }
-  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  return accountStore.accounts
-    .filter(
-      (account) =>
-        account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-        account.code?.toString().includes(lowerCaseSearchTerm) ||
-        account.type.toLowerCase().includes(lowerCaseSearchTerm),
-    )
-    .sort((a, b) => (a.code || '').localeCompare(b.code || '', undefined, { numeric: true, sensitivity: 'base' }));
+
+  return grouped;
 });
 
 const paginatedAccounts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredAccounts.value.slice(start, end)
-})
+  const allAccounts: Account[] = [];
+  const types = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+  
+  types.forEach(type => {
+    if (groupedAndFilteredAccounts.value[type]) {
+      allAccounts.push(...groupedAndFilteredAccounts.value[type]);
+    }
+  });
+
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return allAccounts.slice(start, end);
+});
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredAccounts.value.length / itemsPerPage)
-})
+    const allAccounts: Account[] = [];
+  const types = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+  
+  types.forEach(type => {
+    if (groupedAndFilteredAccounts.value[type]) {
+      allAccounts.push(...groupedAndFilteredAccounts.value[type]);
+    }
+  });
+
+  return Math.ceil(allAccounts.length / itemsPerPage);
+});
 
 function goToPage(page: number) {
   if (page >= 1 && page <= totalPages.value) {
@@ -64,7 +92,9 @@ function goToPage(page: number) {
   }
 }
 
-
+watch(currentPage, (newPage) => {
+  // Não é mais necessário buscar do servidor, a paginação é no cliente
+});
 
 
 
@@ -171,7 +201,7 @@ async function handleDeleteAccount(account: Account) {
 }
 
 onMounted(() => {
-  accountStore.fetchAccounts()
+  accountStore.fetchAccounts();
 })
 </script>
 

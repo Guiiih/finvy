@@ -6,6 +6,7 @@ import { useAccountingPeriodStore } from './accountingPeriodStore'
 
 export const useAccountStore = defineStore('account', () => {
   const accounts = ref<Account[]>([])
+  const totalAccounts = ref(0)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -31,20 +32,23 @@ export const useAccountStore = defineStore('account', () => {
     return accounts.value.filter((account) => account.type === type)
   })
 
-  async function fetchAccounts() {
+  async function fetchAccounts({ page = 1, limit = 1000 }: { page?: number; limit?: number; } = {}) {
     loading.value = true;
     error.value = null;
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         await accountingPeriodStore.fetchAccountingPeriods();
       }
-      const response = await api.get<{ data: Account[] }>('/accounts', {
+      const response = await api.get<{ data: Account[]; count: number }>('/accounts', {
         params: {
           organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
+          page,
+          limit,
         },
       });
       accounts.value = Array.isArray(response.data) ? response.data : [];
+      totalAccounts.value = response.count || 0;
     } catch (err: unknown) {
       console.error('Erro ao buscar contas:', err);
       if (err instanceof Error) {
@@ -70,7 +74,7 @@ export const useAccountStore = defineStore('account', () => {
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
       };
       const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', payload);
-      accounts.value.push(addedAccount);
+      await fetchAccounts({ page: 1, limit: 10 }); 
       return addedAccount;
     } catch (err: unknown) {
       console.error('Erro ao adicionar conta:', err);
@@ -105,7 +109,7 @@ export const useAccountStore = defineStore('account', () => {
     error.value = null
     try {
       await api.delete(`/accounts/${id}`)
-      accounts.value = accounts.value.filter((acc) => acc.id !== id)
+      await fetchAccounts({ page: 1, limit: 10 });
     } catch (err: unknown) {
       console.error('Erro ao deletar conta:', err)
       error.value = err instanceof Error ? err.message : 'Falha ao deletar conta.'
@@ -117,6 +121,7 @@ export const useAccountStore = defineStore('account', () => {
 
   return {
     accounts,
+    totalAccounts,
     loading,
     error,
     fetchAccounts,

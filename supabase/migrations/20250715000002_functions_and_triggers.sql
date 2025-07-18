@@ -243,7 +243,7 @@ BEGIN
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Receita Bruta de Vendas', 'revenue', '4.1', v_receitas_id, p_organization_id, p_accounting_period_id);
 
     -- Nível 3: Contas de Custos e Despesas
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Custo da Mercadoria Vendida', 'expense', '5.1', v_custos_despesas_id, p_organization_id, p_accounting_period_id, TRUE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Custo da Mercadoria Vendida', 'expense', '5.1', v_custos_despesas_id, p_organization_id, p_accounting_period_id, TRUE);
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Deduções da Receita Bruta', 'expense', '5.2', v_custos_despesas_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_deducoes_id;
 
     -- Nível 4: Contas de Caixa
