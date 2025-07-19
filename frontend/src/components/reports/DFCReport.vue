@@ -125,5 +125,3 @@ const dfcData = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
