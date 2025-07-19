@@ -17,6 +17,7 @@ export const useAuthStore = defineStore(
     const userRole = ref<string | null>(null)
     const username = ref<string | null>(null)
     const avatarUrl = ref<string | null>(null)
+    const handle = ref<string | null>(null)
     const userOrganizationId = ref<string | null>(null)
     const userActiveAccountingPeriodId = ref<string | null>(null)
 
@@ -29,15 +30,17 @@ export const useAuthStore = defineStore(
         userRole.value = null;
         username.value = null;
         avatarUrl.value = null;
+        handle.value = null;
         userOrganizationId.value = null;
         userActiveAccountingPeriodId.value = null;
         return;
       }
       try {
-        const response = await api.get<{ username: string; role: string; avatar_url: string; organization_id: string; active_accounting_period_id: string }>('/profile');
+        const response = await api.get<{ username: string; role: string; avatar_url: string; organization_id: string; active_accounting_period_id: string; handle: string }>('/profile');
         userRole.value = response.role;
         username.value = response.username;
         avatarUrl.value = response.avatar_url;
+        handle.value = response.handle;
         userOrganizationId.value = response.organization_id;
         userActiveAccountingPeriodId.value = response.active_accounting_period_id;
         console.log('fetchUserProfile: avatarUrl', avatarUrl.value);
@@ -46,6 +49,7 @@ export const useAuthStore = defineStore(
         userRole.value = null;
         username.value = null;
         avatarUrl.value = null;
+        handle.value = null;
         userOrganizationId.value = null;
         userActiveAccountingPeriodId.value = null;
       }
@@ -235,20 +239,35 @@ export const useAuthStore = defineStore(
       }
     }
 
-    async function updateUserProfile(fullName: string) {
+    async function updateUserProfile(fullName: string, handleValue: string) {
       loading.value = true
       error.value = null
       try {
-        const { data, error: authError } = await supabase.auth.updateUser({
-          data: { first_name: fullName },
-        })
-        if (authError) throw authError
-        user.value = data.user
-        // Atualiza o nome de usuário localmente
-        if (username.value) {
-          username.value = fullName
+        const payload: { username?: string; handle?: string } = {};
+        if (fullName !== username.value) {
+          payload.username = fullName;
         }
-        console.log('Perfil atualizado com sucesso.')
+        if (handleValue !== handle.value) {
+          payload.handle = handleValue;
+        }
+
+        if (Object.keys(payload).length === 0) {
+          console.log('Nenhuma alteração no perfil para salvar.');
+          loading.value = false;
+          return true;
+        }
+
+        const response = await api.put('/profile', payload);
+
+        // Atualiza o nome de usuário e handle localmente
+        if (payload.username) {
+          username.value = payload.username;
+        }
+        if (payload.handle) {
+          handle.value = payload.handle;
+        }
+
+        console.log('Perfil atualizado com sucesso.', response);
         return true
       } catch (err: unknown) {
         console.error('Erro ao atualizar perfil:', err)
@@ -359,6 +378,7 @@ export const useAuthStore = defineStore(
       isAdmin,
       username,
       avatarUrl,
+      handle,
       userOrganizationId,
       userActiveAccountingPeriodId,
       initAuthListener,

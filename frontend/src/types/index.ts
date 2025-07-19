@@ -143,6 +143,7 @@ export interface User {
   id: string;
   email: string;
   username?: string;
+  handle?: string;
 }
 
 export type SharedPermissionLevel = 'read' | 'write';

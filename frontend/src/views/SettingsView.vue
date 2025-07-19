@@ -22,6 +22,10 @@
             <InputText id="fullName" v-model="fullName" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
           </div>
           <div>
+            <label for="handle" class="block text-sm font-medium text-surface-700 mb-1">Nome de usuário</label>
+            <InputText id="handle" v-model="displayHandle" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+          </div>
+          <div>
             <label for="email" class="block text-sm font-medium text-surface-700 mb-1">E-mail</label>
             <InputText id="email" :model-value="authStore.user?.email" class="w-full p-3 border border-surface-300 rounded-md bg-surface-100 cursor-not-allowed" disabled />
           </div>
@@ -375,6 +379,16 @@ const toast = useToast()
 const router = useRouter()
 
 const fullName = ref('')
+const handle = ref('')
+
+const displayHandle = computed<string>({
+  get() {
+    return handle.value ? `@${handle.value}` : '';
+  },
+  set(value: string) {
+    handle.value = value.startsWith('@') ? value.substring(1) : value;
+  },
+});
 const newPassword = ref('')
 const confirmNewPassword = ref('')
 
@@ -436,6 +450,7 @@ const languageOptions = ref([
 
 onMounted(async () => {
   fullName.value = authStore.username || ''
+  handle.value = authStore.handle || ''
   console.log('UserConfigurationView mounted. authStore.avatarUrl:', authStore.avatarUrl)
   console.log('authStore.user:', authStore.user)
 
@@ -540,7 +555,7 @@ const rotate = () => {
 const handleUpdateProfile = async () => {
   loadingProfile.value = true
 
-  const profileUpdateSuccess = await authStore.updateUserProfile(fullName.value)
+  const profileUpdateSuccess = await authStore.updateUserProfile(fullName.value, handle.value)
   if (profileUpdateSuccess) {
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso!', life: 3000 })
     tempAvatarPreview.value = null // Limpa a pré-visualização temporária

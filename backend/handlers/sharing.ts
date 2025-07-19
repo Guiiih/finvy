@@ -33,8 +33,11 @@ async function getUserRoleInOrganization(
 // Zod schemas for validation
 const sharePeriodSchema = z.object({
   accounting_period_id: z.string().uuid("ID do período contábil inválido."),
-  shared_with_user_id: z.string().uuid("ID do usuário para compartilhar inválido."),
+  shared_with_user_id: z.string().uuid("ID do usuário para compartilhar inválido.").optional(),
+  shared_with_identifier: z.string().min(1, "Identificador do usuário para compartilhar é obrigatório.").optional(),
   permission_level: z.enum(["read", "write"], { message: "Nível de permissão inválido." }),
+}).refine(data => data.shared_with_user_id || data.shared_with_identifier, {
+  message: "É necessário fornecer 'shared_with_user_id' ou 'shared_with_identifier'.",
 });
 
 export default async function handler(
@@ -61,7 +64,29 @@ export default async function handler(
         );
       }
 
-      const { accounting_period_id, shared_with_user_id, permission_level } = parsedBody.data;
+      const { accounting_period_id, shared_with_user_id, shared_with_identifier, permission_level } = parsedBody.data;
+
+      let target_user_id: string | undefined = shared_with_user_id;
+
+      if (shared_with_identifier) {
+        logger.info(`[Sharing] Resolvendo identificador: ${shared_with_identifier}`);
+        const { data: resolved_user_id, error: resolveError } = await userSupabase.rpc('get_user_id_by_handle_or_email', { identifier: shared_with_identifier });
+
+        if (resolveError) {
+          logger.error(`[Sharing] Erro ao resolver identificador ${shared_with_identifier}: ${resolveError.message}`);
+          return handleErrorResponse(res, 500, `Erro ao resolver identificador: ${resolveError.message}`);
+        }
+
+        if (!resolved_user_id) {
+          logger.warn(`[Sharing] Identificador ${shared_with_identifier} não encontrado.`);
+          return handleErrorResponse(res, 404, `Usuário com identificador '${shared_with_identifier}' não encontrado.`);
+        }
+        target_user_id = resolved_user_id;
+      }
+
+      if (!target_user_id) {
+        return handleErrorResponse(res, 400, "ID do usuário para compartilhar não fornecido ou inválido.");
+      }
 
       // Get the organization_id of the accounting period
       const { data: periodData, error: periodError } = await userSupabase
@@ -101,7 +126,7 @@ export default async function handler(
         .from("shared_accounting_periods")
         .insert({
           accounting_period_id,
-          shared_with_user_id,
+          shared_with_user_id: target_user_id,
           permission_level,
           shared_by_user_id: user_id, // Record who shared it
         })

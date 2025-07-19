@@ -67,7 +67,7 @@ export default async function handler(
     try {
       const { data: profile, error: dbError } = await userSupabase
         .from("profiles")
-        .select("username, role, avatar_url, organization_id, active_accounting_period_id")
+        .select("username, role, avatar_url, organization_id, active_accounting_period_id, handle")
         .eq("id", user_id)
         .single();
 
@@ -134,7 +134,7 @@ export default async function handler(
         .update(updateData)
         .eq("id", user_id)
         .select(
-          "username, role, avatar_url, organization_id, active_accounting_period_id",
+          "username, role, avatar_url, organization_id, active_accounting_period_id, handle",
         )
         .single();
 

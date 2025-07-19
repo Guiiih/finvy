@@ -299,6 +299,12 @@ export const updateProfileSchema = z
       .min(1, "Nome de usuário é obrigatório.")
       .max(100, "Nome de usuário muito longo.")
       .optional(),
+    handle: z
+      .string()
+      .min(1, "Handle é obrigatório.")
+      .max(50, "Handle muito longo.")
+      .regex(/^[a-z0-9_]+$/, "Handle deve conter apenas letras minúsculas, números e underscores.")
+      .optional(),
     avatar_url: z.string().url("URL do avatar inválida.").optional().nullable(),
     organization_id: z
       .string()
