@@ -34,7 +34,7 @@ export const useProductStore = defineStore('products', () => {
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
         },
       });
-      products.value = data;
+      products.value = Array.isArray(data) ? data : [];
     } catch (err: unknown) {
       console.error('Erro ao buscar produtos:', err);
       error.value = err instanceof Error ? err.message : 'Falha ao buscar produtos.';
