@@ -1,7 +1,9 @@
 
--- Migration: Create functions and triggers
+-- Migração: Funções
 
--- Helper functions
+set check_function_bodies = off;
+
+-- Funções auxiliares
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE plpgsql
@@ -113,7 +115,9 @@ CREATE OR REPLACE FUNCTION search_users(search_term TEXT)
 RETURNS TABLE (
   id UUID,
   username TEXT,
-  email TEXT
+  email TEXT,
+  handle TEXT,
+  avatar_url TEXT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -123,11 +127,17 @@ BEGIN
   SELECT
     p.id,
     p.username,
-    p.email
+    p.email,
+    p.handle,
+    p.avatar_url
   FROM
-    profiles AS p
+    public.profiles AS p
   WHERE
-    p.email ILIKE '%' || search_term || '%'
+    LOWER(p.username) LIKE LOWER(search_term || '%') OR
+    LOWER(p.email) LIKE LOWER(search_term || '%') OR
+    LOWER(p.handle) LIKE LOWER(search_term || '%')
+  ORDER BY
+    p.username
   LIMIT 10;
 END;
 $$;
@@ -283,26 +293,26 @@ DECLARE
     default_start_date DATE;
     default_end_date DATE;
 BEGIN
-    -- Create the organization
+    -- Cria a organização e atribui o proprietário
     INSERT INTO public.organizations (name, is_personal)
     VALUES (p_organization_name, FALSE)
     RETURNING id, name INTO new_org_id, organization_name;
 
-    -- Assign 'owner' role to the creating user for this new organization
+    -- Atribui o papel de 'owner' ao usuário criador para esta nova organização
     INSERT INTO public.user_organization_roles (user_id, organization_id, role)
     VALUES (p_user_id, new_org_id, 'owner');
 
-    -- Create a default accounting period for the new organization
+    -- Cria um período contábil padrão para a nova organização
     current_year := EXTRACT(YEAR FROM NOW());
     default_period_name := current_year::TEXT || ' Fiscal Year';
     default_start_date := (current_year::TEXT || '-01-01')::DATE;
     default_end_date := (current_year::TEXT || '-12-31')::DATE;
 
-    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date, is_active)
-    VALUES (new_org_id, default_period_name, default_start_date, default_end_date, TRUE)
+    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date)
+    VALUES (new_org_id, default_period_name, default_start_date, default_end_date)
     RETURNING id, name INTO new_period_id, accounting_period_name;
 
-    -- Update the user's profile to set this new organization and period as active
+    -- Atualiza o perfil do usuário para definir esta nova organização e período como ativos
     UPDATE public.profiles
     SET organization_id = new_org_id, active_accounting_period_id = new_period_id
     WHERE id = p_user_id;
@@ -324,13 +334,13 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-    -- Check if the current user is allowed to perform this action
+    -- Verifica se o usuário atual tem permissão para realizar esta ação
     IF auth.uid() = p_user_id THEN
-        -- Allow user to create their own role (e.g., when creating a new organization)
+        -- Permite ao usuário criar seu próprio papel (ex: ao criar uma nova organização)
         INSERT INTO public.user_organization_roles (user_id, organization_id, role)
         VALUES (p_user_id, p_organization_id, p_role);
     ELSIF can_manage_organization_role(auth.uid(), p_organization_id) THEN
-        -- Allow owner/admin to add other members
+        -- Permite ao proprietário/administrador adicionar outros membros
         INSERT INTO public.user_organization_roles (user_id, organization_id, role)
         VALUES (p_user_id, p_organization_id, p_role);
     ELSE
@@ -349,14 +359,14 @@ RETURNS BOOLEAN AS $$
 DECLARE
     deleted_entries_count INT;
 BEGIN
-    -- Delete associated entry_lines first
+    -- Exclui as linhas de lançamento associadas primeiro
     DELETE FROM public.entry_lines
     WHERE
         journal_entry_id = p_journal_entry_id AND
         organization_id = p_organization_id AND
         accounting_period_id = p_accounting_period_id;
 
-    -- Delete the journal entry
+    -- Exclui o lançamento contábil
     DELETE FROM public.journal_entries
     WHERE
         id = p_journal_entry_id AND
@@ -364,7 +374,7 @@ BEGIN
         accounting_period_id = p_accounting_period_id
     RETURNING 1 INTO deleted_entries_count;
 
-    -- Check if the journal entry was actually deleted
+    -- Verifica se o lançamento contábil foi realmente excluído
     IF deleted_entries_count > 0 THEN
         RETURN TRUE;
     ELSE
@@ -373,9 +383,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant usage to authenticated role (or appropriate role)
-GRANT EXECUTE ON FUNCTION delete_journal_entry_and_lines TO authenticated;
-
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -383,13 +390,20 @@ DECLARE
     avatar_svg TEXT;
     new_org_id UUID;
     new_period_id UUID;
+    generated_handle TEXT;
+    base_handle_string TEXT;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
     IF NEW.raw_user_meta_data->>'first_name' IS NOT NULL AND LENGTH(NEW.raw_user_meta_data->>'first_name') > 0 THEN
         first_letter := UPPER(SUBSTRING(NEW.raw_user_meta_data->>'first_name', 1, 1));
+        base_handle_string := NEW.raw_user_meta_data->>'first_name';
     ELSE
         first_letter := UPPER(SUBSTRING(NEW.email, 1, 1));
+        base_handle_string := ''; -- Use empty string if first_name is not provided
     END IF;
+
+    -- Gera um handle único
+    generated_handle := public.generate_unique_handle(base_handle_string);
 
     avatar_svg :=
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' ||
@@ -401,17 +415,17 @@ BEGIN
     VALUES (NEW.raw_user_meta_data->>'first_name' || ' Personal', TRUE)
     RETURNING id INTO new_org_id;
 
-    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date, is_active)
-    VALUES (new_org_id, EXTRACT(YEAR FROM NOW())::TEXT || ' Fiscal Year', (EXTRACT(YEAR FROM NOW())::TEXT || '-01-01')::DATE, (EXTRACT(YEAR FROM NOW())::TEXT || '-12-31')::DATE, TRUE)
+    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date)
+    VALUES (new_org_id, EXTRACT(YEAR FROM NOW())::TEXT || ' Fiscal Year', (EXTRACT(YEAR FROM NOW())::TEXT || '-01-01')::DATE, (EXTRACT(YEAR FROM NOW())::TEXT || '-12-31')::DATE)
     RETURNING id INTO new_period_id;
 
-    INSERT INTO public.profiles (id, username, email, role, avatar_url, organization_id, active_accounting_period_id)
-    VALUES (NEW.id, NEW.raw_user_meta_data->>'first_name', NEW.email, 'user', 'data:image/svg+xml;base64,' || encode(avatar_svg::bytea, 'base64'), new_org_id, new_period_id);
+    INSERT INTO public.profiles (id, username, email, role, avatar_url, organization_id, active_accounting_period_id, handle)
+    VALUES (NEW.id, NEW.raw_user_meta_data->>'first_name', NEW.email, 'user', 'data:image/svg+xml;base64,' || encode(avatar_svg::bytea, 'base64'), new_org_id, new_period_id, generated_handle);
 
     INSERT INTO public.user_organization_roles (user_id, organization_id, role)
     VALUES (NEW.id, new_org_id, 'owner');
 
-    -- Chamar a função para criar o plano de contas padrão
+    -- Call function to create default chart of accounts
     PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
   END IF;
   RETURN NEW;
@@ -422,23 +436,91 @@ CREATE OR REPLACE FUNCTION public.delete_user_data()
 RETURNS TRIGGER AS $$
 DECLARE
     org_id UUID;
-    is_owner BOOLEAN;
+    is_user_owner BOOLEAN;
+    num_owners INT;
+    num_members INT;
+    oldest_admin_id UUID;
+    organization_name TEXT;
 BEGIN
     -- Iterar por todas as organizações das quais o usuário é membro
     FOR org_id IN SELECT organization_id FROM public.user_organization_roles WHERE user_id = OLD.id
     LOOP
-        -- Verificar se o usuário é o único proprietário da organização
-        SELECT COUNT(*) = 1 AND EXISTS (SELECT 1 FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id AND role = 'owner')
-        INTO is_owner
+        -- Obter o nome da organização para a mensagem de erro
+        SELECT name INTO organization_name FROM public.organizations WHERE id = org_id;
+
+        -- Verificar se o usuário que está sendo deletado é um proprietário desta organização
+        SELECT EXISTS (SELECT 1 FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id AND role = 'owner')
+        INTO is_user_owner;
+
+        -- Contar o número total de proprietários para esta organização
+        SELECT COUNT(*)
+        INTO num_owners
+        FROM public.user_organization_roles
+        WHERE organization_id = org_id AND role = 'owner';
+
+        -- Contar o número total de membros para esta organização
+        SELECT COUNT(*)
+        INTO num_members
         FROM public.user_organization_roles
         WHERE organization_id = org_id;
 
-        IF is_owner THEN
-            RAISE EXCEPTION 'Não é possível deletar o usuário % porque ele é o único proprietário da organização %.', OLD.id, org_id;
-        END IF;
+        IF is_user_owner THEN
+            -- Se o usuário é um proprietário
+            IF num_owners = 1 THEN
+                -- Se o usuário é o ÚNICO proprietário
+                -- Tentar encontrar o administrador mais antigo para transferir a propriedade
+                SELECT user_id
+                INTO oldest_admin_id
+                FROM public.user_organization_roles
+                WHERE organization_id = org_id AND role = 'admin'
+                ORDER BY created_at ASC
+                LIMIT 1;
 
-        -- Deletar dados associados a esta organização para o usuário
-        DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
+                IF oldest_admin_id IS NOT NULL THEN
+                    -- Cenário B: Único Proprietário com Administradores
+                    -- Transferir a propriedade para o administrador mais antigo
+                    UPDATE public.user_organization_roles
+                    SET role = 'owner'
+                    WHERE user_id = oldest_admin_id AND organization_id = org_id;
+
+                    -- Remover o papel de proprietário do usuário que está sendo deletado
+                    DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
+                ELSIF num_members > 1 THEN
+                    -- Cenário C: Único Proprietário Apenas com Membros (não-proprietários e não-administradores)
+                    -- Tentar encontrar o membro mais antigo para transferir a propriedade
+                    SELECT user_id
+                    INTO oldest_admin_id
+                    FROM public.user_organization_roles
+                    WHERE organization_id = org_id AND user_id != OLD.id -- Excluir o usuário que está sendo deletado
+                    ORDER BY created_at ASC
+                    LIMIT 1;
+
+                    IF oldest_admin_id IS NOT NULL THEN
+                        -- Transferir a propriedade para o membro mais antigo
+                        UPDATE public.user_organization_roles
+                        SET role = 'owner'
+                        WHERE user_id = oldest_admin_id AND organization_id = org_id;
+
+                        -- Remover o papel de proprietário do usuário que está sendo deletado
+                        DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
+                    ELSE
+                        -- Se não há outros membros, deletar a organização
+                        DELETE FROM public.organizations WHERE id = org_id;
+                    END IF;
+                ELSE
+                    -- Se o usuário é o único proprietário E o único membro, deletar a organização
+                    -- Isso irá cascatear e deletar user_organization_roles e outros dados relacionados
+                    DELETE FROM public.organizations WHERE id = org_id;
+                END IF;
+            ELSE
+                -- Cenário A: Existem Outros Proprietários
+                -- Se o usuário é um proprietário, mas existem outros proprietários, apenas remover o papel do usuário
+                DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
+            END IF;
+        ELSE
+            -- Se o usuário NÃO é um proprietário, apenas remover o papel do usuário na organização
+            DELETE FROM public.user_organization_roles WHERE user_id = OLD.id AND organization_id = org_id;
+        END IF;
     END LOOP;
 
     -- Deletar o perfil do usuário
@@ -448,21 +530,129 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger para chamar a função handle_new_user após a inserção em auth.users
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
+CREATE OR REPLACE FUNCTION public.generate_unique_handle(base_string TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    new_handle TEXT;
+    counter INT := 0;
+BEGIN
+    -- Limpa a string base: minúsculas, substitui espaços por underscores, remove caracteres especiais
+    new_handle := REGEXP_REPLACE(LOWER(base_string), '[^a-z0-9_]+', '', 'g');
 
--- Cria um trigger que executa a função delete_user_data ANTES de um usuário ser deletado da auth.users
-CREATE TRIGGER on_user_deleted
-  BEFORE DELETE ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.delete_user_data();
+    -- Garante que o handle comece com uma letra ou número
+    IF new_handle ~ '^[0-9_]' THEN
+        new_handle := 'user_' || new_handle;
+    END IF;
 
--- Otimização de Performance: Adiciona índices para acelerar consultas comuns.
-CREATE INDEX IF NOT EXISTS idx_products_org_period ON public.products(organization_id, accounting_period_id);
-CREATE INDEX IF NOT EXISTS idx_financial_transactions_org_period ON public.financial_transactions(organization_id, accounting_period_id);
-CREATE INDEX IF NOT EXISTS idx_journal_entries_org_period_entry_date ON public.journal_entries(organization_id, accounting_period_id, entry_date);
-CREATE INDEX IF NOT EXISTS idx_entry_lines_journal_entry_id ON public.entry_lines(journal_entry_id);
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+    -- Limita a um tamanho razoável, por exemplo, 30 caracteres, para evitar handles excessivamente longos
+    IF LENGTH(new_handle) > 30 THEN
+        new_handle := SUBSTRING(new_handle, 1, 30);
+    END IF;
+
+    -- Verifica a unicidade e anexa contador se necessário
+    WHILE EXISTS (SELECT 1 FROM public.profiles WHERE handle = new_handle) LOOP
+        counter := counter + 1;
+        new_handle := REGEXP_REPLACE(LOWER(base_string), '[^a-z0-9_]+', '', 'g') || counter::TEXT;
+        -- Re-trim if counter makes it too long
+        IF LENGTH(new_handle) > 30 THEN
+            new_handle := SUBSTRING(new_handle, 1, 30);
+        END IF;
+    END LOOP;
+
+    RETURN new_handle;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.get_user_id_by_handle_or_email(identifier TEXT)
+RETURNS UUID AS $$
+DECLARE
+    user_uuid UUID;
+BEGIN
+    -- Tenta encontrar pelo handle primeiro (case-insensitive)
+    SELECT id INTO user_uuid FROM public.profiles WHERE LOWER(handle) = LOWER(identifier);
+
+    IF user_uuid IS NULL THEN
+        -- Se não encontrado pelo handle, tenta pelo email (case-insensitive)
+        SELECT id INTO user_uuid FROM public.profiles WHERE LOWER(email) = LOWER(identifier);
+    END IF;
+
+    RETURN user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.update_product_stock_and_cost(
+    p_product_id UUID,
+    p_quantity NUMERIC,
+    p_transaction_unit_cost NUMERIC,
+    p_transaction_type TEXT,
+    p_organization_id UUID,
+    p_accounting_period_id UUID
+)
+RETURNS TABLE(
+    id UUID,
+    name TEXT,
+    unit_cost NUMERIC,
+    current_stock NUMERIC,
+    organization_id UUID,
+    accounting_period_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_current_stock NUMERIC;
+    v_unit_cost NUMERIC;
+    v_new_current_stock NUMERIC;
+    v_new_unit_cost NUMERIC;
+    v_product_name TEXT;
+BEGIN
+    -- Bloqueia a linha do produto para evitar condições de corrida
+    SELECT current_stock, unit_cost, name
+    INTO v_current_stock, v_unit_cost, v_product_name
+    FROM products
+    WHERE id = p_product_id
+      AND organization_id = p_organization_id
+      AND accounting_period_id = p_accounting_period_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found or inaccessible.';
+    END IF;
+
+    v_new_current_stock := v_current_stock;
+    v_new_unit_cost := v_unit_cost;
+
+    IF p_transaction_type = 'purchase' THEN
+        v_new_current_stock := v_current_stock + p_quantity;
+        IF v_new_current_stock = 0 THEN
+            v_new_unit_cost := 0;
+        ELSE
+            v_new_unit_cost := ((v_current_stock * v_unit_cost) + (p_quantity * p_transaction_unit_cost)) / v_new_current_stock;
+        END IF;
+    ELSIF p_transaction_type = 'sale' THEN
+        IF v_current_stock < p_quantity THEN
+            RAISE EXCEPTION 'Insufficient stock for product %. Available: %, Requested: %', v_product_name, v_current_stock, p_quantity;
+        END IF;
+        v_new_current_stock := v_current_stock - p_quantity;
+        -- Para vendas, o custo unitário do próprio produto não muda, apenas o estoque
+        -- O custo dos produtos vendidos será baseado no custo unitário médio atual
+    ELSE
+        RAISE EXCEPTION 'Invalid transaction type: %', p_transaction_type;
+    END IF;
+
+    -- Atualiza o produto
+    UPDATE products
+    SET
+        current_stock = v_new_current_stock,
+        unit_cost = v_new_unit_cost
+    WHERE id = p_product_id
+      AND organization_id = p_organization_id
+      AND accounting_period_id = p_accounting_period_id
+    RETURNING id, name, unit_cost, current_stock, organization_id, accounting_period_id
+    INTO id, name, unit_cost, current_stock, organization_id, accounting_period_id;
+
+    RETURN NEXT;
+END;
+$$;
+
+-- Concede uso à função autenticada (ou função apropriada)
+GRANT EXECUTE ON FUNCTION delete_journal_entry_and_lines TO authenticated;

@@ -1,5 +1,47 @@
--- Migration: Create accounting and relational tables
+-- Migração: Esquema Inicial - Tabelas, Colunas e Chaves Estrangeiras
 
+-- Cria a tabela de organizações
+CREATE TABLE organizations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES auth.users(id),
+    updated_by UUID REFERENCES auth.users(id),
+    deleted_by UUID REFERENCES auth.users(id),
+    is_personal BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_archived BOOLEAN DEFAULT FALSE,
+    is_locked BOOLEAN DEFAULT FALSE,
+    is_readonly BOOLEAN DEFAULT FALSE,
+    is_system BOOLEAN DEFAULT FALSE
+);
+
+-- Cria a tabela de perfis
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT UNIQUE,
+    avatar_url TEXT,
+    email TEXT UNIQUE,
+    role TEXT DEFAULT 'user' NOT NULL CHECK (role IN ('user', 'admin')),
+    organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+    active_accounting_period_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    deleted_by UUID REFERENCES auth.users(id),
+    is_deleted BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    handle TEXT UNIQUE NOT NULL
+);
+
+-- Remove a restrição de unicidade da coluna username na tabela profiles
+ALTER TABLE public.profiles
+DROP CONSTRAINT IF EXISTS profiles_username_key;
+
+-- Cria a tabela de períodos contábeis
 CREATE TABLE accounting_periods (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
@@ -12,7 +54,6 @@ CREATE TABLE accounting_periods (
     created_by UUID REFERENCES auth.users(id),
     updated_by UUID REFERENCES auth.users(id),
     deleted_by UUID REFERENCES auth.users(id),
-    is_active BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE,
     is_archived BOOLEAN DEFAULT FALSE,
     is_locked BOOLEAN DEFAULT FALSE,
@@ -22,10 +63,12 @@ CREATE TABLE accounting_periods (
     UNIQUE (organization_id, start_date, end_date)
 );
 
+-- Adiciona chave estrangeira aos perfis para o período contábil ativo
 ALTER TABLE public.profiles
 ADD CONSTRAINT fk_profiles_active_accounting_period
 FOREIGN KEY (active_accounting_period_id) REFERENCES public.accounting_periods(id) ON DELETE SET NULL;
 
+-- Cria a tabela de contas
 CREATE TABLE accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -49,6 +92,7 @@ CREATE TABLE accounts (
     is_system BOOLEAN DEFAULT FALSE
 );
 
+-- Cria a tabela de produtos
 CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -70,6 +114,7 @@ CREATE TABLE products (
     UNIQUE (name, organization_id, accounting_period_id)
 );
 
+-- Cria a tabela de lançamentos contábeis
 CREATE TABLE journal_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     entry_date DATE NOT NULL,
@@ -88,6 +133,7 @@ CREATE TABLE journal_entries (
     is_locked BOOLEAN DEFAULT FALSE
 );
 
+-- Cria a tabela de linhas de lançamento
 CREATE TABLE entry_lines (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE CASCADE,
@@ -121,6 +167,7 @@ CREATE TABLE entry_lines (
     is_deleted BOOLEAN DEFAULT FALSE
 );
 
+-- Cria a tabela de transações financeiras
 CREATE TABLE financial_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     transaction_date DATE NOT NULL,
@@ -141,6 +188,7 @@ CREATE TABLE financial_transactions (
     is_archived BOOLEAN DEFAULT FALSE
 );
 
+-- Cria a tabela de papéis de usuário por organização
 CREATE TABLE public.user_organization_roles (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -154,9 +202,11 @@ CREATE TABLE public.user_organization_roles (
     deleted_by UUID REFERENCES auth.users(id),
     is_deleted BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
-    UNIQUE (user_id, organization_id)
+    UNIQUE (user_id, organization_id),
+    CONSTRAINT fk_user_organization_roles_profile FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
 );
 
+-- Cria a tabela de períodos contábeis compartilhados
 CREATE TABLE public.shared_accounting_periods (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     accounting_period_id uuid REFERENCES public.accounting_periods(id) ON DELETE CASCADE NOT NULL,
@@ -171,17 +221,23 @@ CREATE TABLE public.shared_accounting_periods (
     deleted_by UUID REFERENCES auth.users(id),
     is_deleted BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
-    UNIQUE (accounting_period_id, shared_with_user_id)
+    UNIQUE (accounting_period_id, shared_with_user_id),
+    CONSTRAINT fk_shared_accounting_periods_shared_with_profile FOREIGN KEY (shared_with_user_id) REFERENCES public.profiles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_shared_accounting_periods_shared_by_profile FOREIGN KEY (shared_by_user_id) REFERENCES public.profiles(id) ON DELETE SET NULL
 );
 
-ALTER TABLE public.user_organization_roles
-ADD CONSTRAINT fk_user_organization_roles_profile
-FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
-
-ALTER TABLE public.shared_accounting_periods
-ADD CONSTRAINT fk_shared_accounting_periods_shared_with_profile
-FOREIGN KEY (shared_with_user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
-
-ALTER TABLE public.shared_accounting_periods
-ADD CONSTRAINT fk_shared_accounting_periods_shared_by_profile
-FOREIGN KEY (shared_by_user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+-- Cria a tabela de configurações fiscais
+CREATE TABLE tax_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    effective_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    icms_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    ipi_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    pis_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    cofins_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    mva_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(organization_id, effective_date),
+    CONSTRAINT tax_settings_organization_id_key UNIQUE (organization_id)
+);

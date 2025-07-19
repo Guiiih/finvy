@@ -1,7 +1,7 @@
 
--- Migration: Enable RLS and create policies
+-- Migração: Habilita RLS e cria políticas
 
--- Enable RLS for tables
+-- Habilita RLS para as tabelas
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.accounting_periods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_organization_roles ENABLE ROW LEVEL SECURITY;
@@ -12,10 +12,10 @@ ALTER TABLE public.journal_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.entry_lines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financial_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tax_settings ENABLE ROW LEVEL SECURITY;
 
-
--- RLS Policies
--- Policies for organizations
+-- Políticas de RLS
+-- Políticas para organizações
 CREATE POLICY "org_view_for_members"
 ON public.organizations FOR SELECT
 USING (
@@ -31,7 +31,7 @@ ON public.organizations FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
--- Policies for accounting_periods
+-- Políticas para períodos contábeis
 CREATE POLICY "acct_periods_view_shared"
 ON public.accounting_periods FOR SELECT
 USING (
@@ -82,7 +82,7 @@ USING (
   )
 );
 
--- Policies for user_organization_roles
+-- Políticas para user_organization_roles
 CREATE POLICY "Users can view their own roles"
 ON public.user_organization_roles FOR SELECT
 USING (
@@ -119,7 +119,7 @@ USING (
     can_manage_organization_role(auth.uid(), organization_id)
 );
 
--- Policies for shared_accounting_periods
+-- Políticas para shared_accounting_periods
 CREATE POLICY "shared_acct_periods_read_self"
 ON public.shared_accounting_periods FOR SELECT
 USING (auth.uid() = shared_with_user_id OR auth.uid() = shared_by_user_id);
@@ -161,7 +161,7 @@ USING (
     )
 );
 
--- Policies for profiles
+-- Políticas para perfis
 -- Usuários podem ver seus próprios perfis
 CREATE POLICY "Users can view their own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
@@ -178,7 +178,7 @@ CREATE POLICY "Admins can view all profiles" ON public.profiles
 CREATE POLICY "Admins can update any profile" ON public.profiles
   FOR UPDATE USING (public.is_admin());
 
--- Policies for financial tables (accounts, products, journal_entries, entry_lines, financial_transactions)
+-- Políticas para tabelas financeiras (accounts, products, journal_entries, entry_lines, financial_transactions)
 DO $$
 DECLARE
   table_name TEXT;
@@ -250,4 +250,23 @@ USING (
 END
 $$;
 
-set check_function_bodies = off;
+-- Adiciona políticas RLS para tax_settings
+CREATE POLICY "Organizations can view their own tax settings." ON tax_settings
+  FOR SELECT USING (organization_id IN ( SELECT user_organization_roles.organization_id
+   FROM user_organization_roles
+  WHERE user_id = auth.uid()));
+
+CREATE POLICY "Organizations can insert their own tax settings." ON tax_settings
+  FOR INSERT WITH CHECK (organization_id IN ( SELECT user_organization_roles.organization_id
+   FROM user_organization_roles
+  WHERE user_id = auth.uid()));
+
+CREATE POLICY "Organizations can update their own tax settings." ON tax_settings
+  FOR UPDATE USING (organization_id IN ( SELECT user_organization_roles.organization_id
+   FROM user_organization_roles
+  WHERE user_id = auth.uid()));
+
+CREATE POLICY "Organizations can delete their own tax settings." ON tax_settings
+  FOR DELETE USING (organization_id IN ( SELECT user_organization_roles.organization_id
+   FROM user_organization_roles
+  WHERE user_id = auth.uid()));
