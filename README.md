@@ -2,8 +2,6 @@
 
 [![Status do Projeto](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)](https://github.com/Guiiih/finvy)
 
-[**Experimente o Finvy Online!**](https://finvy.vercel.app/) (Link para a demonstração ao vivo)
-
 ## **Visão Geral**
 
 O Finvy é um Micro SaaS em desenvolvimento, concebido para ser uma ferramenta poderosa e intuitiva para a resolução de exercícios práticos de contabilidade. A sua génese reside na necessidade de transcender as limitações das folhas de cálculo, que, embora flexíveis, são propensas a erros de fórmula, carecem de integridade de dados e não são escaláveis.
@@ -200,14 +198,6 @@ Para fazer alterações no banco de dados, siga este fluxo de trabalho:
 * **Otimização de Performance:** Melhorias contínuas na performance do frontend e backend.
 * **Interface do Usuário (UI/UX):** Aprimoramento da experiência do usuário com componentes mais ricos e design responsivo.
 
-## **Contribuir**
-
-Contribuições são bem-vindas! Por favor, siga o fluxo padrão do GitHub (Fork, Branch, Commit, Pull Request).
-
 ## **Licença**
 
 Este projeto está licenciado sob a Licença MIT.
-
-## **Contato e Suporte**
-
-Para dúvidas, sugestões ou suporte, por favor, abra uma [Issue no GitHub](https://github.com/guilhermecardoso94/finvy/issues) ou entre em contato através do email: [seu.email@example.com](mailto:seu.email@example.com).
