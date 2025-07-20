@@ -70,11 +70,97 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
+        <div>
+          <label for="regime" class="block text-sm font-medium text-gray-700">Regime Tributário</label>
+          <select
+            id="regime"
+            v-model="newPeriod.regime"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          >
+            <option :value="null" disabled>Selecione um regime</option>
+            <option value="simples_nacional">Simples Nacional</option>
+            <option value="lucro_presumido">Lucro Presumido</option>
+            <option value="lucro_real">Lucro Real</option>
+          </select>
+        </div>
         <div class="md:col-span-3 flex justify-end">
           <button
             class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
           >
             {{ accountingPeriodStore.loading ? 'Criando...' : 'Criar Período' }}
+          </button>
+        </div>
+      </form>
+      <p v-if="accountingPeriodStore.error" class="text-red-500 text-sm mt-2">
+        {{ accountingPeriodStore.error }}
+      </p>
+    </div>
+
+    <div v-if="showEditPeriodForm && editingPeriod" class="mb-6 p-4 border rounded-lg shadow-sm bg-white">
+      <h2 class="text-xl font-semibold mb-3">Editar Período</h2>
+      <form @submit.prevent="handleUpdatePeriod" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="editPeriodName" class="block text-sm font-medium text-gray-700"
+            >Nome do Período</label
+          >
+          <input
+            type="text"
+            id="editPeriodName"
+            v-model="editingPeriod.name"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label for="editStartDate" class="block text-sm font-medium text-gray-700"
+            >Data de Início</label
+          >
+          <input
+            type="date"
+            id="editStartDate"
+            v-model="editingPeriod.start_date"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label for="editEndDate" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+          <input
+            type="date"
+            id="editEndDate"
+            v-model="editingPeriod.end_date"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label for="editRegime" class="block text-sm font-medium text-gray-700">Regime Tributário</label>
+          <select
+            id="editRegime"
+            v-model="editingPeriod.regime"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          >
+            <option :value="null" disabled>Selecione um regime</option>
+            <option value="simples_nacional">Simples Nacional</option>
+            <option value="lucro_presumido">Lucro Presumido</option>
+            <option value="lucro_real">Lucro Real</option>
+          </select>
+        </div>
+        <div class="md:col-span-3 flex justify-end space-x-2">
+          <button
+            type="button"
+            @click="showEditPeriodForm = false; editingPeriod = null"
+            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+          >
+            {{ accountingPeriodStore.loading ? 'Atualizando...' : 'Atualizar Período' }}
           </button>
         </div>
       </form>
@@ -100,6 +186,9 @@
               {{ period.name }} ({{ formatDate(period.start_date) }} -
               {{ formatDate(period.end_date) }})
             </p>
+            <p class="text-sm text-gray-600">
+              Regime: {{ formatRegime(period.regime) }}
+            </p>
             <span
               :class="[
                 period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
@@ -118,6 +207,12 @@
               Definir como Ativo
             </button>
             <button
+              @click="startEditPeriod(period)"
+              class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            >
+              Editar
+            </button>
+            <button
               @click="deletePeriod(period.id)"
               class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
             >
@@ -133,6 +228,31 @@
         </li>
       </ul>
       <p v-else class="text-gray-600">Nenhum período contábil encontrado. Crie um novo acima.</p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
+      <h2 class="text-xl font-semibold mb-3">Histórico de Regimes Tributários</h2>
+      <p v-if="!taxRegimeHistory.length" class="text-gray-600">Nenhum histórico de regime tributário encontrado.</p>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Regime</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Início</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Fim</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado Em</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="regimeEntry in taxRegimeHistory" :key="regimeEntry.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatRegime(regimeEntry.regime) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.start_date) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.end_date) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.created_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Share Period Modal -->
@@ -221,7 +341,7 @@ import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore';
 import { useSharingStore } from '@/stores/sharingStore';
 import { useToast } from 'primevue/usetoast';
 import { api } from '@/services/api';
-import type { AccountingPeriod, User, SharedPermissionLevel, SharedAccountingPeriod } from '@/types';
+import type { AccountingPeriod, User, SharedPermissionLevel, SharedAccountingPeriod, TaxRegime, TaxRegimeHistory } from '@/types';
 
 const accountingPeriodStore = useAccountingPeriodStore();
 const sharingStore = useSharingStore();
@@ -232,10 +352,15 @@ const newPeriod = ref({
   name: '',
   start_date: null as string | null,
   end_date: null as string | null,
+  regime: null as TaxRegime | null,
 });
+
+const taxRegimeHistory = ref<TaxRegimeHistory[]>([]);
 
 const searchTerm = ref('');
 const showCreatePeriodForm = ref(false);
+const showEditPeriodForm = ref(false);
+const editingPeriod = ref<AccountingPeriod | null>(null);
 
 // Sharing Modal State
 const showShareModal = ref(false);
@@ -258,10 +383,21 @@ const filteredAccountingPeriods = computed(() => {
 
 onMounted(() => {
   accountingPeriodStore.fetchAccountingPeriods();
+  fetchTaxRegimeHistory();
 });
 
+async function fetchTaxRegimeHistory() {
+  try {
+    const data = await api.get<TaxRegimeHistory[]>('/tax-regime-history');
+    taxRegimeHistory.value = data;
+  } catch (err) {
+    console.error('Erro ao buscar histórico de regime tributário:', err);
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar histórico de regime tributário.', life: 3000 });
+  }
+}
+
 const handleCreatePeriod = async () => {
-  if (!newPeriod.value.name || !newPeriod.value.start_date || !newPeriod.value.end_date) {
+  if (!newPeriod.value.name || !newPeriod.value.start_date || !newPeriod.value.end_date || !newPeriod.value.regime) {
     toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos para criar um novo período.', life: 3000 });
     return;
   }
@@ -271,13 +407,41 @@ const handleCreatePeriod = async () => {
       name: newPeriod.value.name,
       start_date: newPeriod.value.start_date as string,
       end_date: newPeriod.value.end_date as string,
+      regime: newPeriod.value.regime as TaxRegime,
       is_active: true, // Novo período sempre se torna ativo
     });
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil criado e ativado com sucesso!', life: 3000 });
-    newPeriod.value = { name: '', start_date: null, end_date: null }; // Limpa o formulário
+    newPeriod.value = { name: '', start_date: null, end_date: null, regime: null }; // Limpa o formulário
     showCreatePeriodForm.value = false; // Fecha o formulário após a criação
   } catch (err: unknown) {
     toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao criar período contábil.', life: 3000 });
+  }
+};
+
+const startEditPeriod = (period: AccountingPeriod) => {
+  editingPeriod.value = { ...period };
+  showEditPeriodForm.value = true;
+  showCreatePeriodForm.value = false; // Esconde o formulário de criação se estiver visível
+};
+
+const handleUpdatePeriod = async () => {
+  if (!editingPeriod.value || !editingPeriod.value.name || !editingPeriod.value.start_date || !editingPeriod.value.end_date || !editingPeriod.value.regime) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos para atualizar o período.', life: 3000 });
+    return;
+  }
+
+  try {
+    await accountingPeriodStore.updateAccountingPeriod(editingPeriod.value.id, {
+      name: editingPeriod.value.name,
+      start_date: editingPeriod.value.start_date,
+      end_date: editingPeriod.value.end_date,
+      regime: editingPeriod.value.regime,
+    });
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil atualizado com sucesso!', life: 3000 });
+    showEditPeriodForm.value = false; // Fecha o formulário após a atualização
+    editingPeriod.value = null; // Limpa o período em edição
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao atualizar período contábil.', life: 3000 });
   }
 };
 
@@ -301,9 +465,24 @@ const deletePeriod = async (id: string) => {
   }
 };
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return 'N/A';
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString('pt-BR', options);
+};
+
+const formatRegime = (regime: TaxRegime | undefined) => {
+  if (!regime) return 'N/A';
+  switch (regime) {
+    case 'simples_nacional':
+      return 'Simples Nacional';
+    case 'lucro_presumido':
+      return 'Lucro Presumido';
+    case 'lucro_real':
+      return 'Lucro Real';
+    default:
+      return regime;
+  }
 };
 
 // Sharing Modal Functions

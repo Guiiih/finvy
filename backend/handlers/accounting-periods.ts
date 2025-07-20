@@ -7,6 +7,7 @@ import {
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { formatSupabaseError } from "../utils/errorUtils.js";
+import { TaxRegime } from "../types/index.js";
 
 // Esquemas de validação para períodos contábeis
 const createAccountingPeriodSchema = z.object({
@@ -26,7 +27,7 @@ const createAccountingPeriodSchema = z.object({
       /^\d{4}-\d{2}-\d{2}$/,
       "Formato de data de fim inválido. Use YYYY-MM-DD.",
     ),
-  
+  regime: z.nativeEnum(TaxRegime, { invalid_type_error: "Regime tributário inválido." }),
 });
 
 const updateAccountingPeriodSchema = z
@@ -50,7 +51,7 @@ const updateAccountingPeriodSchema = z
         "Formato de data de fim inválido. Use YYYY-MM-DD.",
       )
       .optional(),
-    
+    regime: z.nativeEnum(TaxRegime, { invalid_type_error: "Regime tributário inválido." }).optional(),
   })
   .partial();
 
@@ -102,14 +103,47 @@ export default async function handler(
 
       logger.info(`[Accounting Periods] organization_id encontrado para user_id ${user_id}: ${profile.organization_id}`);
       const { organization_id } = profile;
-      const newPeriodData = { ...parsedBody.data, organization_id };
+      const { name, start_date, end_date, regime } = parsedBody.data;
 
-      
+      // Validação de sobreposição de datas para tax_regime_history
+      const { data: existingRegimes, error: fetchError } = await userSupabase
+        .from("tax_regime_history")
+        .select("start_date, end_date")
+        .eq("organization_id", organization_id)
+        .order("start_date", { ascending: true });
+
+      if (fetchError) {
+        logger.error(`[Accounting Periods] Erro ao buscar regimes existentes para validação: ${fetchError.message}`);
+        throw fetchError;
+      }
+
+      const newStartDate = new Date(start_date);
+      const newEndDate = new Date(end_date);
+
+      if (newStartDate > newEndDate) {
+        return handleErrorResponse(res, 400, "A data de início não pode ser posterior à data de fim.");
+      }
+
+      for (const existing of existingRegimes) {
+        const existingStartDate = new Date(existing.start_date);
+        const existingEndDate = new Date(existing.end_date);
+
+        // Check for overlap
+        if (
+          (newStartDate <= existingEndDate && newEndDate >= existingStartDate)
+        ) {
+          return handleErrorResponse(
+            res,
+            400,
+            "O período do regime tributário especificado se sobrepõe a um regime tributário existente.",
+          );
+        }
+      }
 
       logger.info(`[Accounting Periods] Inserindo novo período contábil para organization_id: ${organization_id}`);
-      const { data, error: dbError } = await userSupabase
+      const { data: accountingPeriod, error: dbError } = await userSupabase
         .from("accounting_periods")
-        .insert([newPeriodData])
+        .insert([{ name, start_date, end_date, organization_id }])
         .select()
         .single();
 
@@ -117,8 +151,28 @@ export default async function handler(
         logger.error(`[Accounting Periods] Erro ao inserir novo período contábil: ${dbError.message}`);
         throw dbError;
       }
-      logger.info(`[Accounting Periods] Novo período contábil criado com sucesso: ${data.id}`);
-      return res.status(201).json(data);
+
+      logger.info(`[Accounting Periods] Novo período contábil criado com sucesso: ${accountingPeriod.id}`);
+
+      // Inserir no tax_regime_history
+      logger.info(`[Accounting Periods] Inserindo novo regime tributário para organization_id: ${organization_id}`);
+      const { data: taxRegimeHistory, error: taxDbError } = await userSupabase
+        .from("tax_regime_history")
+        .insert([{ organization_id, regime, start_date, end_date }])
+        .select()
+        .single();
+
+      if (taxDbError) {
+        logger.error(`[Accounting Periods] Erro ao inserir novo regime tributário: ${taxDbError.message}`);
+        // Consider rolling back accounting period creation if tax regime history fails
+        throw taxDbError;
+      }
+      logger.info(`[Accounting Periods] Novo regime tributário criado com sucesso: ${taxRegimeHistory.id}`);
+
+      return res.status(201).json({
+        accountingPeriod,
+        taxRegimeHistory,
+      });
     } else {
       logger.info(`[Accounting Periods] Tentando obter organização e período para user_id: ${user_id} (GET/PUT/DELETE)`);
       const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
@@ -161,7 +215,10 @@ export default async function handler(
         }
         const updateData = parsedBody.data;
 
-        if (Object.keys(updateData).length === 0) {
+        // Remove 'regime' from updateData as it's handled separately in tax_regime_history
+        const { regime: _, ...accountingPeriodUpdateData } = updateData;
+
+        if (Object.keys(accountingPeriodUpdateData).length === 0 && !newRegime) {
           logger.warn(`[Accounting Periods] Nenhuma campo para atualizar fornecido para período ${id}`);
           return handleErrorResponse(
             res,
@@ -170,7 +227,98 @@ export default async function handler(
           );
         }
 
-        
+        // Fetch current accounting period to get original dates if not updated
+        const { data: currentPeriod, error: fetchCurrentPeriodError } = await userSupabase
+          .from("accounting_periods")
+          .select("start_date, end_date")
+          .eq("id", id)
+          .single();
+
+        if (fetchCurrentPeriodError || !currentPeriod) {
+          logger.error(`[Accounting Periods] Erro ao buscar período contábil atual ${id}: ${fetchCurrentPeriodError?.message || "Período contábil não encontrado."}`);
+          return handleErrorResponse(res, 404, "Período contábil não encontrado.");
+        }
+
+        const newStartDate = updateData.start_date || currentPeriod.start_date;
+        const newEndDate = updateData.end_date || currentPeriod.end_date;
+        const newRegime = updateData.regime;
+
+        // Validação de sobreposição de datas para tax_regime_history no PUT
+        if (newRegime || updateData.start_date || updateData.end_date) {
+          const { data: existingRegimes, error: fetchError } = await userSupabase
+            .from("tax_regime_history")
+            .select("id, start_date, end_date")
+            .eq("organization_id", organization_id)
+            .neq("id", id); // Excluir o regime atual da verificação de sobreposição
+
+          if (fetchError) {
+            logger.error(`[Accounting Periods] Erro ao buscar regimes existentes para PUT: ${fetchError.message}`);
+            throw fetchError;
+          }
+
+          const updatedStartDate = new Date(newStartDate);
+          const updatedEndDate = new Date(newEndDate);
+
+          if (updatedStartDate > updatedEndDate) {
+            return handleErrorResponse(res, 400, "A data de início não pode ser posterior à data de fim.");
+          }
+
+          for (const existing of existingRegimes) {
+            const existingStartDate = new Date(existing.start_date);
+            const existingEndDate = new Date(existing.end_date);
+
+            if (
+              (updatedStartDate <= existingEndDate && updatedEndDate >= existingStartDate)
+            ) {
+              return handleErrorResponse(
+                res,
+                400,
+                "O período do regime tributário atualizado se sobrepõe a um regime tributário existente.",
+              );
+            }
+          }
+
+          // Atualizar ou inserir no tax_regime_history
+          const { data: existingTaxRegime, error: fetchTaxRegimeError } = await userSupabase
+            .from("tax_regime_history")
+            .select("id")
+            .eq("organization_id", organization_id)
+            .eq("start_date", currentPeriod.start_date) // Assuming start_date is unique for a period
+            .eq("end_date", currentPeriod.end_date)
+            .single();
+
+          if (existingTaxRegime) {
+            // Update existing tax regime history entry
+            const { error: updateTaxError } = await userSupabase
+              .from("tax_regime_history")
+              .update({
+                regime: newRegime || undefined,
+                start_date: newStartDate,
+                end_date: newEndDate,
+              })
+              .eq("id", existingTaxRegime.id);
+
+            if (updateTaxError) {
+              logger.error(`[Accounting Periods] Erro ao atualizar regime tributário existente: ${updateTaxError.message}`);
+              throw updateTaxError;
+            }
+          } else if (newRegime) {
+            // Insert new tax regime history entry if it doesn't exist and a regime is provided
+            const { error: insertTaxError } = await userSupabase
+              .from("tax_regime_history")
+              .insert({
+                organization_id,
+                regime: newRegime,
+                start_date: newStartDate,
+                end_date: newEndDate,
+              });
+
+            if (insertTaxError) {
+              logger.error(`[Accounting Periods] Erro ao inserir novo regime tributário: ${insertTaxError.message}`);
+              throw insertTaxError;
+            }
+          }
+        }
 
         const { data, error: dbError } = await userSupabase
           .from("accounting_periods")
@@ -197,6 +345,34 @@ export default async function handler(
       } else if (req.method === "DELETE") {
         const id = req.url?.split("?")[0].split("/").pop() as string;
         logger.info(`[Accounting Periods] Deletando período contábil ${id} para organization_id: ${organization_id}`);
+
+        // Fetch the accounting period to get its start_date and end_date
+        const { data: accountingPeriodToDelete, error: fetchPeriodError } = await userSupabase
+          .from("accounting_periods")
+          .select("start_date, end_date")
+          .eq("id", id)
+          .single();
+
+        if (fetchPeriodError || !accountingPeriodToDelete) {
+          logger.error(`[Accounting Periods] Erro ao buscar período contábil ${id} para exclusão: ${fetchPeriodError?.message || "Período contábil não encontrado."}`);
+          return handleErrorResponse(res, 404, "Período contábil não encontrado ou você não tem permissão para deletar este período.");
+        }
+
+        // Delete corresponding tax_regime_history entry
+        const { error: deleteTaxRegimeError, count: taxRegimeCount } = await userSupabase
+          .from("tax_regime_history")
+          .delete()
+          .eq("organization_id", organization_id)
+          .eq("start_date", accountingPeriodToDelete.start_date)
+          .eq("end_date", accountingPeriodToDelete.end_date);
+
+        if (deleteTaxRegimeError) {
+          logger.error(`[Accounting Periods] Erro ao deletar regime tributário associado ao período ${id}: ${deleteTaxRegimeError.message}`);
+          throw deleteTaxRegimeError;
+        }
+        if (taxRegimeCount === 0) {
+          logger.warn(`[Accounting Periods] Nenhum regime tributário associado encontrado para o período ${id}.`);
+        }
 
         const { error: dbError, count } = await userSupabase
           .from("accounting_periods")

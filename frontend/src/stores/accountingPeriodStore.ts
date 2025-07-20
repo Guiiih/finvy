@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
-import type { AccountingPeriod } from '@/types';
+import type { AccountingPeriod, TaxRegime, TaxRegimeHistory } from '@/types';
 import { useOrganizationSelectionStore } from './organizationSelectionStore';
 import { useAuthStore } from './authStore';
 
-type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'>;
+type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'> & { regime: TaxRegime };
 
 export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const accountingPeriods = ref<AccountingPeriod[]>([]);
@@ -24,13 +24,21 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
     error.value = null;
     try {
       const data = await api.get<AccountingPeriod[]>('/accounting-periods');
+      const taxRegimes = await api.get<TaxRegimeHistory[]>('/tax-regime-history');
       const userActivePeriodId = authStore.userActiveAccountingPeriodId;
 
-      // Garante que cada período tenha a propriedade is_active definida corretamente
-      const periodsWithStatus = data.map(period => ({
-        ...period,
-        is_active: period.id === userActivePeriodId,
-      }));
+      // Garante que cada período tenha a propriedade is_active e regime definida corretamente
+      const periodsWithStatus = data.map(period => {
+        const matchingRegime = taxRegimes.find(regime =>
+          new Date(period.start_date).getTime() === new Date(regime.start_date).getTime() &&
+          new Date(period.end_date).getTime() === new Date(regime.end_date).getTime()
+        );
+        return {
+          ...period,
+          is_active: period.id === userActivePeriodId,
+          regime: matchingRegime ? matchingRegime.regime : undefined, // Adiciona o regime
+        };
+      });
 
       accountingPeriods.value = periodsWithStatus;
 
@@ -62,10 +70,10 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
     loading.value = true;
     error.value = null;
     try {
-      const addedPeriod = await api.post<AccountingPeriod, NewAccountingPeriodPayload>('/accounting-periods', newPeriod);
-      accountingPeriods.value.push(addedPeriod);
+      const response = await api.post<{ accountingPeriod: AccountingPeriod, taxRegimeHistory: TaxRegimeHistory }, NewAccountingPeriodPayload>('/accounting-periods', newPeriod);
+      accountingPeriods.value.push(response.accountingPeriod);
       // Não define automaticamente como ativo aqui, use setActivePeriod para isso
-      return addedPeriod;
+      return response.accountingPeriod;
     } catch (err: unknown) {
       console.error('Erro ao adicionar período contábil:', err);
       error.value = err instanceof Error ? err.message : 'Falha ao adicionar período contábil.';

@@ -129,6 +129,14 @@ export interface Organization {
   id: string
   /** The name of the organization. */
   name: string
+  /** The CNPJ of the organization. */
+  cnpj?: string;
+  /** The social reason (razao social) of the organization. */
+  razao_social?: string;
+  /** The UF (state) of the organization. */
+  uf?: string;
+  /** The municipality of the organization. */
+  municipio?: string;
   /** The timestamp when the organization was created. */
   created_at?: string
   /** Indicates if this is a personal organization. */
@@ -177,6 +185,28 @@ export interface TaxSetting {
   pis_rate: number;
   cofins_rate: number;
   mva_rate: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Represents the tax regime of an organization.
+ */
+export enum TaxRegime {
+  SimplesNacional = 'simples_nacional',
+  LucroPresumido = 'lucro_presumido',
+  LucroReal = 'lucro_real',
+}
+
+/**
+ * Represents the historical tax regime of an organization for a specific period.
+ */
+export interface TaxRegimeHistory {
+  id: string;
+  organization_id: string;
+  regime: TaxRegime;
+  start_date: string;
+  end_date: string;
   created_at?: string;
   updated_at?: string;
 }

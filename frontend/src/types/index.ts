@@ -112,15 +112,32 @@ export interface AccountingPeriod {
   end_date: string;
   is_active: boolean;
   created_at: string;
+  regime?: TaxRegime; // Adicionado o regime tributário
 }
 
 export interface Organization {
   id: string;
   name: string;
+  cnpj?: string | null;
+  razao_social?: string | null;
+  uf?: string | null;
+  municipio?: string | null;
   created_at?: string; // Tornar opcional
   is_personal?: boolean; // Added is_personal property
   is_shared?: boolean; // Indicates if this organization is accessed via a shared period
   shared_from_user_name?: string; // Name of the user who shared the period
+}
+
+export type TaxRegime = 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
+
+export interface TaxRegimeHistory {
+  id: string;
+  organization_id: string;
+  regime: TaxRegime;
+  start_date: string;
+  end_date: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type UserRoleInOrganization = 'owner' | 'admin' | 'member' | 'guest';
