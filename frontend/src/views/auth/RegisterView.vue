@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
     <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
+      <img src="../../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
 
     <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50">

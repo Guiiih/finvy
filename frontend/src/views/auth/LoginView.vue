@@ -2,7 +2,7 @@
   <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
     <Toast />
     <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
+      <img src="../../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
 
     <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50">
@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useForm, useField } from 'vee-validate'

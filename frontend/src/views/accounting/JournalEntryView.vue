@@ -402,7 +402,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 sm:p-6">
+  <div >
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center"></div>
 

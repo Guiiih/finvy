@@ -4,7 +4,7 @@
   >
     <div class="flex flex-col items-center p-10 max-w-lg">
       <div class="w-24 h-24 flex items-center justify-center mb-8">
-        <img src="../assets/check-success.svg" alt="ícone de sucesso" />
+        <img src="../../assets/check-success.svg" alt="ícone de sucesso" />
       </div>
       <h1 class="text-4xl font-bold mb-4 text-white">Redefinição enviada!</h1>
       <p class="text-lg text-gray-400 mb-10 leading-relaxed">

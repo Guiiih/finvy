@@ -50,14 +50,14 @@
     </div>
 
     <div class="hidden md:flex flex-1 bg-[#1a1a1a] items-center justify-center order-2">
-      <img src="../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
+      <img src="../../assets/FinvyLogo.svg" alt="Logo" class="max-w-[30%] h-auto" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 import { useRouter } from 'vue-router'
 
 const email = ref('')

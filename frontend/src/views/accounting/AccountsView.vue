@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { Account } from '@/types'
+import { accountTypeTranslations } from '@/utils/accountTypeTranslations'
 
 import ProgressSpinner from 'primevue/progressspinner'
 import Skeleton from 'primevue/skeleton'
@@ -208,7 +209,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 sm:p-6">
+  <div>
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center"></div>
 
@@ -342,7 +343,7 @@ onMounted(() => {
                     'px-2.5 py-0.5 rounded-full text-xs font-medium': true,
                   }"
                 >
-                  {{ account.type }}
+                  {{ accountTypeTranslations[account.type] || account.type }}
                 </span>
               </div>
               <div class="md:col-span-2 flex justify-center items-center space-x-2">

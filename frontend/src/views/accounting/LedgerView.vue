@@ -127,7 +127,7 @@ function getBalanceClass(account: TAccount) {
 </script>
 
 <template>
-  <div class="p-4 sm:p-6">
+  <div >
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold text-surface-800 mb-6 text-center">Razão (Ledger)</h1>
 
