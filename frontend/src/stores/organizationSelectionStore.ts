@@ -164,6 +164,30 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     }
   }
 
+  async function updateOrganizationDetails(organizationId: string, updatedFields: Partial<Organization>) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await api.put<Organization, Partial<Organization>>(`/organizations/${organizationId}`, updatedFields);
+      // Update the active organization in the store if it's the one being updated
+      if (activeOrganization.value?.id === organizationId) {
+        activeOrganization.value = { ...activeOrganization.value, ...response };
+      }
+      // Also update the accessibleOrganizations list
+      const index = accessibleOrganizations.value.findIndex(org => org.id === organizationId);
+      if (index !== -1) {
+        accessibleOrganizations.value[index] = { ...accessibleOrganizations.value[index], ...response };
+      }
+      return response;
+    } catch (err: unknown) {
+      console.error('Erro ao atualizar detalhes da organização:', err);
+      error.value = err instanceof Error ? err.message : 'Falha ao atualizar detalhes da organização.';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   const personalOrganization = computed(() => {
     return accessibleOrganizations.value.find(org => org.is_personal);
   });
@@ -178,6 +202,7 @@ export const useOrganizationSelectionStore = defineStore('organizationSelection'
     setActiveOrganization,
     createOrganization,
     deleteOrganization,
+    updateOrganizationDetails,
     personalOrganization,
   };
 });

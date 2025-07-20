@@ -177,6 +177,12 @@ const router = createRouter({
       component: () => import('../views/FaqView.vue'),
       meta: { requiresAuth: true, title: 'FAQ' },
     },
+    {
+      path: '/fiscal-tools',
+      name: 'fiscal-tools',
+      component: () => import('../views/FiscalToolsView.vue'),
+      meta: { requiresAuth: true, title: 'Ferramentas Fiscais' },
+    },
 
     {
       path: '/support',

@@ -146,6 +146,10 @@ CREATE OR REPLACE FUNCTION get_user_accessible_organizations(p_user_id UUID)
 RETURNS TABLE (
   id UUID,
   name TEXT,
+  cnpj TEXT,
+  razao_social TEXT,
+  uf TEXT,
+  municipio TEXT,
   created_at TIMESTAMP WITH TIME ZONE,
   is_personal BOOLEAN,
   is_shared BOOLEAN,
@@ -160,6 +164,10 @@ BEGIN
   SELECT
     o.id,
     o.name::TEXT,
+    o.cnpj::TEXT,
+    o.razao_social::TEXT,
+    o.uf::TEXT,
+    o.municipio::TEXT,
     o.created_at,
     o.is_personal,
     FALSE AS is_shared,
@@ -177,6 +185,10 @@ BEGIN
   SELECT
     o.id,
     o.name::TEXT,
+    o.cnpj::TEXT,
+    o.razao_social::TEXT,
+    o.uf::TEXT,
+    o.municipio::TEXT,
     o.created_at,
     o.is_personal,
     TRUE AS is_shared,
@@ -273,7 +285,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.create_organization_and_assign_owner(
     p_organization_name TEXT,
-    p_user_id UUID
+    p_user_id UUID,
+    p_cnpj VARCHAR DEFAULT NULL,
+    p_razao_social VARCHAR DEFAULT NULL,
+    p_uf VARCHAR DEFAULT NULL,
+    p_municipio VARCHAR DEFAULT NULL
 )
 RETURNS TABLE (
     organization_id UUID,
@@ -294,8 +310,8 @@ DECLARE
     default_end_date DATE;
 BEGIN
     -- Cria a organização e atribui o proprietário
-    INSERT INTO public.organizations (name, is_personal)
-    VALUES (p_organization_name, FALSE)
+    INSERT INTO public.organizations (name, is_personal, cnpj, razao_social, uf, municipio)
+    VALUES (p_organization_name, FALSE, p_cnpj, p_razao_social, p_uf, p_municipio)
     RETURNING id, name INTO new_org_id, organization_name;
 
     -- Atribui o papel de 'owner' ao usuário criador para esta nova organização

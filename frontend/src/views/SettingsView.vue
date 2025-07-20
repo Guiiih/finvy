@@ -112,6 +112,27 @@
         <div v-else>
           <h3 class="text-xl font-semibold mb-3">Organização Atual: {{ organizationSelectionStore.activeOrganization.name }} <span v-if="organizationSelectionStore.activeOrganization.is_personal">(Pessoal)</span></h3>
 
+          <!-- Detalhes da Organização -->
+          <div class="space-y-4 mb-6">
+            <div>
+              <label for="orgCnpj" class="block text-sm font-medium text-gray-700">CNPJ:</label>
+              <InputText id="orgCnpj" v-model="orgCnpj" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+            </div>
+            <div>
+              <label for="orgRazaoSocial" class="block text-sm font-medium text-gray-700">Razão Social:</label>
+              <InputText id="orgRazaoSocial" v-model="orgRazaoSocial" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+            </div>
+            <div>
+              <label for="orgUf" class="block text-sm font-medium text-gray-700">UF:</label>
+              <InputText id="orgUf" v-model="orgUf" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+            </div>
+            <div>
+              <label for="orgMunicipio" class="block text-sm font-medium text-gray-700">Município:</label>
+              <InputText id="orgMunicipio" v-model="orgMunicipio" class="w-full p-3 border border-surface-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" />
+            </div>
+            <Button label="Salvar Detalhes da Organização" icon="pi pi-save" @click="handleUpdateOrganizationDetails" :loading="organizationSelectionStore.loading" class="p-button-primary mt-4" />
+          </div>
+
           <!-- Seletor de Organização -->
           <div class="mb-4">
             <label for="selectOrganization" class="block text-sm font-medium text-gray-700">Selecionar Organização:</label>
@@ -413,6 +434,13 @@ const fileInput = ref<HTMLInputElement | null>(null)
 // Organization Management State
 const newOrganizationName = ref('');
 const selectedOrganizationId = ref<string | null>(null);
+
+// Organization Details for Editing
+const orgCnpj = ref<string | null>(null);
+const orgRazaoSocial = ref<string | null>(null);
+const orgUf = ref<string | null>(null);
+const orgMunicipio = ref<string | null>(null);
+
 const memberSearchTerm = ref('');
 const showAddMemberForm = ref(false);
 const editingMember = ref<UserOrganizationRole | null>(null);
@@ -458,17 +486,29 @@ onMounted(async () => {
   await organizationSelectionStore.fetchUserOrganizations();
   if (organizationSelectionStore.activeOrganization) {
     selectedOrganizationId.value = organizationSelectionStore.activeOrganization.id;
+    orgCnpj.value = organizationSelectionStore.activeOrganization.cnpj || null;
+    orgRazaoSocial.value = organizationSelectionStore.activeOrganization.razao_social || null;
+    orgUf.value = organizationSelectionStore.activeOrganization.uf || null;
+    orgMunicipio.value = organizationSelectionStore.activeOrganization.municipio || null;
     await organizationStore.fetchOrganizationMembers();
   }
 });
 
-// Watch for changes in active organization to refetch members
+// Watch for changes in active organization to refetch members and update organization details
 watch(() => organizationSelectionStore.activeOrganization, async (newOrg) => {
   if (newOrg) {
     selectedOrganizationId.value = newOrg.id;
+    orgCnpj.value = newOrg.cnpj || null;
+    orgRazaoSocial.value = newOrg.razao_social || null;
+    orgUf.value = newOrg.uf || null;
+    orgMunicipio.value = newOrg.municipio || null;
     await organizationStore.fetchOrganizationMembers();
   } else {
     organizationStore.organizationMembers = []; // Clear members if no active organization
+    orgCnpj.value = null;
+    orgRazaoSocial.value = null;
+    orgUf.value = null;
+    orgMunicipio.value = null;
   }
 });
 
@@ -621,6 +661,28 @@ async function handleDeleteOrganization() {
     router.push('/settings'); // Stay on settings or redirect to a dashboard
   } catch (err: any) {
     toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao excluir organização.', life: 3000 });
+  }
+}
+
+async function handleUpdateOrganizationDetails() {
+  if (!organizationSelectionStore.activeOrganization) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Nenhuma organização ativa para atualizar.', life: 3000 });
+    return;
+  }
+
+  try {
+    await organizationSelectionStore.updateOrganizationDetails(
+      organizationSelectionStore.activeOrganization.id,
+      {
+        cnpj: orgCnpj.value,
+        razao_social: orgRazaoSocial.value,
+        uf: orgUf.value,
+        municipio: orgMunicipio.value,
+      }
+    );
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Detalhes da organização atualizados com sucesso!', life: 3000 });
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha ao atualizar detalhes da organização.', life: 3000 });
   }
 }
 

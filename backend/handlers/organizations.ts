@@ -15,6 +15,10 @@ import { PostgrestResponse } from "@supabase/supabase-js"; // Import PostgrestRe
 interface AccessibleOrganization {
   id: string;
   name: string;
+  cnpj: string | null;
+  razao_social: string | null;
+  uf: string | null;
+  municipio: string | null;
   created_at: string;
   is_personal: boolean;
   is_shared: boolean;
@@ -27,7 +31,19 @@ const createOrganizationSchema = z.object({
     .string()
     .min(1, "Nome da organização é obrigatório.")
     .max(100, "Nome da organização muito longo."),
+  cnpj: z.string().optional().nullable(),
+  razao_social: z.string().optional().nullable(),
+  uf: z.string().optional().nullable(),
+  municipio: z.string().optional().nullable(),
 });
+
+const updateOrganizationSchema = z.object({
+  name: z.string().min(1, "Nome da organização é obrigatório.").max(100, "Nome da organização muito longo.").optional(),
+  cnpj: z.string().optional().nullable(),
+  razao_social: z.string().optional().nullable(),
+  uf: z.string().optional().nullable(),
+  municipio: z.string().optional().nullable(),
+}).partial();
 
 export default async function handler(
   req: VercelRequest,
@@ -50,12 +66,16 @@ export default async function handler(
         );
       }
 
-      const { name: organizationName } = parsedBody.data;
+      const { name: organizationName, cnpj, razao_social, uf, municipio } = parsedBody.data;
 
       logger.info(`[Organizations] Chamando fun├º├úo create_organization_and_assign_owner para user_id: ${user_id}`);
       const { data: result, error: rpcError } = await userSupabase.rpc('create_organization_and_assign_owner', {
         p_organization_name: organizationName,
         p_user_id: user_id,
+        p_cnpj: cnpj,
+        p_razao_social: razao_social,
+        p_uf: uf,
+        p_municipio: municipio,
       });
 
       if (rpcError) {
@@ -104,7 +124,7 @@ export default async function handler(
       // Fetch organization details to check is_personal and ownership
       const { data: orgToDelete, error: fetchOrgError } = await userSupabase
         .from("organizations")
-        .select("id, name, is_personal")
+        .select("id, name, is_personal, cnpj, razao_social, uf, municipio")
         .eq("id", id)
         .single();
 
@@ -156,8 +176,76 @@ export default async function handler(
         );
       }
 
-      logger.info(`[Organizations] Organização ${id} deletada com sucesso.`);
+      logger.info(`[Organizations] Organiza├º├úo ${id} deletada com sucesso.`);
       return res.status(204).send("");
+    } else if (req.method === "PUT") {
+      const { id } = req.query; // This is the organization_id
+      if (!id || typeof id !== "string") {
+        return handleErrorResponse(res, 400, "ID da organização é obrigatório.");
+      }
+
+      logger.info(`[Organizations] Tentando atualizar organização ${id}.`);
+
+      const parsedBody = updateOrganizationSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        logger.warn(`[Organizations] Erro de validação do corpo da requisição PUT: ${parsedBody.error.errors.map((err) => err.message).join(", ")}`);
+        return handleErrorResponse(
+          res,
+          400,
+          parsedBody.error.errors.map((err) => err.message).join(", "),
+        );
+      }
+      const updateData = parsedBody.data;
+
+      if (Object.keys(updateData).length === 0) {
+        logger.warn(`[Organizations] Nenhum campo para atualizar fornecido para organização ${id}`);
+        return handleErrorResponse(
+          res,
+          400,
+          "Nenhum campo para atualizar fornecido.",
+        );
+      }
+
+      // Check if the requesting user has owner/admin role in this organization
+      const requestingUserRole = await getUserRoleInOrganization(
+        user_id,
+        id,
+        token,
+      );
+
+      if (!requestingUserRole || !["owner", "admin"].includes(requestingUserRole)) {
+        logger.warn(
+          `[Organizations] Usuário ${user_id} não tem permissão para atualizar a organização ${id}. Papel: ${requestingUserRole}`,
+        );
+        return handleErrorResponse(
+          res,
+          403,
+          "Você não tem permissão para atualizar esta organização.",
+        );
+      }
+
+      const { data, error: dbError } = await userSupabase
+        .from("organizations")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (dbError) {
+        logger.error(`[Organizations] Erro ao atualizar organização ${id}: ${dbError.message}`);
+        throw dbError;
+      }
+      if (!data) {
+        logger.warn(`[Organizations] Organização ${id} não encontrada ou sem permissão para atualizar.`);
+        return handleErrorResponse(
+          res,
+          404,
+          "Organização não encontrada ou você não tem permissão para atualizar.",
+        );
+      }
+
+      logger.info(`[Organizations] Organização ${id} atualizada com sucesso.`);
+      return res.status(200).json(data);
     }
 
     logger.warn(`[Organizations] Método ${req.method} não permitido.`);

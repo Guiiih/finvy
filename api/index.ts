@@ -20,6 +20,8 @@ import sharingHandler from '../backend/handlers/sharing.js'
 import usersHandler from '../backend/handlers/users.js'
 import organizationsHandler from '../backend/handlers/organizations.js'
 import swaggerDocsHandler from '../backend/handlers/swagger-docs.js'
+import nfeImportHandler from '../backend/handlers/nfe-import.js'
+import taxRegimeHistoryHandler from '../backend/handlers/tax-regime-history.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -83,6 +85,12 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith('/organizations')) {
     return organizationsHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/nfe-import')) {
+    return nfeImportHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/tax-regime-history')) {
+    return taxRegimeHistoryHandler(req, res, user_id, token)
   }
 
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')
