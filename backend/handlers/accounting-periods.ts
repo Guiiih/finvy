@@ -214,6 +214,7 @@ export default async function handler(
           );
         }
         const updateData = parsedBody.data;
+        const newRegime = updateData.regime;
 
         // Remove 'regime' from updateData as it's handled separately in tax_regime_history
         const { regime: _, ...accountingPeriodUpdateData } = updateData;
@@ -241,15 +242,22 @@ export default async function handler(
 
         const newStartDate = updateData.start_date || currentPeriod.start_date;
         const newEndDate = updateData.end_date || currentPeriod.end_date;
-        const newRegime = updateData.regime;
 
         // Validação de sobreposição de datas para tax_regime_history no PUT
         if (newRegime || updateData.start_date || updateData.end_date) {
+          const { data: taxRegimeToUpdate, error: fetchTaxRegimeError } = await userSupabase
+            .from("tax_regime_history")
+            .select("id")
+            .eq("organization_id", organization_id)
+            .eq("start_date", currentPeriod.start_date)
+            .eq("end_date", currentPeriod.end_date)
+            .single();
+
           const { data: existingRegimes, error: fetchError } = await userSupabase
             .from("tax_regime_history")
             .select("id, start_date, end_date")
             .eq("organization_id", organization_id)
-            .neq("id", id); // Excluir o regime atual da verificação de sobreposição
+            .neq("id", taxRegimeToUpdate?.id || ""); // Excluir o regime atual da verificação de sobreposição
 
           if (fetchError) {
             logger.error(`[Accounting Periods] Erro ao buscar regimes existentes para PUT: ${fetchError.message}`);
@@ -279,7 +287,7 @@ export default async function handler(
           }
 
           // Atualizar ou inserir no tax_regime_history
-          const { data: existingTaxRegime, error: fetchTaxRegimeError } = await userSupabase
+          const { data: existingTaxRegime, error: fetchExistingTaxRegimeError } = await userSupabase
             .from("tax_regime_history")
             .select("id")
             .eq("organization_id", organization_id)
@@ -322,7 +330,7 @@ export default async function handler(
 
         const { data, error: dbError } = await userSupabase
           .from("accounting_periods")
-          .update(updateData)
+          .update(accountingPeriodUpdateData)
           .eq("id", id)
           .eq("organization_id", organization_id)
           .select()
