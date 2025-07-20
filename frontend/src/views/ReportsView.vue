@@ -127,6 +127,18 @@ const exportReport = async (reportType: string) => {
         Ver DFC
       </button>
       <button
+        @click="navigateToReport('variations')"
+        class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
+      >
+        Ver Variações
+      </button>
+      <button
+        @click="navigateToReport('trial-balance')"
+        class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
+      >
+        Ver Balancete
+      </button>
+      <button
         @click="exportReport('trialBalance')"
         class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
       >

@@ -50,41 +50,36 @@ const router = createRouter({
         {
           path: 'dre',
           name: 'dre-report',
-          component: () => import('../views/DREView.vue'),
+          component: () => import('../components/reports/DREReport.vue'),
           meta: { requiresAuth: true, title: 'DRE' },
         },
         {
           path: 'balance-sheet',
           name: 'balance-sheet-report',
-          component: () => import('../views/BalanceSheetView.vue'),
+          component: () => import('../components/reports/BalanceSheetReport.vue'),
           meta: { requiresAuth: true, title: 'Balanço Patrimonial' },
         },
         {
           path: 'dfc',
           name: 'dfc-report',
-          component: () => import('../views/DFCView.vue'),
+          component: () => import('../components/reports/DFCReport.vue'),
           meta: { requiresAuth: true, title: 'DFC' },
+        },
+        {
+          path: 'variations',
+          name: 'variations',
+          component: () => import('../views/VariationView.vue'),
+          meta: { requiresAuth: true, title: 'Variações' },
+        },
+        {
+          path: 'trial-balance',
+          name: 'trial-balance',
+          component: () => import('../views/TrialBalanceView.vue'),
+          meta: { requiresAuth: true, title: 'Balancete de Verificação' },
         },
       ],
     },
-    {
-      path: '/variations',
-      name: 'variations',
-      component: () => import('../views/VariationView.vue'),
-      meta: { requiresAuth: true, title: 'Variações' },
-    },
-    {
-      path: '/trial-balance',
-      name: 'trial-balance',
-      component: () => import('../views/TrialBalanceView.vue'),
-      meta: { requiresAuth: true, title: 'Balancete de Verificação' },
-    },
-    {
-      path: '/chart-of-accounts',
-      name: 'chart-of-accounts',
-      component: () => import('../views/ChartOfAccountsView.vue'),
-      meta: { requiresAuth: true, title: 'Plano de Contas' },
-    },
+    
     {
       path: '/year-end-closing',
       name: 'year-end-closing',

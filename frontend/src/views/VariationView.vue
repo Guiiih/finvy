@@ -27,30 +27,7 @@ const variationData = computed(() => reportStore.variationData)
   <div class="p-4 sm:p-6 max-w-7xl mx-auto">
     <h1 class="text-2xl font-bold mb-4 text-center text-surface-800">Demonstrativo de Variações</h1>
 
-    <div
-      class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 p-4 bg-surface-50 rounded-lg shadow-md"
-    >
-      <div class="flex flex-col sm:flex-row items-center gap-2">
-        <label for="startDate" class="font-medium text-surface-700">Data Inicial:</label>
-        <input
-          type="date"
-          id="startDate"
-          v-model="startDate"
-          @change="fetchVariationData"
-          class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-        />
-      </div>
-      <div class="flex flex-col sm:flex-row items-center gap-2">
-        <label for="endDate" class="font-medium text-surface-700">Data Final:</label>
-        <input
-          type="date"
-          id="endDate"
-          v-model="endDate"
-          @change="fetchVariationData"
-          class="p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-        />
-      </div>
-    </div>
+    
 
     <p
       v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
