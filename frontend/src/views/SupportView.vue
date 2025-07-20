@@ -49,4 +49,3 @@
 <script setup lang="ts">
 // Lógica específica para a view de Suporte, se houver.
 </script>
-

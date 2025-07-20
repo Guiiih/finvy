@@ -61,7 +61,9 @@ const dfcData = computed(() => {
 
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">Demonstração do Fluxo de Caixa</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">
+      Demonstração do Fluxo de Caixa
+    </h1>
 
     <p
       v-if="!reportStore.reports || reportStore.reports.ledgerAccounts.length === 0"
@@ -72,7 +74,9 @@ const dfcData = computed(() => {
     </p>
 
     <div v-else class="flex flex-col border border-surface-200 rounded-lg overflow-hidden">
-      <div class="grid grid-cols-2 gap-4 bg-surface-100 font-bold p-3 border-b-2 border-surface-300 text-surface-700">
+      <div
+        class="grid grid-cols-2 gap-4 bg-surface-100 font-bold p-3 border-b-2 border-surface-300 text-surface-700"
+      >
         <span>Descrição</span>
         <span class="text-right">Valor</span>
       </div>
@@ -118,7 +122,9 @@ const dfcData = computed(() => {
         <span class="text-right">R$ {{ dfcData.fluxoInvestimento.toFixed(2) }}</span>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 p-3 font-bold border-t-2 border-surface-500 bg-emerald-100 text-emerald-800">
+      <div
+        class="grid grid-cols-2 gap-4 p-3 font-bold border-t-2 border-surface-500 bg-emerald-100 text-emerald-800"
+      >
         <span>(=) Sld Final de Caixa</span>
         <span class="text-right">R$ {{ dfcData.sldFinalCaixa.toFixed(2) }}</span>
       </div>

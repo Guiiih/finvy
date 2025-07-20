@@ -3,7 +3,7 @@ import Skeleton from 'primevue/skeleton'
 
 export interface TableHeader<T> {
   label: string
-  key: Extract<keyof T, string> | 'actions' 
+  key: Extract<keyof T, string> | 'actions'
   align?: 'left' | 'center' | 'right'
 }
 
@@ -38,7 +38,10 @@ const handleDelete = (item: T) => {
             v-for="header in headers"
             :key="header.key"
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            :class="{ 'text-center': header.align === 'center', 'text-right': header.align === 'right' }"
+            :class="{
+              'text-center': header.align === 'center',
+              'text-right': header.align === 'right',
+            }"
           >
             {{ header.label }}
           </th>

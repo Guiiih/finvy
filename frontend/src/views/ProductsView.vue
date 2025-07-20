@@ -73,10 +73,7 @@ watch(searchTerm, () => {
   currentPage.value = 1
 })
 
-async function handleSubmit(
-  values: ProductFormValues,
-  { resetForm }: { resetForm: () => void },
-) {
+async function handleSubmit(values: ProductFormValues, { resetForm }: { resetForm: () => void }) {
   try {
     if (isEditing.value && editingProduct.value) {
       const updatedProduct: Partial<Product> = {
@@ -155,7 +152,6 @@ onMounted(() => {
 <template>
   <div class="p-4 sm:p-6">
     <div class="max-w-7xl mx-auto">
-
       <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
           <input
@@ -170,7 +166,9 @@ onMounted(() => {
         </div>
 
         <button
-          @click="isEditing = !isEditing; editingProduct = null
+          @click="
+            isEditing = !isEditing;
+            editingProduct = null
           "
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
@@ -190,7 +188,9 @@ onMounted(() => {
           class="space-y-4"
         >
           <div class="flex flex-col">
-            <label for="productName" class="text-surface-700 font-medium mb-1">Nome do Produto:</label>
+            <label for="productName" class="text-surface-700 font-medium mb-1"
+              >Nome do Produto:</label
+            >
             <Field
               name="name"
               type="text"
@@ -200,7 +200,9 @@ onMounted(() => {
             <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
           </div>
           <div class="flex flex-col">
-            <label for="icmsRate" class="text-surface-700 font-medium mb-1">Alíquota de ICMS (%):</label>
+            <label for="icmsRate" class="text-surface-700 font-medium mb-1"
+              >Alíquota de ICMS (%):</label
+            >
             <Field
               name="icms_rate"
               type="number"
@@ -264,7 +266,13 @@ onMounted(() => {
               <div class="md:col-span-6 text-surface-800">{{ product.name }}</div>
               <div class="md:col-span-2 text-surface-700">{{ product.current_stock }}</div>
               <div class="md:col-span-2 text-surface-700">
-                {{ formatCurrency(product.unit_cost !== null && product.unit_cost !== undefined ? product.unit_cost : 0) }}
+                {{
+                  formatCurrency(
+                    product.unit_cost !== null && product.unit_cost !== undefined
+                      ? product.unit_cost
+                      : 0,
+                  )
+                }}
               </div>
               <div class="md:col-span-2 flex justify-center items-center space-x-2">
                 <button

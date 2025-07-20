@@ -71,7 +71,9 @@
           />
         </div>
         <div>
-          <label for="regime" class="block text-sm font-medium text-gray-700">Regime Tributário</label>
+          <label for="regime" class="block text-sm font-medium text-gray-700"
+            >Regime Tributário</label
+          >
           <select
             id="regime"
             v-model="newPeriod.regime"
@@ -97,7 +99,10 @@
       </p>
     </div>
 
-    <div v-if="showEditPeriodForm && editingPeriod" class="mb-6 p-4 border rounded-lg shadow-sm bg-white">
+    <div
+      v-if="showEditPeriodForm && editingPeriod"
+      class="mb-6 p-4 border rounded-lg shadow-sm bg-white"
+    >
       <h2 class="text-xl font-semibold mb-3">Editar Período</h2>
       <form @submit.prevent="handleUpdatePeriod" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -125,7 +130,9 @@
           />
         </div>
         <div>
-          <label for="editEndDate" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+          <label for="editEndDate" class="block text-sm font-medium text-gray-700"
+            >Data de Fim</label
+          >
           <input
             type="date"
             id="editEndDate"
@@ -135,7 +142,9 @@
           />
         </div>
         <div>
-          <label for="editRegime" class="block text-sm font-medium text-gray-700">Regime Tributário</label>
+          <label for="editRegime" class="block text-sm font-medium text-gray-700"
+            >Regime Tributário</label
+          >
           <select
             id="editRegime"
             v-model="editingPeriod.regime"
@@ -151,7 +160,10 @@
         <div class="md:col-span-3 flex justify-end space-x-2">
           <button
             type="button"
-            @click="showEditPeriodForm = false; editingPeriod = null"
+            @click="
+              showEditPeriodForm = false;
+              editingPeriod = null
+            "
             class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
           >
             Cancelar
@@ -186,9 +198,7 @@
               {{ period.name }} ({{ formatDate(period.start_date) }} -
               {{ formatDate(period.end_date) }})
             </p>
-            <p class="text-sm text-gray-600">
-              Regime: {{ formatRegime(period.regime) }}
-            </p>
+            <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
             <span
               :class="[
                 period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
@@ -232,23 +242,53 @@
 
     <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
       <h2 class="text-xl font-semibold mb-3">Histórico de Regimes Tributários</h2>
-      <p v-if="!taxRegimeHistory.length" class="text-gray-600">Nenhum histórico de regime tributário encontrado.</p>
+      <p v-if="!taxRegimeHistory.length" class="text-gray-600">
+        Nenhum histórico de regime tributário encontrado.
+      </p>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Regime</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Início</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Fim</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado Em</th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Regime
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Data de Início
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Data de Fim
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Criado Em
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="regimeEntry in taxRegimeHistory" :key="regimeEntry.id">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatRegime(regimeEntry.regime) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.start_date) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.end_date) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(regimeEntry.created_at) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {{ formatRegime(regimeEntry.regime) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(regimeEntry.start_date) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(regimeEntry.end_date) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(regimeEntry.created_at) }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -256,12 +296,20 @@
     </div>
 
     <!-- Share Period Modal -->
-    <div v-if="showShareModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" @click.self="closeShareModal">
+    <div
+      v-if="showShareModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full"
+      @click.self="closeShareModal"
+    >
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Compartilhar Período: {{ sharingPeriod?.name }}</h3>
+        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+          Compartilhar Período: {{ sharingPeriod?.name }}
+        </h3>
         <div class="mt-2">
           <div class="mb-4">
-            <label for="shareUserSearch" class="block text-sm font-medium text-gray-700">Buscar Usuário (Email ou Nome):</label>
+            <label for="shareUserSearch" class="block text-sm font-medium text-gray-700"
+              >Buscar Usuário (Email ou Nome):</label
+            >
             <input
               type="text"
               id="shareUserSearch"
@@ -270,7 +318,10 @@
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               placeholder="Digite email ou nome"
             />
-            <ul v-if="searchResults.length > 0" class="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white">
+            <ul
+              v-if="searchResults.length > 0"
+              class="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white"
+            >
               <li
                 v-for="user in searchResults"
                 :key="user.id"
@@ -281,12 +332,15 @@
               </li>
             </ul>
             <p v-if="sharingUser" class="mt-2 text-sm text-gray-600">
-              Usuário selecionado: <span class="font-semibold">{{ sharingUser.username || sharingUser.email }}</span>
+              Usuário selecionado:
+              <span class="font-semibold">{{ sharingUser.username || sharingUser.email }}</span>
             </p>
           </div>
 
           <div class="mb-4">
-            <label for="permissionLevel" class="block text-sm font-medium text-gray-700">Nível de Permissão:</label>
+            <label for="permissionLevel" class="block text-sm font-medium text-gray-700"
+              >Nível de Permissão:</label
+            >
             <select
               id="permissionLevel"
               v-model="sharingPermissionLevel"
@@ -317,8 +371,16 @@
             <h4 class="text-md font-semibold mb-2">Compartilhado com:</h4>
             <p v-if="sharedUsers.length === 0" class="text-sm text-gray-600">Nenhum usuário.</p>
             <ul v-else class="space-y-2">
-              <li v-for="shared in sharedUsers" :key="shared.id" class="flex justify-between items-center p-2 border rounded-md bg-gray-50">
-                <span>{{ shared.profiles?.username || shared.profiles?.email }} ({{ shared.permission_level }})</span>
+              <li
+                v-for="shared in sharedUsers"
+                :key="shared.id"
+                class="flex justify-between items-center p-2 border rounded-md bg-gray-50"
+              >
+                <span
+                  >{{ shared.profiles?.username || shared.profiles?.email }} ({{
+                    shared.permission_level
+                  }})</span
+                >
                 <button
                   @click="unsharePeriod(shared.id)"
                   class="px-2 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600"
@@ -335,71 +397,93 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore';
-import { useSharingStore } from '@/stores/sharingStore';
-import { useToast } from 'primevue/usetoast';
-import { api } from '@/services/api';
-import type { AccountingPeriod, User, SharedPermissionLevel, SharedAccountingPeriod, TaxRegime, TaxRegimeHistory } from '@/types';
+import { ref, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
+import { useSharingStore } from '@/stores/sharingStore'
+import { useToast } from 'primevue/usetoast'
+import { api } from '@/services/api'
+import type {
+  AccountingPeriod,
+  User,
+  SharedPermissionLevel,
+  SharedAccountingPeriod,
+  TaxRegime,
+  TaxRegimeHistory,
+} from '@/types'
 
-const accountingPeriodStore = useAccountingPeriodStore();
-const sharingStore = useSharingStore();
-const { accountingPeriods } = storeToRefs(accountingPeriodStore);
-const toast = useToast();
+const accountingPeriodStore = useAccountingPeriodStore()
+const sharingStore = useSharingStore()
+const { accountingPeriods } = storeToRefs(accountingPeriodStore)
+const toast = useToast()
 
 const newPeriod = ref({
   name: '',
   start_date: null as string | null,
   end_date: null as string | null,
   regime: null as TaxRegime | null,
-});
+})
 
-const taxRegimeHistory = ref<TaxRegimeHistory[]>([]);
+const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
 
-const searchTerm = ref('');
-const showCreatePeriodForm = ref(false);
-const showEditPeriodForm = ref(false);
-const editingPeriod = ref<AccountingPeriod | null>(null);
+const searchTerm = ref('')
+const showCreatePeriodForm = ref(false)
+const showEditPeriodForm = ref(false)
+const editingPeriod = ref<AccountingPeriod | null>(null)
 
 // Sharing Modal State
-const showShareModal = ref(false);
-const sharingPeriod = ref<AccountingPeriod | null>(null);
-const userSearchQuery = ref('');
-const searchResults = ref<User[]>([]);
-const sharingUser = ref<User | null>(null);
-const sharingPermissionLevel = ref<SharedPermissionLevel>('read');
-const sharedUsers = ref<SharedAccountingPeriod[]>([]);
+const showShareModal = ref(false)
+const sharingPeriod = ref<AccountingPeriod | null>(null)
+const userSearchQuery = ref('')
+const searchResults = ref<User[]>([])
+const sharingUser = ref<User | null>(null)
+const sharingPermissionLevel = ref<SharedPermissionLevel>('read')
+const sharedUsers = ref<SharedAccountingPeriod[]>([])
 
 const filteredAccountingPeriods = computed(() => {
-  const lowerCaseSearchTerm = searchTerm.value.toLowerCase();
+  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
   return accountingPeriods.value.filter(
     (period) =>
       period.name.toLowerCase().includes(lowerCaseSearchTerm) ||
       formatDate(period.start_date).toLowerCase().includes(lowerCaseSearchTerm) ||
-      formatDate(period.end_date).toLowerCase().includes(lowerCaseSearchTerm)
-  );
-});
+      formatDate(period.end_date).toLowerCase().includes(lowerCaseSearchTerm),
+  )
+})
 
 onMounted(() => {
-  accountingPeriodStore.fetchAccountingPeriods();
-  fetchTaxRegimeHistory();
-});
+  accountingPeriodStore.fetchAccountingPeriods()
+  fetchTaxRegimeHistory()
+})
 
 async function fetchTaxRegimeHistory() {
   try {
-    const data = await api.get<TaxRegimeHistory[]>('/tax-regime-history');
-    taxRegimeHistory.value = data;
+    const data = await api.get<TaxRegimeHistory[]>('/tax-regime-history')
+    taxRegimeHistory.value = data
   } catch (err) {
-    console.error('Erro ao buscar histórico de regime tributário:', err);
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar histórico de regime tributário.', life: 3000 });
+    console.error('Erro ao buscar histórico de regime tributário:', err)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Falha ao carregar histórico de regime tributário.',
+      life: 3000,
+    })
   }
 }
 
 const handleCreatePeriod = async () => {
-  if (!newPeriod.value.name || !newPeriod.value.start_date || !newPeriod.value.end_date || !newPeriod.value.regime) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos para criar um novo período.', life: 3000 });
-    return;
+  if (
+    !newPeriod.value.name ||
+    !newPeriod.value.start_date ||
+    !newPeriod.value.end_date ||
+    !newPeriod.value.regime
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Preencha todos os campos para criar um novo período.',
+      life: 3000,
+    })
+    return
   }
 
   try {
@@ -409,25 +493,46 @@ const handleCreatePeriod = async () => {
       end_date: newPeriod.value.end_date as string,
       regime: newPeriod.value.regime as TaxRegime,
       is_active: true, // Novo período sempre se torna ativo
-    });
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil criado e ativado com sucesso!', life: 3000 });
-    newPeriod.value = { name: '', start_date: null, end_date: null, regime: null }; // Limpa o formulário
-    showCreatePeriodForm.value = false; // Fecha o formulário após a criação
+    })
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Período contábil criado e ativado com sucesso!',
+      life: 3000,
+    })
+    newPeriod.value = { name: '', start_date: null, end_date: null, regime: null } // Limpa o formulário
+    showCreatePeriodForm.value = false // Fecha o formulário após a criação
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao criar período contábil.', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: err instanceof Error ? err.message : 'Falha ao criar período contábil.',
+      life: 3000,
+    })
   }
-};
+}
 
 const startEditPeriod = (period: AccountingPeriod) => {
-  editingPeriod.value = { ...period };
-  showEditPeriodForm.value = true;
-  showCreatePeriodForm.value = false; // Esconde o formulário de criação se estiver visível
-};
+  editingPeriod.value = { ...period }
+  showEditPeriodForm.value = true
+  showCreatePeriodForm.value = false // Esconde o formulário de criação se estiver visível
+}
 
 const handleUpdatePeriod = async () => {
-  if (!editingPeriod.value || !editingPeriod.value.name || !editingPeriod.value.start_date || !editingPeriod.value.end_date || !editingPeriod.value.regime) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos para atualizar o período.', life: 3000 });
-    return;
+  if (
+    !editingPeriod.value ||
+    !editingPeriod.value.name ||
+    !editingPeriod.value.start_date ||
+    !editingPeriod.value.end_date ||
+    !editingPeriod.value.regime
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Preencha todos os campos para atualizar o período.',
+      life: 3000,
+    })
+    return
   }
 
   try {
@@ -436,100 +541,135 @@ const handleUpdatePeriod = async () => {
       start_date: editingPeriod.value.start_date,
       end_date: editingPeriod.value.end_date,
       regime: editingPeriod.value.regime,
-    });
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil atualizado com sucesso!', life: 3000 });
-    showEditPeriodForm.value = false; // Fecha o formulário após a atualização
-    editingPeriod.value = null; // Limpa o período em edição
+    })
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Período contábil atualizado com sucesso!',
+      life: 3000,
+    })
+    showEditPeriodForm.value = false // Fecha o formulário após a atualização
+    editingPeriod.value = null // Limpa o período em edição
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao atualizar período contábil.', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: err instanceof Error ? err.message : 'Falha ao atualizar período contábil.',
+      life: 3000,
+    })
   }
-};
+}
 
 const setActive = async (id: string) => {
   try {
-    await accountingPeriodStore.setActivePeriod(id);
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil definido como ativo!', life: 3000 });
+    await accountingPeriodStore.setActivePeriod(id)
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Período contábil definido como ativo!',
+      life: 3000,
+    })
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao definir período como ativo.', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: err instanceof Error ? err.message : 'Falha ao definir período como ativo.',
+      life: 3000,
+    })
   }
-};
+}
 
 const deletePeriod = async (id: string) => {
   if (confirm('Tem certeza que deseja excluir este período contábil?')) {
     try {
-      await accountingPeriodStore.deleteAccountingPeriod(id);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período contábil excluído com sucesso!', life: 3000 });
+      await accountingPeriodStore.deleteAccountingPeriod(id)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Período contábil excluído com sucesso!',
+        life: 3000,
+      })
     } catch (err: unknown) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao excluir período contábil.', life: 3000 });
+      toast.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: err instanceof Error ? err.message : 'Falha ao excluir período contábil.',
+        life: 3000,
+      })
     }
   }
-};
+}
 
 const formatDate = (dateString: string | undefined) => {
-  if (!dateString) return 'N/A';
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString('pt-BR', options);
-};
+  if (!dateString) return 'N/A'
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('pt-BR', options)
+}
 
 const formatRegime = (regime: TaxRegime | undefined) => {
-  if (!regime) return 'N/A';
+  if (!regime) return 'N/A'
   switch (regime) {
     case 'simples_nacional':
-      return 'Simples Nacional';
+      return 'Simples Nacional'
     case 'lucro_presumido':
-      return 'Lucro Presumido';
+      return 'Lucro Presumido'
     case 'lucro_real':
-      return 'Lucro Real';
+      return 'Lucro Real'
     default:
-      return regime;
+      return regime
   }
-};
+}
 
 // Sharing Modal Functions
 async function openShareModal(period: AccountingPeriod) {
-  sharingPeriod.value = period;
-  showShareModal.value = true;
-  await fetchSharedUsers(period.id);
+  sharingPeriod.value = period
+  showShareModal.value = true
+  await fetchSharedUsers(period.id)
 }
 
 function closeShareModal() {
-  showShareModal.value = false;
-  sharingPeriod.value = null;
-  userSearchQuery.value = '';
-  searchResults.value = [];
-  sharingUser.value = null;
-  sharingPermissionLevel.value = 'read';
-  sharedUsers.value = [];
+  showShareModal.value = false
+  sharingPeriod.value = null
+  userSearchQuery.value = ''
+  searchResults.value = []
+  sharingUser.value = null
+  sharingPermissionLevel.value = 'read'
+  sharedUsers.value = []
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>;
+let searchTimeout: ReturnType<typeof setTimeout>
 async function searchUsers() {
-  clearTimeout(searchTimeout);
+  clearTimeout(searchTimeout)
   searchTimeout = setTimeout(async () => {
     if (userSearchQuery.value.trim().length > 2) {
       try {
-        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value.trim()}`);
-        searchResults.value = data;
+        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value.trim()}`)
+        searchResults.value = data
       } catch (err) {
-        console.error('Erro ao buscar usuários:', err);
-        searchResults.value = [];
+        console.error('Erro ao buscar usuários:', err)
+        searchResults.value = []
       }
     } else {
-      searchResults.value = [];
+      searchResults.value = []
     }
-  }, 300);
+  }, 300)
 }
 
 function selectUserForSharing(user: User) {
-  sharingUser.value = user;
-  searchResults.value = []; // Clear search results after selection
-  userSearchQuery.value = user.username || user.email || ''; // Display selected user
+  sharingUser.value = user
+  searchResults.value = [] // Clear search results after selection
+  userSearchQuery.value = user.username || user.email || '' // Display selected user
 }
 
 async function sharePeriod() {
   if (!sharingPeriod.value || !sharingUser.value || !sharingPermissionLevel.value) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione um usuário e um nível de permissão.', life: 3000 });
-    return;
+    toast.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Selecione um usuário e um nível de permissão.',
+      life: 3000,
+    })
+    return
   }
 
   try {
@@ -537,26 +677,46 @@ async function sharePeriod() {
       sharingPeriod.value.id,
       sharingUser.value.id,
       sharingPermissionLevel.value,
-    );
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Período compartilhado com sucesso!', life: 3000 });
-    await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
-    sharingUser.value = null; // Clear selected user
-    userSearchQuery.value = ''; // Clear search query
+    )
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Período compartilhado com sucesso!',
+      life: 3000,
+    })
+    await fetchSharedUsers(sharingPeriod.value.id) // Refresh shared users list
+    sharingUser.value = null // Clear selected user
+    userSearchQuery.value = '' // Clear search query
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao compartilhar período.', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: err instanceof Error ? err.message : 'Falha ao compartilhar período.',
+      life: 3000,
+    })
   }
 }
 
 async function unsharePeriod(sharingId: string) {
   if (confirm('Tem certeza que deseja remover este compartilhamento?')) {
     try {
-      await sharingStore.unshareAccountingPeriod(sharingId);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Compartilhamento removido com sucesso!', life: 3000 });
+      await sharingStore.unshareAccountingPeriod(sharingId)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Compartilhamento removido com sucesso!',
+        life: 3000,
+      })
       if (sharingPeriod.value) {
-        await fetchSharedUsers(sharingPeriod.value.id); // Refresh shared users list
+        await fetchSharedUsers(sharingPeriod.value.id) // Refresh shared users list
       }
     } catch (err: unknown) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: err instanceof Error ? err.message : 'Falha ao remover compartilhamento.', life: 3000 });
+      toast.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: err instanceof Error ? err.message : 'Falha ao remover compartilhamento.',
+        life: 3000,
+      })
     }
   }
 }
@@ -565,11 +725,13 @@ async function fetchSharedUsers(periodId: string) {
   try {
     // Assuming you'll add a GET endpoint to /sharing to list shared users for a period
     // For now, this is a placeholder. You'll need to implement this backend endpoint.
-    const data = await api.get<SharedAccountingPeriod[]>(`/sharing?accounting_period_id=${periodId}`);
-    sharedUsers.value = data;
+    const data = await api.get<SharedAccountingPeriod[]>(
+      `/sharing?accounting_period_id=${periodId}`,
+    )
+    sharedUsers.value = data
   } catch (err) {
-    console.error('Erro ao buscar usuários compartilhados:', err);
-    sharedUsers.value = [];
+    console.error('Erro ao buscar usuários compartilhados:', err)
+    sharedUsers.value = []
   }
 }
 </script>

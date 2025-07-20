@@ -3,10 +3,18 @@ import { ref, computed, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index'
+import type {
+  JournalEntry,
+  EntryLine as JournalEntryLine,
+  NFeExtractedData,
+  TaxSimulationResult,
+} from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import ProgressSpinner from 'primevue/progressspinner'
 import Skeleton from 'primevue/skeleton'
+import Dialog from 'primevue/dialog'
+import NFeImporter from '@/components/NFeImporter.vue'
+import TaxSimulator from '@/components/TaxSimulator.vue'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
@@ -14,6 +22,8 @@ const productStore = useProductStore()
 const toast = useToast()
 
 const showAddEntryForm = ref(false)
+const showNFeImporterModal = ref(false)
+const showTaxSimulatorModal = ref(false)
 const newEntryDate = ref(new Date().toISOString().split('T')[0])
 const newEntryDescription = ref('')
 const editingEntryId = ref<string | null>(null)
@@ -40,8 +50,8 @@ const itemsPerPage = 10
 const showDetails = ref<{ [key: string]: boolean }>({})
 
 const visibleAccounts = computed(() => {
-  return accountStore.accounts.filter(account => !account.is_protected);
-});
+  return accountStore.accounts.filter((account) => !account.is_protected)
+})
 
 const sortedJournalEntries = computed(() => {
   return [...journalEntryStore.journalEntries].sort((a, b) => {
@@ -97,8 +107,6 @@ function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-
-
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
   newEntryDescription.value = ''
@@ -108,6 +116,143 @@ function resetForm() {
   ]
   editingEntryId.value = null
   showAddEntryForm.value = false
+  showNFeImporterModal.value = false
+  showTaxSimulatorModal.value = false
+}
+
+const handleNFeProcessed = (data: NFeExtractedData) => {
+  newEntryDate.value = data.emission_date
+  newEntryDescription.value = `Importação NF-e ${data.nfe_id} - ${data.type === 'entrada' ? 'Compra' : 'Venda'} de ${data.razao_social_emit || data.razao_social_dest}`
+  newEntryLines.value = []
+
+  // Exemplo de preenchimento de linhas com base nos dados da NF-e
+  // ATENÇÃO: Substitua os IDs de conta pelos IDs reais do seu sistema!
+
+  // Débito: Estoque / Custo de Mercadoria Vendida
+  if (data.total_products > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_ESTOQUE_OU_CMV', // TODO: Substitua pelo ID da conta de estoque ou CMV real
+      type: 'debit',
+      amount: data.total_products,
+    })
+  }
+
+  // Débito: ICMS a Recuperar (se for entrada)
+  if (data.type === 'entrada' && data.total_icms > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_ICMS_A_RECUPERAR', // TODO: Substitua pelo ID da conta de ICMS a recuperar real
+      type: 'debit',
+      amount: data.total_icms,
+    })
+  }
+
+  // Débito: IPI a Recuperar (se for entrada)
+  if (data.type === 'entrada' && data.total_ipi > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_IPI_A_RECUPERAR', // TODO: Substitua pelo ID da conta de IPI a recuperar real
+      type: 'debit',
+      amount: data.total_ipi,
+    })
+  }
+
+  // Débito: PIS a Recuperar (se for entrada)
+  if (data.type === 'entrada' && data.total_pis > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_PIS_A_RECUPERAR', // TODO: Substitua pelo ID da conta de PIS a recuperar real
+      type: 'debit',
+      amount: data.total_pis,
+    })
+  }
+
+  // Débito: COFINS a Recuperar (se for entrada)
+  if (data.type === 'entrada' && data.total_cofins > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_COFINS_A_RECUPERAR', // TODO: Substitua pelo ID da conta de COFINS a recuperar real
+      type: 'debit',
+      amount: data.total_cofins,
+    })
+  }
+
+  // Crédito: Fornecedores / Clientes
+  if (data.total_nfe > 0) {
+    newEntryLines.value.push({
+      account_id: data.type === 'entrada' ? 'ID_CONTA_FORNECEDORES' : 'ID_CONTA_CLIENTES', // TODO: Substitua pelos IDs reais das contas de Fornecedores/Clientes
+      type: 'credit',
+      amount: data.total_nfe,
+    })
+  }
+
+  showNFeImporterModal.value = false
+  showAddEntryForm.value = true
+  toast.add({
+    severity: 'info',
+    summary: 'Dados da NF-e Carregados',
+    detail: 'Formulário pré-preenchido com os dados da NF-e. Revise e finalize o lançamento.',
+    life: 5000,
+  })
+}
+
+const handleTaxSimulationProcessed = (result: TaxSimulationResult) => {
+  newEntryDate.value = new Date().toISOString().split('T')[0] // Data atual para simulação
+  newEntryDescription.value = 'Lançamento gerado por simulação de impostos'
+  newEntryLines.value = []
+
+  // Exemplo de preenchimento de linhas com base nos dados da simulação
+  // ATENÇÃO: Substitua os IDs de conta pelos IDs reais do seu sistema!
+
+  // Débito: ICMS a Recuperar / ICMS sobre Vendas
+  if (result.valorICMS > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_ICMS_A_RECUPERAR_OU_SOBRE_VENDAS', // TODO: Substitua pelo ID da conta de ICMS a recuperar ou sobre vendas real
+      type: 'debit',
+      amount: result.valorICMS,
+    })
+  }
+
+  // Débito: ICMS-ST a Recuperar / ICMS-ST sobre Vendas
+  if (result.valorICMSST && result.valorICMSST > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_ICMS_ST_A_RECUPERAR_OU_SOBRE_VENDAS', // TODO: Substitua pelo ID da conta de ICMS-ST a recuperar ou sobre vendas real
+      type: 'debit',
+      amount: result.valorICMSST,
+    })
+  }
+
+  // Débito: PIS a Recuperar / PIS sobre Vendas
+  if (result.valorPIS > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_PIS_A_RECUPERAR_OU_SOBRE_VENDAS', // TODO: Substitua pelo ID da conta de PIS a recuperar ou sobre vendas real
+      type: 'debit',
+      amount: result.valorPIS,
+    })
+  }
+
+  // Débito: COFINS a Recuperar / COFINS sobre Vendas
+  if (result.valorCOFINS > 0) {
+    newEntryLines.value.push({
+      account_id: 'ID_CONTA_COFINS_A_RECUPERAR_OU_SOBRE_VENDAS', // TODO: Substitua pelo ID da conta de COFINS a recuperar ou sobre vendas real
+      type: 'debit',
+      amount: result.valorCOFINS,
+    })
+  }
+
+  // Crédito: Receita de Vendas / Custo de Aquisição
+  // Este é um exemplo simplificado. A lógica real dependerá do tipo de operação (compra/venda)
+  // e de como você quer que o valor total da operação seja refletido.
+  newEntryLines.value.push({
+    account_id: 'ID_CONTA_RECEITA_OU_CUSTO', // TODO: Substitua pelo ID da conta de Receita de Vendas ou Custo de Aquisição real
+    type: 'credit',
+    amount: result.baseCalculoICMS, // Ou outro valor relevante da simulação
+  })
+
+  showTaxSimulatorModal.value = false
+  showAddEntryForm.value = true
+  toast.add({
+    severity: 'info',
+    summary: 'Dados da Simulação Carregados',
+    detail: 'Formulário pré-preenchido com os dados da simulação. Revise e finalize o lançamento.',
+    life: 5000,
+  })
 }
 
 function toggleNewEntryForm() {
@@ -149,8 +294,6 @@ function toggleDetails(id: string | undefined) {
     showDetails.value[id] = !showDetails.value[id]
   }
 }
-
-
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
@@ -213,13 +356,13 @@ function startEdit(entry: JournalEntry) {
 }
 
 async function handleDelete(id: string | undefined) {
-  console.log('handleDelete chamado com ID:', id);
+  console.log('handleDelete chamado com ID:', id)
   if (!id) {
-    console.log('ID é indefinido ou nulo, retornando.');
-    return;
+    console.log('ID é indefinido ou nulo, retornando.')
+    return
   }
   if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-    console.log('Confirmação de exclusão aceita para ID:', id);
+    console.log('Confirmação de exclusão aceita para ID:', id)
     try {
       await journalEntryStore.deleteEntry(id)
       toast.add({
@@ -229,12 +372,12 @@ async function handleDelete(id: string | undefined) {
         life: 3000,
       })
     } catch (err: unknown) {
-      console.error('Erro ao deletar lançamento no frontend:', err);
-      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
+      console.error('Erro ao deletar lançamento no frontend:', err)
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
       toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
     }
   } else {
-    console.log('Confirmação de exclusão cancelada.');
+    console.log('Confirmação de exclusão cancelada.')
   }
 }
 
@@ -261,9 +404,7 @@ onMounted(() => {
 <template>
   <div class="p-4 sm:p-6">
     <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center">
-
-      </div>
+      <div class="flex justify-between items-center"></div>
 
       <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
@@ -273,14 +414,28 @@ onMounted(() => {
             placeholder="Busque um lançamento"
             class="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />
-          <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"></i>
+          <i
+            class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"
+          ></i>
         </div>
-        
+
         <button
-            @click="toggleNewEntryForm"
-            class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-          >
+          @click="toggleNewEntryForm"
+          class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
           {{ showAddEntryForm ? 'Fechar Formulário' : 'Novo Lançamento' }}
+        </button>
+        <button
+          @click="showNFeImporterModal = true"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+          Importar NF-e
+        </button>
+        <button
+          @click="showTaxSimulatorModal = true"
+          class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+          Simular Impostos
         </button>
         <button
           @click="resetAllData"
@@ -334,13 +489,9 @@ onMounted(() => {
                 class="md:col-span-5 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
                 <option value="" disabled>Selecione a Conta</option>
-                <optgroup
-                  v-for="type in accountStore.accountTypes"
-                  :label="type"
-                  :key="type"
-                >
+                <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
                   <option
-                    v-for="account in visibleAccounts.filter(acc => acc.type === type)"
+                    v-for="account in visibleAccounts.filter((acc) => acc.type === type)"
                     :value="account.id"
                     :key="account.id"
                   >
@@ -385,8 +536,10 @@ onMounted(() => {
               </div>
             </div>
           </div>
-          
-          <div class="p-4 rounded-lg flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0">
+
+          <div
+            class="p-4 rounded-lg flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0"
+          >
             <p class="text-lg">
               Total Débitos:
               <span class="font-bold text-green-400">{{ formatCurrency(totalDebits) }}</span>
@@ -414,14 +567,38 @@ onMounted(() => {
               class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
             >
               <span class="flex items-center justify-center">
-                <ProgressSpinner v-if="journalEntryStore.loading" class="w-5 h-5 mr-2" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" aria-label="Custom ProgressSpinner" />
+                <ProgressSpinner
+                  v-if="journalEntryStore.loading"
+                  class="w-5 h-5 mr-2"
+                  strokeWidth="8"
+                  fill="var(--surface-ground)"
+                  animationDuration=".5s"
+                  aria-label="Custom ProgressSpinner"
+                />
                 {{ editingEntryId ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}
               </span>
             </button>
-            
           </div>
         </form>
       </div>
+
+      <Dialog
+        v-model:visible="showNFeImporterModal"
+        modal
+        header="Importar NF-e"
+        :style="{ width: '75vw' }"
+      >
+        <NFeImporter @nfe-processed="handleNFeProcessed" />
+      </Dialog>
+
+      <Dialog
+        v-model:visible="showTaxSimulatorModal"
+        modal
+        header="Simulador de Impostos"
+        :style="{ width: '75vw' }"
+      >
+        <TaxSimulator @tax-simulation-processed="handleTaxSimulationProcessed" />
+      </Dialog>
 
       <div class="overflow-hidden">
         <div
@@ -441,10 +618,7 @@ onMounted(() => {
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
           {{ journalEntryStore.error }}
         </p>
-        <p
-          v-else-if="paginatedEntries.length === 0"
-          class="text-surface-400 text-center p-8"
-        >
+        <p v-else-if="paginatedEntries.length === 0" class="text-surface-400 text-center p-8">
           Nenhum lançamento encontrado.
         </p>
 

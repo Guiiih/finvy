@@ -2,7 +2,10 @@
   <div class="min-h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
     <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50 order-1 relative">
       <div class="absolute top-10 left-10 z-10">
-        <router-link to="/login" class="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-gray-200 cursor-pointer text-gray-600 transition-colors duration-200 hover:bg-gray-100 no-underline">
+        <router-link
+          to="/login"
+          class="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-gray-200 cursor-pointer text-gray-600 transition-colors duration-200 hover:bg-gray-100 no-underline"
+        >
           <svg
             width="24"
             height="24"
@@ -19,7 +22,9 @@
       </div>
 
       <div class="max-w-sm w-full px-10 box-border md:p-10">
-        <h2 class="text-gray-800 text-3xl font-semibold mb-2 text-left">Eita, esqueceu sua senha?</h2>
+        <h2 class="text-gray-800 text-3xl font-semibold mb-2 text-left">
+          Eita, esqueceu sua senha?
+        </h2>
         <p class="text-gray-400 text-sm mb-8 text-left">Não esquenta, vamos dar um jeito nisso.</p>
 
         <form @submit.prevent="handleForgotPassword" class="space-y-5">
@@ -30,8 +35,7 @@
               v-model="email"
               placeholder="E-mail"
               required
-              class="w-full p-4 border border-transparent rounded-lg bg-transparent text-gray-700 placeholder-gray-400 outline-none
-                     focus:border-l-4 focus:border-[#1a1a1a] transition-all duration-200 ease-in-out focus:pl-[calc(1rem-1px)]"
+              class="w-full p-4 border border-transparent rounded-lg bg-transparent text-gray-700 placeholder-gray-400 outline-none focus:border-l-4 focus:border-[#1a1a1a] transition-all duration-200 ease-in-out focus:pl-[calc(1rem-1px)]"
             />
           </div>
           <button
@@ -62,7 +66,7 @@ const router = useRouter()
 const handleForgotPassword = async () => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-      redirectTo: window.location.origin + '/update-password'
+      redirectTo: window.location.origin + '/update-password',
     })
 
     if (error) throw error
@@ -76,4 +80,3 @@ const handleForgotPassword = async () => {
   }
 }
 </script>
-

@@ -1,4 +1,5 @@
-'''<script setup lang="ts">
+'''
+<script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
@@ -38,8 +39,6 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
-
-
 onMounted(() => {
   setToast(toast)
   authStore.initAuthListener()
@@ -57,7 +56,8 @@ const shouldHideNavbar = computed(() => {
 const logoSrc = computed(() => {
   return themeStore.theme === 'dark' ? FinvyLogo : FinvyLogoBlack
 })
-</script>'''
+</script>
+'''
 
 <template>
   <Toast aria-live="polite" />
@@ -65,7 +65,7 @@ const logoSrc = computed(() => {
   <div v-if="authStore.isLoggedIn && !shouldHideNavbar" class="min-h-screen bg-surface-100">
     <!-- Desktop Header (hidden on small screens) -->
     <header
-            class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50 bg-surface-100 hidden lg:grid"
+      class="navbar-background py-4 px-6 grid items-center sticky top-0 z-50 bg-surface-100 hidden lg:grid"
       style="grid-template-columns: 180px 1fr auto"
     >
       <div class="flex items-center">
@@ -140,12 +140,17 @@ const logoSrc = computed(() => {
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
       </div>
-
-      </header>
+    </header>
 
     <!-- Mobile Header (visible on small screens) -->
-    <header v-if="authStore.isLoggedIn && !shouldHideNavbar" class="flex items-center justify-between p-4 bg-surface-100 shadow-md sticky top-0 z-50 lg:hidden">
-      <button @click="toggleMobileMenu" class="text-surface-600 focus:outline-none mobile-menu-toggle">
+    <header
+      v-if="authStore.isLoggedIn && !shouldHideNavbar"
+      class="flex items-center justify-between p-4 bg-surface-100 shadow-md sticky top-0 z-50 lg:hidden"
+    >
+      <button
+        @click="toggleMobileMenu"
+        class="text-surface-600 focus:outline-none mobile-menu-toggle"
+      >
         <i class="pi pi-bars text-2xl"></i>
       </button>
       <div class="flex items-center space-x-2">
@@ -181,7 +186,11 @@ const logoSrc = computed(() => {
     </header>
 
     <!-- Mobile Menu Overlay -->
-    <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-black bg-opacity-50 z-40" @click="closeMobileMenu"></div>
+    <div
+      v-if="isMobileMenuOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40"
+      @click="closeMobileMenu"
+    ></div>
 
     <!-- Mobile Side Menu -->
     <div
@@ -190,12 +199,13 @@ const logoSrc = computed(() => {
     >
       <div class="p-4 border-b border-surface-700 flex items-center justify-between">
         <img :src="FinvyLogo" alt="Finvy Logo" class="h-10 w-10" />
-        <button @click="closeMobileMenu" class="text-surface-400 hover:text-white focus:outline-none">
+        <button
+          @click="closeMobileMenu"
+          class="text-surface-400 hover:text-white focus:outline-none"
+        >
           <i class="pi pi-times text-xl"></i>
         </button>
       </div>
-
-      
 
       <nav class="flex flex-col p-4 space-y-2">
         <RouterLink
@@ -254,7 +264,6 @@ const logoSrc = computed(() => {
           <i class="pi pi-file-excel mr-3"></i>
           Relatórios
         </RouterLink>
-        
       </nav>
     </div>
 

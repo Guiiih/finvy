@@ -65,10 +65,18 @@ onMounted(() => {
     <div class="space-y-4">
       <div class="flex flex-col">
         <label for="entry-date" class="block text-sm font-medium text-surface-700">Data:</label>
-        <input type="date" id="entry-date" v-model="newEntryDate" required class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2" />
+        <input
+          type="date"
+          id="entry-date"
+          v-model="newEntryDate"
+          required
+          class="mt-1 block w-full rounded-md border-surface-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 p-2"
+        />
       </div>
       <div class="flex flex-col">
-        <label for="entry-description" class="block text-sm font-medium text-surface-700">Descrição:</label>
+        <label for="entry-description" class="block text-sm font-medium text-surface-700"
+          >Descrição:</label
+        >
         <input
           type="text"
           id="entry-description"
@@ -79,9 +87,19 @@ onMounted(() => {
         />
       </div>
 
-      <h3 class="text-xl font-semibold text-surface-700 border-b border-surface-300 pb-2">Linhas do Lançamento:</h3>
-      <div v-for="(line, index) in newEntryLines" :key="index" class="flex flex-wrap items-center gap-4 mb-4">
-        <select v-model="line.account_id" required class="flex-1 min-w-[150px] p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400">
+      <h3 class="text-xl font-semibold text-surface-700 border-b border-surface-300 pb-2">
+        Linhas do Lançamento:
+      </h3>
+      <div
+        v-for="(line, index) in newEntryLines"
+        :key="index"
+        class="flex flex-wrap items-center gap-4 mb-4"
+      >
+        <select
+          v-model="line.account_id"
+          required
+          class="flex-1 min-w-[150px] p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        >
           <option value="" disabled>Selecione a Conta</option>
           <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
             <option
@@ -93,7 +111,11 @@ onMounted(() => {
             </option>
           </optgroup>
         </select>
-        <select v-model="line.type" required class="flex-1 min-w-[100px] p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <select
+          v-model="line.type"
+          required
+          class="flex-1 min-w-[100px] p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        >
           <option value="debit">Débito</option>
           <option value="credit">Crédito</option>
         </select>
@@ -106,24 +128,45 @@ onMounted(() => {
           required
           class="flex-1 min-w-[100px] p-2 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
-        <button type="button" @click="removeLine(index)" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50">Remover</button>
+        <button
+          type="button"
+          @click="removeLine(index)"
+          class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
+        >
+          Remover
+        </button>
       </div>
-      <button type="button" @click="addLine" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 mt-2">Adicionar Linha</button>
+      <button
+        type="button"
+        @click="addLine"
+        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 mt-2"
+      >
+        Adicionar Linha
+      </button>
 
       <div class="mt-6 p-4 border-t border-surface-300 flex justify-around items-center">
-        <p class="font-bold" :class="{ 'text-emerald-600': isBalanced, 'text-red-600': !isBalanced }">
+        <p
+          class="font-bold"
+          :class="{ 'text-emerald-600': isBalanced, 'text-red-600': !isBalanced }"
+        >
           Total Débitos: R$ {{ totalDebits.toFixed(2) }}
         </p>
-        <p class="font-bold" :class="{ 'text-emerald-600': isBalanced, 'text-red-600': !isBalanced }">
+        <p
+          class="font-bold"
+          :class="{ 'text-emerald-600': isBalanced, 'text-red-600': !isBalanced }"
+        >
           Total Créditos: R$ {{ totalCredits.toFixed(2) }}
         </p>
       </div>
 
-      <button type="submit" :disabled="!isBalanced || journalEntryStore.loading" class="w-full p-3 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 mt-4">
+      <button
+        type="submit"
+        :disabled="!isBalanced || journalEntryStore.loading"
+        class="w-full p-3 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 mt-4"
+      >
         <span v-if="journalEntryStore.loading">Registrando...</span>
         <span v-else>Registrar Lançamento</span>
       </button>
     </div>
   </form>
 </template>
-

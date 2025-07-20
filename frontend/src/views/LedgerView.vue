@@ -24,8 +24,6 @@ onMounted(async () => {
   await accountStore.fetchAccounts()
 })
 
-
-
 interface TAccountEntry {
   journalEntryId: string
   date: string
@@ -92,9 +90,7 @@ const tAccounts = computed<TAccount[]>(() => {
     }
   })
 
-  return Array.from(accountsMap.values()).sort((a, b) =>
-    a.accountName.localeCompare(b.accountName),
-  )
+  return Array.from(accountsMap.values()).sort((a, b) => a.accountName.localeCompare(b.accountName))
 })
 
 function getBalanceClass(account: TAccount) {
@@ -167,27 +163,45 @@ function getBalanceClass(account: TAccount) {
       </p>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div v-for="account in tAccounts" :key="account.accountId" class="bg-surface-50 p-0 rounded-lg shadow-md flex flex-col overflow-hidden">
-          <h3 class="bg-surface-100 p-3 text-center text-surface-700 font-semibold text-lg border-b border-surface-200">{{ account.accountName }}</h3>
+        <div
+          v-for="account in tAccounts"
+          :key="account.accountId"
+          class="bg-surface-50 p-0 rounded-lg shadow-md flex flex-col overflow-hidden"
+        >
+          <h3
+            class="bg-surface-100 p-3 text-center text-surface-700 font-semibold text-lg border-b border-surface-200"
+          >
+            {{ account.accountName }}
+          </h3>
           <div class="relative flex-grow p-3">
             <div class="t-account-wrapper">
               <div class="t-side debit-side">
                 <ul>
-                  <li v-for="(entry, index) in account.debitEntries" :key="index" :title="`Data: ${entry.date}\nDescrição: ${entry.description}`">
+                  <li
+                    v-for="(entry, index) in account.debitEntries"
+                    :key="index"
+                    :title="`Data: ${entry.date}\nDescrição: ${entry.description}`"
+                  >
                     <span class="font-mono text-surface-800">R$ {{ entry.amount.toFixed(2) }}</span>
                   </li>
                 </ul>
               </div>
               <div class="t-side credit-side">
                 <ul>
-                  <li v-for="(entry, index) in account.creditEntries" :key="index" :title="`Data: ${entry.date}\nDescrição: ${entry.description}`">
+                  <li
+                    v-for="(entry, index) in account.creditEntries"
+                    :key="index"
+                    :title="`Data: ${entry.date}\nDescrição: ${entry.description}`"
+                  >
                     <span class="font-mono text-surface-800">R$ {{ entry.amount.toFixed(2) }}</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="flex justify-between font-bold text-sm py-2 border-t border-surface-200 mt-2">
+            <div
+              class="flex justify-between font-bold text-sm py-2 border-t border-surface-200 mt-2"
+            >
               <div class="text-emerald-600">R$ {{ account.totalDebits.toFixed(2) }}</div>
               <div class="text-blue-600">R$ {{ account.totalCredits.toFixed(2) }}</div>
             </div>
@@ -200,8 +214,14 @@ function getBalanceClass(account: TAccount) {
                 }"
                 v-if="
                   (account.finalBalance !== 0 &&
-                    ((['asset', 'expense'].includes(accountStore.getAccountById(account.accountId)?.type || '') && account.finalBalance >= 0) ||
-                      (!['asset', 'expense'].includes(accountStore.getAccountById(account.accountId)?.type || '') && account.finalBalance < 0))) ||
+                    ((['asset', 'expense'].includes(
+                      accountStore.getAccountById(account.accountId)?.type || '',
+                    ) &&
+                      account.finalBalance >= 0) ||
+                      (!['asset', 'expense'].includes(
+                        accountStore.getAccountById(account.accountId)?.type || '',
+                      ) &&
+                        account.finalBalance < 0))) ||
                   (account.accountName === 'Resultado Bruto' && account.finalBalance < 0) ||
                   (account.accountName === 'Estoque Final' && account.finalBalance >= 0) ||
                   (account.accountName === 'CMV' && account.finalBalance >= 0) ||
@@ -219,12 +239,18 @@ function getBalanceClass(account: TAccount) {
                 }"
                 v-if="
                   account.finalBalance !== 0 &&
-                  ((!['asset', 'expense'].includes(accountStore.getAccountById(account.accountId)?.type || '') && account.finalBalance >= 0) ||
+                  ((!['asset', 'expense'].includes(
+                    accountStore.getAccountById(account.accountId)?.type || '',
+                  ) &&
+                    account.finalBalance >= 0) ||
                     (account.accountName === 'Resultado Bruto' && account.finalBalance >= 0) ||
                     (account.accountName === 'Estoque Final' && account.finalBalance < 0) ||
                     (account.accountName === 'CMV' && account.finalBalance < 0) ||
                     (account.accountName === 'Reserva de Lucro' && account.finalBalance >= 0) ||
-                    (['asset', 'expense'].includes(accountStore.getAccountById(account.accountId)?.type || '') && account.finalBalance < 0))
+                    (['asset', 'expense'].includes(
+                      accountStore.getAccountById(account.accountId)?.type || '',
+                    ) &&
+                      account.finalBalance < 0))
                 "
               >
                 R$ {{ Math.abs(account.finalBalance).toFixed(2) }}

@@ -7,7 +7,9 @@
     <div class="flex flex-1 flex-col items-center justify-center p-5 bg-gray-50">
       <div class="max-w-sm w-full px-10 box-border">
         <h2 class="text-gray-800 text-3xl mb-1 text-left font-semibold mt-0">Cadastro</h2>
-        <p class="text-gray-400 text-sm mt-0 mb-6 text-left">Preencha os dados abaixo para começar.</p>
+        <p class="text-gray-400 text-sm mt-0 mb-6 text-left">
+          Preencha os dados abaixo para começar.
+        </p>
 
         <form @submit.prevent="handleRegister" class="space-y-5">
           <div>
@@ -17,8 +19,7 @@
               v-model="firstName"
               placeholder="Nome"
               required
-              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
-                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
           </div>
           <div>
@@ -28,8 +29,7 @@
               v-model="email"
               placeholder="E-mail"
               required
-              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none
-                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
           </div>
           <div class="relative">
@@ -39,8 +39,7 @@
               v-model="password"
               placeholder="Senha"
               required
-              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12
-                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12 focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
             <span
               class="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center text-lg"
@@ -58,8 +57,7 @@
               v-model="confirmPassword"
               placeholder="Confirma Senha"
               required
-              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12
-                     focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
+              class="w-full p-4 rounded-lg bg-white text-gray-700 placeholder-gray-400 outline-none pr-12 focus:border-l-4 focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a] transition-all duration-200 ease-in-out focus-custom-padding"
             />
             <span
               class="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center text-lg"
@@ -70,13 +68,19 @@
               <span v-else>🙉</span>
             </span>
           </div>
-          <button type="submit" class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500">
+          <button
+            type="submit"
+            class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500"
+          >
             Concluir cadastro
           </button>
         </form>
         <p class="mt-8 text-center text-gray-400 text-sm">
           Já tem uma conta?
-          <router-link to="/login" class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline">
+          <router-link
+            to="/login"
+            class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline"
+          >
             Faça login
           </router-link>
         </p>

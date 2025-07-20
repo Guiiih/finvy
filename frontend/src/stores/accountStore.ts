@@ -10,7 +10,7 @@ export const useAccountStore = defineStore('account', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const accountingPeriodStore = useAccountingPeriodStore();
+  const accountingPeriodStore = useAccountingPeriodStore()
 
   const getAllAccounts = computed(() => accounts.value)
 
@@ -32,12 +32,12 @@ export const useAccountStore = defineStore('account', () => {
     return accounts.value.filter((account) => account.type === type)
   })
 
-  async function fetchAccounts({ page = 1, limit = 1000 }: { page?: number; limit?: number; } = {}) {
-    loading.value = true;
-    error.value = null;
+  async function fetchAccounts({ page = 1, limit = 1000 }: { page?: number; limit?: number } = {}) {
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        await accountingPeriodStore.fetchAccountingPeriods();
+        await accountingPeriodStore.fetchAccountingPeriods()
       }
       const response = await api.get<{ data: Account[]; count: number }>('/accounts', {
         params: {
@@ -46,42 +46,42 @@ export const useAccountStore = defineStore('account', () => {
           page,
           limit,
         },
-      });
-      accounts.value = Array.isArray(response.data) ? response.data : [];
-      totalAccounts.value = response.count || 0;
+      })
+      accounts.value = Array.isArray(response.data) ? response.data : []
+      totalAccounts.value = response.count || 0
     } catch (err: unknown) {
-      console.error('Erro ao buscar contas:', err);
+      console.error('Erro ao buscar contas:', err)
       if (err instanceof Error) {
-        error.value = err.message;
+        error.value = err.message
       } else {
-        error.value = 'Ocorreu uma falha desconhecida ao buscar contas.';
+        error.value = 'Ocorreu uma falha desconhecida ao buscar contas.'
       }
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
   async function addAccount(newAccount: Omit<Account, 'id'>) {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        throw new Error('Nenhum período contábil ativo selecionado.');
+        throw new Error('Nenhum período contábil ativo selecionado.')
       }
       const payload = {
         ...newAccount,
         organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
-      };
-      const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', payload);
-      await fetchAccounts({ page: 1, limit: 10 }); 
-      return addedAccount;
+      }
+      const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', payload)
+      await fetchAccounts({ page: 1, limit: 10 })
+      return addedAccount
     } catch (err: unknown) {
-      console.error('Erro ao adicionar conta:', err);
-      error.value = err instanceof Error ? err.message : 'Falha ao adicionar conta.';
-      throw err;
+      console.error('Erro ao adicionar conta:', err)
+      error.value = err instanceof Error ? err.message : 'Falha ao adicionar conta.'
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
@@ -109,7 +109,7 @@ export const useAccountStore = defineStore('account', () => {
     error.value = null
     try {
       await api.delete(`/accounts/${id}`)
-      await fetchAccounts({ page: 1, limit: 10 });
+      await fetchAccounts({ page: 1, limit: 10 })
     } catch (err: unknown) {
       console.error('Erro ao deletar conta:', err)
       error.value = err instanceof Error ? err.message : 'Falha ao deletar conta.'

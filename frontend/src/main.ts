@@ -48,7 +48,7 @@ app.component('AppCropper', Cropper)
 
 async function initApp() {
   const authStore = useAuthStore()
-    await authStore.initAuthListener()
+  await authStore.initAuthListener()
   app.use(router)
   app.mount('#app')
 }

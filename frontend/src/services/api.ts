@@ -25,10 +25,10 @@ export const api = {
   },
   post: async <T, U>(endpoint: string, data: U, config?: AxiosRequestConfig): Promise<T> => {
     try {
-      const response = await apiClient.post<T>(endpoint, data, config);
-      return response.data;
+      const response = await apiClient.post<T>(endpoint, data, config)
+      return response.data
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new Error(getErrorMessage(error))
     }
   },
   put: async <T, U>(endpoint: string, data: U): Promise<T> => {

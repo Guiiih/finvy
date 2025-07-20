@@ -9,7 +9,7 @@ export const useProductStore = defineStore('products', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const accountingPeriodStore = useAccountingPeriodStore();
+  const accountingPeriodStore = useAccountingPeriodStore()
 
   const getAllProducts = computed(() => products.value)
 
@@ -22,48 +22,48 @@ export const useProductStore = defineStore('products', () => {
   })
 
   async function fetchProducts() {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        await accountingPeriodStore.fetchAccountingPeriods();
+        await accountingPeriodStore.fetchAccountingPeriods()
       }
       const data = await api.get<Product[]>('/products', {
         params: {
           organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
         },
-      });
-      products.value = Array.isArray(data) ? data : [];
+      })
+      products.value = Array.isArray(data) ? data : []
     } catch (err: unknown) {
-      console.error('Erro ao buscar produtos:', err);
-      error.value = err instanceof Error ? err.message : 'Falha ao buscar produtos.';
+      console.error('Erro ao buscar produtos:', err)
+      error.value = err instanceof Error ? err.message : 'Falha ao buscar produtos.'
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
   async function addProduct(product: Omit<Product, 'id'>) {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        throw new Error('Nenhum período contábil ativo selecionado.');
+        throw new Error('Nenhum período contábil ativo selecionado.')
       }
       const payload = {
         ...product,
         organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
-      };
-      const newProduct = await api.post<Product, Omit<Product, 'id'>>('/products', payload);
-      products.value.push(newProduct);
-      return newProduct;
+      }
+      const newProduct = await api.post<Product, Omit<Product, 'id'>>('/products', payload)
+      products.value.push(newProduct)
+      return newProduct
     } catch (err: unknown) {
-      console.error('Erro ao adicionar produto:', err);
-      error.value = err instanceof Error ? err.message : 'Falha ao adicionar produto.';
-      throw err;
+      console.error('Erro ao adicionar produto:', err)
+      error.value = err instanceof Error ? err.message : 'Falha ao adicionar produto.'
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 

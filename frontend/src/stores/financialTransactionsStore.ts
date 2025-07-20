@@ -21,38 +21,38 @@ export const useFinancialTransactionsStore = defineStore('financialTransactions'
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const accountingPeriodStore = useAccountingPeriodStore();
+  const accountingPeriodStore = useAccountingPeriodStore()
 
   async function fetchFinancialTransactions() {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        await accountingPeriodStore.fetchAccountingPeriods();
+        await accountingPeriodStore.fetchAccountingPeriods()
       }
       const commonParams = {
         organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
-      };
+      }
 
       const payableData = await api.get<FinancialTransaction[]>('/financial-transactions', {
         params: { type: 'payable', ...commonParams },
-      });
-      payables.value = payableData;
+      })
+      payables.value = payableData
 
       const receivableData = await api.get<FinancialTransaction[]>('/financial-transactions', {
         params: { type: 'receivable', ...commonParams },
-      });
-      receivables.value = receivableData;
+      })
+      receivables.value = receivableData
     } catch (err: unknown) {
-      console.error('Erro ao buscar transações financeiras:', err);
+      console.error('Erro ao buscar transações financeiras:', err)
       if (err instanceof Error) {
-        error.value = err.message || 'Falha ao buscar transações financeiras.';
+        error.value = err.message || 'Falha ao buscar transações financeiras.'
       } else {
-        error.value = 'Falha ao buscar transações financeiras.';
+        error.value = 'Falha ao buscar transações financeiras.'
       }
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
@@ -60,38 +60,38 @@ export const useFinancialTransactionsStore = defineStore('financialTransactions'
     type: 'payable' | 'receivable',
     newTransaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'is_paid' | 'is_received'>,
   ) {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
-        throw new Error('Nenhum período contábil ativo selecionado.');
+        throw new Error('Nenhum período contábil ativo selecionado.')
       }
       const payload = {
         ...newTransaction,
         type,
         organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
-      };
+      }
       const data = await api.post<FinancialTransaction, typeof payload>(
         '/financial-transactions',
         payload,
-      );
+      )
       if (type === 'payable') {
-        payables.value.push(data);
+        payables.value.push(data)
       } else {
-        receivables.value.push(data);
+        receivables.value.push(data)
       }
-      return data;
+      return data
     } catch (err: unknown) {
-      console.error(`Erro ao adicionar transação ${type}:`, err);
+      console.error(`Erro ao adicionar transação ${type}:`, err)
       if (err instanceof Error) {
-        error.value = err.message || `Falha ao adicionar transação ${type}.`;
+        error.value = err.message || `Falha ao adicionar transação ${type}.`
       } else {
-        error.value = `Falha ao adicionar transação ${type}.`;
+        error.value = `Falha ao adicionar transação ${type}.`
       }
-      throw err;
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 

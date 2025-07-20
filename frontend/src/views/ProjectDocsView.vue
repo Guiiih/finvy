@@ -651,3 +651,7 @@ html {
   background-color: #1f2937;
 }
 </style>
+
+<style scoped>
+/* Estilos específicos para este componente */
+</style>

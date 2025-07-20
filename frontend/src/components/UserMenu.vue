@@ -18,7 +18,11 @@ const closeMenu = () => {
 </script>
 
 <template>
-  <nav class="absolute right-0 mt-2 w-64 bg-surface-0 rounded-md shadow-lg py-1 z-50" @click.stop role="menu">
+  <nav
+    class="absolute right-0 mt-2 w-64 bg-surface-0 rounded-md shadow-lg py-1 z-50"
+    @click.stop
+    role="menu"
+  >
     <div class="flex items-center px-4 py-3 border-b border-surface-200">
       <img
         :src="authStore.avatarUrl ?? undefined"
@@ -48,10 +52,7 @@ const closeMenu = () => {
     </button>
     <button
       class="block w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-      @click="
-        router.push('/help'),
-        closeMenu()
-      "
+      @click="(router.push('/help'), closeMenu())"
       role="menuitem"
       tabindex="-1"
     >

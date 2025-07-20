@@ -5,8 +5,6 @@ import type { User, Session } from '@supabase/supabase-js'
 import { AuthApiError } from '@supabase/supabase-js'
 import { api } from '@/services/api'
 
-
-
 export const useAuthStore = defineStore(
   'auth',
   () => {
@@ -27,31 +25,38 @@ export const useAuthStore = defineStore(
 
     async function fetchUserProfile() {
       if (!user.value) {
-        userRole.value = null;
-        username.value = null;
-        avatarUrl.value = null;
-        handle.value = null;
-        userOrganizationId.value = null;
-        userActiveAccountingPeriodId.value = null;
-        return;
+        userRole.value = null
+        username.value = null
+        avatarUrl.value = null
+        handle.value = null
+        userOrganizationId.value = null
+        userActiveAccountingPeriodId.value = null
+        return
       }
       try {
-        const response = await api.get<{ username: string; role: string; avatar_url: string; organization_id: string; active_accounting_period_id: string; handle: string }>('/profile');
-        userRole.value = response.role;
-        username.value = response.username;
-        avatarUrl.value = response.avatar_url;
-        handle.value = response.handle;
-        userOrganizationId.value = response.organization_id;
-        userActiveAccountingPeriodId.value = response.active_accounting_period_id;
-        console.log('fetchUserProfile: avatarUrl', avatarUrl.value);
+        const response = await api.get<{
+          username: string
+          role: string
+          avatar_url: string
+          organization_id: string
+          active_accounting_period_id: string
+          handle: string
+        }>('/profile')
+        userRole.value = response.role
+        username.value = response.username
+        avatarUrl.value = response.avatar_url
+        handle.value = response.handle
+        userOrganizationId.value = response.organization_id
+        userActiveAccountingPeriodId.value = response.active_accounting_period_id
+        console.log('fetchUserProfile: avatarUrl', avatarUrl.value)
       } catch (err: unknown) {
-        console.error('Erro ao buscar perfil do usuário:', err);
-        userRole.value = null;
-        username.value = null;
-        avatarUrl.value = null;
-        handle.value = null;
-        userOrganizationId.value = null;
-        userActiveAccountingPeriodId.value = null;
+        console.error('Erro ao buscar perfil do usuário:', err)
+        userRole.value = null
+        username.value = null
+        avatarUrl.value = null
+        handle.value = null
+        userOrganizationId.value = null
+        userActiveAccountingPeriodId.value = null
       }
     }
 
@@ -69,20 +74,20 @@ export const useAuthStore = defineStore(
         user.value = initialSession?.user || null
 
         if (user.value) {
-          await fetchUserProfile();
+          await fetchUserProfile()
         }
 
         supabase.auth.onAuthStateChange(async (event, newSession) => {
           session.value = newSession
           user.value = newSession?.user || null
           if (user.value) {
-            await fetchUserProfile();
+            await fetchUserProfile()
           } else {
-            userRole.value = null;
-            username.value = null;
-            avatarUrl.value = null;
-            userOrganizationId.value = null;
-            userActiveAccountingPeriodId.value = null;
+            userRole.value = null
+            username.value = null
+            avatarUrl.value = null
+            userOrganizationId.value = null
+            userActiveAccountingPeriodId.value = null
           }
         })
       } catch (err: unknown) {
@@ -108,7 +113,7 @@ export const useAuthStore = defineStore(
         if (authError) throw authError
         user.value = data.user
         session.value = data.session
-        await fetchUserProfile();
+        await fetchUserProfile()
         console.log('Login bem-sucedido:', data)
         return true
       } catch (err: unknown) {
@@ -165,13 +170,11 @@ export const useAuthStore = defineStore(
         if (authError) throw authError
         user.value = null
         session.value = null
-        userRole.value = null;
-        username.value = null;
-        avatarUrl.value = null;
-        userOrganizationId.value = null;
-        userActiveAccountingPeriodId.value = null;
-        
-        
+        userRole.value = null
+        username.value = null
+        avatarUrl.value = null
+        userOrganizationId.value = null
+        userActiveAccountingPeriodId.value = null
 
         console.log('Logout bem-sucedido.')
         return true
@@ -243,31 +246,31 @@ export const useAuthStore = defineStore(
       loading.value = true
       error.value = null
       try {
-        const payload: { username?: string; handle?: string } = {};
+        const payload: { username?: string; handle?: string } = {}
         if (fullName !== username.value) {
-          payload.username = fullName;
+          payload.username = fullName
         }
         if (handleValue !== handle.value) {
-          payload.handle = handleValue;
+          payload.handle = handleValue
         }
 
         if (Object.keys(payload).length === 0) {
-          console.log('Nenhuma alteração no perfil para salvar.');
-          loading.value = false;
-          return true;
+          console.log('Nenhuma alteração no perfil para salvar.')
+          loading.value = false
+          return true
         }
 
-        const response = await api.put('/profile', payload);
+        const response = await api.put('/profile', payload)
 
         // Atualiza o nome de usuário e handle localmente
         if (payload.username) {
-          username.value = payload.username;
+          username.value = payload.username
         }
         if (payload.handle) {
-          handle.value = payload.handle;
+          handle.value = payload.handle
         }
 
-        console.log('Perfil atualizado com sucesso.', response);
+        console.log('Perfil atualizado com sucesso.', response)
         return true
       } catch (err: unknown) {
         console.error('Erro ao atualizar perfil:', err)
@@ -308,7 +311,10 @@ export const useAuthStore = defineStore(
 
         if (!publicUrlData) throw new Error('Não foi possível obter a URL pública do avatar.')
 
-        const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrlData.publicUrl }).eq('id', user.value.id)
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrlData.publicUrl })
+          .eq('id', user.value.id)
 
         if (updateError) throw updateError
 
@@ -349,9 +355,9 @@ export const useAuthStore = defineStore(
         session.value = null
         userRole.value = null
         username.value = null
-        avatarUrl.value = null;
-        userOrganizationId.value = null;
-        userActiveAccountingPeriodId.value = null;
+        avatarUrl.value = null
+        userOrganizationId.value = null
+        userActiveAccountingPeriodId.value = null
         console.log('Conta de usuário excluída com sucesso.')
         return true
       } catch (err: unknown) {

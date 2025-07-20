@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { supabase } from '../supabase'
@@ -163,7 +162,6 @@ const router = createRouter({
       name: 'project-docs',
       component: () => import('../views/ProjectDocsView.vue'),
       meta: { requiresAuth: true, title: 'Documentação do Projeto' },
-
     },
     {
       path: '/docs/api',
@@ -176,12 +174,6 @@ const router = createRouter({
       name: 'faq',
       component: () => import('../views/FaqView.vue'),
       meta: { requiresAuth: true, title: 'FAQ' },
-    },
-    {
-      path: '/fiscal-tools',
-      name: 'fiscal-tools',
-      component: () => import('../views/FiscalToolsView.vue'),
-      meta: { requiresAuth: true, title: 'Ferramentas Fiscais' },
     },
 
     {
@@ -212,19 +204,19 @@ router.beforeEach(async (to, from, next) => {
 })
 
 router.afterEach((to) => {
-  const appName = 'Finvy';
-  let viewName = '';
+  const appName = 'Finvy'
+  let viewName = ''
 
   if (to.meta.title) {
-    viewName = to.meta.title as string;
+    viewName = to.meta.title as string
   } else if (to.name) {
     viewName = String(to.name)
       .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 
-  document.title = viewName ? `${appName} | ${viewName}` : appName;
-});
+  document.title = viewName ? `${appName} | ${viewName}` : appName
+})
 
 export default router

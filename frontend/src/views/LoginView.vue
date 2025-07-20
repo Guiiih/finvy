@@ -36,7 +36,9 @@
               :aria-describedby="passwordError ? 'password-error' : undefined"
             />
             <small class="p-error" id="password-error">{{ passwordError }}</small>
-            <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center"
+            <button
+              type="button"
+              class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 flex items-center justify-center"
               @click="togglePasswordVisibility"
               :class="{ 'text-purple-600': passwordFieldType === 'text' || password }"
               :aria-label="passwordFieldType === 'password' ? 'Mostrar senha' : 'Esconder senha'"
@@ -50,18 +52,29 @@
               <input type="checkbox" class="mr-2 w-4 h-4 accent-[#00e676]" />
               Lembrar-me
             </label>
-            <router-link to="/forgot-password" class="text-gray-400 no-underline transition-colors duration-200 hover:text-[#00e676]"
+            <router-link
+              to="/forgot-password"
+              class="text-gray-400 no-underline transition-colors duration-200 hover:text-[#00e676]"
               >Esqueci minha senha</router-link
             >
           </div>
-          <button type="submit" class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500" :disabled="loading" :aria-busy="loading" aria-live="assertive">
+          <button
+            type="submit"
+            class="w-full p-4 bg-emerald-400 text-white font-bold rounded-lg cursor-pointer transition-colors duration-300 hover:bg-emerald-500"
+            :disabled="loading"
+            :aria-busy="loading"
+            aria-live="assertive"
+          >
             <span v-if="loading" class="pi pi-spin pi-spinner"></span>
             <span v-else>Entrar</span>
           </button>
         </form>
         <p class="mt-8 text-center text-gray-400 text-sm">
           Não tem uma conta?
-          <router-link to="/register" class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline">
+          <router-link
+            to="/register"
+            class="text-[#4169E1] no-underline font-bold transition-colors duration-200 hover:underline"
+          >
             Cadastre-se
           </router-link>
         </p>
@@ -137,7 +150,6 @@ const onSubmit = handleSubmit(async (values) => {
   }
 })
 </script>
-
 
 <style scoped>
 input:-webkit-autofill,

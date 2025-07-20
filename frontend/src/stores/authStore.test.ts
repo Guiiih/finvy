@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
-import { useAuthStore } from './authStore';
-import { supabase, User, Session, AuthError } from '@/supabase';
-import { api } from '@/services/api';
-
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+import { useAuthStore } from './authStore'
+import { supabase, User, Session, AuthError } from '@/supabase'
+import { api } from '@/services/api'
 
 // Mock Supabase
 vi.mock('@/supabase', () => ({
@@ -29,7 +28,7 @@ vi.mock('@/supabase', () => ({
       })),
     })),
   },
-}));
+}))
 
 // Mock API client
 vi.mock('@/services/api', () => ({
@@ -37,118 +36,135 @@ vi.mock('@/services/api', () => ({
     get: vi.fn(),
     delete: vi.fn(),
   },
-}));
-
-
+}))
 
 describe('Auth Store', () => {
   beforeEach(() => {
-    setActivePinia(createPinia());
-    vi.clearAllMocks();
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
     // Reset store state manually if needed, or re-create store
-  });
+  })
 
   it('should initialize with default values', () => {
-    const authStore = useAuthStore();
-    expect(authStore.user).toBeNull();
-    expect(authStore.session).toBeNull();
-    expect(authStore.loading).toBe(false);
-    expect(authStore.error).toBeNull();
-    expect(authStore.isLoggedIn).toBe(false);
-    expect(authStore.token).toBeNull();
-    expect(authStore.isAdmin).toBe(false);
-  });
+    const authStore = useAuthStore()
+    expect(authStore.user).toBeNull()
+    expect(authStore.session).toBeNull()
+    expect(authStore.loading).toBe(false)
+    expect(authStore.error).toBeNull()
+    expect(authStore.isLoggedIn).toBe(false)
+    expect(authStore.token).toBeNull()
+    expect(authStore.isAdmin).toBe(false)
+  })
 
   describe('signIn', () => {
     it('should sign in a user successfully', async () => {
-      const authStore = useAuthStore();
-      const mockUser = { id: 'user-id', email: 'test@example.com' };
-      const mockSession = { access_token: 'mock-token' };
-      const mockProfile = { username: 'testuser', role: 'user', avatar_url: 'avatar.jpg', organization_id: 'org-id', active_accounting_period_id: 'period-id' };
+      const authStore = useAuthStore()
+      const mockUser = { id: 'user-id', email: 'test@example.com' }
+      const mockSession = { access_token: 'mock-token' }
+      const mockProfile = {
+        username: 'testuser',
+        role: 'user',
+        avatar_url: 'avatar.jpg',
+        organization_id: 'org-id',
+        active_accounting_period_id: 'period-id',
+      }
 
-      (supabase.auth.signInWithPassword as vi.Mock<{ data: { user: User | null, session: Session | null }, error: AuthError | null }>).mockResolvedValueOnce({
+      ;(
+        supabase.auth.signInWithPassword as vi.Mock<{
+          data: { user: User | null; session: Session | null }
+          error: AuthError | null
+        }>
+      ).mockResolvedValueOnce({
         data: { user: mockUser, session: mockSession },
         error: null,
-      });
-      (api.get as vi.Mock).mockResolvedValueOnce(mockProfile);
+      })
+      ;(api.get as vi.Mock).mockResolvedValueOnce(mockProfile)
 
-      const result = await authStore.signIn('test@example.com', 'password123');
+      const result = await authStore.signIn('test@example.com', 'password123')
 
-      expect(result).toBe(true);
-      expect(authStore.user).toEqual(mockUser);
-      expect(authStore.session).toEqual(mockSession);
-      expect(authStore.isLoggedIn).toBe(true);
-      expect(authStore.token).toBe('mock-token');
-      expect(authStore.username).toBe('testuser');
-      expect(authStore.userRole).toBe('user');
-      expect(authStore.loading).toBe(false);
-      expect(authStore.error).toBeNull();
-      expect(api.get).toHaveBeenCalledWith('/profile');
-    });
+      expect(result).toBe(true)
+      expect(authStore.user).toEqual(mockUser)
+      expect(authStore.session).toEqual(mockSession)
+      expect(authStore.isLoggedIn).toBe(true)
+      expect(authStore.token).toBe('mock-token')
+      expect(authStore.username).toBe('testuser')
+      expect(authStore.userRole).toBe('user')
+      expect(authStore.loading).toBe(false)
+      expect(authStore.error).toBeNull()
+      expect(api.get).toHaveBeenCalledWith('/profile')
+    })
 
     it('should handle sign in failure', async () => {
-      const authStore = useAuthStore();
-      const mockError = { message: 'Invalid credentials' };
+      const authStore = useAuthStore()
+      const mockError = { message: 'Invalid credentials' }
 
-      (supabase.auth.signInWithPassword as vi.Mock<{ data: { user: User | null, session: Session | null }, error: AuthError | null }>).mockResolvedValueOnce({
+      ;(
+        supabase.auth.signInWithPassword as vi.Mock<{
+          data: { user: User | null; session: Session | null }
+          error: AuthError | null
+        }>
+      ).mockResolvedValueOnce({
         data: { user: null, session: null },
         error: mockError,
-      });
+      })
 
-      const result = await authStore.signIn('test@example.com', 'wrongpassword');
+      const result = await authStore.signIn('test@example.com', 'wrongpassword')
 
-      expect(result).toBe(false);
-      expect(authStore.user).toBeNull();
-      expect(authStore.session).toBeNull();
-      expect(authStore.isLoggedIn).toBe(false);
-      expect(authStore.token).toBeNull();
-      expect(authStore.loading).toBe(false);
-      expect(authStore.error).toBe('Falha no login.'); // Adjusted assertion
-      expect(api.get).not.toHaveBeenCalled();
-    });
-  });
+      expect(result).toBe(false)
+      expect(authStore.user).toBeNull()
+      expect(authStore.session).toBeNull()
+      expect(authStore.isLoggedIn).toBe(false)
+      expect(authStore.token).toBeNull()
+      expect(authStore.loading).toBe(false)
+      expect(authStore.error).toBe('Falha no login.') // Adjusted assertion
+      expect(api.get).not.toHaveBeenCalled()
+    })
+  })
 
   describe('signOut', () => {
     it('should sign out a user successfully', async () => {
-      const authStore = useAuthStore();
+      const authStore = useAuthStore()
       // Set initial state to logged in
-      authStore.user = { id: 'user-id', email: 'test@example.com' } as User;
-      authStore.session = { access_token: 'mock-token' } as Session;
-      authStore.username = 'testuser';
-      authStore.userRole = 'user';
+      authStore.user = { id: 'user-id', email: 'test@example.com' } as User
+      authStore.session = { access_token: 'mock-token' } as Session
+      authStore.username = 'testuser'
+      authStore.userRole = 'user'
 
-      (supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({ error: null });
+      ;(supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({
+        error: null,
+      })
 
-      const result = await authStore.signOut();
+      const result = await authStore.signOut()
 
-      expect(result).toBe(true);
-      expect(authStore.user).toBeNull();
-      expect(authStore.session).toBeNull();
-      expect(authStore.isLoggedIn).toBe(false);
-      expect(authStore.token).toBeNull();
-      expect(authStore.username).toBeNull();
-      expect(authStore.userRole).toBeNull();
-      expect(authStore.loading).toBe(false);
-      expect(authStore.error).toBeNull();
-      
-    });
+      expect(result).toBe(true)
+      expect(authStore.user).toBeNull()
+      expect(authStore.session).toBeNull()
+      expect(authStore.isLoggedIn).toBe(false)
+      expect(authStore.token).toBeNull()
+      expect(authStore.username).toBeNull()
+      expect(authStore.userRole).toBeNull()
+      expect(authStore.loading).toBe(false)
+      expect(authStore.error).toBeNull()
+    })
 
     it('should handle sign out failure', async () => {
-      const authStore = useAuthStore();
+      const authStore = useAuthStore()
       // Set initial state to logged in
-      authStore.user = { id: 'user-id', email: 'test@example.com' } as User;
-      authStore.session = { access_token: 'mock-token' } as Session;
-      const mockError = { message: 'Logout failed' };
+      authStore.user = { id: 'user-id', email: 'test@example.com' } as User
+      authStore.session = { access_token: 'mock-token' } as Session
+      const mockError = { message: 'Logout failed' }
 
-      (supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({ error: mockError });
+      ;(supabase.auth.signOut as vi.Mock<{ error: AuthError | null }>).mockResolvedValueOnce({
+        error: mockError,
+      })
 
-      const result = await authStore.signOut();
+      const result = await authStore.signOut()
 
-      expect(result).toBe(false);
-      expect(authStore.user).not.toBeNull(); // Should not clear state on failure
-      expect(authStore.session).not.toBeNull();
-      expect(authStore.loading).toBe(false);
-      expect(authStore.error).toBe('Falha no logout.'); // Adjusted assertion
-    });
-  });
-});
+      expect(result).toBe(false)
+      expect(authStore.user).not.toBeNull() // Should not clear state on failure
+      expect(authStore.session).not.toBeNull()
+      expect(authStore.loading).toBe(false)
+      expect(authStore.error).toBe('Falha no logout.') // Adjusted assertion
+    })
+  })
+})

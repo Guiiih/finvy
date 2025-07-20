@@ -28,7 +28,9 @@ const dreData = computed(() => reportStore.dreData)
 
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">Demonstração de Resultado do Exercício (DRE)</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">
+      Demonstração de Resultado do Exercício (DRE)
+    </h1>
 
     <p
       v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
@@ -46,17 +48,25 @@ const dreData = computed(() => reportStore.dreData)
 
       <div class="grid grid-cols-2 py-2 border-b border-surface-200">
         <span class="text-surface-800">Receita Bruta de Vendas</span>
-        <span class="text-right font-medium text-surface-900">{{ dreData.receitaBrutaVendas.toFixed(2) }}</span>
+        <span class="text-right font-medium text-surface-900">{{
+          dreData.receitaBrutaVendas.toFixed(2)
+        }}</span>
       </div>
 
       <div class="grid grid-cols-2 py-2 border-b border-surface-200">
         <span class="text-surface-800">(-) Deduções da Receita Bruta (ICMS sobre Vendas)</span>
-        <span class="text-right font-medium text-red-600">({{ dreData.deducoesReceitaBruta.toFixed(2) }})</span>
+        <span class="text-right font-medium text-red-600"
+          >({{ dreData.deducoesReceitaBruta.toFixed(2) }})</span
+        >
       </div>
 
-      <div class="grid grid-cols-2 py-2 border-b border-surface-200 font-bold border-t border-surface-400 pt-4 mt-4">
+      <div
+        class="grid grid-cols-2 py-2 border-b border-surface-200 font-bold border-t border-surface-400 pt-4 mt-4"
+      >
         <span class="text-surface-800">(=) Receita Líquida de Vendas</span>
-        <span class="text-right text-surface-900">{{ dreData.receitaLiquidaVendas.toFixed(2) }}</span>
+        <span class="text-right text-surface-900">{{
+          dreData.receitaLiquidaVendas.toFixed(2)
+        }}</span>
       </div>
 
       <div class="grid grid-cols-2 py-2 border-b border-surface-200">
@@ -64,7 +74,9 @@ const dreData = computed(() => reportStore.dreData)
         <span class="text-right font-medium text-red-600">({{ dreData.cmv.toFixed(2) }})</span>
       </div>
 
-      <div class="grid grid-cols-2 py-2 border-b border-surface-200 font-bold border-t border-surface-400 pt-4 mt-4">
+      <div
+        class="grid grid-cols-2 py-2 border-b border-surface-200 font-bold border-t border-surface-400 pt-4 mt-4"
+      >
         <span class="text-surface-800">(=) Lucro Bruto</span>
         <span class="text-right text-surface-900">{{ dreData.lucroBruto.toFixed(2) }}</span>
       </div>
@@ -76,4 +88,3 @@ const dreData = computed(() => reportStore.dreData)
     </div>
   </div>
 </template>
-

@@ -29,7 +29,9 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
 
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">Balanço Patrimonial</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-surface-800 border-b pb-2">
+      Balanço Patrimonial
+    </h1>
 
     <p
       v-if="!journalEntryStore.journalEntries || journalEntryStore.journalEntries.length === 0"
@@ -42,11 +44,22 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
     <div v-else>
       <div class="flex flex-col md:flex-row justify-between gap-6 p-4">
         <div class="flex-1 p-4 relative">
-          <h2 class="text-xl font-semibold text-surface-700 mb-4 border-b-2 border-surface-500 pb-1 uppercase">ATIVO</h2>
+          <h2
+            class="text-xl font-semibold text-surface-700 mb-4 border-b-2 border-surface-500 pb-1 uppercase"
+          >
+            ATIVO
+          </h2>
           <div class="mb-6" v-if="balanceSheetData.ativoCirculante !== 0">
-            <h3 class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase">ATIVO CIRCULANTE</h3>
+            <h3
+              class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase"
+            >
+              ATIVO CIRCULANTE
+            </h3>
 
-            <div class="flex justify-between font-bold mb-1" v-if="balanceSheetData.disponibilidades !== 0">
+            <div
+              class="flex justify-between font-bold mb-1"
+              v-if="balanceSheetData.disponibilidades !== 0"
+            >
               <span>Disponibilidades</span>
               <span>R$ {{ balanceSheetData.disponibilidades.toFixed(2) }}</span>
             </div>
@@ -66,7 +79,10 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
               </li>
             </ul>
 
-            <div class="flex justify-between font-bold mb-1 mt-2" v-if="balanceSheetData.clientes !== 0">
+            <div
+              class="flex justify-between font-bold mb-1 mt-2"
+              v-if="balanceSheetData.clientes !== 0"
+            >
               <span>Clientes</span>
               <span>R$ {{ balanceSheetData.clientes.toFixed(2) }}</span>
             </div>
@@ -76,12 +92,18 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
               </li>
             </ul>
 
-            <div class="flex justify-between font-bold mb-1 mt-2" v-if="balanceSheetData.estoqueDeMercadorias !== 0">
+            <div
+              class="flex justify-between font-bold mb-1 mt-2"
+              v-if="balanceSheetData.estoqueDeMercadorias !== 0"
+            >
               <span>Estoque de Mercadorias</span>
               <span>R$ {{ balanceSheetData.estoqueDeMercadorias.toFixed(2) }}</span>
             </div>
             <ul class="ml-4 text-sm text-surface-700">
-              <li class="flex justify-between py-0.5" v-if="balanceSheetData.estoqueDeMercadorias !== 0">
+              <li
+                class="flex justify-between py-0.5"
+                v-if="balanceSheetData.estoqueDeMercadorias !== 0"
+              >
                 <span>Estoque</span
                 ><span>R$ {{ balanceSheetData.estoqueDeMercadorias.toFixed(2) }}</span>
               </li>
@@ -94,13 +116,23 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
           </div>
 
           <div class="mb-6" v-if="balanceSheetData.ativoNaoCirculante !== 0">
-            <h3 class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase">ATIVO NÃO CIRCULANTE</h3>
-            <div class="flex justify-between font-bold mb-1" v-if="balanceSheetData.moveisEUtensilios !== 0">
+            <h3
+              class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase"
+            >
+              ATIVO NÃO CIRCULANTE
+            </h3>
+            <div
+              class="flex justify-between font-bold mb-1"
+              v-if="balanceSheetData.moveisEUtensilios !== 0"
+            >
               <span class="item-name">Imobilizado</span>
               <span>R$ {{ balanceSheetData.moveisEUtensilios.toFixed(2) }}</span>
             </div>
             <ul class="ml-4 text-sm text-surface-700">
-              <li class="flex justify-between py-0.5" v-if="balanceSheetData.moveisEUtensilios !== 0">
+              <li
+                class="flex justify-between py-0.5"
+                v-if="balanceSheetData.moveisEUtensilios !== 0"
+              >
                 <span>Móveis e Utensílios</span
                 ><span>R$ {{ balanceSheetData.moveisEUtensilios.toFixed(2) }}</span>
               </li>
@@ -113,11 +145,22 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
         </div>
 
         <div class="flex-1 p-4 relative md:border-l border-surface-200">
-          <h2 class="text-xl font-semibold text-surface-700 mb-4 border-b-2 border-surface-500 pb-1 uppercase">PASSIVO</h2>
+          <h2
+            class="text-xl font-semibold text-surface-700 mb-4 border-b-2 border-surface-500 pb-1 uppercase"
+          >
+            PASSIVO
+          </h2>
           <div class="mb-6" v-if="balanceSheetData.passivoCirculante !== 0">
-            <h3 class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase">PASSIVO CIRCULANTE</h3>
+            <h3
+              class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase"
+            >
+              PASSIVO CIRCULANTE
+            </h3>
 
-            <div class="flex justify-between font-bold mb-1" v-if="balanceSheetData.fornecedores !== 0">
+            <div
+              class="flex justify-between font-bold mb-1"
+              v-if="balanceSheetData.fornecedores !== 0"
+            >
               <span>Fornecedores</span>
               <span>R$ {{ balanceSheetData.fornecedores.toFixed(2) }}</span>
             </div>
@@ -128,7 +171,10 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
               </li>
             </ul>
 
-            <div class="flex justify-between font-bold mb-1 mt-2" v-if="balanceSheetData.despesasComPessoal !== 0">
+            <div
+              class="flex justify-between font-bold mb-1 mt-2"
+              v-if="balanceSheetData.despesasComPessoal !== 0"
+            >
               <span>Despesas com Pessoal</span>
               <span>R$ {{ balanceSheetData.despesasComPessoal.toFixed(2) }}</span>
             </div>
@@ -139,7 +185,10 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
               </li>
             </ul>
 
-            <div class="flex justify-between font-bold mb-1 mt-2" v-if="balanceSheetData.impostoAPagar !== 0">
+            <div
+              class="flex justify-between font-bold mb-1 mt-2"
+              v-if="balanceSheetData.impostoAPagar !== 0"
+            >
               <span>Imposto a pagar</span>
               <span>R$ {{ balanceSheetData.impostoAPagar.toFixed(2) }}</span>
             </div>
@@ -157,7 +206,11 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
           </div>
 
           <div class="mb-6">
-            <h3 class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase">PASSIVO NÃO CIRCULANTE</h3>
+            <h3
+              class="text-lg font-semibold text-surface-600 mb-2 border-b border-surface-300 pb-1 uppercase"
+            >
+              PASSIVO NÃO CIRCULANTE
+            </h3>
             <div class="flex justify-between font-bold mt-4 pt-2 border-t border-surface-400">
               <span>Total do Passivo Não Circulante</span>
               <span>R$ {{ balanceSheetData.passivoNaoCirculante.toFixed(2) }}</span>
@@ -165,24 +218,40 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
           </div>
 
           <div class="mb-6" v-if="balanceSheetData.totalPatrimonioLiquido !== 0">
-            <h3 class="text-lg font-semibold text-surface-700 mb-2 border-b border-surface-300 pb-1 uppercase">PATRIMÔNIO LÍQUIDO</h3>
+            <h3
+              class="text-lg font-semibold text-surface-700 mb-2 border-b border-surface-300 pb-1 uppercase"
+            >
+              PATRIMÔNIO LÍQUIDO
+            </h3>
             <ul class="text-sm text-surface-700">
-              <div class="flex justify-between font-bold mb-1" v-if="balanceSheetData.capitalSocial !== 0">
+              <div
+                class="flex justify-between font-bold mb-1"
+                v-if="balanceSheetData.capitalSocial !== 0"
+              >
                 <span>Capital Social</span>
                 <span>R$ {{ balanceSheetData.capitalSocial.toFixed(2) }}</span>
               </div>
               <ul class="ml-4 text-sm text-surface-700">
-                <li class="flex justify-between py-0.5" v-if="balanceSheetData.capitalSocialSubscrito !== 0">
+                <li
+                  class="flex justify-between py-0.5"
+                  v-if="balanceSheetData.capitalSocialSubscrito !== 0"
+                >
                   <span>Capital Social Subscrito</span
                   ><span>R$ {{ balanceSheetData.capitalSocialSubscrito.toFixed(2) }}</span>
                 </li>
-                <li class="flex justify-between py-0.5" v-if="balanceSheetData.capitalAIntegralizar !== 0">
+                <li
+                  class="flex justify-between py-0.5"
+                  v-if="balanceSheetData.capitalAIntegralizar !== 0"
+                >
                   <span>Capital a Integralizar</span
                   ><span>-R$ {{ Math.abs(balanceSheetData.capitalAIntegralizar).toFixed(2) }}</span>
                 </li>
               </ul>
 
-              <div class="flex justify-between font-bold mb-1 mt-2" v-if="balanceSheetData.reservas > 0">
+              <div
+                class="flex justify-between font-bold mb-1 mt-2"
+                v-if="balanceSheetData.reservas > 0"
+              >
                 <span>Reservas</span>
                 <span>R$ {{ balanceSheetData.reservas.toFixed(2) }}</span>
               </div>
@@ -201,8 +270,12 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
         </div>
       </div>
 
-      <div class="flex flex-col md:flex-row justify-between w-full p-4 bg-surface-100 rounded-b-lg border-t border-surface-200">
-        <div class="flex-1 flex justify-between font-bold text-lg p-2 border-b md:border-b-0 md:border-r border-surface-300">
+      <div
+        class="flex flex-col md:flex-row justify-between w-full p-4 bg-surface-100 rounded-b-lg border-t border-surface-200"
+      >
+        <div
+          class="flex-1 flex justify-between font-bold text-lg p-2 border-b md:border-b-0 md:border-r border-surface-300"
+        >
           <h3>TOTAL DO ATIVO</h3>
           <span>R$ {{ balanceSheetData.totalDoAtivo.toFixed(2) }}</span>
         </div>
@@ -228,4 +301,3 @@ const balanceSheetData = computed(() => reportStore.balanceSheetData)
     </div>
   </div>
 </template>
-
