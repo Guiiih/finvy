@@ -74,7 +74,7 @@ const logoSrc = computed(() => {
 
       <nav class="flex justify-start space-x-6 whitespace-nowrap">
         <RouterLink
-          to="/"
+          to="/dashboard"
           class="text-surface-600 hover:text-surface-900 font-medium router-link-active:text-blue-600 text-sm xl:text-base"
           >Home</RouterLink
         >
@@ -209,7 +209,7 @@ const logoSrc = computed(() => {
 
       <nav class="flex flex-col p-4 space-y-2">
         <RouterLink
-          to="/"
+          to="/dashboard"
           class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
           @click="closeMobileMenu"
         >

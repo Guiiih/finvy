@@ -7,7 +7,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Inital',
+      name: 'Landing',
+      component: () => import('../views/LandingPage.vue'),
+    },
+    {
+      path: '/dashboard',
+      name: 'Initial',
       component: () => import('../views/dashboard/InitialView.vue'),
       meta: { requiresAuth: true, title: 'Visão Geral' },
     },
@@ -189,10 +194,10 @@ router.beforeEach(async (to, from, next) => {
   if (requiresAuth && !session) {
     next('/login')
   } else if (
-    (to.path === '/login' || to.path === '/register' || to.path === '/forgot-password') &&
+    (to.path === '/login' || to.path === '/register' || to.path === '/forgot-password' || to.path === '/' || to.path === '/registration-success') &&
     session
   ) {
-    next('/')
+    next('/dashboard')
   } else {
     next()
   }
