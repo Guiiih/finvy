@@ -7,7 +7,7 @@ import {
 } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { formatSupabaseError } from "../utils/errorUtils.js";
-import { TaxRegime, TaxRegimeHistory } from "../types/index.js";
+import { TaxRegime } from "../types/index.js";
 
 // Esquemas de validação para o histórico de regime tributário
 const createTaxRegimeHistorySchema = z.object({

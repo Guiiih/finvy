@@ -41,9 +41,11 @@ export default async function handler(
 
     const xmlContent = req.body;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedXml: any;
     try {
       parsedXml = await parseStringPromise(xmlContent, { explicitArray: false, mergeAttrs: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (parseError: any) {
       logger.error(`[NFe Import] Erro ao fazer parsing do XML: ${parseError.message}`);
       return handleErrorResponse(res, 400, `Erro ao processar o XML: ${parseError.message}`);
@@ -55,7 +57,11 @@ export default async function handler(
     const emit = nfe.emit; // Emitente
     const dest = nfe.dest; // Destinatário
     const total = nfe.total.ICMSTot; // Totais de ICMS
-    const prod = nfe.det; // Detalhes dos produtos/serviços
+    if (!total) {
+      logger.error(`[NFe Import] ICMSTot não encontrado no XML.`);
+      return handleErrorResponse(res, 400, `Dados totais (ICMSTot) não encontrados no XML.`);
+    }
+    const prod = Array.isArray(nfe.det) ? nfe.det : [nfe.det]; // Detalhes dos produtos/serviços
 
     const emissionDate = ide.dhEmi || ide.dEmi; // Data de emissão
     const cnpjEmit = emit.CNPJ || emit.CPF; // CNPJ/CPF do emitente
@@ -68,12 +74,12 @@ export default async function handler(
     const ufDest = dest.enderDest.UF; // UF do destinatário
     const municipioDest = dest.enderDest.xMun; // Município do destinatário
 
-    const totalProducts = total.vProd; // Valor total dos produtos
-    const totalNFe = total.vNF; // Valor total da NF-e
-    const totalICMS = total.vICMS; // Valor total do ICMS
-    const totalIPI = total.vIPI; // Valor total do IPI
-    const totalPIS = total.vPIS; // Valor total do PIS
-    const totalCOFINS = total.vCOFINS; // Valor total do COFINS
+    const totalProducts = total.vProd ?? '0'; // Valor total dos produtos
+    const totalNFe = total.vNF ?? '0'; // Valor total da NF-e
+    const totalICMS = total.vICMS ?? '0'; // Valor total do ICMS
+    const totalIPI = total.vIPI ?? '0'; // Valor total do IPI
+    const totalPIS = total.vPIS ?? '0'; // Valor total do PIS
+    const totalCOFINS = total.vCOFINS ?? '0'; // Valor total do COFINS
 
     // Determinar o regime tributário da organização na data da emissão
     let organizationTaxRegime: TaxRegimeHistory | null = null;
@@ -90,19 +96,22 @@ export default async function handler(
       }
 
       const emissionDateTime = new Date(emissionDate);
-      for (const regimeEntry of regimes) {
-        const startDate = new Date(regimeEntry.start_date);
-        const endDate = new Date(regimeEntry.end_date);
+      if (regimes && regimes.length > 0) { // Add check for null or undefined regimes and if it has elements
+        for (const regimeEntry of regimes) {
+          const startDate = new Date(regimeEntry.start_date);
+          const endDate = new Date(regimeEntry.end_date);
 
-        if (emissionDateTime >= startDate && emissionDateTime <= endDate) {
-          organizationTaxRegime = regimeEntry;
-          break;
+          if (emissionDateTime >= startDate && emissionDateTime <= endDate) {
+            organizationTaxRegime = regimeEntry;
+            break;
+          }
         }
       }
     }
 
     // Preparar os itens da nota
-    const items = Array.isArray(prod) ? prod.map((item: any) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = (Array.isArray(prod) ? prod : [prod]).map((item: any) => ({
       description: item.prod.xProd,
       ncm: item.prod.NCM,
       quantity: parseFloat(item.prod.qCom),
@@ -112,22 +121,12 @@ export default async function handler(
       ipi_value: item.imposto?.IPI?.IPITrib?.vIPI ? parseFloat(item.imposto.IPI.IPITrib.vIPI) : 0,
       pis_value: item.imposto?.PIS?.PISAliq?.vPIS ? parseFloat(item.imposto.PIS.PISAliq.vPIS) : 0,
       cofins_value: item.imposto?.COFINS?.COFINSAliq?.vCOFINS ? parseFloat(item.imposto.COFINS.COFINSAliq.vCOFINS) : 0,
-    })) : [{
-      description: prod.prod.xProd,
-      ncm: prod.prod.NCM,
-      quantity: parseFloat(prod.prod.qCom),
-      unit_value: parseFloat(prod.prod.vUnCom),
-      total_value: parseFloat(prod.prod.vProd),
-      icms_value: prod.imposto?.ICMS?.ICMS?.vICMS ? parseFloat(prod.imposto.ICMS.ICMS.vICMS) : 0,
-      ipi_value: prod.imposto?.IPI?.IPITrib?.vIPI ? parseFloat(prod.imposto.IPI.IPITrib.vIPI) : 0,
-      pis_value: prod.imposto?.PIS?.PISAliq?.vPIS ? parseFloat(prod.imposto.PIS.PISAliq.vPIS) : 0,
-      cofins_value: prod.imposto?.COFINS?.COFINSAliq?.vCOFINS ? parseFloat(prod.imposto.COFINS.COFINSAliq.vCOFINS) : 0,
-    }];
+    }));
 
     const extractedData = {
       nfe_id: nfe.Id, // ID da NF-e (chave de acesso)
       emission_date: emissionDate,
-      type: nfe.tpNF === '0' ? 'entrada' : 'saida', // 0=entrada, 1=saída
+      type: ide.tpNF === '0' ? 'entrada' : 'saida', // 0=entrada, 1=saída
       cnpj_emit: cnpjEmit,
       razao_social_emit: razaoSocialEmit,
       uf_emit: ufEmit,
@@ -146,7 +145,6 @@ export default async function handler(
       items: items,
     };
 
-    // TODO: Salvar extractedData no banco de dados
     logger.info(`[NFe Import] Dados extraídos e regime determinado:`, extractedData);
 
     return res.status(200).json({

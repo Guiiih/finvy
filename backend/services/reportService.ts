@@ -201,6 +201,7 @@ export function calculateBalanceSheetData(
   let totalEquity = 0;
 
   const trialBalance = calculateTrialBalance(accounts, journalEntries);
+  const dreData = calculateDreData(accounts, journalEntries); // Get net income
 
   trialBalance.forEach((account) => {
     if (account.type === "asset") {
@@ -211,6 +212,9 @@ export function calculateBalanceSheetData(
       totalEquity += account.finalBalance;
     }
   });
+
+  // Incorporate net income into equity for the balance sheet
+  totalEquity += dreData.netIncome;
 
   const isBalanced = totalAssets === totalLiabilities + totalEquity;
 
@@ -264,9 +268,8 @@ export function calculateDfcData(
           // Example for investing
           investingActivities += amount * cashFlowDirection;
         } else if (
-          ["liability", "equity"].includes(relatedAccount.type) &&
-          (relatedAccount.name.includes("Loan") ||
-            relatedAccount.name.includes("Capital"))
+          ["liability"].includes(relatedAccount.type) || // Liabilities are financing
+          relatedAccount.type === "equity" // Equity is also financing
         ) {
           // Example for financing
           financingActivities += amount * cashFlowDirection;

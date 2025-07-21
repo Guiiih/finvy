@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 
 const reportStore = useReportStore()
 const journalEntryStore = useJournalEntryStore()
 
-const startDate = ref('')
-const endDate = ref('')
+const props = defineProps<{
+  startDate: string
+  endDate: string
+  reportType?: string
+}>()
 
 async function fetchVariationData() {
-  await reportStore.fetchReports(startDate.value, endDate.value)
+  await reportStore.fetchReports(props.startDate, props.endDate)
 }
 
-onMounted(async () => {
-  const today = new Date()
-  endDate.value = today.toISOString().split('T')[0]
-  startDate.value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
-  await fetchVariationData()
-})
+watch(
+  [() => props.startDate, () => props.endDate],
+  () => {
+    fetchVariationData()
+  },
+  { immediate: true },
+)
 
 const variationData = computed(() => reportStore.variationData)
 </script>

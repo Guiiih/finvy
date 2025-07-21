@@ -116,6 +116,7 @@ import { useReportStore } from '@/stores/reportStore'
 const props = defineProps<{
   startDate: string
   endDate: string
+  reportType?: string
 }>()
 
 const reportStore = useReportStore()

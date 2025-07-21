@@ -216,8 +216,7 @@ export default async function handler(
         const updateData = parsedBody.data;
         const newRegime = updateData.regime;
 
-        // Remove 'regime' from updateData as it's handled separately in tax_regime_history
-        const { regime: _, ...accountingPeriodUpdateData } = updateData;
+        const { ...accountingPeriodUpdateData } = updateData;
 
         if (Object.keys(accountingPeriodUpdateData).length === 0 && !newRegime) {
           logger.warn(`[Accounting Periods] Nenhuma campo para atualizar fornecido para período ${id}`);
@@ -245,7 +244,7 @@ export default async function handler(
 
         // Validação de sobreposição de datas para tax_regime_history no PUT
         if (newRegime || updateData.start_date || updateData.end_date) {
-          const { data: taxRegimeToUpdate, error: fetchTaxRegimeError } = await userSupabase
+          const { data: taxRegimeToUpdate } = await userSupabase
             .from("tax_regime_history")
             .select("id")
             .eq("organization_id", organization_id)
@@ -287,7 +286,7 @@ export default async function handler(
           }
 
           // Atualizar ou inserir no tax_regime_history
-          const { data: existingTaxRegime, error: fetchExistingTaxRegimeError } = await userSupabase
+          const { data: existingTaxRegime } = await userSupabase
             .from("tax_regime_history")
             .select("id")
             .eq("organization_id", organization_id)
