@@ -65,6 +65,19 @@ Este documento detalha o que já foi implementado e o que ainda precisa ser feit
         - `frontend/src/App.vue` integra o modal global e um botão flutuante para abri-lo.
         - Modal configurado para ser não-bloqueador (`modal="false"`) e posicionado à direita.
 
+### Fase 7: Melhorias de Design e Refatoração de UI - CONCLUÍDA
+- **Objetivo:** Melhorar o design visual do chatbot e otimizar sua estrutura de componentes.
+- **Implementação:**
+    - **Design:**
+        - Atualização do cabeçalho em `ChatbotWindow.vue` com título "Finvy BOT" e ícone de seta para trás, usando fundo branco e borda inferior.
+        - Estilização dos balões de mensagem em `ChatbotWindow.vue` para diferenciar usuário (fundo azul, texto branco) e bot (fundo branco, texto cinza-claro), com cantos arredondados e sombra.
+        - Redesenho da área de entrada em `ChatbotWindow.vue`, incluindo campo de texto, botão de upload e botão de envio circular com ícone e fundo azul.
+        - Ajuste do layout geral da janela do chat para fundo branco e área de mensagens rolável.
+    - **Refatoração:**
+        - Substituição do `PDialog` por uma `div` em `GlobalChatbotModal.vue` para criar um painel lateral.
+        - Integração direta do `ChatbotWindow.vue` no `App.vue`, eliminando a necessidade de `GlobalChatbotModal.vue` e simplificando a estrutura.
+        - Remoção do arquivo `GlobalChatbotModal.vue`.
+
 ## Fases Futuras:
 
 ### Fase 5: Lógica Contábil Avançada e Relatórios

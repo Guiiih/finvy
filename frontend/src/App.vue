@@ -9,7 +9,7 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { setToast } from '@/services/notificationService'
 import UserMenu from '@/components/UserMenu.vue'
-import GlobalChatbotModal from '@/components/GlobalChatbotModal.vue'
+import ChatbotWindow from '@/components/ChatbotWindow.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
 import Button from 'primevue/button'
 
@@ -287,13 +287,15 @@ const logoSrc = computed(() => {
       </nav>
     </div>
 
-    <main class="p-8">
-      <RouterView />
-    </main>
+    <div class="relative flex">
+      <main class="flex-grow p-8">
+        <RouterView />
+      </main>
 
-    
-
-    <GlobalChatbotModal />
+      <div v-if="globalChatbotStore.isChatbotModalVisible" class="w-96 h-[88vh] bg-white shadow-lg border-l border-gray-200 flex flex-col">
+        <ChatbotWindow />
+      </div>
+    </div>
   </div>
 
   <div v-else>

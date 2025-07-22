@@ -22,6 +22,11 @@ import organizationsHandler from '../backend/handlers/organizations.js'
 import swaggerDocsHandler from '../backend/handlers/swagger-docs.js'
 import nfeImportHandler from '../backend/handlers/nfe-import.js'
 import taxRegimeHistoryHandler from '../backend/handlers/tax-regime-history.js'
+import chatbotHandler from '../backend/handlers/chatbot.js'
+import exerciseSolverHandler from '../backend/handlers/exerciseSolver.js'
+import exerciseValidatorHandler from '../backend/handlers/exerciseValidator.js'
+import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryHandler.js'
+import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -91,6 +96,21 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith('/tax-regime-history')) {
     return taxRegimeHistoryHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/chatbot')) {
+    return chatbotHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/exercise-solver')) {
+    return exerciseSolverHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/exercise-validator')) {
+    return exerciseValidatorHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/confirm-journal-entries')) {
+    return confirmJournalEntryHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/document-processor')) {
+    return documentProcessorHandler(req, res, user_id, token)
   }
 
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')

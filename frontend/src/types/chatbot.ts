@@ -12,5 +12,5 @@ export interface ChatbotRequest {
 export interface ChatbotResponse {
   reply: string;
   conversationHistory?: ChatbotMessage[];
-  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_solution_request' | 'awaiting_exercise_text' | 'awaiting_validation_text';
+  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_solution_request' | 'awaiting_exercise_text' | 'awaiting_validation_text' | 'exercise_text_received';
 }

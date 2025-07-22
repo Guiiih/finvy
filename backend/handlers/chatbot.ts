@@ -16,6 +16,8 @@ const chatbotRequestSchema = z.object({
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
+  user_id: string,
+  token: string,
 ) {
   logger.info(`[ChatbotHandler] Recebida requisição para o chatbot.`);
 

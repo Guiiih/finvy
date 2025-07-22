@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { chatbotApiService } from '../services/chatbotApiService';
+import { solveExercise } from '../services/exerciseSolverService';
 import type { ChatbotMessage, ChatbotResponse } from '../types/chatbot';
 
 export const useChatbotStore = defineStore('chatbot', {
@@ -14,11 +15,20 @@ export const useChatbotStore = defineStore('chatbot', {
       this.isLoading = true;
       this.error = null;
       try {
+        
+
         this.addUserMessage(message);
 
         const response = await chatbotApiService.sendMessage(message, this.messages);
-        this.messages = response.conversationHistory || this.messages;
+        this.addModelMessage(response.reply);
         this.currentIntent = response.intent || 'general_question';
+
+        if (this.currentIntent === 'exercise_text_received') {
+          const exerciseText = message; // A mensagem atual é o texto do exercício
+          const solutionResponse = await solveExercise(exerciseText);
+          this.addModelMessage(solutionResponse.message, true); // Adiciona a solução formatada
+          this.currentIntent = 'general_question'; // Reseta a intenção
+        }
       } catch (err: any) {
         this.setError(err.message || 'Erro ao enviar mensagem para o chatbot.');
         console.error('Erro no chatbot store:', err);

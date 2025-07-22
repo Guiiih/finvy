@@ -13,6 +13,8 @@ export const config = {
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
+  user_id: string,
+  token: string,
 ) {
   logger.info(`[DocumentProcessorHandler] Recebida requisição para processar documento.`);
 

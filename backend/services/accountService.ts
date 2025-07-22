@@ -219,3 +219,30 @@ export async function deleteAccount(
   
   return true;
 }
+
+export async function findAccountByName(
+  accountName: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<Account | null> {
+  const userSupabase = getSupabaseClient(token);
+
+  const { data, error: dbError } = await userSupabase
+    .from("accounts")
+    .select("*")
+    .eq("name", accountName)
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", active_accounting_period_id)
+    .single();
+
+  if (dbError) {
+    if (dbError.code === 'PGRST116') { // No rows found
+      return null;
+    }
+    logger.error("Accounts Service: Erro ao buscar conta por nome:", dbError);
+    throw dbError;
+  }
+
+  return data as Account;
+}

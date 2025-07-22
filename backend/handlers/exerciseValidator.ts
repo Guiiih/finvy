@@ -12,6 +12,8 @@ const exerciseValidationRequestSchema = z.object({
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
+  user_id: string,
+  token: string,
 ) {
   logger.info(`[ExerciseValidatorHandler] Recebida requisição para o validador de exercícios.`);
 

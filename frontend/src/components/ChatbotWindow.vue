@@ -1,33 +1,63 @@
 <template>
-  <div class="chatbot-window">
-    <div class="messages">
-      <div v-for="(message, index) in chatbotStore.messages" :key="index" :class="['message', message.role]">
-        <div v-if="message.isSolution">
-          <strong>Solução Proposta:</strong>
-          <pre>{{ message.content }}</pre>
+  <div class="flex flex-col h-full bg-white rounded-lg shadow-lg">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+      <button class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h2 class="text-lg font-semibold text-gray-800">FINVY BOT</h2>
+      <div class="w-6"></div>
+    </div>
+
+    <!-- Messages -->
+    <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto bg-gray-50">
+      <div v-for="(message, index) in chatbotStore.messages" :key="index" class="mb-4">
+        <div :class="message.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+          <div
+            :class="[
+              'max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow',
+              message.role === 'user'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white text-gray-800',
+            ]"
+          >
+            <p v-if="!message.isSolution" class="text-sm">{{ message.content }}</p>
+            <div v-if="message.isSolution">
+              <strong>Solução Proposta:</strong>
+              <pre class="mt-2 text-sm bg-gray-100 text-gray-700 p-2 rounded">{{ message.content }}</pre>
+            </div>
+          </div>
         </div>
-        <p v-else>{{ message.content }}</p>
       </div>
-      <div v-if="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading" class="message model loading">
-        <p>Digitando...</p>
+      <div v-if="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading" class="flex justify-start mb-4">
+          <div class="bg-white text-gray-800 rounded-lg shadow px-4 py-2">
+              <div class="flex items-center space-x-1">
+                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></span>
+                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
+              </div>
+          </div>
       </div>
 
-      <div v-if="proposedEntries.length > 0" class="proposed-entries-section">
-        <h3>Proposta de Lançamentos:</h3>
-        <div v-for="(entry, idx) in proposedEntries" :key="idx" class="proposed-entry-card">
+      <!-- Proposed Entries -->
+      <div v-if="proposedEntries.length > 0" class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400">
+        <h3 class="text-lg font-semibold text-blue-800">Proposta de Lançamentos:</h3>
+        <div v-for="(entry, idx) in proposedEntries" :key="idx" class="p-3 mt-2 bg-white rounded-lg shadow">
           <p><strong>Data:</strong> {{ entry.date }}</p>
           <p><strong>Descrição:</strong> {{ entry.description }}</p>
-          <div class="entry-lines">
-            <div class="debits">
-              <h4>Débitos:</h4>
+          <div class="grid grid-cols-2 gap-4 mt-2">
+            <div>
+              <h4 class="font-semibold text-green-700">Débitos:</h4>
               <ul>
                 <li v-for="(debit, dIdx) in entry.debits" :key="dIdx">
                   {{ debit.account }}: R$ {{ debit.value.toFixed(2) }}
                 </li>
               </ul>
             </div>
-            <div class="credits">
-              <h4>Créditos:</h4>
+            <div>
+              <h4 class="font-semibold text-red-700">Créditos:</h4>
               <ul>
                 <li v-for="(credit, cIdx) in entry.credits" :key="cIdx">
                   {{ credit.account }}: R$ {{ credit.value.toFixed(2) }}
@@ -36,39 +66,49 @@
             </div>
           </div>
         </div>
-        <div class="confirmation-buttons">
-          <Button label="Confirmar Lançamento" @click="handleConfirmEntries" :loading="isConfirming" />
-          <Button label="Cancelar" class="p-button-secondary" @click="handleCancelEntries" :disabled="isConfirming" />
+        <div class="flex justify-end mt-4 space-x-2">
+          <Button label="Confirmar" @click="handleConfirmEntries" :loading="isConfirming" severity="success"/>
+          <Button label="Cancelar" class="p-button-secondary" @click="handleCancelEntries" :disabled="isConfirming" severity="danger"/>
         </div>
       </div>
     </div>
-    <div class="input-area">
-      <input
-        type="file"
-        ref="fileInput"
-        style="display: none;"
-        @change="handleFileUpload"
-        accept=".pdf,image/*"
-      />
-      <Button
-        icon="pi pi-upload"
-        class="p-button-secondary p-button-text"
-        @click="fileInput?.click()"
-        :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
-        v-tooltip.top="'Upload de PDF ou Imagem'"
-      />
-      <Textarea
-        v-model="newMessage"
-        @keyup.enter="handleEnter"
-        :placeholder="inputPlaceholder"
-        :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
-        rows="3"
-        autoResize
-      />
-      <Button @click="sendMessage" :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading" label="Enviar" />
-    </div>
-    <div v-if="chatbotStore.error" class="error-message">
-      {{ chatbotStore.error }}
+
+    <!-- Input -->
+    <div class="p-4 bg-white border-t border-gray-200">
+      <div class="flex items-center">
+        <input
+          type="file"
+          ref="fileInput"
+          style="display: none;"
+          @change="handleFileUpload"
+          accept=".pdf,image/*"
+        />
+        <Button
+            icon="pi pi-paperclip"
+            class="p-button-rounded p-button-text text-gray-500 hover:text-gray-700"
+            @click="fileInput?.click()"
+            :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+            v-tooltip.top="'Upload de PDF ou Imagem'"
+        />
+        <Textarea
+          v-model="newMessage"
+          @keyup.enter="handleEnter"
+          :placeholder="inputPlaceholder"
+          :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+          rows="1"
+          autoResize
+          class="flex-1 px-4 py-2 mx-2 text-sm bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <Button
+          icon="pi pi-send"
+          class="p-button-rounded p-button-primary"
+          @click="sendMessage"
+          :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+        />
+      </div>
+       <div v-if="chatbotStore.error" class="mt-2 text-sm text-red-600">
+        {{ chatbotStore.error }}
+      </div>
     </div>
 
     <ValidationModal
@@ -80,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, nextTick, onMounted, watch } from 'vue';
 import { useChatbotStore } from '@/stores/chatbotStore';
 import { solveExercise } from '@/services/exerciseSolverService';
 import { exerciseValidatorApiService } from '@/services/exerciseValidatorApiService';
@@ -100,6 +140,7 @@ const isConfirming = ref(false);
 const isUploading = ref(false);
 const proposedEntries = ref<ProposedEntry[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
+const messagesContainer = ref<HTMLElement | null>(null);
 
 const inputPlaceholder = computed(() => {
   switch (chatbotStore.currentIntent) {
@@ -108,166 +149,111 @@ const inputPlaceholder = computed(() => {
     case 'awaiting_validation_text':
       return 'Por favor, use o modal de validação para inserir o exercício e sua solução.';
     default:
-      return 'Digite sua mensagem ou dúvida contábil...';
+      return 'Envie sua mensagem...';
   }
 });
 
-const handleConfirmEntries = () => {
-  // Logic for confirming entries
-  console.log('Confirming entries');
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    }
+  });
+};
+
+onMounted(() => {
+  scrollToBottom();
+});
+
+watch(() => chatbotStore.messages, () => {
+  scrollToBottom();
+}, { deep: true });
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim() && proposedEntries.value.length === 0) return;
+
+  const text = newMessage.value;
+  newMessage.value = '';
+
+  if (chatbotStore.currentIntent === 'awaiting_exercise_text') {
+    isSolving.value = true;
+    try {
+      const result = await solveExercise(text);
+      proposedEntries.value = result.proposedEntries;
+    } catch (error) {
+      chatbotStore.setError('Erro ao processar o exercício.');
+    } finally {
+      isSolving.value = false;
+    }
+  } else {
+    await chatbotStore.sendMessage(text);
+  }
+};
+
+const handleEnter = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    const file = target.files[0];
+    isUploading.value = true;
+    try {
+      const response = await documentProcessorApiService.uploadDocument(file);
+      newMessage.value = response.extractedText;
+      await chatbotStore.sendMessage(response.extractedText);
+    } catch (error) {
+      chatbotStore.setError('Falha ao processar o arquivo.');
+    } finally {
+      isUploading.value = false;
+      target.value = '';
+    }
+  }
+};
+
+const handleValidationSubmit = async (data: { exercise: string; solution: string }) => {
+  isModalLoading.value = true;
+  try {
+    const response = await exerciseValidatorApiService.validateSolution(data.exercise, data.solution);
+    chatbotStore.addModelMessage(response);
+    isValidationModalVisible.value = false;
+  } catch (error) {
+    chatbotStore.setError('Erro ao validar a solução.');
+  } finally {
+    isModalLoading.value = false;
+  }
+};
+
+const handleConfirmEntries = async () => {
+  isConfirming.value = true;
+  try {
+    await confirmJournalEntryApiService.confirmEntries(proposedEntries.value);
+    chatbotStore.addModelMessage('Lançamentos confirmados com sucesso!');
+    proposedEntries.value = [];
+  } catch (error) {
+    chatbotStore.setError('Erro ao confirmar os lançamentos.');
+  } finally {
+    isConfirming.value = false;
+  }
 };
 
 const handleCancelEntries = () => {
-  // Logic for canceling entries
-  console.log('Canceling entries');
+  proposedEntries.value = [];
+  chatbotStore.addModelMessage('Proposta de lançamento cancelada.');
 };
 
-const handleFileUpload = (event: Event) => {
-  // Logic for file upload
-  console.log('File uploaded', event);
-};
+watch(() => chatbotStore.currentIntent, (intent: any) => {
+  if (intent === 'awaiting_validation_text') {
+    isValidationModalVisible.value = true;
+  }
+});
 
-const handleEnter = () => {
-  // Logic for handling enter key press
-  console.log('Enter pressed');
-};
-
-const sendMessage = () => {
-  // Logic for sending message
-  console.log('Sending message');
-};
-
-const handleValidationSubmit = () => {
-  // Logic for validation submit
-  console.log('Validation submitted');
-};
 </script>
 
 <style scoped>
-.chatbot-window {
-  display: flex;
-  flex-direction: column;
-  height: 70vh;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-}
-
-.messages {
-  flex-grow: 1;
-  padding: 10px;
-  overflow-y: auto;
-  background-color: #f9f9f9;
-}
-
-.message {
-  margin-bottom: 10px;
-  padding: 8px 12px;
-  border-radius: 15px;
-  max-width: 80%;
-  word-wrap: break-word;
-}
-
-.message.user {
-  background-color: #007bff;
-  color: white;
-  align-self: flex-end;
-  margin-left: auto;
-}
-
-.message.model {
-  background-color: #e2e2e2;
-  color: #333;
-  align-self: flex-start;
-  margin-right: auto;
-}
-
-.message.loading {
-  font-style: italic;
-  color: #666;
-}
-
-pre {
-  background-color: #f0f0f0;
-  padding: 10px;
-  border-radius: 5px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-}
-
-.input-area {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-top: 1px solid #ccc;
-}
-
-.input-area .p-inputtextarea {
-  flex-grow: 1;
-  margin-right: 10px;
-}
-
-.error-message {
-  color: red;
-  padding: 10px;
-  background-color: #ffe0e0;
-  border-top: 1px solid #ffc0c0;
-}
-
-.suggested-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-  justify-content: center; /* Centraliza os botões */
-}
-
-.proposed-entries-section {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #e9ecef;
-}
-
-.proposed-entry-card {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-.entry-lines {
-  display: flex;
-  gap: 20px;
-  margin-top: 10px;
-}
-
-.debits, .credits {
-  flex: 1;
-  border: 1px solid #ced4da;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-.debits h4, .credits h4 {
-  margin-top: 0;
-  color: #0056b3;
-}
-
-.debits ul, .credits ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.confirmation-buttons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
+/* All styles are now handled by TailwindCSS */
 </style>
