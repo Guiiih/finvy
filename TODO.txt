@@ -94,3 +94,61 @@ Este documento detalha o que já foi implementado e o que ainda precisa ser feit
     - Melhorar a formatação das mensagens do chatbot para diferentes tipos de conteúdo (ex: listas, tabelas).
     - Adicionar feedback visual durante o processamento (ex: spinners mais elaborados).
     - Implementar a capacidade de "lembrar" o contexto da conversa para interações mais longas.
+
+
+
+
+Como testar o chatbot:
+
+
+   1. Abra o Modal do Chatbot:
+       * Clique no botão flutuante (com o ícone de balão de fala, pi pi-comment) no canto inferior direito da tela. O modal do chatbot deve aparecer no lado direito.
+
+
+   2. Teste uma Dúvida Geral:
+       * No campo de texto do chatbot, digite: O que é ativo e passivo na contabilidade?
+       * Clique em "Enviar".
+       * Observe: O chatbot deve responder à sua pergunta. O placeholder do campo de texto deve permanecer como "Digite sua mensagem ou dúvida contábil...".
+
+
+   3. Teste a Solicitação de Resolução de Exercício:
+       * No campo de texto, digite: Quero que você resolva um exercício para mim.
+       * Clique em "Enviar".
+       * Observe: O chatbot deve responder algo como "Ok! Por favor, cole o texto completo do exercício." e o placeholder do campo de texto deve mudar para "Por
+         favor, cole o texto do exercício aqui...".
+
+
+   4. Teste a Resolução de Exercício (com Confirmação):
+       * Com o placeholder indicando "Por favor, cole o texto do exercício aqui...", cole um exercício contábil simples, por exemplo:
+
+   1         Em 15/07/2025, a empresa ABC comprou um veículo à vista por R$ 50.000,00.
+
+       * Clique em "Enviar".
+       * Observe: O chatbot deve exibir uma "Proposta de Lançamentos" formatada (não mais JSON puro), com os botões "Confirmar Lançamento" e "Cancelar".
+       * Clique em "Confirmar Lançamento".
+       * Observe: O chatbot deve responder "Lançamento(s) criado(s) com sucesso!".
+       * Verifique no Supabase: Acesse seu painel do Supabase e confira as tabelas journal_entries e entry_lines para confirmar que o lançamento foi criado.
+
+
+   5. Teste a Solicitação de Validação de Solução:
+       * No campo de texto, digite: Minha solução para um exercício está correta?
+       * Clique em "Enviar".
+       * Observe: O chatbot deve responder algo como "Ok! Por favor, preencha o exercício e sua solução no modal que se abriu." e o modal de validação deve aparecer
+         automaticamente.
+
+
+   6. Teste a Validação de Solução (via Modal):
+       * No modal de validação, preencha:
+           * Enunciado do Exercício: A empresa XYZ vendeu mercadorias a prazo por R$ 1.000,00.
+           * Sua Solução: D - Clientes R$ 1.000,00 / C - Receita de Vendas R$ 1.000,00
+       * Clique em "Validar".
+       * Observe: O modal deve fechar, e o chatbot deve exibir a "Análise da Solução" com o feedback do Gemini.
+
+
+   7. Teste o Upload de Documentos:
+       * Clique no ícone de upload (clipe de papel) ao lado do campo de texto.
+       * Selecione um arquivo PDF ou uma imagem (com texto claro).
+       * Observe: O texto extraído do documento deve aparecer no campo de texto do chatbot, pronto para ser enviado para resolução ou validação.
+
+
+  Me informe sobre os resultados de cada teste!

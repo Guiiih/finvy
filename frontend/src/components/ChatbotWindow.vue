@@ -174,20 +174,7 @@ const sendMessage = async () => {
 
   const text = newMessage.value;
   newMessage.value = '';
-
-  if (chatbotStore.currentIntent === 'awaiting_exercise_text') {
-    isSolving.value = true;
-    try {
-      const result = await solveExercise(text);
-      proposedEntries.value = result.proposedEntries;
-    } catch (error) {
-      chatbotStore.setError('Erro ao processar o exercício.');
-    } finally {
-      isSolving.value = false;
-    }
-  } else {
-    await chatbotStore.sendMessage(text);
-  }
+  await chatbotStore.sendMessage(text);
 };
 
 const handleEnter = (event: KeyboardEvent) => {

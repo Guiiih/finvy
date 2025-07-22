@@ -24,10 +24,10 @@ export const useChatbotStore = defineStore('chatbot', {
         this.currentIntent = response.intent || 'general_question';
 
         if (this.currentIntent === 'exercise_text_received') {
-          const exerciseText = message; // A mensagem atual é o texto do exercício
+          const exerciseText = message;
           const solutionResponse = await solveExercise(exerciseText);
-          this.addModelMessage(solutionResponse.message, true); // Adiciona a solução formatada
-          this.currentIntent = 'general_question'; // Reseta a intenção
+          this.addModelMessage(JSON.stringify(solutionResponse.proposedEntries, null, 2), true);
+          this.currentIntent = 'general_question';
         }
       } catch (err: any) {
         this.setError(err.message || 'Erro ao enviar mensagem para o chatbot.');

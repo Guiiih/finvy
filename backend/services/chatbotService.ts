@@ -43,12 +43,10 @@ export async function sendMessageToChatbot(
       - 'general_question': Se for uma pergunta comum sobre contabilidade.
       - 'resolve_exercise_request': Se o usuário pedir para resolver um exercício (ex: "resolva este exercício", "calcule isso").
       - 'validate_solution_request': Se o usuário pedir para validar uma solução (ex: "minha solução está correta?", "verifique meu lançamento").
-      - 'exercise_text_received': Se o usuário fornecer o texto de um exercício APÓS uma intenção de 'awaiting_exercise_text'.
-
       Sua resposta deve ser um JSON com a seguinte estrutura:
       {
         "reply": "sua resposta textual aqui",
-        "intent": "general_question" | "resolve_exercise_request" | "validate_solution_request" | "awaiting_exercise_text" | "awaiting_validation_text" | "exercise_text_received"
+        "intent": "general_question" | "resolve_exercise_request" | "validate_solution_request" | "awaiting_exercise_text" | "awaiting_validation_text"
       }
 
       Exemplos de interação:
@@ -76,7 +74,7 @@ export async function sendMessageToChatbot(
           type: Type.OBJECT,
           properties: {
             reply: { type: Type.STRING },
-            intent: { type: Type.STRING, enum: ['general_question', 'resolve_exercise_request', 'validate_solution_request', 'awaiting_exercise_text', 'awaiting_validation_text', 'exercise_text_received'] },
+            intent: { type: Type.STRING, enum: ['general_question', 'resolve_exercise_request', 'validate_solution_request', 'awaiting_exercise_text', 'awaiting_validation_text'] },
           },
           required: ['reply', 'intent'],
         },
