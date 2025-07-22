@@ -9,6 +9,9 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { setToast } from '@/services/notificationService'
 import UserMenu from '@/components/UserMenu.vue'
+import GlobalChatbotModal from '@/components/GlobalChatbotModal.vue'
+import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
+import Button from 'primevue/button'
 
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
@@ -19,6 +22,7 @@ const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const accountingPeriodStore = useAccountingPeriodStore()
 const toast = useToast()
+const globalChatbotStore = useGlobalChatbotStore()
 
 const showUserMenu = ref(false)
 const isMobileMenuOpen = ref(false)
@@ -120,6 +124,14 @@ const logoSrc = computed(() => {
           <span>{{ accountingPeriodStore.activeAccountingPeriod.name }}</span>
         </router-link>
 
+        <button
+          class="p-2 rounded-full hover:bg-surface-200 relative"
+          aria-label="Abrir Chatbot"
+          @click="globalChatbotStore.toggleChatbotModal()"
+        >
+          <i class="pi pi-comment text-xl text-surface-600"></i>
+        </button>
+
         <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
         </button>
@@ -162,6 +174,14 @@ const logoSrc = computed(() => {
           <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
           <span>{{ accountingPeriodStore.activeAccountingPeriod.name }}</span>
         </router-link>
+
+        <button
+          class="p-2 rounded-full hover:bg-surface-200 relative"
+          aria-label="Abrir Chatbot"
+          @click="globalChatbotStore.toggleChatbotModal()"
+        >
+          <i class="pi pi-comment text-xl text-surface-600"></i>
+        </button>
 
         <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
@@ -270,6 +290,10 @@ const logoSrc = computed(() => {
     <main class="p-8">
       <RouterView />
     </main>
+
+    
+
+    <GlobalChatbotModal />
   </div>
 
   <div v-else>

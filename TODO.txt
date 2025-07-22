@@ -1,0 +1,83 @@
+# Progresso do Chatbot Contábil no Finvy
+
+Este documento detalha o que já foi implementado e o que ainda precisa ser feito para a funcionalidade de chatbot contábil no projeto Finvy.
+
+## Fases Concluídas:
+
+### Fase 1: Análise e Estrutura
+- **Objetivo:** Entender onde a nova funcionalidade se encaixaria na arquitetura e definir os componentes principais.
+- **Implementação:**
+    - Criação dos arquivos iniciais no `backend/` (`handlers/chatbot.ts`, `services/chatbotService.ts`, `types/chatbot.ts`).
+    - Criação dos arquivos iniciais no `frontend/src/` (`components/ChatbotWindow.vue`, `services/chatbotApiService.ts`, `stores/chatbotStore.ts`, `views/ChatbotView.vue`).
+    - Definição dos tipos `ChatbotMessage`, `ChatbotRequest`, `ChatbotResponse` em `backend/types/chatbot.ts` e `frontend/src/types/chatbot.ts`.
+    - Configuração das rotas da API no `api/index.ts` para o endpoint `/chatbot`.
+
+### Fase 2: Chatbot de Dúvidas (MVP)
+- **Objetivo:** Implementar a base do chatbot para responder a dúvidas gerais de contabilidade.
+- **Implementação:**
+    - Implementação do `chatbotApiService.ts` para comunicação com o backend.
+    - Implementação do `chatbotStore.ts` (Pinia) para gerenciar o estado do chatbot no frontend.
+    - Implementação do `ChatbotWindow.vue` (UI básica do chat).
+    - Integração do Google Gemini API (`gemini-2.5-flash`) no `backend/services/chatbotService.ts` para processamento das mensagens.
+    - Configuração do carregamento da `GEMINI_API_KEY` via `.env` na raiz do projeto.
+    - **Observação:** A `systemInstruction` no `startChat` causou problemas com o `gemini-2.5-flash` e foi removida para o chat geral.
+
+### Fase 3: Resolução/Validação de Exercícios (Texto Simples) - CONCLUÍDA
+- **Objetivo:** Aprimorar o chatbot para interpretar e processar exercícios contábeis simples fornecidos em texto, e validar soluções.
+- **Implementação:**
+    - **Backend:**
+        - Criação de `backend/services/exerciseSolverService.ts` para a lógica de resolução de exercícios (agora retorna proposta).
+        - Criação de `backend/handlers/exerciseSolver.ts` para o endpoint da API de resolução de exercícios.
+        - Adição da rota `/exercise-solver` em `api/index.ts`.
+        - Criação de `backend/services/exerciseValidatorService.ts` para a lógica de validação de soluções.
+        - Criação de `backend/handlers/exerciseValidator.ts` para o endpoint da API de validação de exercícios.
+        - Adição da rota `/exercise-validator` em `api/index.ts`.
+        - Criação de `backend/services/confirmJournalEntryService.ts` para a lógica de criação de lançamentos após confirmação.
+        - Criação de `backend/handlers/confirmJournalEntryHandler.ts` para o endpoint da API de confirmação de lançamentos.
+        - Adição da rota `/confirm-journal-entries` em `api/index.ts`.
+        - Implementação da lógica contábil básica para criar lançamentos e suas linhas (`journalEntryService.ts`, `entryLineService.ts`), incluindo validação de débito/crédito.
+        - Aprimoramento do `chatbotService.ts` para retornar a intenção do usuário (`intent`) em vez de `suggested_actions`, permitindo um fluxo de conversa mais natural.
+    - **Frontend:**
+        - `ChatbotWindow.vue` adaptado para um fluxo de conversa natural, reagindo à `intent` do backend.
+        - `ChatbotWindow.vue` exibe a proposta de lançamentos de forma formatada e aguarda confirmação do usuário.
+        - `ChatbotWindow.vue` inclui botões "Confirmar Lançamento" e "Cancelar" para a proposta.
+        - `ChatbotWindow.vue` integra `ValidationModal.vue` para a funcionalidade de validação de soluções.
+        - `frontend/src/services/exerciseValidatorApiService.ts` criado para comunicação com o validador.
+        - `frontend/src/services/confirmJournalEntryApiService.ts` criado para comunicação com o confirmador de lançamentos.
+        - `frontend/src/stores/chatbotStore.ts` atualizado para gerenciar a `intent`.
+
+### Fase 4: Processamento de Entrada Avançado (PDF/Imagem) - CONCLUÍDA
+- **Objetivo:** Permitir que o usuário forneça exercícios via upload de PDF ou imagem.
+- **Implementação:**
+    - **Backend:**
+        - Criação de `backend/handlers/documentProcessor.ts` para lidar com upload de arquivos.
+        - Criação de `backend/services/documentProcessorService.ts` para extração de texto de PDF (`pdf-parse`) e imagens (`tesseract.js`).
+        - Adição da rota `/document-processor` em `api/index.ts`.
+        - Instalação das dependências `pdf-parse`, `tesseract.js`, `formidable` e seus `@types` correspondentes.
+    - **Frontend:**
+        - `ChatbotWindow.vue` inclui um botão de upload de arquivo.
+        - `ChatbotWindow.vue` envia o arquivo para o backend e preenche o campo de mensagem com o texto extraído.
+        - `frontend/src/services/documentProcessorApiService.ts` criado para comunicação com o processador de documentos.
+    - **Refatoração de UI:**
+        - Chatbot transformado em um modal global (`GlobalChatbotModal.vue`) acessível de qualquer página.
+        - `frontend/src/router/index.ts` teve a rota `/chatbot` removida.
+        - `frontend/src/stores/globalChatbotStore.ts` criado para gerenciar a visibilidade do modal.
+        - `frontend/src/App.vue` integra o modal global e um botão flutuante para abri-lo.
+        - Modal configurado para ser não-bloqueador (`modal="false"`) e posicionado à direita.
+
+## Fases Futuras:
+
+### Fase 5: Lógica Contábil Avançada e Relatórios
+- **Objetivo:** Expandir a capacidade do chatbot para lidar com exercícios mais complexos e gerar relatórios.
+- **Planejamento:**
+    - Aprimorar o motor de resolução para lidar com cálculos de custo médio ponderado, simulação de impostos, depreciação, etc.
+    - Capacidade de gerar demonstrações financeiras simplificadas (DRE, Balanço) a partir dos dados do exercício.
+    - Integração mais profunda com os módulos existentes do Finvy.
+
+### Fase 6: Melhorias na Experiência do Usuário
+- **Objetivo:** Tornar a interação com o chatbot ainda mais intuitiva e visualmente agradável.
+- **Planejamento:**
+    - Refinar a exibição da "Análise da Solução" do validador (atualmente texto puro) para um formato mais estruturado (ex: tabela comparativa, destaque de erros).
+    - Melhorar a formatação das mensagens do chatbot para diferentes tipos de conteúdo (ex: listas, tabelas).
+    - Adicionar feedback visual durante o processamento (ex: spinners mais elaborados).
+    - Implementar a capacidade de "lembrar" o contexto da conversa para interações mais longas.
