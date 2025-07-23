@@ -5,11 +5,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
+import { useUserPresenceStore } from '@/stores/userPresenceStore'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { setToast } from '@/services/notificationService'
 import UserMenu from '@/components/UserMenu.vue'
 import ChatbotWindow from '@/components/ChatbotWindow.vue'
+import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
 import Button from 'primevue/button'
 
@@ -23,6 +25,7 @@ const themeStore = useThemeStore()
 const accountingPeriodStore = useAccountingPeriodStore()
 const toast = useToast()
 const globalChatbotStore = useGlobalChatbotStore()
+const userPresenceStore = useUserPresenceStore()
 
 const showUserMenu = ref(false)
 const isMobileMenuOpen = ref(false)
@@ -44,14 +47,16 @@ const closeMobileMenu = () => {
 }
 
 onMounted(() => {
-  setToast(toast)
-  authStore.initAuthListener()
-  window.addEventListener('click', closeUserMenu)
-})
+  setToast(toast);
+  authStore.initAuthListener();
+  userPresenceStore.startPresenceTracking();
+  window.addEventListener('click', closeUserMenu);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeUserMenu)
-})
+  window.removeEventListener('click', closeUserMenu);
+  userPresenceStore.stopPresenceTracking();
+});
 
 const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false
@@ -115,6 +120,16 @@ const logoSrc = computed(() => {
       </nav>
 
       <div class="flex justify-end items-center space-x-4">
+        <div class="flex items-center space-x-2">
+          <UserAvatarWithPresence
+            v-for="user in userPresenceStore.onlineUsers"
+            :key="user.user_id"
+            :user="user"
+            :currentUserId="authStore.user?.id"
+            class="h-6 w-6"
+          />
+        </div>
+
         <router-link
           to="/accounting-periods"
           v-if="accountingPeriodStore.activeAccountingPeriod"
@@ -143,11 +158,12 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img
+          <img
               :src="authStore.avatarUrl ?? undefined"
               alt="Avatar do usuário"
-              class="h-8 w-8 rounded-full"
+              class="w-9 rounded-full"
             />
+
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
@@ -166,6 +182,16 @@ const logoSrc = computed(() => {
         <i class="pi pi-bars text-2xl"></i>
       </button>
       <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2">
+          <UserAvatarWithPresence
+            v-for="user in userPresenceStore.onlineUsers"
+            :key="user.user_id"
+            :user="user"
+            :currentUserId="authStore.user?.id"
+            class="h-6 w-6"
+          />
+        </div>
+
         <router-link
           to="/accounting-periods"
           v-if="accountingPeriodStore.activeAccountingPeriod"
@@ -194,10 +220,10 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img
+          <img
               :src="authStore.avatarUrl ?? undefined"
               alt="Avatar do usuário"
-              class="h-8 w-8 rounded-full"
+              class="w-9 rounded-full"
             />
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />

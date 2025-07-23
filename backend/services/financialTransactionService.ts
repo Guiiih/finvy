@@ -1,6 +1,9 @@
 import { getSupabaseClient } from "../utils/supabaseClient.js";
 import logger from "../utils/logger.js";
 import { FinancialTransaction } from "../types/index.js";
+import { NotificationService } from "./notificationService.js";
+
+const notificationService = new NotificationService();
 
 export async function getFinancialTransactions(
   type: "payable" | "receivable",
@@ -58,5 +61,10 @@ export async function createFinancialTransaction(
     logger.error("Financial Transactions Service: Erro ao criar transação financeira:", dbError);
     throw dbError;
   }
+
+  // Create a notification for the new financial transaction
+  const notificationMessage = `Nova conta a ${type === 'payable' ? 'pagar' : 'receber'} criada: ${newTransaction.description} no valor de ${newTransaction.amount} com vencimento em ${newTransaction.due_date}.`;
+  await notificationService.createNotification(user_id, organization_id, `new_${type}_transaction`, notificationMessage);
+
   return newFinancialTransaction;
 }

@@ -20,6 +20,7 @@ import SelectButton from 'primevue/selectbutton'
 import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 
+import Tooltip from 'primevue/tooltip'
 import MyAuraPreset from '@/themes/MyAuraPreset'
 
 const app = createApp(App)
@@ -37,6 +38,7 @@ app.use(PrimeVue, {
   },
 })
 app.use(ToastService)
+app.directive('tooltip', Tooltip)
 app.component('InputText', InputText)
 app.component('PPassword', Password)
 app.component('PButton', Button)

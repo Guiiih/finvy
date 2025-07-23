@@ -1341,7 +1341,235 @@
           }
         }
       }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Retorna todas as notificações do usuário autenticado.",
+        "description": "Retorna uma lista de todas as notificações associadas ao usuário autenticado.",
+        "tags": [
+          "Notifications"
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de notificações.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID único da notificação."
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID do usuário ao qual a notificação pertence."
+                      },
+                      "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "O ID da organização à qual a notificação pertence."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "O tipo da notificação (e.g., 'financial_transaction_due')."
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "A mensagem da notificação."
+                      },
+                      "read": {
+                        "type": "boolean",
+                        "description": "Indica se a notificação foi lida."
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "A data e hora de criação da notificação."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "put": {
+        "summary": "Marca uma notificação como lida.",
+        "description": "Marca uma notificação específica como lida pelo seu ID.",
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da notificação a ser marcada como lida."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Notificação marcada como lida com sucesso. Nenhuma resposta de conteúdo."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Notificação não encontrada ou você não tem permissão para atualizar esta notificação."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/user-presence": {
+      "post": {
+        "summary": "Atualiza a presença do usuário.",
+        "description": "Atualiza o status de presença do usuário (online, período contábil ativo).",
+        "tags": [
+          "User Presence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "organizationId",
+                  "activeAccountingPeriodId"
+                ],
+                "properties": {
+                  "organizationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "O ID da organização atual do usuário."
+                  },
+                  "activeAccountingPeriodId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "O ID do período contábil ativo do usuário."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presença do usuário atualizada com sucesso."
+          },
+          "400": {
+            "description": "Requisição inválida. organizationId ou activeAccountingPeriodId ausentes."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "get": {
+        "summary": "Retorna usuários online na mesma organização e período contábil.",
+        "description": "Retorna uma lista de usuários que estão online na mesma organização e período contábil que o usuário autenticado.",
+        "tags": [
+          "User Presence"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da organização para filtrar usuários."
+          },
+          {
+            "in": "query",
+            "name": "activeAccountingPeriodId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID do período contábil ativo para filtrar usuários."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de usuários online.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "last_seen": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "profiles": {
+                        "type": "object",
+                        "properties": {
+                          "username": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. organizationId ou activeAccountingPeriodId ausentes."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
     }
   },
-  "tags": []
+  "tags": [
+    {
+      "name": "Notifications",
+      "description": "Operações relacionadas a notificações."
+    },
+    {
+      "name": "User Presence",
+      "description": "Gerenciamento de presença de usuários."
+    }
+  ]
 }

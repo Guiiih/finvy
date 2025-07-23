@@ -7,6 +7,14 @@ import type {
   LedgerAccount as FrontendLedgerAccount,
 } from "../types/index.js";
 
+// TODO: Para otimização de relatórios com grandes conjuntos de dados:
+// A geração de relatórios contábeis (Balanço, DRE, DFC) geralmente requer o processamento de todos os lançamentos
+// e contas para um período. Isso torna a otimização via streaming nos cálculos internos complexa.
+// A solução mais robusta para grandes volumes de dados é a geração assíncrona em background jobs,
+// onde o relatório é processado por um worker e disponibilizado para download posteriormente.
+// Isso evita timeouts e estouro de memória na função principal da API.
+
+
 interface StockBalance {
   product_id: string;
   product_name: string;

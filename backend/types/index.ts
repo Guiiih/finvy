@@ -210,3 +210,11 @@ export interface TaxRegimeHistory {
   created_at?: string;
   updated_at?: string;
 }
+
+import { VercelRequest } from '@vercel/node';
+
+export interface AuthenticatedRequest extends VercelRequest {
+  userId?: string;
+  organizationId?: string;
+  token?: string;
+}

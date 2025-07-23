@@ -27,6 +27,8 @@ import exerciseSolverHandler from '../backend/handlers/exerciseSolver.js'
 import journalEntryValidatorHandler from '../backend/handlers/journalEntryValidator.js'
 import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryHandler.js'
 import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
+import { getNotifications, markNotificationAsRead } from '../backend/handlers/notifications.js'
+import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -111,6 +113,23 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith('/document-processor')) {
     return documentProcessorHandler(req, res, user_id, token)
+  }
+  if (finalUrlPath.startsWith('/user-presence')) {
+    if (req.method === 'POST') {
+      return updateUserPresence(req, res, user_id, token)
+    }
+    if (req.method === 'GET') {
+      return getOnlineUsers(req, res, user_id, token)
+    }
+  }
+  if (finalUrlPath.startsWith('/notifications')) {
+    if (req.method === 'GET') {
+      return getNotifications(req, res, user_id)
+    }
+    if (req.method === 'PUT' && finalUrlPath.endsWith('/read')) {
+      const notificationId = finalUrlPath.split('/')[2]; // Extract ID from /notifications/:id/read
+      return markNotificationAsRead(req, res, user_id, notificationId)
+    }
   }
 
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')
