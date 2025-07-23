@@ -31,7 +31,7 @@
           </div>
         </div>
       </div>
-      <div v-if="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading" class="flex justify-start mb-4">
+      <div v-if="chatbotStore.isLoading || isSolving || isConfirming || isUploading" class="flex justify-start mb-4">
           <div class="bg-white text-gray-800 rounded-lg shadow px-4 py-2">
               <div class="flex items-center space-x-1">
                   <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
@@ -79,6 +79,21 @@
           <Button label="Cancelar" class="p-button-secondary" @click="handleCancelEntries" :disabled="isConfirming" severity="danger"/>
         </div>
       </div>
+
+      <!-- Found Journal Entry for Confirmation -->
+      <div v-if="chatbotStore.currentIntent === 'awaiting_confirmation_for_existing_journal_entry' && chatbotStore.foundJournalEntry" class="p-4 my-4 bg-green-50 border-l-4 border-green-400">
+        <h3 class="text-lg font-semibold text-green-800">Lançamento Encontrado:</h3>
+        <div class="p-3 mt-2 bg-white rounded-lg shadow">
+          <p><strong>ID:</strong> {{ chatbotStore.foundJournalEntry.id }}</p>
+          <p><strong>Data:</strong> {{ chatbotStore.foundJournalEntry.date }}</p>
+          <p><strong>Descrição:</strong> {{ chatbotStore.foundJournalEntry.description }}</p>
+          <!-- Adicione mais detalhes do lançamento conforme necessário -->
+        </div>
+        <div class="flex justify-end mt-4 space-x-2">
+          <Button label="Sim, é este!" @click="handleConfirmFoundJournalEntry" severity="success"/>
+          <Button label="Não, buscar outro" class="p-button-secondary" @click="handleCancelFoundJournalEntry" severity="danger"/>
+        </div>
+      </div>
     </div>
 
     <!-- Input -->
@@ -95,14 +110,14 @@
             icon="pi pi-paperclip"
             class="p-button-rounded p-button-text text-gray-500 hover:text-gray-700"
             @click="fileInput?.click()"
-            :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+            :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
             v-tooltip.top="'Upload de PDF ou Imagem'"
         />
         <Textarea
           v-model="newMessage"
           @keyup.enter="handleEnter"
           :placeholder="inputPlaceholder"
-          :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+          :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
           rows="1"
           autoResize
           class="flex-1 px-4 py-2 mx-2 text-sm bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -111,39 +126,29 @@
           icon="pi pi-send"
           class="p-button-rounded p-button-primary"
           @click="sendMessage"
-          :disabled="chatbotStore.isLoading || isSolving || isModalLoading || isConfirming || isUploading"
+          :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
         />
       </div>
        <div v-if="chatbotStore.error" class="mt-2 text-sm text-red-600">
         {{ chatbotStore.error }}
       </div>
     </div>
-
-    <ValidationModal
-      :visible="isValidationModalVisible"
-      @close="isValidationModalVisible = false"
-      @submit="handleValidationSubmit"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, watch } from 'vue';
 import { useChatbotStore } from '@/stores/chatbotStore';
-import { solveExercise } from '@/services/exerciseSolverService';
-import { exerciseValidatorApiService } from '@/services/exerciseValidatorApiService';
+
 import { confirmJournalEntryApiService, type ProposedEntry } from '@/services/confirmJournalEntryApiService';
 import { documentProcessorApiService } from '@/services/documentProcessorApiService';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
-import ValidationModal from './ValidationModal.vue';
 import Tooltip from 'primevue/tooltip';
 
 const chatbotStore = useChatbotStore();
 const newMessage = ref('');
 const isSolving = ref(false);
-const isValidationModalVisible = ref(false);
-const isModalLoading = ref(false);
 const isConfirming = ref(false);
 const isUploading = ref(false);
 
@@ -154,8 +159,8 @@ const inputPlaceholder = computed(() => {
   switch (chatbotStore.currentIntent) {
     case 'awaiting_exercise_text':
       return 'Por favor, cole o texto do exercício aqui...';
-    case 'awaiting_validation_text':
-      return 'Por favor, use o modal de validação para inserir o exercício e sua solução.';
+    case 'awaiting_existing_journal_entry_description':
+      return 'Por favor, digite a descrição do lançamento que você quer validar...';
     case 'awaiting_clarification':
       return 'Responda às perguntas de esclarecimento...';
     default:
@@ -212,19 +217,6 @@ const handleFileUpload = async (event: Event) => {
   }
 };
 
-const handleValidationSubmit = async (data: { exercise: string; solution: string }) => {
-  isModalLoading.value = true;
-  try {
-    const response = await exerciseValidatorApiService.validateSolution(data.exercise, data.solution);
-    chatbotStore.addModelMessage(response);
-    isValidationModalVisible.value = false;
-  } catch (error) {
-    chatbotStore.setError('Erro ao validar a solução.');
-  } finally {
-    isModalLoading.value = false;
-  }
-};
-
 const handleConfirmEntries = async () => {
   isConfirming.value = true;
   try {
@@ -243,11 +235,22 @@ const handleCancelEntries = () => {
   chatbotStore.addModelMessage('Proposta de lançamento cancelada.');
 };
 
-watch(() => chatbotStore.currentIntent, (intent: any) => {
-  if (intent === 'awaiting_validation_text') {
-    isValidationModalVisible.value = true;
+const handleConfirmFoundJournalEntry = async () => {
+  if (chatbotStore.foundJournalEntry) {
+    // Aqui você enviaria o lançamento encontrado para validação
+    // Por enquanto, apenas adiciona uma mensagem de confirmação
+    chatbotStore.addModelMessage(`Confirmado! Lançamento ${chatbotStore.foundJournalEntry.id} será validado.`);
+    // Limpa o lançamento encontrado e reseta a intenção
+    chatbotStore.setFoundJournalEntry(null);
+    chatbotStore.currentIntent = 'general_question'; // Ou uma nova intenção para o processo de validação
   }
-});
+};
+
+const handleCancelFoundJournalEntry = () => {
+  chatbotStore.addModelMessage('Busca de lançamento cancelada. Por favor, tente outra descrição.');
+  chatbotStore.setFoundJournalEntry(null);
+  chatbotStore.currentIntent = 'awaiting_existing_journal_entry_description'; // Volta para o estado de aguardar descrição
+};
 
 </script>
 

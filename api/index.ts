@@ -24,7 +24,7 @@ import nfeImportHandler from '../backend/handlers/nfe-import.js'
 import taxRegimeHistoryHandler from '../backend/handlers/tax-regime-history.js'
 import chatbotHandler from '../backend/handlers/chatbot.js'
 import exerciseSolverHandler from '../backend/handlers/exerciseSolver.js'
-import exerciseValidatorHandler from '../backend/handlers/exerciseValidator.js'
+import journalEntryValidatorHandler from '../backend/handlers/journalEntryValidator.js'
 import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryHandler.js'
 import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 
@@ -103,8 +103,8 @@ async function protectedRoutesHandler(
   if (finalUrlPath.startsWith('/exercise-solver')) {
     return exerciseSolverHandler(req, res, user_id, token)
   }
-  if (finalUrlPath.startsWith('/exercise-validator')) {
-    return exerciseValidatorHandler(req, res, user_id, token)
+  if (finalUrlPath.startsWith('/journal-entry-validator')) {
+    return journalEntryValidatorHandler(req, res, user_id, token)
   }
   if (finalUrlPath.startsWith('/confirm-journal-entries')) {
     return confirmJournalEntryHandler(req, res, user_id, token)

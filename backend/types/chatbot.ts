@@ -17,7 +17,7 @@ export interface ProposedEntry {
 export interface ChatbotResponse {
   reply: string;
   conversationHistory?: ChatbotMessage[];
-  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_solution_request' | 'awaiting_exercise_text' | 'awaiting_validation_text' | 'exercise_text_received' | 'awaiting_clarification';
+  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_journal_entry_request' | 'validate_existing_journal_entry_request' | 'awaiting_exercise_text' | 'journal_entry_text_received' | 'awaiting_existing_journal_entry_description' | 'awaiting_confirmation_for_existing_journal_entry' | 'awaiting_clarification';
   clarifyingQuestions?: string[];
   proposedEntries?: ProposedEntry[];
 }
