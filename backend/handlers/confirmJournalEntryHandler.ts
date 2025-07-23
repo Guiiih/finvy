@@ -80,11 +80,11 @@ export default async function handler(
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
   } catch (error: unknown) {
     logger.error("Erro inesperado na API de confirmação de lançamentos:", error);
-    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    logger.error("Detalhes do erro:", error);
     return handleErrorResponse(
       res,
       500,
-      `Erro interno do servidor ao confirmar lançamentos: ${errorMessage}`,
+      error instanceof Error ? error.message : "Erro interno do servidor ao confirmar lançamentos.",
     );
   }
 }

@@ -33,12 +33,26 @@ export async function solveExercise(
   // 1. Chamar a API do Gemini para obter a estrutura JSON
   const jsonResponse = await getJsonFromGemini(exerciseText);
 
-  if (!jsonResponse.entries || !Array.isArray(jsonResponse.entries)) {
-    throw new Error("A resposta da IA não contém uma lista de lançamentos válida.");
+  if (jsonResponse.clarifyingQuestions && Array.isArray(jsonResponse.clarifyingQuestions) && jsonResponse.clarifyingQuestions.length > 0) {
+    logger.info(`[ExerciseSolverService] Perguntas de esclarecimento geradas.`);
+    return {
+      message: "Preciso de mais informações para resolver o exercício.",
+      clarifyingQuestions: jsonResponse.clarifyingQuestions,
+    };
   }
 
-  // 2. Validar balanço para cada lançamento proposto
+  if (!jsonResponse.entries || !Array.isArray(jsonResponse.entries)) {
+    throw new Error("A resposta da IA não contém uma lista de lançamentos válida ou perguntas de esclarecimento.");
+  }
+
+  // 2. Validar balanço para cada lançamento proposto e formatar a data
   for (const entry of jsonResponse.entries) {
+    // Formatar a data para YYYY-MM-DD
+    if (entry.date) {
+      const dateObj = new Date(entry.date);
+      entry.date = dateObj.toISOString().split('T')[0]; // Garante YYYY-MM-DD
+    }
+
     const totalDebits = entry.debits.reduce((sum: number, d: any) => sum + d.value, 0);
     const totalCredits = entry.credits.reduce((sum: number, c: any) => sum + c.value, 0);
 
@@ -58,10 +72,20 @@ export async function solveExercise(
 async function getJsonFromGemini(exerciseText: string): Promise<any> {
   const prompt = `
     Você é um assistente contábil especializado no sistema contábil brasileiro.
-    Sua tarefa é analisar o exercício contábil a seguir e extrair os lançamentos em formato JSON.
-    O JSON deve conter uma lista de lançamentos, onde cada lançamento tem data, descrição, uma lista de débitos e uma lista de créditos.
-    Cada débito e crédito deve especificar a conta e o valor.
-    A data deve ser inferida do texto ou usar a data atual se não especificada.
+    Sua tarefa é analisar o exercício contábil fornecido e determinar se todas as informações necessárias para criar um lançamento contábil completo estão presentes.
+
+    As informações necessárias para um lançamento contábil completo são:
+    - Data do lançamento (YYYY-MM-DD)
+    - Descrição ou histórico do lançamento
+    - Contas e valores para todos os débitos
+    - Contas e valores para todos os créditos
+    - O total dos débitos deve ser igual ao total dos créditos.
+
+    Se todas as informações estiverem presentes e o lançamento for balanceado, retorne um objeto JSON com a chave "entries", contendo uma lista de lançamentos contábeis. Cada lançamento deve ter "date", "description", "debits" (lista de objetos {account, value}) e "credits" (lista de objetos {account, value}). A data deve ser inferida do texto ou usar a data atual se não especificada.
+
+    Se alguma informação estiver faltando ou for ambígua para criar um lançamento completo e balanceado, retorne um objeto JSON com a chave "clarifyingQuestions", contendo uma lista de strings. Cada string deve ser uma pergunta clara e concisa para obter a informação que falta. Não inclua "entries" neste caso.
+
+    Sempre retorne APENAS UMA das chaves: "entries" OU "clarifyingQuestions".
 
     Exercício: "${exerciseText}"
   `;
@@ -77,7 +101,7 @@ async function getJsonFromGemini(exerciseText: string): Promise<any> {
           properties: {
             entries: {
               type: Type.ARRAY,
-              description: "Lista de lançamentos contábeis extraídos do exercício.",
+              description: "Lista de lançamentos contábeis extraídos do exercício, se todas as informações estiverem presentes.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -89,8 +113,13 @@ async function getJsonFromGemini(exerciseText: string): Promise<any> {
                 required: ["date", "description", "debits", "credits"],
               },
             },
+            clarifyingQuestions: {
+              type: Type.ARRAY,
+              description: "Lista de perguntas para obter informações adicionais, se necessário.",
+              items: { type: Type.STRING },
+            },
           },
-          required: ["entries"],
+          // Não definimos 'required' aqui porque queremos que o Gemini retorne 'entries' OU 'clarifyingQuestions'
         },
       },
     });

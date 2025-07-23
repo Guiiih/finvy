@@ -1,6 +1,6 @@
 import logger from "../utils/logger.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleErrorResponse } from "../utils/supabaseClient.js";
+import { handleErrorResponse, getUserOrganizationAndPeriod } from "../utils/supabaseClient.js";
 import { z } from "zod";
 import { sendMessageToChatbot } from "../services/chatbotService.js";
 import { ChatbotMessage } from "../types/chatbot.js";
@@ -35,9 +35,26 @@ export default async function handler(
         );
       }
 
+      const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+      if (!userOrgAndPeriod) {
+        return handleErrorResponse(
+          res,
+          403,
+          "Organização ou período contábil não encontrado para o usuário.",
+        );
+      }
+      const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+
       const { message, conversationHistory } = parsedBody.data;
 
-      const response = await sendMessageToChatbot(message, conversationHistory as ChatbotMessage[]);
+      const response = await sendMessageToChatbot(
+        message,
+        conversationHistory as ChatbotMessage[],
+        user_id,
+        token,
+        organization_id,
+        active_accounting_period_id
+      );
 
       logger.info(`[ChatbotHandler] Resposta do chatbot enviada.`);
       return res.status(200).json(response);
@@ -51,3 +68,4 @@ export default async function handler(
     return handleErrorResponse(res, 500, "Erro interno do servidor.");
   }
 }
+

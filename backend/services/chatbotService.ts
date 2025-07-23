@@ -2,9 +2,9 @@ import { ChatbotMessage, ChatbotResponse } from "../types/chatbot.js";
 import logger from "../utils/logger.js";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from 'dotenv';
-
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { solveExercise } from './exerciseSolverService.js'; // Importar o serviço de resolução de exercícios
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +25,10 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 export async function sendMessageToChatbot(
   message: string,
   conversationHistory: ChatbotMessage[] = [],
+  user_id: string, // Adicionar user_id
+  token: string, // Adicionar token
+  organization_id: string, // Adicionar organization_id
+  active_accounting_period_id: string, // Adicionar active_accounting_period_id
 ): Promise<ChatbotResponse> {
   logger.info(`[ChatbotService] Recebida mensagem: "${message}"`);
 
@@ -43,10 +47,13 @@ export async function sendMessageToChatbot(
       - 'general_question': Se for uma pergunta comum sobre contabilidade.
       - 'resolve_exercise_request': Se o usuário pedir para resolver um exercício (ex: "resolva este exercício", "calcule isso").
       - 'validate_solution_request': Se o usuário pedir para validar uma solução (ex: "minha solução está correta?", "verifique meu lançamento").
+      - 'exercise_text_received': Se o usuário colou o texto de um exercício para ser resolvido.
+      - 'awaiting_clarification': Se o chatbot fez perguntas de esclarecimento e está aguardando a resposta do usuário.
+
       Sua resposta deve ser um JSON com a seguinte estrutura:
       {
         "reply": "sua resposta textual aqui",
-        "intent": "general_question" | "resolve_exercise_request" | "validate_solution_request" | "awaiting_exercise_text" | "awaiting_validation_text"
+        "intent": "general_question" | "resolve_exercise_request" | "validate_solution_request" | "awaiting_exercise_text" | "awaiting_validation_text" | "exercise_text_received" | "awaiting_clarification"
       }
 
       Exemplos de interação:
@@ -74,7 +81,7 @@ export async function sendMessageToChatbot(
           type: Type.OBJECT,
           properties: {
             reply: { type: Type.STRING },
-            intent: { type: Type.STRING, enum: ['general_question', 'resolve_exercise_request', 'validate_solution_request', 'awaiting_exercise_text', 'awaiting_validation_text'] },
+            intent: { type: Type.STRING, enum: ['general_question', 'resolve_exercise_request', 'validate_solution_request', 'awaiting_exercise_text', 'awaiting_validation_text', 'exercise_text_received', 'awaiting_clarification'] },
           },
           required: ['reply', 'intent'],
         },
@@ -82,8 +89,40 @@ export async function sendMessageToChatbot(
     });
 
     const responseJson = JSON.parse(result.text || '{ "reply": "Não foi possível obter uma resposta.", "intent": "general_question" }');
-    const replyText = responseJson.reply || 'Não foi possível obter uma resposta.';
-    const intent = responseJson.intent || 'general_question';
+    let replyText = responseJson.reply || 'Não foi possível obter uma resposta.';
+    let intent = responseJson.intent || 'general_question';
+    let clarifyingQuestions: string[] | undefined;
+    let proposedEntries: any[] | undefined;
+
+    // Se a intenção for receber texto de exercício, chame o exerciseSolverService
+    if (intent === 'exercise_text_received') {
+      logger.info(`[ChatbotService] Intenção detectada: exercise_text_received. Chamando exerciseSolverService.`);
+      try {
+        const solverResponse = await solveExercise(
+          message,
+          organization_id,
+          active_accounting_period_id,
+          token
+        );
+
+        if (solverResponse.clarifyingQuestions) {
+          replyText = solverResponse.message;
+          clarifyingQuestions = solverResponse.clarifyingQuestions;
+          intent = 'awaiting_clarification';
+        } else if (solverResponse.proposedEntries) {
+          replyText = solverResponse.message;
+          proposedEntries = solverResponse.proposedEntries;
+          // A intenção permanece exercise_text_received ou pode ser alterada para algo como 'exercise_solved'
+        } else {
+          replyText = "Não foi possível processar o exercício. Tente novamente.";
+          intent = 'general_question';
+        }
+      } catch (solverError: any) {
+        logger.error("Erro ao resolver exercício no ChatbotService:", solverError);
+        replyText = `Erro ao resolver o exercício: ${solverError.message || "Erro desconhecido"}`;
+        intent = 'general_question';
+      }
+    }
 
     const newConversationHistory: ChatbotMessage[] = [
       ...conversationHistory.map(msg => ({
@@ -100,6 +139,8 @@ export async function sendMessageToChatbot(
       reply: replyText,
       conversationHistory: newConversationHistory,
       intent: intent,
+      clarifyingQuestions: clarifyingQuestions,
+      proposedEntries: proposedEntries,
     };
   } catch (error) {
     logger.error("Erro ao se comunicar com o Gemini API:", error);

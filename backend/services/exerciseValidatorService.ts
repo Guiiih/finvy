@@ -26,8 +26,13 @@ export async function validateExerciseSolution(
 
   const prompt = `
     Você é um professor de contabilidade experiente e detalhista. Sua tarefa é analisar um exercício contábil e a solução proposta por um aluno.
-    Forneça um feedback construtivo e detalhado. Se a solução do aluno estiver correta, parabenize-o.
-    Se houver erros, explique claramente onde o aluno errou, por que está errado e apresente a solução correta passo a passo.
+    Forneça um feedback construtivo e detalhado, seguindo o formato abaixo:
+
+    **Análise da Solução:**
+    [Indique se a solução está CORRETA ou INCORRETA. Se incorreta, explique o motivo.]
+
+    **Feedback Detalhado:**
+    [Se a solução estiver correta, parabenize o aluno. Se houver erros, explique claramente onde o aluno errou, por que está errado e apresente a solução correta passo a passo, com os lançamentos contábeis completos (débito e crédito).] 
 
     Exercício:
     """
@@ -39,8 +44,8 @@ export async function validateExerciseSolution(
     ${userSolution}
     """
 
-    Sua análise deve ser clara, didática e focada em ajudar o aluno a entender os conceitos contábeis.
-  `;
+    Sua análise deve ser clara, didática e focada em ajudar o aluno a entender os conceitos contábeis. Use formatação Markdown para facilitar a leitura.`
+  ;
 
   try {
     const result = await ai.models.generateContent({

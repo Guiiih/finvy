@@ -19,7 +19,7 @@ export interface Account {
   /** The type of the account (e.g., asset, liability, revenue). */
   type: AccountType
   /** The ID of the parent account, if it's a sub-account. */
-  parentId?: string | null
+  parent_account_id?: string | null
   /** The ID of the user who owns this account (if applicable). */
   user_id?: string
   /** The numerical code assigned to the account. */

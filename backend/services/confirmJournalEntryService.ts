@@ -1,5 +1,5 @@
 import logger from "../utils/logger.js";
-import { findAccountByName } from "./accountService.js";
+import { findAccountByName, getOrCreateAccount } from "./accountService.js";
 import { createJournalEntry } from "./journalEntryService.js";
 import { createSimpleEntryLines } from "./entryLineService.js";
 
@@ -36,21 +36,16 @@ export async function confirmProposedJournalEntries(
     // 2. Mapear nomes de conta para IDs
     const linesToCreate = [];
     for (const debit of entry.debits) {
-      const account = await findAccountByName(debit.account, organization_id, active_accounting_period_id, token);
-      if (!account) {
-        throw new Error(`A conta de débito "${debit.account}" não foi encontrada. Por favor, crie a conta antes de continuar.`);
-      }
+      const account = await getOrCreateAccount(debit.account, organization_id, active_accounting_period_id, token, entry.description);
       linesToCreate.push({ account_id: account.id, debit: debit.value, credit: null });
     }
     for (const credit of entry.credits) {
-      const account = await findAccountByName(credit.account, organization_id, active_accounting_period_id, token);
-      if (!account) {
-        throw new Error(`A conta de crédito "${credit.account}" não foi encontrada. Por favor, crie a conta antes de continuar.`);
-      }
+      const account = await getOrCreateAccount(credit.account, organization_id, active_accounting_period_id, token, entry.description);
       linesToCreate.push({ account_id: account.id, debit: null, credit: credit.value });
     }
 
     // 3. Criar as Entry Lines
+    logger.debug(`[ConfirmJournalEntryService] Linhas a serem inseridas para o lançamento ${journalEntry.id}:`, linesToCreate);
     const createdLines = await createSimpleEntryLines(
       journalEntry.id,
       linesToCreate,

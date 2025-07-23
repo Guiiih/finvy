@@ -9,8 +9,17 @@ export interface ChatbotRequest {
   conversationHistory?: ChatbotMessage[];
 }
 
+export interface ProposedEntry {
+  date: string;
+  description: string;
+  debits: Array<{ account: string; value: number }>;
+  credits: Array<{ account: string; value: number }>;
+}
+
 export interface ChatbotResponse {
   reply: string;
   conversationHistory?: ChatbotMessage[];
-  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_solution_request' | 'awaiting_exercise_text' | 'awaiting_validation_text' | 'exercise_text_received';
+  intent?: 'general_question' | 'resolve_exercise_request' | 'validate_solution_request' | 'awaiting_exercise_text' | 'awaiting_validation_text' | 'exercise_text_received' | 'awaiting_clarification';
+  clarifyingQuestions?: string[];
+  proposedEntries?: ProposedEntry[];
 }

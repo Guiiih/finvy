@@ -41,10 +41,18 @@
           </div>
       </div>
 
+      <div v-if="chatbotStore.clarifyingQuestions.length > 0" class="p-4 my-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+        <h3 class="text-lg font-semibold">Preciso de mais informações:</h3>
+        <ul class="list-disc list-inside mt-2">
+          <li v-for="(question, qIdx) in chatbotStore.clarifyingQuestions" :key="qIdx">{{ question }}</li>
+        </ul>
+        <p class="mt-2 text-sm">Por favor, responda às perguntas acima para que eu possa continuar.</p>
+      </div>
+
       <!-- Proposed Entries -->
-      <div v-if="proposedEntries.length > 0" class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400">
+      <div v-if="chatbotStore.proposedEntries.length > 0" class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400">
         <h3 class="text-lg font-semibold text-blue-800">Proposta de Lançamentos:</h3>
-        <div v-for="(entry, idx) in proposedEntries" :key="idx" class="p-3 mt-2 bg-white rounded-lg shadow">
+        <div v-for="(entry, idx) in chatbotStore.proposedEntries" :key="idx" class="p-3 mt-2 bg-white rounded-lg shadow">
           <p><strong>Data:</strong> {{ entry.date }}</p>
           <p><strong>Descrição:</strong> {{ entry.description }}</p>
           <div class="grid grid-cols-2 gap-4 mt-2">
@@ -138,7 +146,7 @@ const isValidationModalVisible = ref(false);
 const isModalLoading = ref(false);
 const isConfirming = ref(false);
 const isUploading = ref(false);
-const proposedEntries = ref<ProposedEntry[]>([]);
+
 const fileInput = ref<HTMLInputElement | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
 
@@ -148,6 +156,8 @@ const inputPlaceholder = computed(() => {
       return 'Por favor, cole o texto do exercício aqui...';
     case 'awaiting_validation_text':
       return 'Por favor, use o modal de validação para inserir o exercício e sua solução.';
+    case 'awaiting_clarification':
+      return 'Responda às perguntas de esclarecimento...';
     default:
       return 'Envie sua mensagem...';
   }
@@ -170,7 +180,7 @@ watch(() => chatbotStore.messages, () => {
 }, { deep: true });
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim() && proposedEntries.value.length === 0) return;
+  if (!newMessage.value.trim() && chatbotStore.proposedEntries.length === 0) return;
 
   const text = newMessage.value;
   newMessage.value = '';
@@ -218,9 +228,9 @@ const handleValidationSubmit = async (data: { exercise: string; solution: string
 const handleConfirmEntries = async () => {
   isConfirming.value = true;
   try {
-    await confirmJournalEntryApiService.confirmEntries(proposedEntries.value);
+    await confirmJournalEntryApiService.confirmEntries(chatbotStore.proposedEntries);
     chatbotStore.addModelMessage('Lançamentos confirmados com sucesso!');
-    proposedEntries.value = [];
+    chatbotStore.proposedEntries = [];
   } catch (error) {
     chatbotStore.setError('Erro ao confirmar os lançamentos.');
   } finally {
@@ -229,7 +239,7 @@ const handleConfirmEntries = async () => {
 };
 
 const handleCancelEntries = () => {
-  proposedEntries.value = [];
+  chatbotStore.proposedEntries = [];
   chatbotStore.addModelMessage('Proposta de lançamento cancelada.');
 };
 
