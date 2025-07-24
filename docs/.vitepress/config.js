@@ -5,10 +5,10 @@ export default {
   appearance: 'dark',
   themeConfig: {
     nav: [
-      { text: 'Início', link: '/' },
-      { text: 'Guia', link: '/guide/introduction' },
+      { text: 'Documentação', link: '/guide/introduction' },
       { text: 'API', link: '/api/introduction' },
-      { text: 'Changelog', link: '/changelog/product-updates' }
+      { text: 'Changelog', link: '/changelog/product-updates' },
+      { text: 'Políticas', link: '/policies/terms-of-service' }
     ],
 
     sidebar: {
@@ -18,6 +18,16 @@ export default {
           items: [
             { text: 'Introdução', link: '/guide/introduction' },
             { text: 'Início Rápido', link: '/guide/quickstart' },
+            { text: 'Gestão de Organizações', link: '/guide/organizations' },
+            { text: 'Gestão de Períodos Contábeis', link: '/guide/accounting-periods' },
+            { text: 'Plano de Contas', link: '/guide/accounts' },
+            { text: 'Lançamentos Contábeis', link: '/guide/journal-entries' },
+            { text: 'Controle de Estoque e Produtos', link: '/guide/products-stock' },
+            { text: 'Importação de NF-e', link: '/guide/nfe-import' },
+            { text: 'Contas a Pagar e Receber', link: '/guide/financial-transactions' },
+            { text: 'Geração de Relatórios', link: '/guide/reports' },
+            { text: 'Recursos de IA', link: '/guide/ai-features' },
+            { text: 'Compartilhamento e Colaboração', link: '/guide/sharing-collaboration' },
           ]
         }
       ],
@@ -82,6 +92,16 @@ export default {
           text: 'Changelog',
           items: [
             { text: 'Atualizações do Produto', link: '/changelog/product-updates' },
+          ]
+        }
+      ],
+
+      '/policies/': [
+        {
+          text: 'Políticas',
+          items: [
+            { text: 'Termos de Serviço', link: '/policies/terms-of-service' },
+            { text: 'Política de Privacidade', link: '/policies/privacy-policy' }
           ]
         }
       ]
