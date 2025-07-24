@@ -120,32 +120,6 @@ const logoSrc = computed(() => {
       </nav>
 
       <div class="flex justify-end items-center space-x-4">
-        <div class="flex items-center space-x-2">
-          <UserAvatarWithPresence
-            v-for="user in userPresenceStore.onlineUsers"
-            :key="user.user_id"
-            :user="user"
-            :currentUserId="authStore.user?.id"
-            class="h-6 w-6"
-          />
-        </div>
-
-        <router-link
-          to="/accounting-periods"
-          v-if="accountingPeriodStore.activeAccountingPeriod"
-          class="flex items-center space-x-2 px-3 py-1 text-sm font-medium text-surface-700 bg-surface-200 rounded-full shadow-inner cursor-pointer hover:bg-surface-300 transition-colors duration-200"
-        >
-          <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
-          <span>{{ accountingPeriodStore.activeAccountingPeriod.name }}</span>
-        </router-link>
-
-        <button
-          class="p-2 rounded-full hover:bg-surface-200 relative"
-          aria-label="Abrir Chatbot"
-          @click="globalChatbotStore.toggleChatbotModal()"
-        >
-          <i class="pi pi-comment text-xl text-surface-600"></i>
-        </button>
 
         <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
@@ -200,14 +174,6 @@ const logoSrc = computed(() => {
           <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
           <span>{{ accountingPeriodStore.activeAccountingPeriod.name }}</span>
         </router-link>
-
-        <button
-          class="p-2 rounded-full hover:bg-surface-200 relative"
-          aria-label="Abrir Chatbot"
-          @click="globalChatbotStore.toggleChatbotModal()"
-        >
-          <i class="pi pi-comment text-xl text-surface-600"></i>
-        </button>
 
         <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
@@ -318,10 +284,19 @@ const logoSrc = computed(() => {
         <RouterView />
       </main>
 
-      <div v-if="globalChatbotStore.isChatbotModalVisible" class="w-96 h-[88vh] bg-white shadow-lg border-l border-gray-200 flex flex-col">
+      <div v-if="globalChatbotStore.isChatbotModalVisible" class="fixed bottom-24 right-4 w-80 h-[70vh] bg-white shadow-lg border border-gray-200 flex flex-col z-50 rounded-lg overflow-hidden">
         <ChatbotWindow />
       </div>
     </div>
+
+    <!-- Floating Chatbot Button -->
+    <button
+      class="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 z-40"
+      aria-label="Abrir Chatbot"
+      @click="globalChatbotStore.toggleChatbotModal()"
+    >
+      <i class="pi pi-comment text-2xl"></i>
+    </button>
   </div>
 
   <div v-else>
