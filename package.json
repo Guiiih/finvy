@@ -23,7 +23,10 @@
     "lint": "npm run lint:frontend && npm run lint:backend",
     "format": "npm run format:frontend && npm run format:backend",
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs"
+    "docs:build": "vitepress build docs --outDir frontend/dist/docs",
+    "build": "run-p build:frontend build:backend docs:build",
+    "build:frontend": "npm run build --workspace frontend",
+    "build:backend": "npm run build --workspace backend"
   },
   "workspaces": [
     "frontend",
