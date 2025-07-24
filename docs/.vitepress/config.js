@@ -1,4 +1,5 @@
 export default {
+  base: '/docs/',
   title: 'Finvy',
   description: 'Documentação do Finvy',
   appearance: 'dark',
