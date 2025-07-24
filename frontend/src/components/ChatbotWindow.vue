@@ -1,18 +1,7 @@
 <template>
-  <div class="flex flex-col h-full bg-white rounded-lg shadow-lg">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-200">
-      <button class="text-gray-500 hover:text-gray-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h2 class="text-lg font-semibold text-gray-800">FINVY BOT</h2>
-      <div class="w-6"></div>
-    </div>
+  <div class="flex flex-col h-full bg-surface-100 rounded-lg shadow-lg">
 
-    <!-- Messages -->
-    <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto bg-gray-50">
+    <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto bg-surface-50">
       <div v-for="(message, index) in chatbotStore.messages" :key="index" class="mb-4">
         <div :class="message.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
           <div
@@ -20,23 +9,23 @@
               'max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow',
               message.role === 'user'
                 ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-800',
+                : 'bg-surface-0 text-surface-800',
             ]"
           >
             <p v-if="!message.isSolution" class="text-sm">{{ message.content }}</p>
             <div v-if="message.isSolution">
               <strong>Solução Proposta:</strong>
-              <pre class="mt-2 text-sm bg-gray-100 text-gray-700 p-2 rounded">{{ message.content }}</pre>
+              <pre class="mt-2 text-sm bg-surface-100 text-surface-700 p-2 rounded">{{ message.content }}</pre>
             </div>
           </div>
         </div>
       </div>
       <div v-if="chatbotStore.isLoading || isSolving || isConfirming || isUploading" class="flex justify-start mb-4">
-          <div class="bg-white text-gray-800 rounded-lg shadow px-4 py-2">
+          <div class="bg-surface-0 text-surface-800 rounded-lg shadow px-4 py-2">
               <div class="flex items-center space-x-1">
-                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
-                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></span>
-                  <span class="block w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
+                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse"></span>
+                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-75"></span>
+                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-150"></span>
               </div>
           </div>
       </div>
@@ -49,10 +38,9 @@
         <p class="mt-2 text-sm">Por favor, responda às perguntas acima para que eu possa continuar.</p>
       </div>
 
-      <!-- Proposed Entries -->
       <div v-if="chatbotStore.proposedEntries.length > 0" class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400">
         <h3 class="text-lg font-semibold text-blue-800">Proposta de Lançamentos:</h3>
-        <div v-for="(entry, idx) in chatbotStore.proposedEntries" :key="idx" class="p-3 mt-2 bg-white rounded-lg shadow">
+        <div v-for="(entry, idx) in chatbotStore.proposedEntries" :key="idx" class="p-3 mt-2 bg-surface-0 rounded-lg shadow">
           <p><strong>Data:</strong> {{ entry.date }}</p>
           <p><strong>Descrição:</strong> {{ entry.description }}</p>
           <div class="grid grid-cols-2 gap-4 mt-2">
@@ -75,64 +63,87 @@
           </div>
         </div>
         <div class="flex justify-end mt-4 space-x-2">
-          <Button label="Confirmar" @click="handleConfirmEntries" :loading="isConfirming" severity="success"/>
-          <Button label="Cancelar" class="p-button-secondary" @click="handleCancelEntries" :disabled="isConfirming" severity="danger"/>
+          <button
+            type="button"
+            @click="handleConfirmEntries"
+            :disabled="isConfirming"
+            class="px-4 py-2 rounded-md text-white bg-green-500 hover:bg-green-600 transition"
+          >
+            Confirmar
+          </button>
+          <button
+            type="button"
+            @click="handleCancelEntries"
+            :disabled="isConfirming"
+            class="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 transition"
+          >
+            Cancelar
+          </button>
         </div>
       </div>
 
-      <!-- Found Journal Entry for Confirmation -->
       <div v-if="chatbotStore.currentIntent === 'awaiting_confirmation_for_existing_journal_entry' && chatbotStore.foundJournalEntry" class="p-4 my-4 bg-green-50 border-l-4 border-green-400">
         <h3 class="text-lg font-semibold text-green-800">Lançamento Encontrado:</h3>
-        <div class="p-3 mt-2 bg-white rounded-lg shadow">
+        <div class="p-3 mt-2 bg-surface-0 rounded-lg shadow">
           <p><strong>ID:</strong> {{ chatbotStore.foundJournalEntry.id }}</p>
           <p><strong>Data:</strong> {{ chatbotStore.foundJournalEntry.date }}</p>
           <p><strong>Descrição:</strong> {{ chatbotStore.foundJournalEntry.description }}</p>
-          <!-- Adicione mais detalhes do lançamento conforme necessário -->
-        </div>
+          </div>
         <div class="flex justify-end mt-4 space-x-2">
-          <Button label="Sim, é este!" @click="handleConfirmFoundJournalEntry" severity="success"/>
-          <Button label="Não, buscar outro" class="p-button-secondary" @click="handleCancelFoundJournalEntry" severity="danger"/>
+          <button
+            type="button"
+            @click="handleConfirmFoundJournalEntry"
+            class="px-4 py-2 rounded-md text-white bg-green-500 hover:bg-green-600 transition"
+          >
+            Sim, é este!
+          </button>
+          <button
+            type="button"
+            @click="handleCancelFoundJournalEntry"
+            class="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 transition"
+          >
+            Não, buscar outro
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Input -->
-    <div class="p-4 bg-white border-t border-gray-200">
-      <div class="flex items-center">
-        <input
-          type="file"
-          ref="fileInput"
-          style="display: none;"
-          @change="handleFileUpload"
-          accept=".pdf,image/*"
-        />
-        <Button
-            icon="pi pi-paperclip"
-            class="p-button-rounded p-button-text text-gray-500 hover:text-gray-700"
-            @click="fileInput?.click()"
-            :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-            v-tooltip.top="'Upload de PDF ou Imagem'"
-        />
-        <Textarea
-          v-model="newMessage"
-          @keyup.enter="handleEnter"
-          :placeholder="inputPlaceholder"
+    <div class="flex flex-col bg-surface-50 rounded-2xl px-4 py-3 mx-4 my-2 shadow-inner">
+      <!-- Campo de texto -->
+      <textarea
+        ref="textareaRef"
+        v-model="newMessage"
+        @keyup.enter="handleEnter"
+        @input="adjustTextareaHeight"
+        :placeholder="inputPlaceholder"
+        :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
+        rows="1"
+        class="bg-transparent border-none text-sm placeholder-zinc-400 focus:outline-none resize-none"
+      ></textarea>
+
+      <!-- Botões pequenos abaixo -->
+      <div class="flex justify-between items-center mt-3 space-x-2">
+        <button
+          type="button"
+          @click="fileInput?.click()"
           :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-          rows="1"
-          autoResize
-          class="flex-1 px-4 py-2 mx-2 text-sm bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <Button
-          icon="pi pi-send"
-          class="p-button-rounded p-button-primary"
+          class="flex justify-center items-center p-0.5 rounded-full text-zinc-400 hover:text-white transition h-6 w-6"
+          title="Anexar Arquivo"
+        >
+          <i class="pi pi-paperclip w-4 h-4"></i>
+        </button>
+        <button
+          type="button"
           @click="sendMessage"
           :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-        />
-      </div>
-       <div v-if="chatbotStore.error" class="mt-2 text-sm text-red-600">
-        {{ chatbotStore.error }}
+          class="flex justify-center items-center p-0.5 rounded-full text-zinc-400 hover:text-white transition h-2 w-2"
+          title="Enviar Mensagem"
+        >
+          <i class="pi pi-arrow-up"></i>
+        </button>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -142,8 +153,8 @@ import { useChatbotStore } from '@/stores/chatbotStore';
 
 import { confirmJournalEntryApiService, type ProposedEntry } from '@/services/confirmJournalEntryApiService';
 import { documentProcessorApiService } from '@/services/documentProcessorApiService';
-import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
+
+
 import Tooltip from 'primevue/tooltip';
 
 const chatbotStore = useChatbotStore();
@@ -154,6 +165,20 @@ const isUploading = ref(false);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+const adjustTextareaHeight = () => { // Força recompile
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto';
+    textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px';
+  }
+};
+
+watch(newMessage, () => {
+  nextTick(() => {
+    adjustTextareaHeight();
+  });
+});
 
 const inputPlaceholder = computed(() => {
   switch (chatbotStore.currentIntent) {

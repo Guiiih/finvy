@@ -29,6 +29,7 @@ const userPresenceStore = useUserPresenceStore()
 
 const showUserMenu = ref(false)
 const isMobileMenuOpen = ref(false)
+const isChatbotMaximized = ref(false)
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
@@ -44,6 +45,10 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
+}
+
+const toggleChatbotMaximize = () => {
+  isChatbotMaximized.value = !isChatbotMaximized.value
 }
 
 onMounted(() => {
@@ -284,7 +289,26 @@ const logoSrc = computed(() => {
         <RouterView />
       </main>
 
-      <div v-if="globalChatbotStore.isChatbotModalVisible" class="fixed bottom-24 right-4 w-80 h-[70vh] bg-white shadow-lg border border-gray-200 flex flex-col z-50 rounded-lg overflow-hidden">
+      <div
+        v-if="globalChatbotStore.isChatbotModalVisible"
+        :class="{
+          'fixed bottom-24 right-4 w-96 h-[70vh]': !isChatbotMaximized,
+          'fixed top-0 right-0 w-3/4 h-full': isChatbotMaximized
+        }"
+        class="bg-surface-100 shadow-lg rounded-lg border border-surface-200 flex flex-col z-50 rounded-lg overflow-hidden transition-all duration-300 ease-in-out"
+      >
+        <div
+          class="flex items-center justify-between p-4 border-b border-surface-200 bg-surface-100 text-surface-900"
+        >
+          <div class="flex items-center space-x-2">
+            <span class="font-semibold">Finvy</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900">
+              <i :class="isChatbotMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"></i>
+            </button>
+          </div>
+        </div>
         <ChatbotWindow />
       </div>
     </div>
