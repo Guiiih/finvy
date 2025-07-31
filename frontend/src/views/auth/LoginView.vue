@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { supabase } from '../../supabase'
+import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useForm, useField } from 'vee-validate'
@@ -116,39 +116,25 @@ const { handleSubmit } = useForm({
 const { value: email, errorMessage: emailError } = useField<string>('email')
 const { value: password, errorMessage: passwordError } = useField<string>('password')
 
-const onSubmit = handleSubmit(async (values) => {
-  loading.value = true
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    })
+const authStore = useAuthStore();
 
-    if (error) {
-      throw error
-    }
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Login realizado com sucesso!',
-      life: 3000,
-    })
-    router.push('/')
-  } catch (error: unknown) {
-    let message = 'Ocorreu um erro desconhecido.'
-    if (error instanceof Error) {
-      message = error.message
-    }
+const onSubmit = handleSubmit(async (values) => {
+  loading.value = true;
+  const result = await authStore.signIn(values.email, values.password);
+  if (authStore.error) {
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: message,
+      summary: 'Erro no Login',
+      detail: authStore.error,
       life: 3000,
-    })
-  } finally {
-    loading.value = false
+    });
+  } else if (result && result.twoFactorRequired) {
+    router.push({ name: '2fa-challenge' });
+  } else {
+    router.push({ name: 'Dashboard' });
   }
-})
+  loading.value = false;
+});
 </script>
 
 <style scoped>

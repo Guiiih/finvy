@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full bg-surface-100 rounded-lg shadow-lg">
+  <div class="flex flex-col h-full bg-surface-50 rounded-lg shadow-lg">
 
     <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto bg-surface-50">
       <div v-for="(message, index) in chatbotStore.messages" :key="index" class="mb-4">
@@ -108,7 +108,7 @@
       </div>
     </div>
 
-    <div class="flex flex-col bg-surface-50 rounded-2xl px-4 py-3 mx-4 my-2 shadow-inner">
+    <div class="flex flex-col bg-surface-100 rounded-2xl px-4 py-3 mx-4 my-2 shadow-inner">
       <!-- Campo de texto -->
       <textarea
         ref="textareaRef"
@@ -121,25 +121,24 @@
         class="bg-transparent border-none text-sm placeholder-zinc-400 focus:outline-none resize-none"
       ></textarea>
 
-      <!-- Botões pequenos abaixo -->
       <div class="flex justify-between items-center mt-3 space-x-2">
         <button
           type="button"
           @click="fileInput?.click()"
           :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-          class="flex justify-center items-center p-0.5 rounded-full text-zinc-400 hover:text-white transition h-6 w-6"
+          class="flex justify-center items-center rounded-full text-zinc-400 hover:text-white transition h-4 w-4"
           title="Anexar Arquivo"
         >
-          <i class="pi pi-paperclip w-4 h-4"></i>
+          <i class="material-icons" style="font-size: 15px !important;">attach_file</i>
         </button>
         <button
           type="button"
           @click="sendMessage"
           :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-          class="flex justify-center items-center p-0.5 rounded-full text-zinc-400 hover:text-white transition h-2 w-2"
+          class="flex justify-center items-center rounded-full bg-surface-200 text-surface-500 hover:text-surface-700 transition  h-7 w-7"
           title="Enviar Mensagem"
         >
-          <i class="pi pi-arrow-up"></i>
+          <i class="material-icons" style="font-size: 19px !important;">arrow_upward</i>
         </button>
       </div>
     </div>
@@ -278,7 +277,3 @@ const handleCancelFoundJournalEntry = () => {
 };
 
 </script>
-
-<style scoped>
-/* All styles are now handled by TailwindCSS */
-</style>

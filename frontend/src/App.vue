@@ -292,34 +292,38 @@ const logoSrc = computed(() => {
       <div
         v-if="globalChatbotStore.isChatbotModalVisible"
         :class="{
-          'fixed bottom-24 right-4 w-96 h-[70vh]': !isChatbotMaximized,
-          'fixed top-0 right-0 w-3/4 h-full': isChatbotMaximized
+          'fixed bottom-24 right-4 w-96 h-[75vh]': !isChatbotMaximized,
+          'fixed bottom-24  right-4 w-165 h-[87vh]': isChatbotMaximized
         }"
-        class="bg-surface-100 shadow-lg rounded-lg border border-surface-200 flex flex-col z-50 rounded-lg overflow-hidden transition-all duration-300 ease-in-out"
-      >
+        class="bg-surface-100 shadow-lg rounded-[1rem] border border-surface-200 flex flex-col z-50 overflow-hidden transition-all duration-300 ease-in-out">
         <div
-          class="flex items-center justify-between p-4 border-b border-surface-200 bg-surface-100 text-surface-900"
-        >
+          class="flex items-center justify-between p-4 border-b border-surface-200 bg-surface-50 text-surface-900">
           <div class="flex items-center space-x-2">
-            <span class="font-semibold">Finvy</span>
+            <img :src="logoSrc" alt="Finvy Logo" class="h-9 w-9" />
+            <span class="text-sm font-semibold">Assistente</span>
           </div>
           <div class="flex items-center space-x-2">
             <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900">
-              <i :class="isChatbotMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"></i>
+              <i class="material-icons" style="font-size: 15px !important;" >{{ isChatbotMaximized ? 'close_fullscreen' : 'open_in_full' }}</i>
             </button>
           </div>
         </div>
+
         <ChatbotWindow />
       </div>
     </div>
 
+
     <!-- Floating Chatbot Button -->
+
     <button
-      class="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 z-40"
+      class="fixed bottom-4 right-4 bg-surface-900 text-surface-50 p-3 rounded-[30vh] shadow-lg"
       aria-label="Abrir Chatbot"
       @click="globalChatbotStore.toggleChatbotModal()"
     >
-      <i class="pi pi-comment text-2xl"></i>
+      <span class="material-icons" style="font-size: 20px !important;">{{
+        globalChatbotStore.isChatbotModalVisible ? 'south_east' : 'chat_bubble'
+      }}</span>
     </button>
   </div>
 

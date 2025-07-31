@@ -29,6 +29,8 @@ import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryH
 import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 import { getNotifications, markNotificationAsRead } from '../backend/handlers/notifications.js'
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
+import twoFactorRoutes from '../backend/handlers/2fa.js'
+import twoFactorVerifyRoutes from '../backend/handlers/2fa-verify.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -132,6 +134,11 @@ async function protectedRoutesHandler(
     }
   }
 
+  if (finalUrlPath.startsWith('/2fa')) {
+    return twoFactorRoutes(req, res)
+  }
+  }
+
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')
 }
 
@@ -154,6 +161,11 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   // Rota para a documentação da API (não protegida por autenticação)
   if (urlPath === '/api/docs') {
     return await swaggerDocsHandler(req, res)
+  }
+
+  // Rota para verificação 2FA (não protegida por autenticação completa)
+  if (urlPath.startsWith('/api/2fa/verify')) {
+      return twoFactorVerifyRoutes(req, res);
   }
 
   // Para todas as outras rotas /api, aplicar o middleware de autenticação
