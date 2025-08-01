@@ -91,6 +91,12 @@ const router = createRouter({
     },
     
     {
+      path: '/accounting-periods',
+      name: 'accounting-periods',
+      component: () => import('../views/accounting/AccountingPeriodView.vue'),
+      meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
+    },
+    {
       path: '/year-end-closing',
       name: 'year-end-closing',
       component: () => import('../views/accounting/YearEndClosingView.vue'),
@@ -150,43 +156,7 @@ const router = createRouter({
       component: () => import('../views/settings/SettingsView.vue'),
       meta: { requiresAuth: true, title: 'Configurações' },
     },
-    {
-      path: '/help',
-      name: 'help',
-      component: () => import('../views/docs/HelpView.vue'),
-      meta: { requiresAuth: true, title: 'Ajuda' },
-    },
-    {
-      path: '/accounting-periods',
-      name: 'accounting-periods',
-      component: () => import('../views/accounting/AccountingPeriodView.vue'),
-      meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
-    },
-    {
-      path: '/docs/project',
-      name: 'project-docs',
-      component: () => import('../views/docs/ProjectDocsView.vue'),
-      meta: { requiresAuth: true, title: 'Documentação do Projeto' },
-    },
-    {
-      path: '/docs/api',
-      name: 'api-docs',
-      component: () => import('../views/docs/ApiDocsView.vue'),
-      meta: { requiresAuth: true, title: 'Documentação da API' },
-    },
-    {
-      path: '/faq',
-      name: 'faq',
-      component: () => import('../views/docs/FaqView.vue'),
-      meta: { requiresAuth: true, title: 'FAQ' },
-    },
-
-    {
-      path: '/support',
-      name: 'support',
-      component: () => import('../views/docs/SupportView.vue'),
-      meta: { requiresAuth: true, title: 'Suporte' },
-    },
+    
   ],
 })
 

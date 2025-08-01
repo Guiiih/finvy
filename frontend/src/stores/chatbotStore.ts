@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { chatbotApiService } from '../services/chatbotApiService';
 import type { ChatbotMessage, ChatbotResponse, ProposedEntry } from '../types/chatbot';
+import type { JournalEntry } from '../types';
 
 export const useChatbotStore = defineStore('chatbot', {
   state: () => ({
@@ -10,7 +11,7 @@ export const useChatbotStore = defineStore('chatbot', {
     currentIntent: 'general_question' as ChatbotResponse['intent'],
     clarifyingQuestions: [] as string[],
     proposedEntries: [] as ProposedEntry[],
-    foundJournalEntry: null as any | null, // Para armazenar o lançamento encontrado para validação
+    foundJournalEntry: null as JournalEntry | null, // Para armazenar o lançamento encontrado para validação
   }),
   actions: {
     async sendMessage(message: string) {
@@ -27,8 +28,12 @@ export const useChatbotStore = defineStore('chatbot', {
         this.proposedEntries = response.proposedEntries || [];
         this.foundJournalEntry = response.foundJournalEntry || null; // Atualiza o lançamento encontrado
 
-      } catch (err: any) {
-        this.setError(err.message || 'Erro ao enviar mensagem para o chatbot.');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          this.setError(err.message || 'Erro ao enviar mensagem para o chatbot.');
+        } else {
+          this.setError('Erro ao enviar mensagem para o chatbot.');
+        }
         console.error('Erro no chatbot store:', err);
       } finally {
         this.isLoading = false;
@@ -51,7 +56,7 @@ export const useChatbotStore = defineStore('chatbot', {
       this.proposedEntries = [];
       this.foundJournalEntry = null;
     },
-    setFoundJournalEntry(entry: any | null) {
+    setFoundJournalEntry(entry: JournalEntry | null) {
       this.foundJournalEntry = entry;
     },
   },

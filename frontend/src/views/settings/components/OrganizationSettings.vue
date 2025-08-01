@@ -283,8 +283,9 @@ async function handleCreateOrganization() {
     await organizationSelectionStore.createOrganization(newOrganizationName.value);
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização criada com sucesso!', life: 3000 });
     newOrganizationName.value = '';
-  } catch (_err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+  } catch (err: unknown) {
+    console.error(err);
+    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
   }
 }
 
@@ -294,8 +295,9 @@ async function handleOrganizationChange() {
     try {
       await organizationSelectionStore.setActiveOrganization(selectedOrganizationId.value);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização ativa alterada!', life: 3000 });
-    } catch (_err: unknown) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+    } catch (err: unknown) {
+      console.error(err);
+      toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
     }
   }
 }
@@ -309,8 +311,9 @@ async function handleUpdateOrganizationDetails() {
             { cnpj: orgCnpj.value, razao_social: orgRazaoSocial.value, uf: orgUf.value, municipio: orgMunicipio.value }
         );
         toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Detalhes da organização atualizados!', life: 3000 });
-    } catch (_err: unknown) {
-        toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+    } catch (err: unknown) {
+      console.error(err);
+        toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
     }
 }
 
@@ -326,8 +329,9 @@ async function handleDeleteOrganization() {
     await organizationSelectionStore.deleteOrganization(organizationToDeleteId.value);
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Organização excluída!', life: 3000 });
     showDeleteOrganizationModal.value = false;
-  } catch (_err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+  } catch (err: unknown) {
+    console.error(err);
+    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
   }
 }
 
@@ -345,7 +349,8 @@ async function searchUsers() {
     const response = await api.get<User[]>(`/users?query=${searchUserTerm.value}`);
     searchResults.value = response;
     showSearchResults.value = true;
-  } catch (_err: unknown) {
+  } catch (err: unknown) {
+    console.error(err);
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao buscar usuários.', life: 3000 });
     searchResults.value = [];
   } finally {
@@ -385,8 +390,9 @@ async function handleSubmitMember() {
     }
     resetMemberForm();
     await organizationStore.fetchOrganizationMembers();
-  } catch (_err: unknown) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+  } catch (err: unknown) {
+    console.error(err);
+    toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
   }
 }
 
@@ -397,8 +403,9 @@ async function removeMember(memberRoleId: string) {
       await organizationStore.removeOrganizationMember(memberRoleId);
       toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro removido!', life: 3000 });
       await organizationStore.fetchOrganizationMembers();
-    } catch (_err: unknown) {
-      toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(_err), life: 3000 });
+    } catch (err: unknown) {
+      console.error(err);
+      toast.add({ severity: 'error', summary: 'Erro', detail: getErrorMessage(err), life: 3000 });
     }
   }
 }

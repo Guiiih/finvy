@@ -64,7 +64,7 @@ onUnmounted(() => {
     </button>
     <button
       class="block w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-      @click="(router.push('/help'), closeMenu())"
+      @click="(router.push('#'), closeMenu())"
       role="menuitem"
       tabindex="-1"
     >

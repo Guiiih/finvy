@@ -8,7 +8,7 @@ export interface ProposedEntry {
 }
 
 export const confirmJournalEntryApiService = {
-  async confirmEntries(proposedEntries: ProposedEntry[]): Promise<any> {
+  async confirmEntries(proposedEntries: ProposedEntry[]): Promise<{ message: string }> {
     const response = await apiClient.post('/confirm-journal-entries', { proposedEntries });
     return response.data;
   },

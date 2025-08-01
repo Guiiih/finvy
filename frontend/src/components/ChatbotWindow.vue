@@ -86,7 +86,7 @@
         <h3 class="text-lg font-semibold text-green-800">Lançamento Encontrado:</h3>
         <div class="p-3 mt-2 bg-surface-0 rounded-lg shadow">
           <p><strong>ID:</strong> {{ chatbotStore.foundJournalEntry.id }}</p>
-          <p><strong>Data:</strong> {{ chatbotStore.foundJournalEntry.date }}</p>
+          <p><strong>Data:</strong> {{ chatbotStore.foundJournalEntry.entry_date }}</p>
           <p><strong>Descrição:</strong> {{ chatbotStore.foundJournalEntry.description }}</p>
           </div>
         <div class="flex justify-end mt-4 space-x-2">
@@ -131,6 +131,7 @@
         >
           <i class="material-icons" style="font-size: 15px !important;">attach_file</i>
         </button>
+        <input type="file" @change="handleFileUpload" ref="fileInput" style="display: none;" />
         <button
           type="button"
           @click="sendMessage"
@@ -150,11 +151,8 @@
 import { ref, computed, nextTick, onMounted, watch } from 'vue';
 import { useChatbotStore } from '@/stores/chatbotStore';
 
-import { confirmJournalEntryApiService, type ProposedEntry } from '@/services/confirmJournalEntryApiService';
+import { confirmJournalEntryApiService } from '@/services/confirmJournalEntryApiService';
 import { documentProcessorApiService } from '@/services/documentProcessorApiService';
-
-
-import Tooltip from 'primevue/tooltip';
 
 const chatbotStore = useChatbotStore();
 const newMessage = ref('');
@@ -233,6 +231,7 @@ const handleFileUpload = async (event: Event) => {
       newMessage.value = response.extractedText;
       await chatbotStore.sendMessage(response.extractedText);
     } catch (error) {
+      console.error(error);
       chatbotStore.setError('Falha ao processar o arquivo.');
     } finally {
       isUploading.value = false;
@@ -248,6 +247,7 @@ const handleConfirmEntries = async () => {
     chatbotStore.addModelMessage('Lançamentos confirmados com sucesso!');
     chatbotStore.proposedEntries = [];
   } catch (error) {
+    console.error(error);
     chatbotStore.setError('Erro ao confirmar os lançamentos.');
   } finally {
     isConfirming.value = false;
