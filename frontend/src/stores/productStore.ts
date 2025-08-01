@@ -8,6 +8,7 @@ export const useProductStore = defineStore('products', () => {
   const products = ref<Product[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const totalProducts = ref(0)
 
   const accountingPeriodStore = useAccountingPeriodStore()
 
@@ -21,20 +22,22 @@ export const useProductStore = defineStore('products', () => {
     return products.value.find((product) => product.name === name)
   })
 
-  async function fetchProducts() {
+  async function fetchProducts(page: number = 1, itemsPerPage: number = 10) {
     loading.value = true
     error.value = null
     try {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         await accountingPeriodStore.fetchAccountingPeriods()
       }
-      const data = await api.get<Product[]>('/products', {
+      const productsData = await api.get<Product[]>('/products', {
         params: {
           organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
+          _page: page,
+          _limit: itemsPerPage,
         },
       })
-      products.value = Array.isArray(data) ? data : []
+      products.value = Array.isArray(productsData) ? productsData : []
     } catch (err: unknown) {
       console.error('Erro ao buscar produtos:', err)
       error.value = err instanceof Error ? err.message : 'Falha ao buscar produtos.'
@@ -115,5 +118,6 @@ export const useProductStore = defineStore('products', () => {
     deleteProduct,
     loading,
     error,
+    totalProducts,
   }
 })

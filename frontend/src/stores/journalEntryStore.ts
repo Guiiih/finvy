@@ -12,6 +12,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const totalJournalEntries = ref(0)
   const toast = useToast()
   const realtimeChannel = ref<RealtimeChannel | null>(null)
 
@@ -28,7 +29,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     { deep: true },
   )
 
-  async function fetchJournalEntries() {
+  async function fetchJournalEntries(page: number = 1, itemsPerPage: number = 10) {
     loading.value = true
     error.value = null
     try {
@@ -38,14 +39,17 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const orgId = accountingPeriodStore.activeAccountingPeriod!.organization_id
       const periodId = accountingPeriodStore.activeAccountingPeriod!.id
 
-      const response = await api.get<{ data: JournalEntry[] }>('/journal-entries', {
+      const entriesData = await api.get<JournalEntry[]>('/journal-entries', {
         params: {
           organization_id: orgId,
           accounting_period_id: periodId,
+          _page: page,
+          _limit: itemsPerPage,
         },
       })
 
-      const entriesData = response.data
+      
+      
 
       if (!Array.isArray(entriesData)) {
         console.error('Dados da API não são um array:', entriesData)
@@ -356,5 +360,6 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     loading,
     error,
     unsubscribeFromRealtime,
+    totalJournalEntries,
   }
 })

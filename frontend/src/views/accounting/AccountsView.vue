@@ -6,6 +6,7 @@ import { accountTypeTranslations } from '@/utils/accountTypeTranslations'
 
 import Skeleton from 'primevue/skeleton'
 import { useToast } from 'primevue/usetoast'
+import Paginator from 'primevue/paginator'
 
 import AccountFormModal from '@/components/AccountFormModal.vue'
 
@@ -17,7 +18,7 @@ const isEditing = ref(false)
 const editingAccount = ref<Account | null>(null)
 const searchTerm = ref('')
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = ref(10)
 
 const groupedAndFilteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
@@ -50,6 +51,18 @@ const groupedAndFilteredAccounts = computed(() => {
   return grouped
 })
 
+const totalRecords = computed(() => {
+  const allAccounts: Account[] = []
+  const types = ['asset', 'liability', 'equity', 'revenue', 'expense']
+
+  types.forEach((type) => {
+    if (groupedAndFilteredAccounts.value[type]) {
+      allAccounts.push(...groupedAndFilteredAccounts.value[type])
+    }
+  })
+  return allAccounts.length
+})
+
 const paginatedAccounts = computed(() => {
   const allAccounts: Account[] = []
   const types = ['asset', 'liability', 'equity', 'revenue', 'expense']
@@ -60,33 +73,15 @@ const paginatedAccounts = computed(() => {
     }
   })
 
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
   return allAccounts.slice(start, end)
 })
 
-const totalPages = computed(() => {
-  const allAccounts: Account[] = []
-  const types = ['asset', 'liability', 'equity', 'revenue', 'expense']
-
-  types.forEach((type) => {
-    if (groupedAndFilteredAccounts.value[type]) {
-      allAccounts.push(...groupedAndFilteredAccounts.value[type])
-    }
-  })
-
-  return Math.ceil(allAccounts.length / itemsPerPage)
-})
-
-function goToPage(page: number) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
+  currentPage.value = event.page + 1
+  itemsPerPage.value = event.rows
 }
-
-watch(currentPage, () => {
-  // Não é mais necessário buscar do servidor, a paginação é no cliente
-})
 
 function openNewAccountModal() {
   isEditing.value = false
@@ -267,35 +262,15 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        <div class="flex flex-wrap justify-center mt-6 space-x-2" v-if="totalPages > 1">
-          <button
-            @click="goToPage(currentPage - 1)"
-            :disabled="currentPage === 1"
-            class="p-2 rounded-full bg-surface-200 hover:bg-surface-300 text-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i class="pi pi-angle-left w-5 h-5"></i>
-          </button>
-          <button
-            v-for="page in totalPages"
-            :key="page"
-            @click="goToPage(page)"
-            :class="[
-              'px-4 py-2 rounded-full font-semibold',
-              currentPage === page
-                ? 'bg-emerald-400 text-white'
-                : 'bg-surface-200 hover:bg-surface-300 text-surface-700',
-            ]"
-          >
-            {{ page }}
-          </button>
-          <button
-            @click="goToPage(currentPage + 1)"
-            :disabled="currentPage === totalPages"
-            class="p-2 rounded-full bg-surface-200 hover:bg-surface-300 text-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i class="pi pi-angle-right w-5 h-5"></i>
-          </button>
-        </div>
+        <Paginator
+          v-if="totalRecords > itemsPerPage"
+          :rows="itemsPerPage"
+          :totalRecords="totalRecords"
+          :rowsPerPageOptions="[10, 20, 50]"
+          @page="onPageChange"
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+          class="mt-6"
+        ></Paginator>
       </div>
     </div>
   </div>

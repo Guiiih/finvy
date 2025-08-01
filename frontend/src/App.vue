@@ -285,7 +285,7 @@ const logoSrc = computed(() => {
     </div>
 
     <div class="relative flex">
-      <main class="flex-grow p-8">
+      <main class="flex-grow p-6">
         <RouterView />
       </main>
 

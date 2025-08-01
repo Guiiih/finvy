@@ -14,6 +14,7 @@ import Skeleton from 'primevue/skeleton'
 import Dialog from 'primevue/dialog'
 import NFeImporter from '@/components/NFeImporter.vue'
 import TaxSimulator from '@/components/TaxSimulator.vue'
+import Paginator from 'primevue/paginator'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
@@ -31,44 +32,14 @@ const taxSimulationDataForModal = ref<TaxSimulationResult | null>(null)
 
 const searchTerm = ref('')
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = ref(10)
 
 const showDetails = ref<{ [key: string]: boolean }>({})
 
-const sortedJournalEntries = computed(() => {
-  return [...journalEntryStore.journalEntries].sort((a, b) => {
-    if (a.entry_date > b.entry_date) return -1
-    if (a.entry_date < b.entry_date) return 1
-    return (b.id ?? '').localeCompare(a.id ?? '')
-  })
-})
-
-const filteredEntries = computed(() => {
-  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  if (!lowerCaseSearchTerm) {
-    return sortedJournalEntries.value
-  }
-  return sortedJournalEntries.value.filter(
-    (entry) =>
-      entry.description.toLowerCase().includes(lowerCaseSearchTerm) ||
-      entry.entry_date.includes(lowerCaseSearchTerm),
-  )
-})
-
-const paginatedEntries = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredEntries.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredEntries.value.length / itemsPerPage)
-})
-
-function goToPage(page: number) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
+  currentPage.value = event.page + 1
+  itemsPerPage.value = event.rows
+  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
 }
 
 function formatCurrency(value: number) {
@@ -105,13 +76,13 @@ function startEdit(entry: JournalEntry) {
   showJournalEntryFormModal.value = true
 }
 
-function handleModalSubmitSuccess() {
+async function handleModalSubmitSuccess() {
   showJournalEntryFormModal.value = false
   isEditing.value = false
   editingEntry.value = null
   nfeDataForModal.value = null
   taxSimulationDataForModal.value = null
-  journalEntryStore.fetchJournalEntries() // Refresh entries after add/edit
+  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value) // Refresh entries after add/edit
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
@@ -144,6 +115,7 @@ async function handleDelete(id: string | undefined) {
         detail: 'Lançamento excluído com sucesso!',
         life: 3000,
       })
+      await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
     } catch (err: unknown) {
       console.error('Erro ao deletar lançamento no frontend:', err)
       const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
@@ -154,22 +126,12 @@ async function handleDelete(id: string | undefined) {
   }
 }
 
-const resetAllData = () => {
-  if (
-    confirm(
-      'Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita sem restaurar o banco de dados manualmente.',
-    )
-  ) {
-    alert(
-      'A funcionalidade de resetar todos os dados do banco de dados não está implementada via UI. Por favor, gerencie os dados diretamente no Supabase.',
-    )
-  }
-}
 
-onMounted(() => {
-  journalEntryStore.fetchJournalEntries()
+
+onMounted(async () => {
+  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
   accountStore.fetchAccounts()
-  productStore.fetchProducts()
+  productStore.fetchProducts(currentPage.value, itemsPerPage.value)
 })
 </script>
 
@@ -209,12 +171,7 @@ onMounted(() => {
         >
           Simular Impostos
         </button>
-        <button
-          @click="resetAllData"
-          class="bg-surface-500 hover:bg-surface-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Resetar contas
-        </button>
+        
       </div>
 
       <JournalEntryFormModal
@@ -256,20 +213,27 @@ onMounted(() => {
         </div>
 
         <div v-if="journalEntryStore.loading" class="p-4 space-y-4">
-          <Skeleton height="3rem" class="mb-2 bg-surface-200" />
-          <Skeleton height="3rem" class="mb-2 bg-surface-200" />
-          <Skeleton height="3rem" class="bg-surface-200" />
+          <div v-for="i in itemsPerPage" :key="i" class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center">
+            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" class="bg-surface-200" /></div>
+            <div class="md:col-span-5"><Skeleton height="1rem" class="bg-surface-200" /></div>
+            <div class="md:col-span-3"><Skeleton height="1rem" width="50%" class="bg-surface-200" /></div>
+            <div class="md:col-span-2 flex justify-center items-center space-x-2">
+              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
+              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
+              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
+            </div>
+          </div>
         </div>
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
           {{ journalEntryStore.error }}
         </p>
-        <p v-else-if="paginatedEntries.length === 0" class="text-surface-400 text-center p-8">
+        <p v-else-if="journalEntryStore.journalEntries.length === 0" class="text-surface-400 text-center p-8">
           Nenhum lançamento encontrado.
         </p>
 
         <div v-else>
           <div
-            v-for="entry in paginatedEntries"
+            v-for="entry in journalEntryStore.journalEntries"
             :key="entry.id"
             class="border-b border-surface-200 last:border-b-0"
           >
@@ -339,35 +303,15 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex justify-center mt-6 space-x-2" v-if="totalPages > 1">
-        <button
-          @click="goToPage(currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 text-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          &lt;
-        </button>
-        <button
-          v-for="page in totalPages"
-          :key="page"
-          @click="goToPage(page)"
-          :class="[
-            'px-4 py-2 w-10 h-10 flex items-center justify-center rounded-full font-semibold',
-            currentPage === page
-              ? 'bg-primary-600 text-white'
-              : 'bg-surface-700 hover:bg-surface-600 text-surface-300',
-          ]"
-        >
-          {{ page }}
-        </button>
-        <button
-          @click="goToPage(currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="p-2 w-10 h-10 flex items-center justify-center rounded-full bg-surface-700 hover:bg-surface-600 text-surface-900 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          &gt;
-        </button>
-      </div>
+      <Paginator
+        v-if="journalEntryStore.totalJournalEntries > itemsPerPage"
+        :rows="itemsPerPage"
+        :totalRecords="journalEntryStore.totalJournalEntries"
+        :rowsPerPageOptions="[10, 20, 50]"
+        @page="onPageChange"
+        template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+        class="mt-6"
+      ></Paginator>
     </div>
   </div>
 </template>
