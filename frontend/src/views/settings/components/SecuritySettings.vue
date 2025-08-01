@@ -45,22 +45,7 @@
 
     <div class="border-t border-zinc-200"></div>
 
-    <div>
-      <h2 class="text-lg font-medium text-surface-800">Autenticação</h2>
-      <div class="mt-4 flex justify-between items-center">
-        <div>
-          <h3 class="font-medium text-surface-800">Autenticação de dois fatores</h3>
-          <p class="text-sm text-surface-600">Camada extra de segurança para sua conta</p>
-        </div>
-        <div class="flex items-center space-x-3">
-            <span class="text-sm text-surface-500">{{ twoFactorEnabled ? 'Ativado' : 'Desativado' }}</span>
-            <InputSwitch v-model="twoFactorEnabled" />
-            <Button icon="pi pi-ellipsis-v text-surface-400" text rounded aria-label="Opções" class="text-surface-500" />
-        </div>
-      </div>
-    </div>
-
-    <div class="border-t border-zinc-200"></div>
+    
 
     <div>
         <div class="flex justify-between items-center">
@@ -140,7 +125,7 @@ import { useToast } from 'primevue/usetoast';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
-import InputSwitch from 'primevue/inputswitch';
+
 
 // Mock authStore for demonstration purposes
 const useAuthStore = () => ({
@@ -158,8 +143,6 @@ const router = useRouter();
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmNewPassword = ref('');
-const twoFactorEnabled = ref(false);
-
 const loadingPassword = ref(false);
 const loadingDelete = ref(false);
 const showDeleteModal = ref(false);

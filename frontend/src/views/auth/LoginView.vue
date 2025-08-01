@@ -128,8 +128,7 @@ const onSubmit = handleSubmit(async (values) => {
       detail: authStore.error,
       life: 3000,
     });
-  } else if (result && result.twoFactorRequired) {
-    router.push({ name: '2fa-challenge' });
+  } else {
   } else {
     router.push({ name: 'Dashboard' });
   }
