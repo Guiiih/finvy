@@ -15,6 +15,7 @@ import Dialog from 'primevue/dialog'
 import NFeImporter from '@/components/NFeImporter.vue'
 import TaxSimulator from '@/components/TaxSimulator.vue'
 import Paginator from 'primevue/paginator'
+import Popover from 'primevue/popover';
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
@@ -35,6 +36,7 @@ const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
 const showDetails = ref<{ [key: string]: boolean }>({})
+const op = ref()
 
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
@@ -154,23 +156,34 @@ onMounted(async () => {
         </div>
 
         <button
-          @click="openNewEntryModal"
+          type="button"
+          @click="op.toggle($event)"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Novo Lançamento
+        ><i class="pi pi-plus"></i>
+          Ações 
         </button>
-        <button
-          @click="showNFeImporterModal = true"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Importar NF-e
-        </button>
-        <button
-          @click="showTaxSimulatorModal = true"
-          class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Simular Impostos
-        </button>
+        <Popover ref="op">
+          <div class="flex flex-col space-y-2">
+            <button
+              @click="openNewEntryModal(); op.hide()"
+              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
+            >
+              Novo Lançamento
+            </button>
+            <button
+              @click="showNFeImporterModal = true; op.hide()"
+              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
+            >
+              Importar NF-e
+            </button>
+            <button
+              @click="showTaxSimulatorModal = true; op.hide()"
+              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
+            >
+              Simular Impostos
+            </button>
+          </div>
+        </Popover>
         
       </div>
 

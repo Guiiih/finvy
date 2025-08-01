@@ -17,7 +17,6 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import FileUpload from 'primevue/fileupload'
 import SelectButton from 'primevue/selectbutton'
-import Dropdown from 'primevue/dropdown'
 import { Cropper } from 'vue-advanced-cropper'
 
 import Tooltip from 'primevue/tooltip'
@@ -45,7 +44,6 @@ app.component('PButton', Button)
 app.component('PDialog', Dialog)
 app.component('FileUpload', FileUpload)
 app.component('SelectButton', SelectButton)
-app.component('PDropdown', Dropdown)
 app.component('AppCropper', Cropper)
 
 async function initApp() {

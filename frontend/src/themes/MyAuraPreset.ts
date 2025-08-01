@@ -20,7 +20,6 @@ const MyAuraPreset = definePreset(Aura, {
     colorScheme: {
       light: {
         surface: {
-          0: '#ffffff',
           50: '{gray.50}',
           100: '{gray.100}',
           200: '{gray.200}',
@@ -54,56 +53,70 @@ const MyAuraPreset = definePreset(Aura, {
   },
   components: {
     dialog: {
-    colorScheme: {
-      light: {
-          root: {
-            background: '{surface.0}',
-            color: '{surface.600}',
-            borderColor: '{surface.0}',
-          },
-        },
-        dark: {
-          root: {
-            background: '{zinc.900}',
-            color: '{surface.600}',
-            borderColor: '{surface.0}',
-          },
-        }
-      }
-    },
-    select: {
       colorScheme: {
         light: {
-          overlay: {
-            background: '{surface.0}',
+            root: {
+              color: '{surface.600}',
+              borderColor: '{transparent}',
+            },
           },
-        },
-        dark: {
-          overlay: {
-            background: '{surface.50}',
-          },
-          list: {
+          dark: {
+            root: {
+              background: '{zinc.900}',
+              color: '{surface.600}',
+              borderColor: '{transparent}',
+            },
           }
         }
-      }
-    },
-    paginator: {
-      colorScheme: {
-        light: {
-          root: {
-            background: '{transparent}',
-            color: '{surface.600}'
+      },
+      select: {
+        colorScheme: {
+          light: {
+            overlay: {
+              background: '{surface.0}',
+            },
+            option: {
+              focusBackground: '{surface.200}',
+            },
           },
-        },
-        dark: {
-          root: {
-            background: '{transparent}',
-            color: '{surface.600}'
-          },
+          dark: {
+            overlay: {
+              background: '{surface.50}',
+            },
+            option: {
+              focusBackground: '{surface.200}',          
+            }
+          }
         }
-      }
-    },
+      },
+      paginator: {
+        colorScheme: {
+          light: {
+            root: {
+              background: '{transparent}',
+              color: '{surface.600}'
+            },
+          },
+          dark: {
+            root: {
+              background: '{transparent}',
+              color: '{surface.600}'
+            },
+          }
+        }
+      },
+      popover: {
+        colorScheme: {
+          dark: {
+            root: {
+              background: '{zinc.900}',
+              borderColor: '{zinc.800}',
+            },
+          }
+        }
+      },
+    }
   }
-});
+);
 
 export default MyAuraPreset
