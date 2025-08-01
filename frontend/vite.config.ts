@@ -26,9 +26,7 @@ export default defineConfig({
             if (id.includes('zod')) {
               return 'zod';
             }
-            if (id.includes('axios')) {
-              return 'axios';
-            }
+            
             if (id.includes('pinia')) {
               return 'pinia';
             }

@@ -45,10 +45,7 @@ const exportSelectedReport = async () => {
         startDate: startDate.value,
         endDate: endDate.value,
         format: selectedFormat.value,
-      },
-      {
-        responseType: 'blob',
-      },
+      }
     )
 
     const url = window.URL.createObjectURL(new Blob([response as Blob]))

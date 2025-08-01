@@ -129,7 +129,6 @@ const onSubmit = handleSubmit(async (values) => {
       life: 3000,
     });
   } else {
-  } else {
     router.push({ name: 'Dashboard' });
   }
   loading.value = false;
