@@ -76,7 +76,7 @@ import InputSwitch from 'primevue/inputswitch';
 // Lógica de Aparência
 const themeStore = useThemeStore();
 const languageStore = useLanguageStore();
-const transparencyEffects = ref(false);
+
 
 const themeOptions = ref([
   { name: 'Claro', value: 'light' },

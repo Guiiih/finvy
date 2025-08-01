@@ -120,7 +120,7 @@ const authStore = useAuthStore();
 
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true;
-  const result = await authStore.signIn(values.email, values.password);
+  await authStore.signIn(values.email, values.password);
   if (authStore.error) {
     toast.add({
       severity: 'error',

@@ -13,7 +13,7 @@ import UserMenu from '@/components/UserMenu.vue'
 import ChatbotWindow from '@/components/ChatbotWindow.vue'
 import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
-import Button from 'primevue/button'
+
 
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'

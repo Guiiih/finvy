@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+
 // import { useAuthStore } from '../../../stores/authStore'; // Uncomment when using in your project
 import { useToast } from 'primevue/usetoast';
 
@@ -137,7 +137,7 @@ const useAuthStore = () => ({
 
 const authStore = useAuthStore();
 const toast = useToast();
-const router = useRouter();
+
 
 // Component State
 const currentPassword = ref('');

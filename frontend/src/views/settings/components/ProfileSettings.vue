@@ -143,7 +143,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '../../../stores/authStore';
 import { useToast } from 'primevue/usetoast';
-import InputText from 'primevue/inputtext';
+
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import { Cropper } from 'vue-advanced-cropper';

@@ -1,11 +1,14 @@
 import { defineStore } from 'pinia';
-import { supabase } from '@/supabase';
 import { useAuthStore } from './authStore';
 
 interface UserPresence {
   user_id: string;
   username: string;
   last_seen: string;
+  profiles?: {
+    username: string;
+    avatar_url?: string;
+  };
 }
 
 export const useUserPresenceStore = defineStore('userPresence', {
@@ -59,7 +62,7 @@ export const useUserPresenceStore = defineStore('userPresence', {
           );
           if (response.ok) {
             const data = await response.json();
-            this.onlineUsers = data.map((item: any) => ({
+            this.onlineUsers = data.map((item: UserPresence) => ({
               user_id: item.user_id,
               username: item.profiles?.username || 'Usuário Desconhecido',
               last_seen: item.last_seen,

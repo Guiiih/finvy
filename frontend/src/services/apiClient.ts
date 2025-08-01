@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore'
 import { showToast } from './notificationService'
-import { supabase } from '@/supabase'
+
 
 const handleResponse = async (response: Response) => {
   if (response.ok) {

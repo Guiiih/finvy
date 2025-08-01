@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useUserPresenceStore } from '@/stores/userPresenceStore';
-import Tooltip from 'primevue/tooltip';
+
 
 interface UserPresence {
   user_id: string;

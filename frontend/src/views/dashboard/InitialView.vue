@@ -3,14 +3,14 @@ import { ref, onMounted, computed } from 'vue'
 import InfoCard from '@/components/InfoCard.vue'
 import { useReportStore } from '@/stores/reportStore'
 import { useAuthStore } from '@/stores/authStore'
-import { useOrganizationStore } from '@/stores/organizationStore'
+
 import Chart from 'primevue/chart'
 import { api } from '@/services/api'
 import type { Organization } from '@/types/organization'
 
 const reportStore = useReportStore()
 const authStore = useAuthStore()
-const organizationStore = useOrganizationStore()
+
 
 const startDate = ref('')
 const endDate = ref('')
