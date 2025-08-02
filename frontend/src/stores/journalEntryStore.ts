@@ -39,7 +39,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const orgId = accountingPeriodStore.activeAccountingPeriod!.organization_id
       const periodId = accountingPeriodStore.activeAccountingPeriod!.id
 
-      const entriesData = await api.get<JournalEntry[]>('/journal-entries', {
+      const response = await api.get<{ data: JournalEntry[]; count: number }>('/journal-entries', {
         params: {
           organization_id: orgId,
           accounting_period_id: periodId,
@@ -48,11 +48,11 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         },
       })
 
-      
-      
+      const entriesData = response.data
+      totalJournalEntries.value = response.count
 
       if (!Array.isArray(entriesData)) {
-        console.error('Dados da API não são um array:', entriesData)
+        console.error('Dados da API não são um array:', response)
         journalEntries.value = []
         return
       }
