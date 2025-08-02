@@ -51,6 +51,33 @@ export async function getAccounts(
   return { data: data as Account[], count: count || 0 };
 }
 
+export async function getAccountsByType(
+  organization_id: string,
+  active_accounting_period_id: string,
+  type: string,
+  token: string,
+): Promise<{ data: Account[]; count: number }> {
+  const userSupabase = getSupabaseClient(token);
+
+  const { data, error: dbError, count } = await userSupabase
+    .from("accounts")
+    .select(
+      "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
+      { count: 'exact' }
+    )
+    .eq("organization_id", organization_id)
+    .eq("accounting_period_id", active_accounting_period_id)
+    .eq("type", type)
+    .order("name", { ascending: true });
+
+  if (dbError) {
+    logger.error("Accounts Service: Erro ao buscar contas por tipo:", dbError);
+    throw dbError;
+  }
+
+  return { data: data as Account[], count: count || 0 };
+}
+
 export async function createAccount(
   accountData: { name: string; parent_account_id?: string | null; type?: Account['type'] },
   organization_id: string,

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
-import type { Account } from '@/types'
+import type { Account, AccountType } from '@/types'
 
 import ProgressSpinner from 'primevue/progressspinner'
-import Dialog from 'primevue/dialog' // Import Dialog component
+import Dialog from 'primevue/dialog'
+import Select from 'primevue/select'
 
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -24,19 +25,67 @@ const props = defineProps<{
 const emit = defineEmits(['update:visible', 'submitSuccess'])
 
 const displayModal = ref(props.visible)
+const selectedAccountType = ref<AccountType | ''>((''))
+const parentAccounts = ref<Account[]>([])
+
+const flattenedParentAccounts = computed(() => {
+  return flattenHierarchy(parentAccounts.value)
+})
 
 watch(() => props.visible, (value) => {
   displayModal.value = value
+  if (value && props.isEditing && props.editingAccount) {
+    selectedAccountType.value = props.editingAccount.type
+  } else {
+    selectedAccountType.value = ''
+  }
 })
 
 watch(displayModal, (value) => {
   emit('update:visible', value)
 })
 
+watch(selectedAccountType, async (newType) => {
+  if (newType) {
+    parentAccounts.value = await accountStore.fetchAccountsByType(newType)
+  } else {
+    parentAccounts.value = []
+  }
+})
+
+const flattenHierarchy = (accounts: Account[]) => {
+  const accountMap = new Map(accounts.map(acc => [acc.id, { ...acc, children: [] as Account[] }]));
+  const roots: any[] = [];
+
+  accounts.forEach(acc => {
+    if (acc.parent_account_id && accountMap.has(acc.parent_account_id)) {
+      accountMap.get(acc.parent_account_id)!.children.push(acc as any);
+    } else {
+      roots.push(acc);
+    }
+  });
+
+  const flattened: { id: string; name: string }[] = [];
+  const traverse = (account: Account, depth: number) => {
+    flattened.push({
+      id: account.id,
+      name: `${'\u00A0\u00A0\u00A0\u00A0'.repeat(depth)} ${account.code} - ${account.name}`
+    });
+    const children = accountMap.get(account.id)?.children;
+    if (children) {
+      children.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })).forEach(child => traverse(child, depth + 1));
+    }
+  };
+
+  roots.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })).forEach(root => traverse(root, 0));
+  return flattened;
+};
+
 const zodSchema = z.object({
   name: z
     .string({ required_error: 'O nome é obrigatório' })
     .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+  account_type: z.string({ required_error: 'O tipo de conta é obrigatório.' }),
   parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
 })
 
@@ -50,6 +99,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
       const updatedAccount: Partial<Account> = {
         name: values.name,
         parent_account_id: values.parent_account_id,
+        type: values.account_type as AccountType,
       }
       await accountStore.updateAccount(
         props.editingAccount.id,
@@ -62,9 +112,10 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
         life: 3000,
       })
     } else {
-      const newAccount: Omit<Account, 'id' | 'code' | 'type'> = {
+      const newAccount: Omit<Account, 'id' | 'code'> = {
         name: values.name,
         parent_account_id: values.parent_account_id,
+        type: values.account_type as AccountType,
       }
 
       await accountStore.addAccount({
@@ -82,7 +133,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
     }
     resetForm()
     emit('submitSuccess')
-    displayModal.value = false // Close modal on success
+    displayModal.value = false
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
     toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
@@ -103,25 +154,40 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
         @submit="handleSubmit as any"
         :validation-schema="accountSchema"
         :initial-values="props.editingAccount || {}"
-        v-slot="{ isSubmitting }"
+        v-slot="{ isSubmitting, setFieldValue }"
         class="space-y-4"
       >
         <div class="flex flex-col">
-          <label for="parentAccount" class="text-surface-700 font-medium mb-1">Conta Pai:</label>
+          <label for="accountType" class="text-surface-700 font-medium mb-1">Tipo de Conta:</label>
           <Field
-            name="parent_account_id"
+            name="account_type"
             as="select"
-            id="parentAccount"
+            id="accountType"
             class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            v-model="selectedAccountType"
           >
             <option value="" disabled>Selecione...</option>
-            <option
-              v-for="account in accountStore.accounts"
-              :key="account.id"
-              :value="account.id"
-            >
-              {{ account.code }} - {{ account.name }}
-            </option>
+            <option value="asset">Ativo</option>
+            <option value="liability">Passivo</option>
+            <option value="equity">Patrimônio Líquido</option>
+            <option value="revenue">Receita</option>
+            <option value="expense">Despesa</option>
+          </Field>
+          <ErrorMessage name="account_type" class="text-red-500 text-sm mt-1" />
+        </div>
+        <div class="flex flex-col">
+          <label for="parentAccount" class="text-surface-700 font-medium mb-1">Conta Pai:</label>
+          <Field name="parent_account_id" v-slot="{ field, value }">
+            <Select
+              :options="flattenedParentAccounts"
+              :modelValue="value"
+              @update:modelValue="(val) => setFieldValue('parent_account_id', val)"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecione a conta pai"
+              :filter="true"
+              class="w-full"
+            />
           </Field>
           <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
         </div>

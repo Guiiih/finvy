@@ -13,6 +13,7 @@ import {
 import { formatSupabaseError } from "../utils/errorUtils.js";
 import {
   getAccounts,
+  getAccountsByType,
   createAccount,
   updateAccount,
   deleteAccount,
@@ -86,11 +87,20 @@ export default async function handler(
 
   try {
     if (req.method === "GET") {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      if (req.url?.includes("/by-type")) {
+        const type = req.query.type as string;
+        if (!type) {
+          return handleErrorResponse(res, 400, "O parâmetro 'type' é obrigatório.");
+        }
+        const { data, count } = await getAccountsByType(organization_id, active_accounting_period_id, type, token);
+        return res.status(200).json({ data, count });
+      } else {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-      const { data, count } = await getAccounts(organization_id, active_accounting_period_id, token, page, limit);
-      return res.status(200).json({ data, count });
+        const { data, count } = await getAccounts(organization_id, active_accounting_period_id, token, page, limit);
+        return res.status(200).json({ data, count });
+      }
     } else if (req.method === "POST") {
       /**
        * @swagger

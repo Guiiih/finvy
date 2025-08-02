@@ -126,6 +126,25 @@ const logoSrc = computed(() => {
 
       <div class="flex justify-end items-center space-x-4">
 
+        <div class="flex items-center space-x-2">
+          <UserAvatarWithPresence
+            v-for="user in userPresenceStore.onlineUsers"
+            :key="user.user_id"
+            :user="user"
+            :currentUserId="authStore.user?.id"
+            class="h-6 w-6"
+          />
+        </div>
+
+        <router-link
+          to="/accounting-periods"
+          v-if="accountingPeriodStore.activeAccountingPeriod"
+          class="flex items-center space-x-2 px-3 py-1 text-sm font-medium text-surface-700 bg-surface-200 rounded-full shadow-inner cursor-pointer hover:bg-surface-300 transition-colors duration-200"
+        >
+          <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
+          <span>{{ accountingPeriodStore.activeAccountingPeriod.name }}</span>
+        </router-link>
+
         <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
           <i class="pi pi-bell text-xl text-surface-600"></i>
         </button>

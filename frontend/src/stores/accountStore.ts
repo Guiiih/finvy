@@ -28,10 +28,6 @@ export const useAccountStore = defineStore('account', () => {
     return Array.from(types)
   })
 
-  const getAccountsByType = computed(() => (type: string) => {
-    return accounts.value.filter((account) => account.type === type)
-  })
-
   async function fetchAccounts({ page = 1, limit = 1000 }: { page?: number; limit?: number } = {}) {
     loading.value = true
     error.value = null
@@ -56,6 +52,34 @@ export const useAccountStore = defineStore('account', () => {
       } else {
         error.value = 'Ocorreu uma falha desconhecida ao buscar contas.'
       }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchAccountsByType(type: string) {
+    loading.value = true
+    error.value = null
+    try {
+      if (!accountingPeriodStore.activeAccountingPeriod?.id) {
+        await accountingPeriodStore.fetchAccountingPeriods()
+      }
+      const response = await api.get<{ data: Account[]; count: number }>('/accounts/by-type', {
+        params: {
+          organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
+          accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
+          type,
+        },
+      })
+      return Array.isArray(response.data) ? response.data : []
+    } catch (err: unknown) {
+      console.error('Erro ao buscar contas por tipo:', err)
+      if (err instanceof Error) {
+        error.value = err.message
+      } else {
+        error.value = 'Ocorreu uma falha desconhecida ao buscar contas por tipo.'
+      }
+      return []
     } finally {
       loading.value = false
     }
@@ -125,6 +149,7 @@ export const useAccountStore = defineStore('account', () => {
     loading,
     error,
     fetchAccounts,
+    fetchAccountsByType,
     addAccount,
     updateAccount,
     deleteAccount,
@@ -132,6 +157,5 @@ export const useAccountStore = defineStore('account', () => {
     getAccountById,
     getAccountByName,
     accountTypes,
-    getAccountsByType,
   }
 })

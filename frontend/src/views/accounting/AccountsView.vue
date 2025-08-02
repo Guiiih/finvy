@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
-import type { Account } from '@/types'
+import type { Account, AccountType } from '@/types'
 import { accountTypeTranslations } from '@/utils/accountTypeTranslations'
 
 import Skeleton from 'primevue/skeleton'
 import { useToast } from 'primevue/usetoast'
 import Paginator from 'primevue/paginator'
+import Button from 'primevue/button'
+import OverlayPanel from 'primevue/overlaypanel'
 
 import AccountFormModal from '@/components/AccountFormModal.vue'
 
@@ -19,16 +21,35 @@ const editingAccount = ref<Account | null>(null)
 const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const selectedAccountTypes = ref<AccountType[]>([]) // Alterado para array
+
+const op = ref<InstanceType<typeof OverlayPanel> | undefined>()
+
+const toggle = (event: Event) => {
+  op.value?.toggle(event)
+}
+
+const applyFilter = (type: AccountType) => {
+  const index = selectedAccountTypes.value.indexOf(type)
+  if (index > -1) {
+    selectedAccountTypes.value.splice(index, 1) // Remove se já estiver selecionado
+  } else {
+    selectedAccountTypes.value.push(type) // Adiciona se não estiver selecionado
+  }
+  // op.value?.hide() // Manter comentado ou remover se o usuário quiser selecionar múltiplos e depois fechar
+}
 
 const groupedAndFilteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  const filtered = accountStore.accounts.filter(
-    (account) =>
+  const filtered = accountStore.accounts.filter((account) => {
+    const typeMatch = selectedAccountTypes.value.length === 0 || selectedAccountTypes.value.includes(account.type)
+    const searchMatch = 
       !account.is_protected &&
       (account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
         account.code?.toString().includes(lowerCaseSearchTerm) ||
-        account.type.toLowerCase().includes(lowerCaseSearchTerm)),
-  )
+        account.type.toLowerCase().includes(lowerCaseSearchTerm))
+    return typeMatch && searchMatch
+  })
 
   const grouped = filtered.reduce(
     (acc, account) => {
@@ -173,6 +194,24 @@ onMounted(() => {
             class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"
           ></i>
         </div>
+
+        <Button
+          icon="pi pi-filter"
+          class="p-button-secondary p-button-outlined"
+          @click="toggle"
+        />
+        <OverlayPanel ref="op" style="min-width: 250px;">
+          <div class="flex flex-col space-y-2 p-4">
+            <div
+              v-for="type in Object.keys(accountTypeTranslations)" :key="type"
+              class="flex items-center justify-between p-2 hover:bg-surface-100 cursor-pointer"
+              @click="applyFilter(type as AccountType)"
+            >
+              <span>{{ accountTypeTranslations[type as AccountType] }}</span>
+              <i v-if="selectedAccountTypes.includes(type as AccountType)" class="pi pi-check text-surface-500"></i>
+            </div>
+          </div>
+        </OverlayPanel>
 
         <button
           @click="openNewAccountModal"
