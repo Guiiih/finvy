@@ -12,6 +12,7 @@ Este endpoint gerencia os períodos contábeis (exercícios fiscais) dentro de u
 | `end_date` | `string` | A data de fim do período no formato `YYYY-MM-DD`. |
 | `organization_id` | `string` | O ID da organização à qual o período pertence. |
 | `regime` | `string` | O regime tributário associado a este período (`simples_nacional`, `lucro_presumido`, `lucro_real`). |
+| `costing_method` | `string` | O método de custeio padrão para este período (`average`, `fifo`, `lifo`). |
 
 ---
 
@@ -46,7 +47,8 @@ Cria um novo período contábil para a organização ativa. A API valida para ga
   "name": "Exercício 2026",
   "start_date": "2026-01-01",
   "end_date": "2026-12-31",
-  "regime": "lucro_presumido"
+  "regime": "lucro_presumido",
+  "costing_method": "average"
 }
 ```
 

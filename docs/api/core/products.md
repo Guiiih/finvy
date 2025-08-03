@@ -9,7 +9,7 @@ Este endpoint é responsável pelo gerenciamento do cadastro de produtos e seus 
 | `id` | `string` | O ID único do produto (UUID). |
 | `name` | `string` | O nome do produto. |
 | `description` | `string` | Opcional. Uma descrição para o produto. |
-| `unit_cost` | `number` | O custo médio ponderado atual do produto. Este valor é atualizado automaticamente pelas transações de compra. |
+| `quantity_in_stock` | `integer` | A quantidade atual do produto em estoque. |
 | `organization_id` | `string` | O ID da organização à qual o produto pertence. |
 | `accounting_period_id` | `string` | O ID do período contábil ao qual o produto pertence. |
 
@@ -40,7 +40,7 @@ Retorna uma lista paginada de todos os produtos para a organização e período 
       "id": "p1q2r3s4-t5u6-7890-1234-567890abcdef",
       "name": "Produto Exemplo A",
       "description": "Componente eletrônico principal",
-      "unit_cost": 55.75
+      "quantity_in_stock": 100
     }
   ],
   "count": 1
@@ -51,7 +51,7 @@ Retorna uma lista paginada de todos os produtos para a organização e período 
 
 ## Criar um Produto
 
-Cria um novo produto com seu custo inicial.
+Cria um novo produto. O estoque inicial é zero.
 
 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
   <span style="background-color: #1867C0; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">POST</span>
@@ -63,8 +63,7 @@ Cria um novo produto com seu custo inicial.
 ```json
 {
   "name": "Produto Exemplo B",
-  "description": "Componente secundário",
-  "unit_cost": 10.00
+  "description": "Componente secundário"
 }
 ```
 
@@ -76,7 +75,7 @@ Retorna o objeto do produto recém-criado.
 
 ## Atualizar um Produto
 
-Atualiza os detalhes de um produto existente. Note que `unit_cost` não deve ser atualizado diretamente por este método, pois é controlado pelas transações de compra.
+Atualiza os detalhes de um produto existente.
 
 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
   <span style="background-color: #f0ad4e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">PUT</span>
@@ -122,3 +121,69 @@ Exclui um produto do cadastro.
 ### Resposta
 
 `204 No Content` em caso de sucesso.
+
+---
+
+## Registrar Compra de Produto
+
+Registra a compra de um produto, atualizando o estoque e criando um novo lote de inventário.
+
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+  <span style="background-color: #1867C0; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">POST</span>
+  <span>/api/products/purchase</span>
+</div>
+
+### Corpo da Requisição
+
+```json
+{
+  "product_id": "p1q2r3s4-t5u6-7890-1234-567890abcdef",
+  "quantity": 50,
+  "unit_cost": 12.50
+}
+```
+
+| Atributo | Tipo | Descrição |
+|---|---|---|
+| `product_id` | `string` | **Obrigatório.** O ID do produto comprado. |
+| `quantity` | `integer` | **Obrigatório.** A quantidade comprada. |
+| `unit_cost` | `number` | **Obrigatório.** O custo unitário da compra. |
+
+### Resposta
+
+`200 OK` com uma mensagem de sucesso.
+
+---
+
+## Calcular Custo da Mercadoria Vendida (CMV)
+
+Calcula o Custo da Mercadoria Vendida (CMV) para uma venda de produto, com base no método de custeio configurado para o período contábil.
+
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+  <span style="background-color: #1867C0; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">POST</span>
+  <span>/api/products/calculate-cogs</span>
+</div>
+
+### Corpo da Requisição
+
+```json
+{
+  "product_id": "p1q2r3s4-t5u6-7890-1234-567890abcdef",
+  "quantity_sold": 10
+}
+```
+
+| Atributo | Tipo | Descrição |
+|---|---|---|
+| `product_id` | `string` | **Obrigatório.** O ID do produto vendido. |
+| `quantity_sold` | `integer` | **Obrigatório.** A quantidade vendida. |
+
+### Resposta
+
+`200 OK` com o valor do CMV calculado.
+
+```json
+{
+  "cogs": 125.00
+}
+```

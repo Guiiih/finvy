@@ -6,7 +6,6 @@ import {
   getUserOrganizationAndPeriod,
 } from "../utils/supabaseClient.js";
 import { createEntryLineSchema } from "../utils/schemas.js";
-import { updateProductStockAndCost } from "../services/productService.js";
 import { calculateTaxes } from "../services/taxService.js";
 import { formatSupabaseError } from "../utils/errorUtils.js";
 import { getTaxSettings } from "../services/taxSettingService.js";
@@ -490,20 +489,7 @@ export default async function handler(
           });
         }
 
-        // Stock and cost update logic for sales
-        if (product_id && quantity) {
-          // For sales, unit_cost in entry_line should be the average cost at the time of sale.
-          // The updateProductStockAndCost function will only decrease stock for sales.
-          await updateProductStockAndCost(
-            product_id,
-            quantity,
-            unit_cost || 0,
-            "sale",
-            organization_id,
-            active_accounting_period_id,
-            token,
-          );
-        }
+        
       } else if (transaction_type === "purchase") {
         // Fetch required account IDs for purchases
         const { data: accounts, error: accountsError } = await getSupabaseClient(token)
@@ -562,18 +548,7 @@ export default async function handler(
           accounting_period_id: active_accounting_period_id,
         });
 
-        // Stock and cost update logic for purchases
-        if (product_id && quantity && unit_cost !== undefined) {
-          await updateProductStockAndCost(
-            product_id,
-            quantity,
-            unit_cost,
-            "purchase",
-            organization_id,
-            active_accounting_period_id,
-            token,
-          );
-        }
+        
       } else {
         // Default or other types, for now, just insert the main line
         entryLinesToInsert.push({

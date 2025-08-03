@@ -157,6 +157,21 @@
             <option value="lucro_real">Lucro Real</option>
           </select>
         </div>
+        <div>
+          <label for="editCostingMethod" class="block text-sm font-medium text-gray-700"
+            >Método de Custeio</label
+          >
+          <select
+              id="editCostingMethod"
+              v-model="editingPeriod.costing_method as 'average' | 'fifo' | 'lifo'"
+              required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+            <option v-for="method in costingMethods" :key="method.value" :value="method.value">
+              {{ method.label }}
+            </option>
+          </select>
+        </div>
         <div class="md:col-span-3 flex justify-end space-x-2">
           <button
             type="button"
@@ -199,6 +214,7 @@
               {{ formatDate(period.end_date) }})
             </p>
             <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
+            <p class="text-sm text-gray-600">Custeio: {{ formatCostingMethod(period.costing_method) }}</p>
             <span
               :class="[
                 period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
@@ -417,12 +433,17 @@ const sharingStore = useSharingStore()
 const { accountingPeriods } = storeToRefs(accountingPeriodStore)
 const toast = useToast()
 
-const newPeriod = ref({
+const newPeriod = ref<AccountingPeriod>({
+  id: '',
+  organization_id: '',
   name: '',
-  start_date: null as string | null,
-  end_date: null as string | null,
-  regime: null as TaxRegime | null,
-})
+  start_date: null,
+  end_date: null,
+  is_active: false,
+  created_at: '',
+  regime: null,
+  costing_method: 'average',
+});
 
 const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
 
@@ -430,6 +451,11 @@ const searchTerm = ref('')
 const showCreatePeriodForm = ref(false)
 const showEditPeriodForm = ref(false)
 const editingPeriod = ref<AccountingPeriod | null>(null)
+const costingMethods = [
+  { label: 'Custo Médio Ponderado', value: 'average' },
+  { label: 'PEPS (Primeiro a Entrar, Primeiro a Sair)', value: 'fifo' },
+  { label: 'UEPS (Último a Entrar, Primeiro a Sair)', value: 'lifo' },
+]
 
 // Sharing Modal State
 const showShareModal = ref(false)
@@ -492,6 +518,7 @@ const handleCreatePeriod = async () => {
       start_date: newPeriod.value.start_date as string,
       end_date: newPeriod.value.end_date as string,
       regime: newPeriod.value.regime as TaxRegime,
+      costing_method: newPeriod.value.costing_method, // Adicionado
       is_active: true, // Novo período sempre se torna ativo
     })
     toast.add({
@@ -500,7 +527,17 @@ const handleCreatePeriod = async () => {
       detail: 'Período contábil criado e ativado com sucesso!',
       life: 3000,
     })
-    newPeriod.value = { name: '', start_date: null, end_date: null, regime: null } // Limpa o formulário
+            newPeriod.value = {
+      id: '',
+      organization_id: '',
+      name: '',
+      start_date: null,
+      end_date: null,
+      is_active: false,
+      created_at: '',
+      regime: null,
+      costing_method: 'average',
+    }; // Limpa o formulário
     showCreatePeriodForm.value = false // Fecha o formulário após a criação
   } catch (err: unknown) {
     toast.add({
@@ -514,6 +551,9 @@ const handleCreatePeriod = async () => {
 
 const startEditPeriod = (period: AccountingPeriod) => {
   editingPeriod.value = { ...period }
+  if (!editingPeriod.value.costing_method) {
+    editingPeriod.value.costing_method = 'average' // Garante um valor padrão
+  }
   showEditPeriodForm.value = true
   showCreatePeriodForm.value = false // Esconde o formulário de criação se estiver visível
 }
@@ -538,9 +578,10 @@ const handleUpdatePeriod = async () => {
   try {
     await accountingPeriodStore.updateAccountingPeriod(editingPeriod.value.id, {
       name: editingPeriod.value.name,
-      start_date: editingPeriod.value.start_date,
-      end_date: editingPeriod.value.end_date,
-      regime: editingPeriod.value.regime,
+      start_date: editingPeriod.value.start_date || '',
+      end_date: editingPeriod.value.end_date || '',
+      regime: editingPeriod.value.regime || undefined,
+      costing_method: editingPeriod.value.costing_method, // Adicionado
     })
     toast.add({
       severity: 'success',
@@ -600,13 +641,13 @@ const deletePeriod = async (id: string) => {
   }
 }
 
-const formatDate = (dateString: string | undefined) => {
+const formatDate = (dateString: string | null | undefined) => {
   if (!dateString) return 'N/A'
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
   return new Date(dateString).toLocaleDateString('pt-BR', options)
 }
 
-const formatRegime = (regime: TaxRegime | undefined) => {
+const formatRegime = (regime: TaxRegime | null | undefined) => {
   if (!regime) return 'N/A'
   switch (regime) {
     case 'simples_nacional':
@@ -617,6 +658,20 @@ const formatRegime = (regime: TaxRegime | undefined) => {
       return 'Lucro Real'
     default:
       return regime
+  }
+}
+
+const formatCostingMethod = (method: 'average' | 'fifo' | 'lifo' | undefined) => {
+  if (!method) return 'N/A'
+  switch (method) {
+    case 'average':
+      return 'Custo Médio Ponderado'
+    case 'fifo':
+      return 'PEPS'
+    case 'lifo':
+      return 'UEPS'
+    default:
+      return method
   }
 }
 

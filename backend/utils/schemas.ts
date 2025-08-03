@@ -182,9 +182,6 @@ export const createProductSchema = z.object({
     .min(1, "Nome do produto é obrigatório.")
     .max(100, "Nome do produto muito longo."),
   description: z.string().max(255, "Descrição muito longa.").optional(),
-  unit_cost: z
-    .number()
-    .nonnegative("Custo unitário deve ser um valor não negativo."),
 });
 
 export const updateProductSchema = z
@@ -195,10 +192,6 @@ export const updateProductSchema = z
       .max(100, "Nome do produto muito longo.")
       .optional(),
     description: z.string().max(255, "Descrição muito longa.").optional(),
-    unit_cost: z
-      .number()
-      .nonnegative("Custo unitário deve ser um valor não negativo.")
-      .optional(),
     icms_rate: z
       .number()
       .nonnegative("Alíquota de ICMS deve ser um valor não negativo.")

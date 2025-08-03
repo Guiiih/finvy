@@ -12,7 +12,7 @@ A funcionalidade de **Importação de NF-e** no Finvy automatiza a entrada de da
     *   **Aplicar Regime Tributário:** Com base na data de emissão da NF-e e no histórico de regimes tributários da sua organização, o Finvy aplicará as alíquotas de impostos corretas.
     *   **Sugerir Lançamentos:** O sistema irá gerar uma sugestão de lançamentos contábeis completos, incluindo as partidas dobradas para o valor da nota, impostos e movimentação de estoque (se aplicável).
 4.  **Revisão e Confirmação:** Você terá a oportunidade de revisar os dados extraídos e os lançamentos sugeridos. Isso permite que você faça quaisquer ajustes necessários antes de confirmar a criação dos lançamentos no seu sistema.
-5.  **Criação de Lançamentos e Atualização de Estoque:** Após a sua confirmação, o Finvy criará automaticamente os lançamentos contábeis correspondentes e atualizará o estoque dos produtos envolvidos, incluindo o recálculo do Custo Médio Ponderado.
+5.  **Criação de Lançamentos e Atualização de Estoque:** Após a sua confirmação, o Finvy criará automaticamente os lançamentos contábeis correspondentes e **gerenciará o estoque e o Custo da Mercadoria Vendida (CMV) com base no método de custeio (Custo Médio Ponderado, PEPS ou UEPS) configurado para o período contábil.**
 
 ## Benefícios
 

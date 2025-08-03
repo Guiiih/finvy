@@ -1,1 +1,0 @@
-ALTER TABLE public.products DROP COLUMN current_stock;

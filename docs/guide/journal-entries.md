@@ -40,6 +40,6 @@ Para transações de venda e compra que envolvem produtos e impostos, o Finvy au
 *   Gera as linhas para a conta de Clientes/Fornecedores.
 *   Gera as linhas para a Receita/Custo da Mercadoria Vendida.
 *   Calcula e gera as linhas para os impostos (ICMS, IPI, PIS, COFINS) com base no regime tributário da sua organização.
-*   Atualiza automaticamente o estoque e o custo médio ponderado dos produtos.
+*   **Gerencia o estoque e o Custo da Mercadoria Vendida (CMV) com base no método de custeio (Custo Médio Ponderado, PEPS ou UEPS) configurado para o período contábil.**
 
 Essa automação garante a precisão e a conformidade fiscal dos seus registros.

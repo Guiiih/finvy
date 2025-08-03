@@ -23,7 +23,7 @@ type EntryLine = {
   amount: number
   product_id?: string
   quantity?: number
-  unit_cost?: number
+  unit_cost?: number // Adicionado de volta
   icms_rate?: number
   total_gross?: number
   icms_value?: number
@@ -247,6 +247,11 @@ function removeLine(index: number) {
   newEntryLines.value.splice(index, 1)
 }
 
+import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
+import { useAuthStore } from '@/stores/authStore'
+
+// ... (rest of the script)
+
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
     toast.add({
@@ -267,13 +272,90 @@ async function submitEntry() {
     return
   }
 
+  const authStore = useAuthStore()
+  const organizationId = authStore.userOrganizationId
+  const accountingPeriodId = authStore.userActiveAccountingPeriodId
+  const token = authStore.token
+
+  if (!organizationId || !accountingPeriodId || !token) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Dados da organização ou período contábil ausentes.',
+      life: 3000,
+    })
+    return
+  }
+
   const entryData = {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
-    lines: newEntryLines.value.map((line) => ({ ...line })),
+    lines: [] as typeof newEntryLines.value,
   }
 
   try {
+    // Process stock movements first
+    for (const line of newEntryLines.value) {
+      if (line.account_id === stockAccountId.value && line.product_id && line.quantity) {
+        if (line.type === 'debit') { // Purchase
+          if (!line.unit_cost) {
+            toast.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Custo unitário é obrigatório para compras de estoque.',
+              life: 3000,
+            })
+            return
+          }
+          await recordProductPurchase(
+            line.product_id,
+            line.quantity,
+            line.unit_cost,
+            organizationId,
+            accountingPeriodId,
+          )
+          // Add the original line to the entry data
+          entryData.lines.push(line)
+        } else if (line.type === 'credit') { // Sale
+          const cogs = await calculateCogsForSale(
+            line.product_id,
+            line.quantity,
+            organizationId,
+            accountingPeriodId,
+          )
+
+          // Add the original sale line (e.g., Credit to Stock, Debit to Accounts Receivable)
+          entryData.lines.push(line)
+
+          // Add the COGS entry (Debit to COGS account, Credit to Stock account)
+          const cogsAccountId = accountStore.accounts.find(acc => acc.name === 'Custo da Mercadoria Vendida')?.id
+          if (!cogsAccountId) {
+            toast.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Conta de Custo da Mercadoria Vendida não encontrada.',
+              life: 3000,
+            })
+            return
+          }
+
+          entryData.lines.push({
+            account_id: cogsAccountId,
+            type: 'debit',
+            amount: cogs,
+          })
+          entryData.lines.push({
+            account_id: stockAccountId.value,
+            type: 'credit',
+            amount: cogs,
+          })
+        }
+      } else {
+        // For non-stock related lines, just add them to the entry data
+        entryData.lines.push(line)
+      }
+    }
+
     if (props.isEditing && props.editingEntry) {
       await journalEntryStore.updateEntry({ id: props.editingEntry.id!, ...entryData })
       toast.add({
@@ -375,6 +457,15 @@ async function submitEntry() {
                   type="number"
                   v-model.number="line.quantity"
                   placeholder="Quantidade"
+                  min="0"
+                  class="md:col-span-2 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+                <input
+                  v-if="line.type === 'debit'"
+                  type="number"
+                  v-model.number="line.unit_cost"
+                  placeholder="Custo Unit."
+                  step="0.01"
                   min="0"
                   class="md:col-span-2 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />

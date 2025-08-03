@@ -119,7 +119,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { name, description, unit_cost } = parsedBody.data;
+      const { name, description } = parsedBody.data; // Removed unit_cost
 
       const { data, error: dbError } = await userSupabase
         .from("products")
@@ -127,7 +127,6 @@ export default async function handler(
           {
             name,
             description,
-            unit_cost,
             organization_id,
             accounting_period_id: active_accounting_period_id,
           },
@@ -137,6 +136,48 @@ export default async function handler(
       if (dbError) throw dbError;
 
       return res.status(201).json(data[0]);
+    }
+
+    // New POST route for recording product purchases
+    if (req.method === "POST" && req.url === "/products/purchase") {
+      const { product_id, quantity, unit_cost } = req.body;
+      if (!product_id || !quantity || !unit_cost) {
+        return handleErrorResponse(res, 400, "product_id, quantity, and unit_cost are required.");
+      }
+      try {
+        await userSupabase.rpc("record_purchase", {
+          p_product_id: product_id,
+          p_quantity: quantity,
+          p_unit_cost: unit_cost,
+          p_organization_id: organization_id,
+          p_accounting_period_id: active_accounting_period_id,
+        });
+        return res.status(200).json({ message: "Purchase recorded successfully." });
+      } catch (rpcError: any) {
+        logger.error("Error calling record_purchase RPC:", rpcError);
+        return handleErrorResponse(res, 500, formatSupabaseError(rpcError));
+      }
+    }
+
+    // New POST route for calculating COGS
+    if (req.method === "POST" && req.url === "/products/calculate-cogs") {
+      const { product_id, quantity_sold } = req.body;
+      if (!product_id || !quantity_sold) {
+        return handleErrorResponse(res, 400, "product_id and quantity_sold are required.");
+      }
+      try {
+        const { data: cogs, error: rpcError } = await userSupabase.rpc("calculate_cogs_for_sale", {
+          p_product_id: product_id,
+          p_quantity_sold: quantity_sold,
+          p_organization_id: organization_id,
+          p_accounting_period_id: active_accounting_period_id,
+        });
+        if (rpcError) throw rpcError;
+        return res.status(200).json({ cogs });
+      } catch (rpcError: any) {
+        logger.error("Error calling calculate_cogs_for_sale RPC:", rpcError);
+        return handleErrorResponse(res, 500, formatSupabaseError(rpcError));
+      }
     }
 
     /**

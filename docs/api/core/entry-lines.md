@@ -13,7 +13,6 @@ Este endpoint gerencia as linhas individuais (débitos e créditos) que compõem
 | `credit` | `number` | O valor do crédito. `null` se for um débito. |
 | `product_id` | `string` | Opcional. O ID do produto associado à transação. |
 | `quantity` | `integer` | Opcional. A quantidade do produto. |
-| `unit_cost` | `number` | Opcional. O custo unitário do produto. |
 | `total_gross` | `number` | O valor bruto total da transação, base para impostos. |
 | `icms_value` | `number` | O valor calculado de ICMS. |
 | `ipi_value` | `number` | O valor calculado de IPI. |
@@ -69,22 +68,6 @@ O corpo da requisição varia ligeiramente entre venda e compra, mas a estrutura
   "unit_cost": 50.00 // Opcional, custo do produto no momento da venda
 }
 ```
-
-### Lógica de Negócio
-
--   **Para `transaction_type: "sale"`:**
-    -   A API irá automaticamente:
-        1.  Debitar a `account_id` (Clientes) pelo valor líquido total.
-        2.  Creditar a conta "Receita de Vendas" pelo valor bruto.
-        3.  Debitar as contas de despesa de impostos (PIS, COFINS) e creditar as contas de impostos a recolher (ICMS, IPI, PIS, COFINS).
-        4.  Debitar "Custo da Mercadoria Vendida" (CMV) e creditar "Estoque" com base no `unit_cost` e `quantity`.
-        5.  Atualizar o estoque do produto.
-
--   **Para `transaction_type: "purchase"`:**
-    -   A API irá automaticamente:
-        1.  Debitar a conta "Estoque de Mercadorias" pelo valor líquido.
-        2.  Creditar a `account_id` (Fornecedores).
-        3.  Atualizar o estoque e o custo médio ponderado do produto.
 
 ### Resposta
 

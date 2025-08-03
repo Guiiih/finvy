@@ -31,12 +31,6 @@ export const useTransactionStore = defineStore('transactionStore', () => {
         description,
       } = saleDetails
 
-      const product = productStore.getProductById(productId)
-      if (!product) {
-        throw new Error(`Produto com ID ${productId} não encontrado.`)
-      }
-      const costOfGoods = product.unit_cost
-
       const journalEntryLines: EntryLine[] = [
         {
           account_id: customerAccountId,
@@ -51,23 +45,6 @@ export const useTransactionStore = defineStore('transactionStore', () => {
           debit: 0,
           credit: quantity * salePrice,
           amount: quantity * salePrice,
-        },
-        {
-          account_id: cogsAccountId,
-          type: 'debit',
-          debit: quantity * costOfGoods,
-          credit: 0,
-          amount: quantity * costOfGoods,
-        },
-        {
-          account_id: inventoryAccountId,
-          type: 'credit',
-          debit: 0,
-          credit: quantity * costOfGoods,
-          amount: quantity * costOfGoods,
-          product_id: productId,
-          quantity: quantity,
-          unit_cost: costOfGoods,
         },
       ]
 

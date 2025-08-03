@@ -8,31 +8,36 @@ Cada item que sua organização compra, vende ou utiliza deve ser cadastrado com
 
 *   **Nome:** Identificação do produto.
 *   **Descrição:** Detalhes adicionais sobre o produto.
-*   **Custo Unitário:** O custo médio ponderado atual do produto. Este valor é atualizado automaticamente a cada compra.
 *   **Estoque Atual:** A quantidade disponível do produto em seu estoque.
 
 ## Gerenciar Produtos
 
 1.  **Acesse a Seção de Produtos:** Navegue até "Produtos" no menu principal.
-2.  **Visualizar Produtos:** Veja a lista de todos os seus produtos, com seus detalhes, custo unitário e estoque atual.
+2.  **Visualizar Produtos:** Veja a lista de todos os seus produtos, com seus detalhes e estoque atual.
 3.  **Adicionar Novo Produto:**
     *   Clique em "Adicionar Produto".
-    *   Preencha o nome, descrição, custo unitário inicial e a quantidade inicial em estoque.
+    *   Preencha o nome e a descrição. O estoque inicial é zero.
 4.  **Editar Produto:**
     *   Selecione o produto que deseja editar.
-    *   Você pode alterar o nome e a descrição. O custo unitário e o estoque são atualizados por meio de transações.
+    *   Você pode alterar o nome e a descrição. O estoque é atualizado por meio de transações.
 5.  **Excluir Produto:**
     *   Selecione o produto e clique em "Excluir".
     *   **Atenção:** Produtos com movimentações de estoque ou lançamentos associados não podem ser excluídos diretamente.
 
-## Controle de Estoque (Custo Médio Ponderado)
+## Métodos de Custeio de Estoque (Custo Médio Ponderado, PEPS, UEPS)
 
-O Finvy automatiza o cálculo do **Custo Médio Ponderado (CMP)**, um método de avaliação de estoque que recalcula o custo médio de cada item após cada nova compra. Isso garante que o valor do seu estoque e o Custo da Mercadoria Vendida (CMV) sejam sempre precisos.
+O Finvy suporta diferentes métodos de custeio de estoque, permitindo que você escolha o mais adequado para cada período contábil da sua organização:
+
+*   **Custo Médio Ponderado (CMP):** Recalcula o custo médio de cada item após cada nova compra.
+*   **PEPS (Primeiro a Entrar, Primeiro a Sair - FIFO):** Assume que os primeiros itens comprados são os primeiros a serem vendidos.
+*   **UEPS (Último a Entrar, Primeiro a Sair - LIFO):** Assume que os últimos itens comprados são os primeiros a serem vendidos.
+
+O método de custeio é configurado por [Período Contábil](./accounting-periods.md).
 
 ### Como Funciona:
 
-*   **Compras:** Ao registrar uma compra de produtos, o Finvy atualiza automaticamente o estoque e recalcula o CMP com base no custo da nova aquisição e na quantidade existente.
-*   **Vendas:** Ao registrar uma venda, o Finvy debita o estoque pelo CMP atual do produto e registra o CMV, garantindo a correta apuração do resultado.
+*   **Compras:** Ao registrar uma compra de produtos, o Finvy atualiza automaticamente o estoque e registra o lote de inventário com seu custo unitário.
+*   **Vendas:** Ao registrar uma venda, o Finvy calcula o Custo da Mercadoria Vendida (CMV) e debita o estoque com base no método de custeio selecionado para o período contábil ativo.
 
 ## Movimentações de Estoque
 

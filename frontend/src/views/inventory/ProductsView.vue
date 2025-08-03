@@ -178,16 +178,7 @@ onMounted(async () => {
               class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition"
             >
               <div class="md:col-span-6 text-surface-800">{{ product.name }}</div>
-              <div class="md:col-span-2 text-surface-700">{{ stockControlStore.getBalanceByProductId(product.id)?.quantity || 0 }}</div>
-              <div class="md:col-span-2 text-surface-700">
-                {{
-                  formatCurrency(
-                    product.unit_cost !== null && product.unit_cost !== undefined
-                      ? product.unit_cost
-                      : 0,
-                  )
-                }}
-              </div>
+              <div class="md:col-span-2 text-surface-700">{{ product.quantity_in_stock || 0 }}</div>
               <div class="md:col-span-2 flex justify-center items-center space-x-2">
                 <button
                   @click="startEdit(product)"

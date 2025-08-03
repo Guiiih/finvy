@@ -14,6 +14,7 @@ Um período contábil geralmente corresponde a um ano fiscal (por exemplo, de 1�
     *   **Data de Início:** A data de início do período (ex: 2025-01-01).
     *   **Data de Fim:** A data de término do período (ex: 2025-12-31).
     *   **Regime Tributário:** O regime tributário aplicável a este período (Simples Nacional, Lucro Presumido, Lucro Real). O Finvy valida para evitar sobreposição de datas com períodos existentes, garantindo a integridade histórica do regime tributário.
+    *   **Método de Custeio:** O método de custeio padrão para este período (Custo Médio Ponderado, PEPS - Primeiro a Entrar, Primeiro a Sair, ou UEPS - Último a Entrar, Primeiro a Sair).
 
 ## Período Ativo
 

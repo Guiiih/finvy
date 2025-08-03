@@ -16,11 +16,11 @@ export interface Product {
   id: string
   name: string
   description?: string
-  unit_cost: number
   icms_rate?: number
   user_id?: string
   organization_id?: string
   accounting_period_id?: string
+  quantity_in_stock?: number // Adicionado para refletir a nova coluna
 }
 
 export type EntryType = 'debit' | 'credit'
@@ -106,11 +106,12 @@ export interface AccountingPeriod {
   id: string
   organization_id: string
   name: string
-  start_date: string
-  end_date: string
+  start_date: string | null
+  end_date: string | null
   is_active: boolean
   created_at: string
-  regime?: TaxRegime // Adicionado o regime tributário
+  regime?: TaxRegime | null // Adicionado o regime tributário
+  costing_method: 'average' | 'fifo' | 'lifo' // Adicionado o método de custeio
 }
 
 export interface Organization {

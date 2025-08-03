@@ -8,7 +8,7 @@ import { useAuthStore } from './authStore'
 type NewAccountingPeriodPayload = Omit<
   AccountingPeriod,
   'id' | 'created_at' | 'organization_id'
-> & { regime: TaxRegime }
+> & { regime: TaxRegime; costing_method: 'average' | 'fifo' | 'lifo' }
 
 export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const accountingPeriods = ref<AccountingPeriod[]>([])
@@ -33,8 +33,8 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
       const periodsWithStatus = data.map((period) => {
         const matchingRegime = taxRegimes.find(
           (regime) =>
-            new Date(period.start_date).getTime() === new Date(regime.start_date).getTime() &&
-            new Date(period.end_date).getTime() === new Date(regime.end_date).getTime(),
+            new Date(period.start_date || '').getTime() === new Date(regime.start_date).getTime() &&
+            new Date(period.end_date || '').getTime() === new Date(regime.end_date).getTime(),
         )
         return {
           ...period,
