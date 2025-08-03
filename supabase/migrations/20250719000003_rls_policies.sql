@@ -1,4 +1,3 @@
-
 -- Migração: Habilita RLS e cria políticas
 
 -- Habilita RLS para as tabelas
@@ -83,38 +82,35 @@ USING (
 );
 
 -- Políticas para user_organization_roles
-CREATE POLICY "Users can view their own roles"
-ON public.user_organization_roles FOR SELECT
-USING (
+CREATE POLICY "Users can view their own roles" ON public.user_organization_roles
+FOR SELECT USING (
     auth.uid() = user_id
 );
 
-CREATE POLICY "Owners/Admins can view all organization members"
-ON public.user_organization_roles FOR SELECT
-USING (
+CREATE POLICY "Owners/Admins can view all organization members" ON public.user_organization_roles
+FOR SELECT USING (
     public.can_manage_organization_role(auth.uid(), organization_id)
 );
 
-CREATE POLICY "All members can view organization members"
-ON public.user_organization_roles FOR SELECT
-USING (
+CREATE POLICY "All members can view organization members" ON public.user_organization_roles
+FOR SELECT USING (
     public.is_member_of_any_organization(auth.uid(), organization_id)
 );
 
-CREATE POLICY "Owners/Admins can insert roles"
-ON public.user_organization_roles FOR INSERT
+CREATE POLICY "Owners/Admins can insert roles" ON public.user_organization_roles
+FOR INSERT
 WITH CHECK (
     can_manage_organization_role(auth.uid(), organization_id)
 );
 
-CREATE POLICY "Owners/Admins can update roles"
-ON public.user_organization_roles FOR UPDATE
+CREATE POLICY "Owners/Admins can update roles" ON public.user_organization_roles
+FOR UPDATE
 USING (
     can_manage_organization_role(auth.uid(), organization_id)
 );
 
-CREATE POLICY "Owners/Admins can delete roles"
-ON public.user_organization_roles FOR DELETE
+CREATE POLICY "Owners/Admins can delete roles" ON public.user_organization_roles
+FOR DELETE
 USING (
     can_manage_organization_role(auth.uid(), organization_id)
 );
@@ -270,3 +266,64 @@ CREATE POLICY "Organizations can delete their own tax settings." ON tax_settings
   FOR DELETE USING (organization_id IN ( SELECT user_organization_roles.organization_id
    FROM user_organization_roles
   WHERE user_id = auth.uid()));
+
+-- Enable Row Level Security (RLS) for tax_regime_history
+ALTER TABLE tax_regime_history ENABLE ROW LEVEL SECURITY;
+
+-- Policy for users to view their own organization's tax regime history
+CREATE POLICY "Users can view their own organization's tax regime history" ON tax_regime_history
+FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid() AND profiles.organization_id = tax_regime_history.organization_id
+    )
+);
+
+-- Policy for users to insert tax regime history for their own organization
+CREATE POLICY "Users can insert tax regime history for their own organization" ON tax_regime_history
+FOR INSERT WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid() AND profiles.organization_id = tax_regime_history.organization_id
+    )
+);
+
+-- Policy for users to update tax regime history for their own organization
+CREATE POLICY "Users can update tax regime history for their own organization" ON tax_regime_history
+FOR UPDATE USING (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid() AND profiles.organization_id = tax_regime_history.organization_id
+    )
+);
+
+-- Policy for users to delete tax regime history for their own organization
+CREATE POLICY "Users can delete tax regime history for their own organization" ON tax_regime_history
+FOR DELETE USING (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid() AND profiles.organization_id = tax_regime_history.organization_id
+    )
+);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own notifications" ON public.notifications
+FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own notifications" ON public.notifications
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own notifications" ON public.notifications
+FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE public.user_presence ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view user presence" ON public.user_presence
+FOR SELECT USING (true); -- Adjust this policy if you want to restrict visibility
+
+CREATE POLICY "Users can insert their own presence" ON public.user_presence
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own presence" ON public.user_presence
+FOR UPDATE USING (auth.uid() = user_id);

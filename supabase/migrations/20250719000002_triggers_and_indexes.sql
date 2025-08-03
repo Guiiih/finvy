@@ -1,4 +1,3 @@
-
 -- Migração: Triggers e Índices
 
 -- Trigger para chamar handle_new_user após a inserção em auth.users
@@ -19,3 +18,6 @@ CREATE INDEX IF NOT EXISTS idx_financial_transactions_org_period ON public.finan
 CREATE INDEX IF NOT EXISTS idx_journal_entries_org_period_entry_date ON public.journal_entries(organization_id, accounting_period_id, entry_date);
 CREATE INDEX IF NOT EXISTS idx_entry_lines_journal_entry_id ON public.entry_lines(journal_entry_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+
+-- Optional: Index for faster lookup by user_id and read status
+CREATE INDEX notifications_user_id_read_idx ON public.notifications (user_id, read);

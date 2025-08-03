@@ -97,8 +97,6 @@ CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    unit_cost NUMERIC(10, 2) NOT NULL,
-    icms_rate NUMERIC(5, 2) DEFAULT 0,
     organization_id UUID REFERENCES organizations(id),
     accounting_period_id UUID REFERENCES accounting_periods(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -239,4 +237,82 @@ CREATE TABLE tax_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(organization_id, effective_date),
     CONSTRAINT tax_settings_organization_id_key UNIQUE (organization_id)
+);
+
+-- Create the tax_regime_enum
+DO $$ BEGIN
+    CREATE TYPE tax_regime_enum AS ENUM ('simples_nacional', 'lucro_presumido', 'lucro_real');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Add new columns to the organizations table
+ALTER TABLE organizations
+ADD COLUMN cnpj VARCHAR(18),
+ADD COLUMN razao_social VARCHAR(255),
+ADD COLUMN uf VARCHAR(2),
+ADD COLUMN municipio VARCHAR(100);
+
+-- Create the tax_regime_history table
+CREATE TABLE IF NOT EXISTS tax_regime_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    regime tax_regime_enum NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add unique constraint to prevent overlapping periods for the same organization
+ALTER TABLE tax_regime_history
+ADD CONSTRAINT unique_tax_regime_period UNIQUE (organization_id, start_date, end_date);
+
+CREATE TABLE public.notifications (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
+    type text NOT NULL, -- e.g., 'financial_transaction_due', 'low_stock', 'accounting_period_closed'
+    message text NOT NULL,
+    read boolean DEFAULT FALSE,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.user_presence (
+    user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+    organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
+    active_accounting_period_id uuid REFERENCES public.accounting_periods(id) ON DELETE CASCADE,
+    last_seen timestamp with time zone DEFAULT now(),
+    PRIMARY KEY (user_id)
+);
+
+-- 2. Alter the products table
+ALTER TABLE public.products
+DROP COLUMN IF EXISTS unit_cost,
+ADD COLUMN IF NOT EXISTS quantity_in_stock INT NOT NULL DEFAULT 0;
+
+-- Create ENUM type for costing methods
+CREATE TYPE costing_method_enum AS ENUM ('average', 'fifo', 'lifo');
+
+-- Add costing_method column to accounting_periods table
+ALTER TABLE public.accounting_periods
+ADD COLUMN IF NOT EXISTS costing_method costing_method_enum NOT NULL DEFAULT 'average';
+
+-- Create inventory_lots table
+CREATE TABLE public.inventory_lots (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    quantity_purchased INT NOT NULL,
+    quantity_remaining INT NOT NULL,
+    unit_cost NUMERIC(10, 2) NOT NULL,
+    purchase_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    organization_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+    accounting_period_id UUID NOT NULL REFERENCES public.accounting_periods(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES auth.users(id),
+    updated_by UUID REFERENCES auth.users(id),
+    deleted_by UUID REFERENCES auth.users(id),
+    is_deleted BOOLEAN DEFAULT FALSE
 );
