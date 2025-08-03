@@ -17,7 +17,6 @@ export interface Product {
   name: string
   description?: string
   unit_cost: number
-  current_stock: number
   icms_rate?: number
   user_id?: string
   organization_id?: string

@@ -185,10 +185,6 @@ export const createProductSchema = z.object({
   unit_cost: z
     .number()
     .nonnegative("Custo unitário deve ser um valor não negativo."),
-  current_stock: z
-    .number()
-    .int()
-    .nonnegative("Estoque atual deve ser um número inteiro não negativo."),
 });
 
 export const updateProductSchema = z
@@ -202,11 +198,6 @@ export const updateProductSchema = z
     unit_cost: z
       .number()
       .nonnegative("Custo unitário deve ser um valor não negativo.")
-      .optional(),
-    current_stock: z
-      .number()
-      .int()
-      .nonnegative("Estoque atual deve ser um número inteiro não negativo.")
       .optional(),
     icms_rate: z
       .number()

@@ -98,7 +98,6 @@ CREATE TABLE products (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     unit_cost NUMERIC(10, 2) NOT NULL,
-    current_stock INTEGER NOT NULL,
     icms_rate NUMERIC(5, 2) DEFAULT 0,
     organization_id UUID REFERENCES organizations(id),
     accounting_period_id UUID REFERENCES accounting_periods(id),

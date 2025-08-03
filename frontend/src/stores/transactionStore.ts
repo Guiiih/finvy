@@ -80,10 +80,6 @@ export const useTransactionStore = defineStore('transactionStore', () => {
 
       await journalEntryStore.addJournalEntry(newJournalEntry)
 
-      await productStore.updateProduct(productId, {
-        current_stock: (product.current_stock || 0) - quantity,
-      })
-
       console.log('Venda registrada com sucesso!')
     } catch (err: unknown) {
       console.error('Erro ao registrar venda:', err)

@@ -12,8 +12,7 @@ import type {
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
 import Dialog from 'primevue/dialog'
-import NFeImporter from '@/components/NFeImporter.vue'
-import TaxSimulator from '@/components/TaxSimulator.vue'
+import Imposto from '@/components/Imposto.vue'
 import Paginator from 'primevue/paginator'
 import Popover from 'primevue/popover';
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
@@ -24,8 +23,8 @@ const productStore = useProductStore()
 const toast = useToast()
 
 const showJournalEntryFormModal = ref(false)
-const showNFeImporterModal = ref(false)
-const showTaxSimulatorModal = ref(false)
+const showImpostoModal = ref(false)
+const initialImpostoTab = ref('nfe')
 const isEditing = ref(false)
 const editingEntry = ref<JournalEntry | null>(null)
 const nfeDataForModal = ref<NFeExtractedData | null>(null)
@@ -51,14 +50,14 @@ function formatCurrency(value: number) {
 const handleNFeProcessed = (data: NFeExtractedData) => {
   nfeDataForModal.value = data
   taxSimulationDataForModal.value = null
-  showNFeImporterModal.value = false
+  showImpostoModal.value = false
   showJournalEntryFormModal.value = true
 }
 
 const handleTaxSimulationProcessed = (result: TaxSimulationResult) => {
   taxSimulationDataForModal.value = result
   nfeDataForModal.value = null
-  showTaxSimulatorModal.value = false
+  showImpostoModal.value = false
   showJournalEntryFormModal.value = true
 }
 
@@ -68,6 +67,12 @@ function openNewEntryModal() {
   nfeDataForModal.value = null
   taxSimulationDataForModal.value = null
   showJournalEntryFormModal.value = true
+}
+
+function openImpostoModal(tab: 'nfe' | 'simulator') {
+  initialImpostoTab.value = tab
+  showImpostoModal.value = true
+  op.value.hide()
 }
 
 function startEdit(entry: JournalEntry) {
@@ -171,16 +176,10 @@ onMounted(async () => {
               Novo Lançamento
             </button>
             <button
-              @click="showNFeImporterModal = true; op.hide()"
+              @click="openImpostoModal('nfe')"
               class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
             >
-              Importar NF-e
-            </button>
-            <button
-              @click="showTaxSimulatorModal = true; op.hide()"
-              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
-            >
-              Simular Impostos
+              Impostos
             </button>
           </div>
         </Popover>
@@ -198,21 +197,16 @@ onMounted(async () => {
       />
 
       <Dialog
-        v-model:visible="showNFeImporterModal"
+        v-model:visible="showImpostoModal"
         modal
-        header="Importar NF-e"
+        header="Impostos"
         :style="{ width: '75vw' }"
       >
-        <NFeImporter @nfe-processed="handleNFeProcessed" />
-      </Dialog>
-
-      <Dialog
-        v-model:visible="showTaxSimulatorModal"
-        modal
-        header="Simulador de Impostos"
-        :style="{ width: '75vw' }"
-      >
-        <TaxSimulator @tax-simulation-processed="handleTaxSimulationProcessed" />
+        <Imposto 
+          :initial-tab="initialImpostoTab"
+          @nfe-processed="handleNFeProcessed" 
+          @tax-simulation-processed="handleTaxSimulationProcessed" 
+        />
       </Dialog>
 
       <div class="overflow-hidden">

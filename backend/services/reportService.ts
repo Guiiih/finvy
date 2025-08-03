@@ -300,29 +300,63 @@ export function calculateDfcData(
   };
 }
 
-async function getProductStockBalances(
-  organization_id: string,
-  accounting_period_id: string,
-  token: string,
-): Promise<StockBalance[]> {
+async function getProducts(organization_id: string, token: string) {
   const userSupabase = getSupabaseClient(token);
   const { data, error } = await userSupabase
     .from("products")
-    .select("id, name, current_stock")
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", accounting_period_id);
+    .select("id, name")
+    .eq("organization_id", organization_id);
 
   if (error) {
-    logger.error(`[getProductStockBalances] Erro ao buscar saldos de estoque de produtos: ${error.message}`);
-    throw new Error(error.message || "Error fetching product stock balances.");
+    logger.error(`[getProducts] Erro ao buscar produtos: ${error.message}`);
+    throw new Error(error.message || "Erro ao buscar produtos.");
+  }
+  return data;
+}
+
+function calculateStockFromJournalEntries(
+  journalEntries: JournalEntry[],
+  accounts: Account[],
+  products: { id: string; name: string }[],
+): StockBalance[] {
+  const stockBalances = new Map<string, {
+    product_id: string;
+    product_name: string;
+    balance: number;
+  }>();
+
+  const productMap = new Map(products.map((p) => [p.id, p.name]));
+  const stockAccount = accounts.find((acc) => acc.name === "Estoques");
+
+  if (!stockAccount) {
+    logger.warn("Conta 'Estoques' não encontrada. O balanço de estoque não pode ser calculado.");
+    return [];
   }
 
-  return data.map((product) => ({
-    product_id: product.id,
-    product_name: product.name,
-    balance: product.current_stock,
-  }));
+  journalEntries.forEach((entry) => {
+    entry.lines.forEach((line) => {
+      if (line.product_id && line.quantity && line.account_id === stockAccount.id) {
+        const productName = productMap.get(line.product_id) || "Produto Desconhecido";
+        const currentBalance = stockBalances.get(line.product_id) || {
+          product_id: line.product_id,
+          product_name: productName,
+          balance: 0,
+        };
+
+        if ((line.debit ?? 0) > 0) {
+          currentBalance.balance += line.quantity;
+        } else if ((line.credit ?? 0) > 0) {
+          currentBalance.balance -= line.quantity;
+        }
+
+        stockBalances.set(line.product_id, currentBalance);
+      }
+    });
+  });
+
+  return Array.from(stockBalances.values());
 }
+
 
 export async function generateReports(
   user_id: string,
@@ -332,30 +366,31 @@ export async function generateReports(
 ) {
   const orgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
   if (!orgAndPeriod) {
-    throw new Error("Organization and period not found for the user.");
+    throw new Error("Organização e período não encontrados para o usuário.");
   }
   const { organization_id, active_accounting_period_id } = orgAndPeriod;
 
-  const [accounts, journalEntries, productStockBalances] = await Promise.all([
+  const [accountsResponse, journalEntries, products] = await Promise.all([
     getAccounts(organization_id, active_accounting_period_id, token),
     getJournalEntries(organization_id, active_accounting_period_id, token, startDate, endDate),
-    getProductStockBalances(organization_id, active_accounting_period_id, token), // Fetch product stock balances
+    getProducts(organization_id, token),
   ]);
 
+  const accounts = accountsResponse.data;
+
   if (!accounts) {
-    throw new Error("No accounts found for the given organization and period.");
+    throw new Error("Nenhuma conta encontrada para a organização e período informados.");
   }
 
-  const ledgerAccountsList = calculateTrialBalance(accounts.data, journalEntries);
-
-  const dreData = calculateDreData(accounts.data, journalEntries);
-  const balanceSheetData = calculateBalanceSheetData(accounts.data, journalEntries);
-  const dfcData = calculateDfcData(accounts.data, journalEntries);
-  const ledgerDetails = calculateLedgerDetails(accounts.data, journalEntries);
-  const stockBalances: StockBalance[] = productStockBalances; // Populate stockBalances
+  const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
+  const dreData = calculateDreData(accounts, journalEntries);
+  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries);
+  const dfcData = calculateDfcData(accounts, journalEntries);
+  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries);
+  const stockBalances = calculateStockFromJournalEntries(journalEntries, accounts, products);
 
   return {
-    accounts,
+    accounts: accountsResponse,
     journalEntries,
     trialBalanceData: ledgerAccountsList,
     dreData,

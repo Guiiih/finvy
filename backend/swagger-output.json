@@ -27,54 +27,6 @@
   ],
   "paths": {
     "/accounts": {
-      "get": {
-        "summary": "Retorna todas as contas do usuário autenticado.",
-        "description": "Retorna uma lista de todas as contas financeiras associadas ao usuário autenticado. Os dados são cacheados por 5 minutos.",
-        "tags": [
-          "Accounts"
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de contas.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID único da conta."
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "O nome da conta."
-                      },
-                      "type": {
-                        "type": "string",
-                        "description": "O tipo da conta (e.g., 'Asset', 'Liability')."
-                      },
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID do usuário ao qual a conta pertence."
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
       "post": {
         "summary": "Cria uma nova conta.",
         "description": "Cria uma nova conta financeira para o usuário autenticado.",
@@ -423,26 +375,6 @@
                     "type": "number",
                     "description": "Valor total bruto da transação (base para impostos)."
                   },
-                  "icms_rate": {
-                    "type": "number",
-                    "description": "Alíquota de ICMS (%)."
-                  },
-                  "ipi_rate": {
-                    "type": "number",
-                    "description": "Alíquota de IPI (%)."
-                  },
-                  "pis_rate": {
-                    "type": "number",
-                    "description": "Alíquota de PIS (%)."
-                  },
-                  "cofins_rate": {
-                    "type": "number",
-                    "description": "Alíquota de COFINS (%)."
-                  },
-                  "mva_rate": {
-                    "type": "number",
-                    "description": "Alíquota de MVA para ICMS-ST (%)."
-                  },
                   "total_net": {
                     "type": "number",
                     "description": "Valor líquido total da nota (usado em compras). Se não fornecido em vendas, é calculado."
@@ -672,55 +604,6 @@
       }
     },
     "/journal-entries": {
-      "get": {
-        "summary": "Retorna todos os lançamentos de diário do usuário autenticado.",
-        "description": "Retorna uma lista de todos os lançamentos de diário associados ao usuário autenticado. Os dados são cacheados por 5 minutos.",
-        "tags": [
-          "Journal Entries"
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de lançamentos de diário.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID único do lançamento de diário."
-                      },
-                      "entry_date": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "A data do lançamento."
-                      },
-                      "description": {
-                        "type": "string",
-                        "description": "A descrição do lançamento."
-                      },
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID do usuário ao qual o lançamento pertence."
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
       "post": {
         "summary": "Cria um novo lançamento de diário.",
         "description": "Cria um novo lançamento de diário para o usuário autenticado.",
@@ -920,67 +803,9 @@
       }
     },
     "/products": {
-      "get": {
-        "summary": "Retorna todos os produtos do usuário autenticado.",
-        "description": "Retorna uma lista de todos os produtos associados ao usuário autenticado. Os dados são cacheados por 5 minutos.",
-        "tags": [
-          "Products"
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de produtos.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID único do produto."
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "O nome do produto."
-                      },
-                      "description": {
-                        "type": "string",
-                        "description": "A descrição do produto."
-                      },
-                      "unit_cost": {
-                        "type": "number",
-                        "format": "float",
-                        "description": "O custo unitário do produto."
-                      },
-                      "current_stock": {
-                        "type": "number",
-                        "format": "integer",
-                        "description": "O estoque atual do produto."
-                      },
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID do usuário ao qual o produto pertence."
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
       "post": {
         "summary": "Cria um novo produto.",
-        "description": "Cria um novo produto para o usuário autenticado.",
+        "description": "Cria um novo produto para o usuário autenticado. O estoque inicial será 0.",
         "tags": [
           "Products"
         ],
@@ -992,8 +817,7 @@
                 "type": "object",
                 "required": [
                   "name",
-                  "unit_cost",
-                  "current_stock"
+                  "unit_cost"
                 ],
                 "properties": {
                   "name": {
@@ -1008,11 +832,6 @@
                     "type": "number",
                     "format": "float",
                     "description": "O custo unitário do produto."
-                  },
-                  "current_stock": {
-                    "type": "number",
-                    "format": "integer",
-                    "description": "O estoque inicial do produto."
                   }
                 }
               }
@@ -1044,11 +863,6 @@
                       "type": "number",
                       "format": "float",
                       "description": "O custo unitário do produto criado."
-                    },
-                    "current_stock": {
-                      "type": "number",
-                      "format": "integer",
-                      "description": "O estoque atual do produto criado."
                     },
                     "user_id": {
                       "type": "string",
@@ -1110,11 +924,6 @@
                     "type": "number",
                     "format": "float",
                     "description": "O novo custo unitário do produto."
-                  },
-                  "current_stock": {
-                    "type": "number",
-                    "format": "integer",
-                    "description": "O novo estoque atual do produto."
                   }
                 }
               }
@@ -1146,11 +955,6 @@
                       "type": "number",
                       "format": "float",
                       "description": "O custo unitário do produto atualizado."
-                    },
-                    "current_stock": {
-                      "type": "number",
-                      "format": "integer",
-                      "description": "O estoque atual do produto atualizado."
                     },
                     "user_id": {
                       "type": "string",
@@ -1341,235 +1145,7 @@
           }
         }
       }
-    },
-    "/notifications": {
-      "get": {
-        "summary": "Retorna todas as notificações do usuário autenticado.",
-        "description": "Retorna uma lista de todas as notificações associadas ao usuário autenticado.",
-        "tags": [
-          "Notifications"
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de notificações.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID único da notificação."
-                      },
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID do usuário ao qual a notificação pertence."
-                      },
-                      "organization_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "O ID da organização à qual a notificação pertence."
-                      },
-                      "type": {
-                        "type": "string",
-                        "description": "O tipo da notificação (e.g., 'financial_transaction_due')."
-                      },
-                      "message": {
-                        "type": "string",
-                        "description": "A mensagem da notificação."
-                      },
-                      "read": {
-                        "type": "boolean",
-                        "description": "Indica se a notificação foi lida."
-                      },
-                      "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "A data e hora de criação da notificação."
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
-    "/notifications/{id}/read": {
-      "put": {
-        "summary": "Marca uma notificação como lida.",
-        "description": "Marca uma notificação específica como lida pelo seu ID.",
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": "O ID da notificação a ser marcada como lida."
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Notificação marcada como lida com sucesso. Nenhuma resposta de conteúdo."
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "404": {
-            "description": "Notificação não encontrada ou você não tem permissão para atualizar esta notificação."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
-    "/user-presence": {
-      "post": {
-        "summary": "Atualiza a presença do usuário.",
-        "description": "Atualiza o status de presença do usuário (online, período contábil ativo).",
-        "tags": [
-          "User Presence"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "organizationId",
-                  "activeAccountingPeriodId"
-                ],
-                "properties": {
-                  "organizationId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "O ID da organização atual do usuário."
-                  },
-                  "activeAccountingPeriodId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "O ID do período contábil ativo do usuário."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Presença do usuário atualizada com sucesso."
-          },
-          "400": {
-            "description": "Requisição inválida. organizationId ou activeAccountingPeriodId ausentes."
-          },
-          "401": {
-            "description": "Não autorizado."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
-      "get": {
-        "summary": "Retorna usuários online na mesma organização e período contábil.",
-        "description": "Retorna uma lista de usuários que estão online na mesma organização e período contábil que o usuário autenticado.",
-        "tags": [
-          "User Presence"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "organizationId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": "O ID da organização para filtrar usuários."
-          },
-          {
-            "in": "query",
-            "name": "activeAccountingPeriodId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": "O ID do período contábil ativo para filtrar usuários."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de usuários online.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "last_seen": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "profiles": {
-                        "type": "object",
-                        "properties": {
-                          "username": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Requisição inválida. organizationId ou activeAccountingPeriodId ausentes."
-          },
-          "401": {
-            "description": "Não autorizado."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
     }
   },
-  "tags": [
-    {
-      "name": "Notifications",
-      "description": "Operações relacionadas a notificações."
-    },
-    {
-      "name": "User Presence",
-      "description": "Gerenciamento de presença de usuários."
-    }
-  ]
+  "tags": []
 }

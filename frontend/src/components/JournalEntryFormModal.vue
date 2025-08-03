@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
+import { useProductStore } from '@/stores/productStore'
 import type {
   JournalEntry,
   NFeExtractedData,
@@ -13,6 +14,7 @@ import Dialog from 'primevue/dialog'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
+const productStore = useProductStore()
 const toast = useToast()
 
 type EntryLine = {
@@ -62,13 +64,21 @@ watch(() => props.visible, (value) => {
   }
 })
 
-// Watch for changes in displayModal to emit update:visible
 watch(displayModal, (value) => {
   emit('update:visible', value)
 })
 
 const visibleAccounts = computed(() => {
   return accountStore.accounts.filter((account) => !account.is_protected)
+})
+
+onMounted(() => {
+  accountStore.fetchAccounts()
+  productStore.fetchProducts(1, 1000) // Fetch all products
+})
+
+const stockAccountId = computed(() => {
+  return accountStore.accounts.find(acc => acc.name === 'Estoques')?.id
 })
 
 const totalDebits = computed(() =>
@@ -337,7 +347,8 @@ async function submitEntry() {
             <select
               v-model="line.account_id"
               required
-              class="md:col-span-5 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              :class="line.account_id === stockAccountId ? 'md:col-span-4' : 'md:col-span-5'" 
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             >
               <option value="" disabled>Selecione a Conta</option>
               <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
@@ -350,23 +361,43 @@ async function submitEntry() {
                 </option>
               </optgroup>
             </select>
-            <select
-              v-model="line.type"
-              required
-              class="md:col-span-2 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              <option value="debit">Débito</option>
-              <option value="credit">Crédito</option>
-            </select>
-            <input
-              type="number"
-              v-model.number="line.amount"
-              placeholder="Valor"
-              step="0.01"
-              min="0"
-              required
-              class="md:col-span-4 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
+              <template v-if="line.account_id === stockAccountId">
+                <select
+                  v-model="line.product_id"
+                  class="md:col-span-3 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" 
+                >
+                  <option value="" disabled>Selecione o Produto</option>
+                  <option v-for="product in productStore.products" :value="product.id" :key="product.id">
+                    {{ product.name }}
+                  </option>
+                </select>
+                <input
+                  type="number"
+                  v-model.number="line.quantity"
+                  placeholder="Quantidade"
+                  min="0"
+                  class="md:col-span-2 p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+              </template>
+                <select
+                  v-model="line.type"
+                  required
+                  :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-2'"
+                  class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" 
+                >
+                  <option value="debit">Débito</option>
+                  <option value="credit">Crédito</option>
+                </select>
+                <input
+                  type="number"
+                  v-model.number="line.amount"
+                  placeholder="Valor"
+                  step="0.01"
+                  min="0"
+                  required
+                  :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-4'"
+                  class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" 
+                />
             <div class="md:col-span-1 flex items-center space-x-2">
               <button
                 type="button"

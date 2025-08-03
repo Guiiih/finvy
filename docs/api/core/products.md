@@ -1,6 +1,6 @@
 # Produtos e Estoque
 
-Este endpoint é responsável pelo gerenciamento do cadastro de produtos e seus respectivos saldos de estoque e custos.
+Este endpoint é responsável pelo gerenciamento do cadastro de produtos e seus respectivos custos.
 
 ## Objeto Produto
 
@@ -10,7 +10,6 @@ Este endpoint é responsável pelo gerenciamento do cadastro de produtos e seus 
 | `name` | `string` | O nome do produto. |
 | `description` | `string` | Opcional. Uma descrição para o produto. |
 | `unit_cost` | `number` | O custo médio ponderado atual do produto. Este valor é atualizado automaticamente pelas transações de compra. |
-| `current_stock` | `number` | A quantidade atual de itens em estoque. |
 | `organization_id` | `string` | O ID da organização à qual o produto pertence. |
 | `accounting_period_id` | `string` | O ID do período contábil ao qual o produto pertence. |
 
@@ -41,8 +40,7 @@ Retorna uma lista paginada de todos os produtos para a organização e período 
       "id": "p1q2r3s4-t5u6-7890-1234-567890abcdef",
       "name": "Produto Exemplo A",
       "description": "Componente eletrônico principal",
-      "unit_cost": 55.75,
-      "current_stock": 150
+      "unit_cost": 55.75
     }
   ],
   "count": 1
@@ -53,7 +51,7 @@ Retorna uma lista paginada de todos os produtos para a organização e período 
 
 ## Criar um Produto
 
-Cria um novo produto com seu saldo de estoque e custo inicial.
+Cria um novo produto com seu custo inicial.
 
 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
   <span style="background-color: #1867C0; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">POST</span>
@@ -66,8 +64,7 @@ Cria um novo produto com seu saldo de estoque e custo inicial.
 {
   "name": "Produto Exemplo B",
   "description": "Componente secundário",
-  "unit_cost": 10.00,
-  "current_stock": 500
+  "unit_cost": 10.00
 }
 ```
 
@@ -79,7 +76,7 @@ Retorna o objeto do produto recém-criado.
 
 ## Atualizar um Produto
 
-Atualiza os detalhes de um produto existente. Note que `unit_cost` e `current_stock` não devem ser atualizados diretamente por este método, pois são controlados pelas transações de compra e venda.
+Atualiza os detalhes de um produto existente. Note que `unit_cost` não deve ser atualizado diretamente por este método, pois é controlado pelas transações de compra.
 
 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
   <span style="background-color: #f0ad4e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">PUT</span>

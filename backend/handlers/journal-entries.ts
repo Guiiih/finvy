@@ -16,58 +16,7 @@ import {
   deleteJournalEntry,
 } from "../services/journalEntryService.js";
 
-/**
- * @swagger
- * /journal-entries:
- *   get:
- *     summary: Retorna todos os lançamentos de diário do usuário autenticado.
- *     description: Retorna uma lista de todos os lançamentos de diário associados ao usuário autenticado. Os dados são cacheados por 5 minutos.
- *     tags:
- *       - Journal Entries
- *     responses:
- *       200:
- *         description: Uma lista de lançamentos de diário.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     format: uuid
- *                     description: O ID único do lançamento de diário.
- *                   entry_date:
- *                     type: string
- *                     format: date
- *                     description: A data do lançamento.
- *                   description:
- *                     type: string
- *                     description: A descrição do lançamento.
- *                   user_id:
- *                     type: string
- *                     format: uuid
- *                     description: O ID do usuário ao qual o lançamento pertence.
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: O número da página a ser retornada (começa em 1).
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *         description: O número máximo de itens por página (padrão: 10, máximo: 100).
- *       401:
- *         description: Não autorizado. Token de autenticação ausente ou inválido.
- *       500:
- *         description: Erro interno do servidor.
- */
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,

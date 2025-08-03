@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useProductStore } from '@/stores/productStore'
+import { useStockControlStore } from '@/stores/stockControlStore'
 import type { Product } from '@/types'
 
 import Skeleton from 'primevue/skeleton'
@@ -10,6 +11,7 @@ import Paginator from 'primevue/paginator'
 import ProductFormModal from '../../components/ProductFormModal.vue'
 
 const productStore = useProductStore()
+const stockControlStore = useStockControlStore()
 const toast = useToast()
 
 const displayModal = ref(false)
@@ -176,7 +178,7 @@ onMounted(async () => {
               class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition"
             >
               <div class="md:col-span-6 text-surface-800">{{ product.name }}</div>
-              <div class="md:col-span-2 text-surface-700">{{ product.current_stock }}</div>
+              <div class="md:col-span-2 text-surface-700">{{ stockControlStore.getBalanceByProductId(product.id)?.quantity || 0 }}</div>
               <div class="md:col-span-2 text-surface-700">
                 {{
                   formatCurrency(

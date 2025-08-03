@@ -10,65 +10,7 @@ import { formatSupabaseError } from "../utils/errorUtils.js";
 
 
 
-/**
- * @swagger
- * /products:
- *   get:
- *     summary: Retorna todos os produtos do usuário autenticado.
- *     description: Retorna uma lista de todos os produtos associados ao usuário autenticado. Os dados são cacheados por 5 minutos.
- *     tags:
- *       - Products
- *     responses:
- *       200:
- *         description: Uma lista de produtos.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     format: uuid
- *                     description: O ID único do produto.
- *                   name:
- *                     type: string
- *                     description: O nome do produto.
- *                   description:
- *                     type: string
- *                     description: A descrição do produto (opcional).
- *                   unit_cost:
- *                     type: number
- *                     format: float
- *                     description: O custo unitário do produto.
- *                   current_stock:
- *                     type: number
- *                     format: integer
- *                     description: O estoque atual do produto.
- *                   user_id:
- *                     type: string
- *                     format: uuid
- *                     description: O ID do usuário ao qual o produto pertence.
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: O número da página a ser retornada (começa em 1).
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *         description: O número máximo de itens por página (padrão: 10, máximo: 100).
- *       401:
- *         description: Não autorizado. Token de autenticação ausente ou inválido.
- *       500:
- *         description: Erro interno do servidor.
- */
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -96,7 +38,7 @@ export default async function handler(
       const { data, count } = await userSupabase
         .from("products")
         .select(
-          "id, name, description, unit_cost, current_stock, organization_id, accounting_period_id",
+          "id, name, description, unit_cost, organization_id, accounting_period_id",
           { count: 'exact' }
         )
         .eq("organization_id", organization_id)
@@ -112,7 +54,7 @@ export default async function handler(
      * /products:
      *   post:
      *     summary: Cria um novo produto.
-     *     description: Cria um novo produto para o usuário autenticado.
+     *     description: Cria um novo produto para o usuário autenticado. O estoque inicial será 0.
      *     tags:
      *       - Products
      *     requestBody:
@@ -124,7 +66,6 @@ export default async function handler(
      *             required:
      *               - name
      *               - unit_cost
-     *               - current_stock
      *             properties:
      *               name:
      *                 type: string
@@ -136,10 +77,6 @@ export default async function handler(
      *                 type: number
      *                 format: float
      *                 description: O custo unitário do produto.
-     *               current_stock:
-     *                 type: number
-     *                 format: integer
-     *                 description: O estoque inicial do produto.
      *     responses:
      *       201:
      *         description: Produto criado com sucesso.
@@ -162,10 +99,6 @@ export default async function handler(
      *                   type: number
      *                   format: float
      *                   description: O custo unitário do produto criado.
-     *                 current_stock:
-     *                   type: number
-     *                   format: integer
-     *                   description: O estoque atual do produto criado.
      *                 user_id:
      *                   type: string
      *                   format: uuid
@@ -186,7 +119,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { name, description, unit_cost, current_stock } = parsedBody.data;
+      const { name, description, unit_cost } = parsedBody.data;
 
       const { data, error: dbError } = await userSupabase
         .from("products")
@@ -195,7 +128,6 @@ export default async function handler(
             name,
             description,
             unit_cost,
-            current_stock,
             organization_id,
             accounting_period_id: active_accounting_period_id,
           },
@@ -240,10 +172,6 @@ export default async function handler(
      *                 type: number
      *                 format: float
      *                 description: O novo custo unitário do produto.
-     *               current_stock:
-     *                 type: number
-     *                 format: integer
-     *                 description: O novo estoque atual do produto.
      *     responses:
      *       200:
      *         description: Produto atualizado com sucesso.
@@ -266,10 +194,6 @@ export default async function handler(
      *                   type: number
      *                   format: float
      *                   description: O custo unitário do produto atualizado.
-     *                 current_stock:
-     *                   type: number
-     *                   format: integer
-     *                   description: O estoque atual do produto atualizado.
      *                 user_id:
      *                   type: string
      *                   format: uuid

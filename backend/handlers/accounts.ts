@@ -19,53 +19,7 @@ import {
   deleteAccount,
 } from "../services/accountService.js";
 
-/**
- * @swagger
- * /accounts:
- *   get:
- *     summary: Retorna todas as contas do usuário autenticado.
- *     description: Retorna uma lista de todas as contas financeiras associadas ao usuário autenticado. Os dados são cacheados por 5 minutos.
- *     tags:
- *       - Accounts
- *     responses:
- *       200:
- *         description: Uma lista de contas.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     format: uuid
- *                     description: O ID único da conta.
- *                   name:
- *                     type: string
- *                     description: O nome da conta.
- *                   type:
- *                     type: string
- *                     description: O tipo da conta (e.g., 'Asset', 'Liability').
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: O número da página a ser retornada (começa em 1).
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *         description: O número máximo de itens por página (padrão: 10, máximo: 100).
- *       401:
- *         description: Não autorizado. Token de autenticação ausente ou inválido.
- *       500:
- *         description: Erro interno do servidor.
- */
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,

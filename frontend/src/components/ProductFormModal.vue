@@ -67,7 +67,6 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
       const newProduct: Omit<Product, 'id' | 'organization_id' | 'user_id'> = {
         name: values.name,
         icms_rate: values.icms_rate,
-        current_stock: 0,
         unit_cost: 0,
       }
       await productStore.addProduct(newProduct)
