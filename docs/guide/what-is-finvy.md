@@ -1,1 +1,1 @@
-# O que ‚ o Finvy?  
+# O que Ã© o Finvy?

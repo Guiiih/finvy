@@ -64,8 +64,7 @@ O corpo da requisição varia ligeiramente entre venda e compra, mas a estrutura
   "transaction_type": "sale", // ou "purchase"
   "total_gross": 1000.00, // Valor bruto dos produtos/serviços
   "product_id": "p1q2r3s4-t5u6-7890-1234-567890abcdef", // Opcional
-  "quantity": 10, // Opcional
-  "unit_cost": 50.00 // Opcional, custo do produto no momento da venda
+  "quantity": 10 // Opcional
 }
 ```
 
