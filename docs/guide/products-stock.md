@@ -6,9 +6,15 @@ O Finvy oferece um sistema integrado para gerenciar seus produtos e controlar o 
 
 Cada item que sua organização compra, vende ou utiliza deve ser cadastrado como um produto no Finvy. As informações essenciais incluem:
 
-*   **Nome:** Identificação do produto.
-*   **Descrição:** Detalhes adicionais sobre o produto.
-*   **Estoque Atual:** A quantidade disponível do produto em seu estoque.
+*   **Nome:** Identificação principal do produto.
+*   **SKU (Stock Keeping Unit):** Código único para identificação interna do produto (opcional).
+*   **Categoria:** Classificação do produto (ex: "Informática", "Mobiliário").
+*   **Marca:** Fabricante do produto (opcional).
+*   **Estoque Mínimo:** Quantidade mínima em estoque para alerta (opcional).
+*   **Descrição:** Detalhes adicionais sobre o produto (opcional).
+*   **Unidade:** Unidade de medida do produto (ex: "Unidade", "Caixa").
+*   **Alíquota de ICMS (%):** Percentual de ICMS aplicável ao produto (opcional).
+*   **Estoque Atual:** A quantidade disponível do produto em seu estoque (gerenciado automaticamente).
 
 ## Gerenciar Produtos
 
@@ -32,7 +38,7 @@ O Finvy suporta diferentes métodos de custeio de estoque, permitindo que você 
 *   **PEPS (Primeiro a Entrar, Primeiro a Sair - FIFO):** Assume que os primeiros itens comprados são os primeiros a serem vendidos.
 *   **UEPS (Último a Entrar, Primeiro a Sair - LIFO):** Assume que os últimos itens comprados são os primeiros a serem vendidos.
 
-O método de custeio é configurado por [Período Contábil](./accounting-periods.md).
+O método de custeio é definido para cada [Período Contábil](./accounting-periods.md) da sua organização. Isso significa que você pode aplicar diferentes métodos de custeio em diferentes períodos fiscais, conforme a necessidade do seu negócio.
 
 ### Como Funciona:
 

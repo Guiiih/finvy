@@ -26,7 +26,7 @@ No Finvy, um lançamento contábil é composto por duas partes principais:
     *   `account_id`: A conta contábil afetada.
     *   `debit`: O valor debitado na conta (se aplicável).
     *   `credit`: O valor creditado na conta (se aplicável).
-    *   Informações adicionais como `product_id`, `quantity`, `unit_cost`, e valores de impostos (`icms_value`, `ipi_value`, etc.) para transações mais complexas como vendas e compras.
+    *   Informações adicionais como `product_id`, `quantity`, e valores de impostos (`icms_value`, `ipi_value`, etc.) para transações mais complexas como vendas e compras.
 
 ## Como Funciona no Finvy
 

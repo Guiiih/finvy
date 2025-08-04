@@ -15,10 +15,17 @@ No Finvy, você pode realizar diferentes tipos de lançamentos:
 2.  **Clique em "Novo Lançamento":**
     *   **Data:** Selecione a data em que a transação ocorreu.
     *   **Descrição:** Forneça uma descrição clara e concisa do lançamento (ex: "Pagamento de conta de luz - Julho").
-3.  **Adicionar Linhas de Lançamento:** Para cada lançamento, você precisará adicionar pelo menos uma linha de débito e uma de crédito.
-    *   **Débito:** Selecione a conta a ser debitada e o valor.
-    *   **Crédito:** Selecione a conta a ser creditada e o valor.
-    *   **Importante:** O total dos débitos deve ser igual ao total dos créditos para que o lançamento seja válido.
+3.  **Preencha os Detalhes do Lançamento:** O formulário de lançamento agora é organizado em abas para facilitar o preenchimento:
+    *   **Aba "Básico":**
+        *   **Data:** Selecione a data em que a transação ocorreu.
+        *   **Descrição:** Forneça uma descrição clara e concisa do lançamento (ex: "Pagamento de conta de luz - Julho").
+    *   **Aba "Partidas":** Adicione as linhas de débito e crédito.
+        *   **Conta:** Selecione a conta contábil afetada.
+        *   **Tipo:** Escolha se é um débito ou crédito.
+        *   **Valor:** Insira o valor da partida.
+        *   **Importante:** O total dos débitos deve ser sempre igual ao total dos créditos para que o lançamento seja válido.
+    *   **Aba "Produtos":** Se o lançamento envolver movimentação de estoque (compra ou venda de produtos), você pode associar produtos às linhas de lançamento. O sistema gerenciará automaticamente o estoque e o Custo da Mercadoria Vendida (CMV) com base no método de custeio configurado para o período contábil.
+    *   **Aba "Impostos":** Para transações que envolvem impostos, você pode registrar as alíquotas e valores. O sistema auxiliará na segregação e apuração dos impostos.
 4.  **Salvar Lançamento:** Após adicionar todas as linhas e garantir o equilíbrio, salve o lançamento.
 
 ## Visualizar e Editar Lançamentos
@@ -33,13 +40,4 @@ Na seção de Lançamentos Contábeis, você pode:
 
 Você pode excluir um lançamento contábil. Ao fazer isso, todas as linhas de débito e crédito associadas a ele também serão removidas. **Esta ação é irreversível.**
 
-## Lançamentos de Venda e Compra (com Estoque e Impostos)
 
-Para transações de venda e compra que envolvem produtos e impostos, o Finvy automatiza a criação de múltiplas linhas de lançamento. Ao registrar uma venda ou compra, o sistema:
-
-*   Gera as linhas para a conta de Clientes/Fornecedores.
-*   Gera as linhas para a Receita/Custo da Mercadoria Vendida.
-*   Calcula e gera as linhas para os impostos (ICMS, IPI, PIS, COFINS) com base no regime tributário da sua organização.
-*   **Gerencia o estoque e o Custo da Mercadoria Vendida (CMV) com base no método de custeio (Custo Médio Ponderado, PEPS ou UEPS) configurado para o período contábil.**
-
-Essa automação garante a precisão e a conformidade fiscal dos seus registros.

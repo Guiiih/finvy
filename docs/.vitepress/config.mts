@@ -94,7 +94,8 @@ export default withMermaid({
         {
           text: 'Changelog',
           items: [
-            { text: 'Atualizações do Produto', link: '/changelog/product-updates' },
+            { text: '2025-08-04 - Major Update', link: '/changelog/20250804_major_update' },
+            { text: 'Product Updates', link: '/changelog/product-updates' },
           ]
         }
       ],
