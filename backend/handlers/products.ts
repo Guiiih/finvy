@@ -119,7 +119,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { name, description } = parsedBody.data; // Removed unit_cost
+      const { name, description, sku, category } = parsedBody.data;
 
       const { data, error: dbError } = await userSupabase
         .from("products")
@@ -127,6 +127,8 @@ export default async function handler(
           {
             name,
             description,
+            sku,
+            category,
             organization_id,
             accounting_period_id: active_accounting_period_id,
           },

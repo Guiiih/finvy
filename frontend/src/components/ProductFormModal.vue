@@ -25,9 +25,12 @@ const emit = defineEmits(['update:visible', 'submitSuccess'])
 
 const displayModal = ref(props.visible)
 
-watch(() => props.visible, (value) => {
-  displayModal.value = value
-})
+watch(
+  () => props.visible,
+  (value) => {
+    displayModal.value = value
+  },
+)
 
 watch(displayModal, (value) => {
   emit('update:visible', value)
@@ -37,8 +40,15 @@ const zodSchema = z.object({
   name: z
     .string({ required_error: 'O nome é obrigatório' })
     .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+  sku: z.string().optional(),
+  category: z.string({ required_error: 'A categoria é obrigatória' }),
+  brand: z.string().optional(),
+  minimum_stock: z.coerce.number({ invalid_type_error: 'Deve ser um número' }).optional(),
+  description: z.string().optional(),
+  unit: z.string().optional(),
+  featured: z.boolean().optional(),
   icms_rate: z
-    .number({
+    .coerce.number({
       required_error: 'A alíquota é obrigatória',
       invalid_type_error: 'A alíquota deve ser um número',
     })
@@ -54,6 +64,12 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
     if (props.isEditing && props.editingProduct) {
       const updatedProduct: Partial<Product> = {
         name: values.name,
+        sku: values.sku,
+        category: values.category,
+        brand: values.brand,
+        minimum_stock: values.minimum_stock,
+        description: values.description,
+        unit: values.unit,
         icms_rate: values.icms_rate,
       }
       await productStore.updateProduct(props.editingProduct.id, updatedProduct)
@@ -66,6 +82,12 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
     } else {
       const newProduct: Omit<Product, 'id' | 'organization_id' | 'user_id'> = {
         name: values.name,
+        sku: values.sku,
+        category: values.category,
+        brand: values.brand,
+        minimum_stock: values.minimum_stock,
+        description: values.description,
+        unit: values.unit,
         icms_rate: values.icms_rate,
       }
       await productStore.addProduct(newProduct)
@@ -90,48 +112,154 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
   <Dialog
     v-model:visible="displayModal"
     modal
-    :header="props.isEditing ? 'Editar Produto' : 'Adicionar Produto'"
+    :header="props.isEditing ? 'Editar Produto' : 'Novo Produto'"
     :style="{ width: '50vw' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
   >
-    <div class="p-6 rounded-lg shadow-inner mb-6">
+    <div class="p-4">
+      <p class="text-surface-600 mb-4">Adicione um novo produto ao catálogo</p>
       <Form
         @submit="handleSubmit as any"
         :validation-schema="productSchema"
-        :initial-values="props.editingProduct || { icms_rate: 0 }"
+        :initial-values="
+          props.editingProduct || {
+            icms_rate: 0,
+            minimum_stock: 0,
+            unit: 'Unidade',
+          }
+        "
         v-slot="{ isSubmitting }"
         class="space-y-4"
       >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col">
+            <label for="productName" class="text-surface-700 font-medium mb-1"
+              >Nome do Produto *</label
+            >
+            <Field
+              name="name"
+              type="text"
+              id="productName"
+              placeholder="Ex: Smartphone Samsung Galaxy"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="productSku" class="text-surface-700 font-medium mb-1">SKU</label>
+            <Field
+              name="sku"
+              type="text"
+              id="productSku"
+              placeholder="Ex: SM-GAL-S24"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="sku" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="productCategory" class="text-surface-700 font-medium mb-1"
+              >Categoria *</label
+            >
+            <Field
+              name="category"
+              as="select"
+              id="productCategory"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              <option value="" disabled>Selecione a Categoria</option>
+              <option value="Informática">Informática</option>
+              <option value="Impressoras">Impressoras</option>
+              <option value="Periféricos">Periféricos</option>
+              <option value="Mobiliário">Mobiliário</option>
+              <option value="Serviços">Serviços</option>
+              <option value="Geral">Geral</option>
+            </Field>
+            <ErrorMessage name="category" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="productBrand" class="text-surface-700 font-medium mb-1">Marca</label>
+            <Field
+              name="brand"
+              type="text"
+              id="productBrand"
+              placeholder="Ex: Samsung"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="brand" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="minimumStock" class="text-surface-700 font-medium mb-1"
+              >Estoque Mínimo</label
+            >
+            <Field
+              name="minimum_stock"
+              type="number"
+              id="minimumStock"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="minimum_stock" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="icmsRate" class="text-surface-700 font-medium mb-1"
+              >Alíquota de ICMS (%)</label
+            >
+            <Field
+              name="icms_rate"
+              type="number"
+              id="icmsRate"
+              step="0.01"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="icms_rate" class="text-red-500 text-sm mt-1" />
+          </div>
+        </div>
+
         <div class="flex flex-col">
-          <label for="productName" class="text-surface-700 font-medium mb-1"
-            >Nome do Produto:</label
+          <label for="productDescription" class="text-surface-700 font-medium mb-1"
+            >Descrição</label
           >
           <Field
-            name="name"
-            type="text"
-            id="productName"
+            name="description"
+            as="textarea"
+            id="productDescription"
+            placeholder="Descrição detalhada do produto"
             class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            rows="3"
           />
-          <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
+          <ErrorMessage name="description" class="text-red-500 text-sm mt-1" />
         </div>
-        <div class="flex flex-col">
-          <label for="icmsRate" class="text-surface-700 font-medium mb-1"
-            >Alíquota de ICMS (%):</label
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div class="flex flex-col">
+            <label for="productUnit" class="text-surface-700 font-medium mb-1">Unidade</label>
+            <Field
+              name="unit"
+              as="select"
+              id="productUnit"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              <option value="Unidade">Unidade</option>
+              <option value="Caixa">Caixa</option>
+              <option value="Peça">Peça</option>
+              <option value="Serviço">Serviço</option>
+            </Field>
+            <ErrorMessage name="unit" class="text-red-500 text-sm mt-1" />
+          </div>
+          
+        </div>
+
+        <div class="flex justify-end space-x-4 mt-6">
+          <button
+            type="button"
+            @click="displayModal = false"
+            class="px-4 py-2 rounded-lg border border-surface-300 text-surface-700 hover:bg-surface-50 transition duration-300"
           >
-          <Field
-            name="icms_rate"
-            type="number"
-            id="icmsRate"
-            step="0.01"
-            class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          />
-          <ErrorMessage name="icms_rate" class="text-red-500 text-sm mt-1" />
-        </div>
-        <div class="flex space-x-4">
+            Cancelar
+          </button>
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+            class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
           >
             <ProgressSpinner
               v-if="isSubmitting"
@@ -141,7 +269,9 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
               animationDuration=".5s"
               aria-label="Custom ProgressSpinner"
             />
-            <span v-else>{{ props.isEditing ? 'Atualizar Produto' : 'Adicionar Produto' }}</span>
+            <span v-else>{{
+              props.isEditing ? 'Atualizar Produto' : 'Adicionar Produto'
+            }}</span>
           </button>
         </div>
       </Form>

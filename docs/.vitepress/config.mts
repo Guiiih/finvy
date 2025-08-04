@@ -1,4 +1,6 @@
-export default {
+import { withMermaid } from "vitepress-plugin-mermaid";
+
+export default withMermaid({
   base: '/docs/',
   title: 'Finvy',
   description: 'Documentação do Finvy',
@@ -6,6 +8,7 @@ export default {
   themeConfig: {
     nav: [
       { text: 'Documentação', link: '/guide/introduction' },
+      { text: 'Conceitos', link: '/concepts/what-is-finvy' },
       { text: 'API', link: '/api/introduction' },
       { text: 'Changelog', link: '/changelog/product-updates' },
       { text: 'Políticas', link: '/policies/terms-of-service' }
@@ -104,6 +107,27 @@ export default {
             { text: 'Política de Privacidade', link: '/policies/privacy-policy' }
           ]
         }
+      ],
+
+      '/concepts/': [
+        {
+          text: 'Conceitos Fundamentais',
+          items: [
+            { text: 'O que é o Finvy?', link: '/concepts/what-is-finvy' },
+            { text: 'Plano de Contas', link: '/concepts/chart-of-accounts' },
+            { text: 'Lançamentos Contábeis', link: '/concepts/journal-entries' },
+          ]
+        },
+        {
+          text: 'Fluxos de Trabalho',
+          items: [
+            { text: 'Arquitetura Geral', link: '/concepts/flows/architecture' },
+            { text: 'Interação do Usuário', link: '/concepts/flows/user-interaction' },
+            { text: 'Configuração Inicial', link: '/concepts/flows/initial-setup' },
+            { text: 'Operações Diárias', link: '/concepts/flows/daily-operations' },
+            { text: 'Relatórios e Encerramento', link: '/concepts/flows/reporting-closing' },
+          ]
+        }
       ]
     },
 
@@ -111,4 +135,4 @@ export default {
       { icon: 'github', link: 'https://github.com/your-repo/finvy' }
     ]
   }
-}
+});

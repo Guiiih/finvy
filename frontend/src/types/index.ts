@@ -15,7 +15,12 @@ export interface Account {
 export interface Product {
   id: string
   name: string
+  sku?: string
+  category?: string
+  brand?: string
+  minimum_stock?: number
   description?: string
+  unit?: string
   icms_rate?: number
   user_id?: string
   organization_id?: string

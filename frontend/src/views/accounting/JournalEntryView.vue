@@ -6,8 +6,6 @@ import { useProductStore } from '@/stores/productStore'
 import type {
   JournalEntry,
   EntryLine as JournalEntryLine,
-  NFeExtractedData,
-  TaxSimulationResult,
 } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
@@ -23,12 +21,8 @@ const productStore = useProductStore()
 const toast = useToast()
 
 const showJournalEntryFormModal = ref(false)
-const showImpostoModal = ref(false)
-const initialImpostoTab = ref('nfe')
 const isEditing = ref(false)
 const editingEntry = ref<JournalEntry | null>(null)
-const nfeDataForModal = ref<NFeExtractedData | null>(null)
-const taxSimulationDataForModal = ref<TaxSimulationResult | null>(null)
 
 const searchTerm = ref('')
 const currentPage = ref(1)
@@ -47,39 +41,15 @@ function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-const handleNFeProcessed = (data: NFeExtractedData) => {
-  nfeDataForModal.value = data
-  taxSimulationDataForModal.value = null
-  showImpostoModal.value = false
-  showJournalEntryFormModal.value = true
-}
-
-const handleTaxSimulationProcessed = (result: TaxSimulationResult) => {
-  taxSimulationDataForModal.value = result
-  nfeDataForModal.value = null
-  showImpostoModal.value = false
-  showJournalEntryFormModal.value = true
-}
-
 function openNewEntryModal() {
   isEditing.value = false
   editingEntry.value = null
-  nfeDataForModal.value = null
-  taxSimulationDataForModal.value = null
   showJournalEntryFormModal.value = true
-}
-
-function openImpostoModal(tab: 'nfe' | 'simulator') {
-  initialImpostoTab.value = tab
-  showImpostoModal.value = true
-  op.value.hide()
 }
 
 function startEdit(entry: JournalEntry) {
   isEditing.value = true
   editingEntry.value = { ...entry }
-  nfeDataForModal.value = null
-  taxSimulationDataForModal.value = null
   showJournalEntryFormModal.value = true
 }
 
@@ -87,8 +57,6 @@ async function handleModalSubmitSuccess() {
   showJournalEntryFormModal.value = false
   isEditing.value = false
   editingEntry.value = null
-  nfeDataForModal.value = null
-  taxSimulationDataForModal.value = null
   await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value) // Refresh entries after add/edit
 }
 
@@ -175,12 +143,7 @@ onMounted(async () => {
             >
               Novo Lançamento
             </button>
-            <button
-              @click="openImpostoModal('nfe')"
-              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
-            >
-              Impostos
-            </button>
+            
           </div>
         </Popover>
         
@@ -190,24 +153,11 @@ onMounted(async () => {
         :visible="showJournalEntryFormModal"
         :isEditing="isEditing"
         :editingEntry="editingEntry"
-        :nfeData="nfeDataForModal"
-        :taxSimulationData="taxSimulationDataForModal"
         @update:visible="showJournalEntryFormModal = $event"
         @submitSuccess="handleModalSubmitSuccess"
       />
 
-      <Dialog
-        v-model:visible="showImpostoModal"
-        modal
-        header="Impostos"
-        :style="{ width: '75vw' }"
-      >
-        <Imposto 
-          :initial-tab="initialImpostoTab"
-          @nfe-processed="handleNFeProcessed" 
-          @tax-simulation-processed="handleTaxSimulationProcessed" 
-        />
-      </Dialog>
+      
 
       <div class="overflow-hidden">
         <div
