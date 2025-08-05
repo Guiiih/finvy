@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useProductStore } from '@/stores/productStore'
-import { useStockControlStore } from '@/stores/stockControlStore'
 import type { Product } from '@/types'
 
 import Skeleton from 'primevue/skeleton'
@@ -11,7 +10,7 @@ import Paginator from 'primevue/paginator'
 import ProductFormModal from '../../components/ProductFormModal.vue'
 
 const productStore = useProductStore()
-const stockControlStore = useStockControlStore()
+
 const toast = useToast()
 
 const displayModal = ref(false)
@@ -21,34 +20,14 @@ const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-const filteredProducts = computed(() => {
-  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  if (!lowerCaseSearchTerm) {
-    return productStore.products
-  }
-  return productStore.products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      (product.icms_rate ?? 0).toString().includes(lowerCaseSearchTerm),
-  )
-})
 
-const totalRecords = computed(() => {
-  return productStore.totalProducts
-})
 
-const paginatedProducts = computed(() => {
-  return filteredProducts.value
-})
+
 
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
   itemsPerPage.value = event.rows
   productStore.fetchProducts(currentPage.value, itemsPerPage.value)
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 watch(searchTerm, () => {

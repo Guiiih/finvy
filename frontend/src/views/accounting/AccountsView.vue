@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { Account, AccountType } from '@/types'
 import { accountTypeTranslations } from '@/utils/accountTypeTranslations'

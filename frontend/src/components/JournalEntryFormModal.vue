@@ -100,10 +100,6 @@ watch(displayModal, (value) => {
   emit('update:visible', value)
 })
 
-const visibleAccounts = computed(() => {
-  return accountStore.accounts.filter((account) => !account.is_protected)
-})
-
 onMounted(() => {
   accountStore.fetchAccounts()
   productStore.fetchProducts(1, 1000) // Fetch all products
@@ -141,13 +137,7 @@ function resetForm() {
   ]
 }
 
-function addLine() {
-  newEntryLines.value.push({ account_id: '', type: 'debit', amount: 0 })
-}
 
-function removeLine(index: number) {
-  newEntryLines.value.splice(index, 1)
-}
 
 async function generateReferenceNumber(prefix: string) {
   const authStore = useAuthStore()

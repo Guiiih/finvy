@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { useJournalEntryStore } from './journalEntryStore'
-import { useProductStore } from './productStore'
+
 import type { JournalEntry, EntryLine } from '@/types/index'
 
 export const useTransactionStore = defineStore('transactionStore', () => {
   const journalEntryStore = useJournalEntryStore()
-  const productStore = useProductStore()
+  
 
   async function recordSale(saleDetails: {
     productId: string
@@ -20,13 +20,10 @@ export const useTransactionStore = defineStore('transactionStore', () => {
   }) {
     try {
       const {
-        productId,
         quantity,
         salePrice,
         customerAccountId,
         revenueAccountId,
-        cogsAccountId,
-        inventoryAccountId,
         date,
         description,
       } = saleDetails

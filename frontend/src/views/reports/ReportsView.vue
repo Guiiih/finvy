@@ -17,7 +17,7 @@ import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';
 import InputSwitch from 'primevue/inputswitch';
 import Calendar from 'primevue/calendar';
-import MultiSelect from 'primevue/multiselect';
+
 import Toast from 'primevue/toast';
 
 const toast = useToast();
@@ -273,18 +273,7 @@ const handleExportReport = async () => {
   }
 };
 
-const printReport = async () => {
-  loading.value = true;
-  try {
-    // TODO: Implementar a lógica de impressão real
-    // Pode ser uma chamada de API para gerar um PDF e abrir em nova aba, ou usar window.print()
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Relatório enviado para impressão!', life: 3000 });
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao imprimir relatório.', life: 3000 });
-  } finally {
-    loading.value = false;
-  }
-};
+
 
 const handleConfigureReport = (reportId: string) => {
   selectedReport.value = reportId;
@@ -578,7 +567,7 @@ const groupedReports = computed(() => {
             </div>
             <div class="space-y-3">
                 <label>Destinatários</label>
-                <div v-for="(recipient, index) in scheduleConfig.recipients" :key="index" class="flex gap-2">
+                <div v-for="(_, index) in scheduleConfig.recipients" :key="index" class="flex gap-2">
                     <InputText type="email" v-model="scheduleConfig.recipients[index]" placeholder="email@empresa.com" class="flex-1" />
                     <Button v-if="scheduleConfig.recipients.length > 1" icon="pi pi-times" severity="danger" text rounded @click="removeRecipient(index)" />
                 </div>

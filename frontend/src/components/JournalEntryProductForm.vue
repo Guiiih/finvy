@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useProductStore } from '@/stores/productStore'
-import { useToast } from 'primevue/usetoast'
+
 import Dropdown from 'primevue/dropdown'
 import type { Product } from '@/types/index'
 
 const productStore = useProductStore()
-const toast = useToast()
+
 
 const selectedProduct = ref(null)
 

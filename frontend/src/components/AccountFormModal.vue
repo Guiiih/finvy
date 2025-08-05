@@ -177,7 +177,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
         </div>
         <div class="flex flex-col">
           <label for="parentAccount" class="text-surface-700 font-medium mb-1">Conta Pai:</label>
-          <Field name="parent_account_id" v-slot="{ field, value }">
+          <Field name="parent_account_id" v-slot="{ value }">
             <Select
               :options="flattenedParentAccounts"
               :modelValue="value"

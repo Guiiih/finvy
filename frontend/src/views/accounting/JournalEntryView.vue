@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
@@ -9,8 +9,7 @@ import type {
 } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
-import Dialog from 'primevue/dialog'
-import Imposto from '@/components/Imposto.vue'
+
 import Paginator from 'primevue/paginator'
 import Popover from 'primevue/popover';
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
