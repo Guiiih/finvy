@@ -117,9 +117,9 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(", "),
         );
       }
-      const { entry_date, description } = parsedBody.data;
+      const { entry_date, description, reference } = parsedBody.data;
 
-      const newEntry = { entry_date, description };
+      const newEntry = { entry_date, description, reference };
       const createdEntry = await createJournalEntry(newEntry, organization_id, active_accounting_period_id, token);
       logger.info("Journal Entries Handler: Lançamento criado com sucesso.");
       return res.status(201).json(createdEntry);

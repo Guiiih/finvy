@@ -56,6 +56,10 @@ export const createJournalEntrySchema = z.object({
     .string()
     .min(1, "Descrição é obrigatória.")
     .max(255, "Descrição muito longa."),
+  reference: z
+    .string()
+    .min(1, "Referência é obrigatória.")
+    .max(255, "Referência muito longa."),
 });
 
 export const updateJournalEntrySchema = z
@@ -68,6 +72,11 @@ export const updateJournalEntrySchema = z
       .string()
       .min(1, "Descrição é obrigatória.")
       .max(255, "Descrição muito longa.")
+      .optional(),
+    reference: z
+      .string()
+      .min(1, "Referência é obrigatória.")
+      .max(255, "Referência muito longa.")
       .optional(),
   })
   .partial();

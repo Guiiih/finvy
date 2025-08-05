@@ -86,7 +86,7 @@ export interface JournalEntry {
   /** A description of the journal entry. */
   description: string
   /** An array of entry lines that make up this journal entry. */
-  lines: EntryLine[]
+  lines?: EntryLine[]
   /** The ID of the user who created this journal entry. */
   user_id?: string
   /** The ID of the organization this journal entry belongs to. */

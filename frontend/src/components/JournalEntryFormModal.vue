@@ -7,6 +7,9 @@ import type {
   JournalEntry,
   Product,
 } from '@/types/index'
+import { useAuthStore } from '@/stores/authStore'
+import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
+import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
@@ -45,21 +48,36 @@ const emit = defineEmits(['update:visible', 'submitSuccess'])
 const displayModal = ref(props.visible)
 const newEntryDate = ref(new Date().toISOString().split('T')[0])
 const newEntryDescription = ref('')
+const newEntryReferencePrefix = ref('')
+const generatedSequenceNumber = ref(0)
 const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref(0)
 const selectedProductFromForm = ref<Product | null>(null)
 
 // Watch for changes in props.visible to control displayModal
-watch(() => props.visible, (value) => {
+      watch(() => props.visible, async (value) => {
   displayModal.value = value
   if (value) {
     // When modal becomes visible, initialize form based on props
     if (props.isEditing && props.editingEntry) {
       newEntryDate.value = props.editingEntry.entry_date
       newEntryDescription.value = props.editingEntry.description
+      // Parse existing reference into prefix and number
+      const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
+      if (match) {
+        newEntryReferencePrefix.value = match[1]
+        generatedSequenceNumber.value = parseInt(match[2], 10)
+      } else {
+        newEntryReferencePrefix.value = ''
+        generatedSequenceNumber.value = 0
+      }
       newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
     } else {
       resetForm()
+      // Generate initial reference number if prefix is already set
+      if (newEntryReferencePrefix.value) {
+        generatedSequenceNumber.value = await generateReferenceNumber(newEntryReferencePrefix.value)
+      }
     }
   }
 })
@@ -116,6 +134,7 @@ function formatCurrency(value: number) {
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
   newEntryDescription.value = ''
+  newEntryReferencePrefix.value = ''
   newEntryLines.value = [
     { account_id: '', type: 'debit', amount: 0 },
     { account_id: '', type: 'credit', amount: 0 },
@@ -130,10 +149,74 @@ function removeLine(index: number) {
   newEntryLines.value.splice(index, 1)
 }
 
-import { useAuthStore } from '@/stores/authStore'
-import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
+async function generateReferenceNumber(prefix: string) {
+  const authStore = useAuthStore()
+  const organizationId = authStore.userOrganizationId
+  const accountingPeriodId = authStore.userActiveAccountingPeriodId
 
-// ... (rest of the script)
+  if (!organizationId || !accountingPeriodId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Dados da organização ou período contábil ausentes para gerar referência.',
+      life: 3000,
+    })
+    return 0
+  }
+
+  try {
+    const response = await api.get<{ nextNumber: number }>('/generate-reference', {
+      params: {
+        prefix,
+        organization_id: organizationId,
+        accounting_period_id: accountingPeriodId,
+      },
+    })
+    return response.nextNumber
+  } catch (error) {
+    console.error('Erro ao buscar o próximo número de referência:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Falha ao gerar número de referência.',
+      life: 3000,
+    })
+    return 0
+  }
+}
+
+watch(newEntryReferencePrefix, async (newPrefix) => {
+  if (newPrefix && !props.isEditing) {
+    generatedSequenceNumber.value = await generateReferenceNumber(newPrefix)
+  }
+})
+
+watch(() => props.visible, async (value) => {
+  displayModal.value = value
+  if (value) {
+    // When modal becomes visible, initialize form based on props
+    if (props.isEditing && props.editingEntry) {
+      newEntryDate.value = props.editingEntry.entry_date
+      newEntryDescription.value = props.editingEntry.description
+      // Parse existing reference into prefix and number
+      const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
+      if (match) {
+        newEntryReferencePrefix.value = match[1]
+        generatedSequenceNumber.value = parseInt(match[2], 10)
+      } else {
+        newEntryReferencePrefix.value = ''
+        generatedSequenceNumber.value = 0
+      }
+      newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
+    } else {
+      resetForm()
+      // Generate initial reference number if prefix is already set
+      if (newEntryReferencePrefix.value) {
+        generatedSequenceNumber.value = await generateReferenceNumber(newEntryReferencePrefix.value)
+      }
+    }
+  }
+})
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
@@ -173,6 +256,7 @@ async function submitEntry() {
   const entryData = {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
+    reference: `${newEntryReferencePrefix.value}${generatedSequenceNumber.value}`,
     lines: [] as typeof newEntryLines.value,
   }
 
@@ -224,7 +308,7 @@ async function submitEntry() {
     }
 
     if (props.isEditing && props.editingEntry) {
-      await journalEntryStore.updateEntry({ id: props.editingEntry.id!, ...entryData })
+      await journalEntryStore.updateEntry({ id: props.editingEntry.id!, ...entryData } as JournalEntry)
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -232,7 +316,7 @@ async function submitEntry() {
         life: 3000,
       })
     } else {
-      await journalEntryStore.addJournalEntry(entryData)
+      await journalEntryStore.addJournalEntry(entryData as Omit<JournalEntry, 'id'>)
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -264,6 +348,7 @@ async function submitEntry() {
           <JournalEntryBasicForm
             v-model:entryDate="newEntryDate"
             v-model:entryDescription="newEntryDescription"
+            v-model:referencePrefix="newEntryReferencePrefix"
           />
         </TabPanel>
         <TabPanel header="Partidas" :value="1">

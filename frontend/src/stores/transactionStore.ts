@@ -52,6 +52,7 @@ export const useTransactionStore = defineStore('transactionStore', () => {
         id: '',
         entry_date: date,
         description: description,
+        reference: '', // Adicionado campo de referência
         lines: journalEntryLines,
       }
 

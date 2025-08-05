@@ -6,6 +6,7 @@ import { createSimpleEntryLines } from "./entryLineService.js";
 interface ProposedEntry {
   date: string;
   description: string;
+  reference?: string; // Adicionado o campo reference
   debits: Array<{ account: string; value: number }>;
   credits: Array<{ account: string; value: number }>;
 }
@@ -23,7 +24,7 @@ export async function confirmProposedJournalEntries(
   for (const entry of proposedEntries) {
     // 1. Criar o Journal Entry principal
     const journalEntry = await createJournalEntry(
-      { entry_date: new Date(entry.date).toISOString().slice(0, 10), description: entry.description },
+      { entry_date: new Date(entry.date).toISOString().slice(0, 10), description: entry.description, reference: entry.reference || 'AUTO-GENERATED' },
       organization_id,
       active_accounting_period_id,
       token

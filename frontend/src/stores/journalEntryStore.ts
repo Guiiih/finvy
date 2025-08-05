@@ -160,13 +160,14 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         throw new Error('Nenhum período contábil ativo selecionado.')
       }
       const { lines, ...entryHeader } = entry
+      const payload: JournalEntryPayload = {
+        ...entryHeader,
+        organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
+        accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
+      }
       const newJournalEntry = await api.post<JournalEntry, JournalEntryPayload>(
         '/journal-entries',
-        {
-          ...entryHeader,
-          organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
-          accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
-        },
+        payload,
       )
 
       const newLines: EntryLine[] = []
@@ -220,11 +221,12 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null
     try {
       const { lines, ...entryHeader } = updatedEntry
-      await api.put<JournalEntry, JournalEntryPayload>(`/journal-entries/${updatedEntry.id}`, {
+      const payload: JournalEntryPayload = {
         ...entryHeader,
         organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
-      })
+      }
+      await api.put<JournalEntry, JournalEntryPayload>(`/journal-entries/${updatedEntry.id}`, payload)
 
       await deleteEntryLinesByJournalEntryId(
         updatedEntry.id,
@@ -329,6 +331,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       } = {
         entry_date: new Date().toISOString().split('T')[0],
         description: `Estorno do Lançamento ${originalEntry.id} - ${originalEntry.description}`,
+        reference: `ESTORNO-${originalEntry.reference || originalEntry.id}`,
         lines: reversedLines,
       }
 

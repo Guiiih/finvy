@@ -116,17 +116,19 @@ export function calculateTrialBalance(
   });
 
   journalEntries.forEach((entry) => {
-    entry.lines.forEach((line) => {
-      const accountData = accountsMap.get(line.account_id);
-      if (accountData) {
-        if (line.debit !== null) {
-          accountData.totalDebits += line.debit ?? 0;
+    if (entry.lines) {
+      entry.lines.forEach((line) => {
+        const accountData = accountsMap.get(line.account_id);
+        if (accountData) {
+          if (line.debit !== null) {
+            accountData.totalDebits += line.debit ?? 0;
+          }
+          if (line.credit !== null) {
+            accountData.totalCredits += line.credit ?? 0;
+          }
         }
-        if (line.credit !== null) {
-          accountData.totalCredits += line.credit ?? 0;
-        }
-      }
-    });
+      });
+    }
   });
 
   accountsMap.forEach((accountData) => {
@@ -158,17 +160,19 @@ export function calculateLedgerDetails(
   });
 
   journalEntries.forEach((entry) => {
-    entry.lines.forEach((line) => {
-      if (ledgerDetails[line.account_id]) {
-        ledgerDetails[line.account_id].push({
-          journalEntryId: entry.id,
-          entryDate: entry.entry_date,
-          description: entry.description,
-          debit: line.debit ?? 0,
-          credit: line.credit ?? 0,
-        });
-      }
-    });
+    if (entry.lines) {
+      entry.lines.forEach((line) => {
+        if (ledgerDetails[line.account_id]) {
+          ledgerDetails[line.account_id].push({
+            journalEntryId: entry.id,
+            entryDate: entry.entry_date,
+            description: entry.description,
+            debit: line.debit ?? 0,
+            credit: line.credit ?? 0,
+          });
+        }
+      });
+    }
   });
 
   return ledgerDetails;
@@ -248,45 +252,49 @@ export function calculateDfcData(
   const accountMap = new Map(accounts.map((acc) => [acc.id, acc]));
 
   journalEntries.forEach((entry) => {
-    entry.lines.forEach((line) => {
-      // Only consider lines that affect cash accounts
-      if (cashAccountIds.includes(line.account_id)) {
-        const relatedAccountLine = entry.lines.find(
-          (l) => l.account_id !== line.account_id,
-        ); // The other side of the entry
-        if (!relatedAccountLine) return; // Should not happen for balanced entries
+    if (entry.lines) {
+      entry.lines.forEach((line) => {
+        // Only consider lines that affect cash accounts
+        if (cashAccountIds.includes(line.account_id)) {
+          if (entry.lines) {
+            const relatedAccountLine = entry.lines.find(
+              (l) => l.account_id !== line.account_id,
+            ); // The other side of the entry
+            if (!relatedAccountLine) return; // Should not happen for balanced entries
 
-        const relatedAccount = accountMap.get(relatedAccountLine.account_id);
-        if (!relatedAccount) return;
+            const relatedAccount = accountMap.get(relatedAccountLine.account_id);
+            if (!relatedAccount) return;
 
-        const amount =
-          (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0); // Cash movement amount
+            const amount =
+              (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0); // Cash movement amount
 
-        // Determine if cash is flowing in or out from the perspective of the cash account
-        // If cash account is debited, it's an inflow. If credited, it's an outflow.
-        const cashFlowDirection = (line.debit ?? 0) > 0 ? 1 : -1;
+            // Determine if cash is flowing in or out from the perspective of the cash account
+            // If cash account is debited, it's an inflow. If credited, it's an outflow.
+            const cashFlowDirection = (line.debit ?? 0) > 0 ? 1 : -1;
 
-        // Categorization based on related account type and name
-        if (["revenue", "expense"].includes(relatedAccount.type)) {
-          operatingActivities += amount * cashFlowDirection;
-        } else if (
-          relatedAccount.name === "Equipment" ||
-          relatedAccount.name.includes("Invest")
-        ) {
-          // Example for investing
-          investingActivities += amount * cashFlowDirection;
-        } else if (
-          ["liability"].includes(relatedAccount.type) || // Liabilities are financing
-          relatedAccount.type === "equity" // Equity is also financing
-        ) {
-          // Example for financing
-          financingActivities += amount * cashFlowDirection;
-        } else {
-          // Fallback for other operating activities if not explicitly categorized
-          operatingActivities += amount * cashFlowDirection;
+            // Categorization based on related account type and name
+            if (["revenue", "expense"].includes(relatedAccount.type)) {
+              operatingActivities += amount * cashFlowDirection;
+            } else if (
+              relatedAccount.name === "Equipment" ||
+              relatedAccount.name.includes("Invest")
+            ) {
+              // Example for investing
+              investingActivities += amount * cashFlowDirection;
+            } else if (
+              ["liability"].includes(relatedAccount.type) || // Liabilities are financing
+              relatedAccount.type === "equity" // Equity is also financing
+            ) {
+              // Example for financing
+              financingActivities += amount * cashFlowDirection;
+            } else {
+              // Fallback for other operating activities if not explicitly categorized
+              operatingActivities += amount * cashFlowDirection;
+            }
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   const netCashFlow =
@@ -334,24 +342,26 @@ function calculateStockFromJournalEntries(
   }
 
   journalEntries.forEach((entry) => {
-    entry.lines.forEach((line) => {
-      if (line.product_id && line.quantity && line.account_id === stockAccount.id) {
-        const productName = productMap.get(line.product_id) || "Produto Desconhecido";
-        const currentBalance = stockBalances.get(line.product_id) || {
-          product_id: line.product_id,
-          product_name: productName,
-          balance: 0,
-        };
+    if (entry.lines) {
+      entry.lines.forEach((line) => {
+        if (line.product_id && line.quantity && line.account_id === stockAccount.id) {
+          const productName = productMap.get(line.product_id) || "Produto Desconhecido";
+          const currentBalance = stockBalances.get(line.product_id) || {
+            product_id: line.product_id,
+            product_name: productName,
+            balance: 0,
+          };
 
-        if ((line.debit ?? 0) > 0) {
-          currentBalance.balance += line.quantity;
-        } else if ((line.credit ?? 0) > 0) {
-          currentBalance.balance -= line.quantity;
+          if ((line.debit ?? 0) > 0) {
+            currentBalance.balance += line.quantity;
+          } else if ((line.credit ?? 0) > 0) {
+            currentBalance.balance -= line.quantity;
+          }
+
+          stockBalances.set(line.product_id, currentBalance);
         }
-
-        stockBalances.set(line.product_id, currentBalance);
-      }
-    });
+      });
+    }
   });
 
   return Array.from(stockBalances.values());

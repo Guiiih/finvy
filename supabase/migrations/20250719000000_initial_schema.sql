@@ -116,6 +116,7 @@ CREATE TABLE journal_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     entry_date DATE NOT NULL,
     description TEXT,
+    reference VARCHAR(255) NOT NULL DEFAULT 'N/A',
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
     accounting_period_id UUID REFERENCES accounting_periods(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

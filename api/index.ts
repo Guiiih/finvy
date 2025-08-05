@@ -29,6 +29,7 @@ import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryH
 import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 import { getNotifications, markNotificationAsRead } from '../backend/handlers/notifications.js'
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
+import referenceGeneratorHandler from '../backend/src/handlers/referenceGenerator.js'
 
 
 // This handler contains the logic for protected routes
@@ -131,6 +132,9 @@ async function protectedRoutesHandler(
       const notificationId = finalUrlPath.split('/')[2]; // Extract ID from /notifications/:id/read
       return markNotificationAsRead(req, res, user_id, notificationId)
     }
+  }
+  if (finalUrlPath.startsWith('/generate-reference')) {
+    return referenceGeneratorHandler(req, res, user_id, token)
   }
 
   

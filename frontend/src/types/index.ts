@@ -52,6 +52,7 @@ export interface JournalEntry {
   id: string
   entry_date: string
   description: string
+  reference: string
   lines: EntryLine[]
   user_id?: string
   organization_id?: string
@@ -61,6 +62,7 @@ export interface JournalEntry {
 export interface JournalEntryPayload extends Omit<JournalEntry, 'id' | 'lines' | 'user_id'> {
   organization_id?: string
   accounting_period_id?: string
+  reference: string
 }
 
 export interface StockMovement {

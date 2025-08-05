@@ -18,7 +18,7 @@ export async function getJournalEntries(
   const { data, error: dbError, count } = await userSupabase
     .from("journal_entries")
     .select(
-      "id, entry_date, description, organization_id, accounting_period_id",
+      "id, entry_date, description, reference, organization_id, accounting_period_id",
       { count: 'exact' }
     )
     .eq("organization_id", organization_id)
@@ -38,7 +38,7 @@ export async function getJournalEntries(
 }
 
 export async function createJournalEntry(
-  newEntry: Omit<JournalEntry, "id" | "lines">,
+  newEntry: Omit<JournalEntry, "id" | "lines"> & { reference: string },
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -70,7 +70,7 @@ export async function createJournalEntry(
 
 export async function updateJournalEntry(
   id: string,
-  updateData: Partial<Omit<JournalEntry, "id" | "lines">>,
+  updateData: Partial<Omit<JournalEntry, "id" | "lines"> & { reference: string }>,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
