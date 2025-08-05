@@ -13,5 +13,22 @@ export default defineConfigWithVueTs(
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
+  {
+    name: 'app/custom-rules',
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*'],
+              message: 'Use o alias "@" para importações relativas.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  skipFormatting,
   skipFormatting,
 )

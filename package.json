@@ -34,5 +34,9 @@
     "esbuild": "^0.25.0",
     "path-to-regexp": "^8.2.0",
     "undici": "^7.11.0"
+  },
+  "dependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.46.2",
+    "lightningcss": "^1.30.1"
   }
 }
