@@ -100,9 +100,6 @@ export async function sendMessageToChatbot(
       try {
         const solverResponse = await solveExercise(
           message,
-          organization_id,
-          active_accounting_period_id,
-          token
         );
 
         if (solverResponse.clarifyingQuestions) {

@@ -1,11 +1,10 @@
 import logger from "../utils/logger.js";
 import pdf from 'pdf-parse';
-import { createWorker, Worker } from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 
 export async function processDocument(fileBuffer: Buffer, mimetype: string): Promise<string> {
   logger.info(`[DocumentProcessorService] Processando documento com mimetype: ${mimetype}`);
 
-  let worker: Worker; // Revertendo para tipagem explícita
   let extractedText = '';
 
   if (mimetype === 'application/pdf') {

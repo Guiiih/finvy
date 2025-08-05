@@ -43,4 +43,3 @@ const specs = swaggerJsdoc(options);
 import fs from "fs";
 fs.writeFileSync(path.join(__dirname, "swagger-output.json"), JSON.stringify(specs, null, 2));
 
-console.log("Documentação Swagger gerada em backend/swagger-output.json");

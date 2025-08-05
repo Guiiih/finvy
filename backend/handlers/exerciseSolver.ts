@@ -31,7 +31,7 @@ export default async function handler(
           "Organização ou período contábil não encontrado para o usuário.",
         );
       }
-      const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+      const { } = userOrgAndPeriod;
 
       const parsedBody = exerciseSolverRequestSchema.safeParse(req.body);
       if (!parsedBody.success) {
@@ -51,9 +51,6 @@ export default async function handler(
 
       const solution = await solveExercise(
         exercise,
-        organization_id,
-        active_accounting_period_id,
-        token,
       );
 
       logger.info(`[ExerciseSolverHandler] Solução do exercício enviada.`);

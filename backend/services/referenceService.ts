@@ -1,5 +1,5 @@
-import { supabase } from '../../utils/supabaseClient.js'
-import logger from '../../utils/logger.js'
+import { supabase } from '../utils/supabaseClient.js'
+import logger from '../utils/logger.js'
 
 export async function getNextReferenceNumber(
   prefix: string,

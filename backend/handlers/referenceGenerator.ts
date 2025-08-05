@@ -1,13 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getNextReferenceNumber } from '../services/referenceService.js'
-import { handleErrorResponse } from '../../utils/supabaseClient.js'
-import logger from '../../utils/logger.js'
+import { handleErrorResponse } from '../utils/supabaseClient.js'
+import logger from '../utils/logger.js'
 
 export default async function referenceGeneratorHandler(
   req: VercelRequest,
   res: VercelResponse,
-  user_id: string,
-  token: string,
 ) {
   if (req.method !== 'GET') {
     return handleErrorResponse(res, 405, 'Método não permitido.')

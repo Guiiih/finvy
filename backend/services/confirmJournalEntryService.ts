@@ -1,5 +1,5 @@
 import logger from "../utils/logger.js";
-import { findAccountByName, getOrCreateAccount } from "./accountService.js";
+import { getOrCreateAccount } from "./accountService.js";
 import { createJournalEntry } from "./journalEntryService.js";
 import { createSimpleEntryLines } from "./entryLineService.js";
 

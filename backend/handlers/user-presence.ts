@@ -5,7 +5,7 @@ import logger from '../utils/logger.js';
 
 const userPresenceService = new UserPresenceService();
 
-export async function updateUserPresence(req: VercelRequest, res: VercelResponse, userId: string, token: string): Promise<void> {
+export async function updateUserPresence(req: VercelRequest, res: VercelResponse, userId: string): Promise<void> {
     try {
         const { organizationId, activeAccountingPeriodId } = req.body;
 
@@ -21,7 +21,7 @@ export async function updateUserPresence(req: VercelRequest, res: VercelResponse
     }
 }
 
-export async function getOnlineUsers(req: VercelRequest, res: VercelResponse, userId: string, token: string): Promise<void> {
+export async function getOnlineUsers(req: VercelRequest, res: VercelResponse): Promise<void> {
     try {
         const { organizationId, activeAccountingPeriodId } = req.query;
 

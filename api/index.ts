@@ -29,7 +29,7 @@ import confirmJournalEntryHandler from '../backend/handlers/confirmJournalEntryH
 import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 import { getNotifications, markNotificationAsRead } from '../backend/handlers/notifications.js'
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
-import referenceGeneratorHandler from '../backend/src/handlers/referenceGenerator.js'
+import referenceGeneratorHandler from '../backend/handlers/referenceGenerator.js'
 
 
 // This handler contains the logic for protected routes
@@ -108,20 +108,20 @@ async function protectedRoutesHandler(
     return exerciseSolverHandler(req, res, user_id, token)
   }
   if (finalUrlPath.startsWith('/journal-entry-validator')) {
-    return journalEntryValidatorHandler(req, res, user_id, token)
+    return journalEntryValidatorHandler(req, res)
   }
   if (finalUrlPath.startsWith('/confirm-journal-entries')) {
     return confirmJournalEntryHandler(req, res, user_id, token)
   }
   if (finalUrlPath.startsWith('/document-processor')) {
-    return documentProcessorHandler(req, res, user_id, token)
+    return documentProcessorHandler(req, res)
   }
   if (finalUrlPath.startsWith('/user-presence')) {
     if (req.method === 'POST') {
-      return updateUserPresence(req, res, user_id, token)
+      return updateUserPresence(req, res, user_id)
     }
     if (req.method === 'GET') {
-      return getOnlineUsers(req, res, user_id, token)
+      return getOnlineUsers(req, res)
     }
   }
   if (finalUrlPath.startsWith('/notifications')) {
@@ -134,7 +134,7 @@ async function protectedRoutesHandler(
     }
   }
   if (finalUrlPath.startsWith('/generate-reference')) {
-    return referenceGeneratorHandler(req, res, user_id, token)
+    return referenceGeneratorHandler(req, res)
   }
 
   

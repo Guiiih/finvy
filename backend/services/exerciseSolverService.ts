@@ -24,9 +24,6 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export async function solveExercise(
   exerciseText: string,
-  organization_id: string, // Estes parâmetros ainda são necessários para o getJsonFromGemini se o prompt precisar de contexto
-  active_accounting_period_id: string, // mas não para a criação de lançamentos aqui.
-  token: string,
 ): Promise<any> {
   logger.info(`[ExerciseSolverService] Iniciando resolução de exercício.`);
 
