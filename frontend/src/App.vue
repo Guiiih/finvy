@@ -1,7 +1,7 @@
 '''
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
@@ -53,8 +53,19 @@ const toggleChatbotMaximize = () => {
 onMounted(() => {
   setToast(toast)
   authStore.initAuthListener()
-  userPresenceStore.startPresenceTracking()
   window.addEventListener('click', closeUserMenu)
+
+  watch(
+    () => authStore.profileLoaded,
+    (isLoaded) => {
+      if (isLoaded) {
+        userPresenceStore.startPresenceTracking()
+      } else {
+        userPresenceStore.stopPresenceTracking()
+      }
+    },
+    { immediate: true },
+  )
 })
 
 onUnmounted(() => {

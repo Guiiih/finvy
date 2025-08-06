@@ -18,6 +18,7 @@ export const useAuthStore = defineStore(
     const handle = ref<string | null>(null)
     const userOrganizationId = ref<string | null>(null)
     const userActiveAccountingPeriodId = ref<string | null>(null)
+    const profileLoaded = ref(false)
 
     const isLoggedIn = computed(() => !!user.value)
     const token = computed(() => session.value?.access_token || null)
@@ -31,6 +32,7 @@ export const useAuthStore = defineStore(
         handle.value = null
         userOrganizationId.value = null
         userActiveAccountingPeriodId.value = null
+        profileLoaded.value = false
         return
       }
       try {
@@ -48,6 +50,7 @@ export const useAuthStore = defineStore(
         handle.value = response.handle
         userOrganizationId.value = response.organization_id
         userActiveAccountingPeriodId.value = response.active_accounting_period_id
+        profileLoaded.value = true
         console.log('fetchUserProfile: avatarUrl', avatarUrl.value)
       } catch (err: unknown) {
         console.error('Erro ao buscar perfil do usuário:', err)
@@ -57,6 +60,7 @@ export const useAuthStore = defineStore(
         handle.value = null
         userOrganizationId.value = null
         userActiveAccountingPeriodId.value = null
+        profileLoaded.value = false
       }
     }
 
@@ -88,6 +92,7 @@ export const useAuthStore = defineStore(
             avatarUrl.value = null
             userOrganizationId.value = null
             userActiveAccountingPeriodId.value = null
+            profileLoaded.value = false
           }
         })
       } catch (err: unknown) {
@@ -175,6 +180,7 @@ export const useAuthStore = defineStore(
         avatarUrl.value = null
         userOrganizationId.value = null
         userActiveAccountingPeriodId.value = null
+        profileLoaded.value = false
 
         console.log('Logout bem-sucedido.')
         return true
@@ -387,6 +393,7 @@ export const useAuthStore = defineStore(
       handle,
       userOrganizationId,
       userActiveAccountingPeriodId,
+      profileLoaded,
       initAuthListener,
       signIn,
       signUp,

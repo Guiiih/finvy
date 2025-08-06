@@ -24,7 +24,7 @@ export const useUserPresenceStore = defineStore('userPresence', {
       const organizationId = authStore.userOrganizationId
       const activeAccountingPeriodId = authStore.userActiveAccountingPeriodId
 
-      if (userId && organizationId && activeAccountingPeriodId) {
+      if (userId && organizationId && activeAccountingPeriodId && authStore.profileLoaded) {
         try {
           // Call backend to update presence
           await fetch('/api/user-presence', {
@@ -50,7 +50,7 @@ export const useUserPresenceStore = defineStore('userPresence', {
       const organizationId = authStore.userOrganizationId
       const activeAccountingPeriodId = authStore.userActiveAccountingPeriodId
 
-      if (organizationId && activeAccountingPeriodId) {
+      if (organizationId && activeAccountingPeriodId && authStore.profileLoaded) {
         try {
           const response = await fetch(
             `/api/user-presence?organizationId=${organizationId}&activeAccountingPeriodId=${activeAccountingPeriodId}`,
@@ -78,14 +78,18 @@ export const useUserPresenceStore = defineStore('userPresence', {
     },
 
     startPresenceTracking() {
+      const authStore = useAuthStore()
       if (this.presenceInterval) {
         clearInterval(this.presenceInterval)
       }
-      // Update presence every 30 seconds
-      this.presenceInterval = setInterval(() => {
-        this.updateMyPresence()
-        this.fetchOnlineUsers() // Also fetch others' presence periodically
-      }, 30000) as unknown as number // Explicitly cast to number
+      // Only start presence tracking if the user profile is loaded
+      if (authStore.profileLoaded) {
+        // Update presence every 30 seconds
+        this.presenceInterval = setInterval(() => {
+          this.updateMyPresence()
+          this.fetchOnlineUsers() // Also fetch others' presence periodically
+        }, 30000) as unknown as number // Explicitly cast to number
+      }
     },
 
     stopPresenceTracking() {
