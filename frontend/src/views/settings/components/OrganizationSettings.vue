@@ -192,16 +192,16 @@
 <script setup lang="ts">
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ref, onMounted, computed, watch } from 'vue';
-import { useOrganizationStore } from '../../../stores/organizationStore';
-import { useOrganizationSelectionStore } from '../../../stores/organizationSelectionStore';
+import { useOrganizationStore } from '@/stores/organizationStore';
+import { useOrganizationSelectionStore } from '@/stores/organizationSelectionStore';
 import { useToast } from 'primevue/usetoast';
-import { api } from '../../../services/api';
+import { api } from '@/services/api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
-import type { UserOrganizationRole, UserRoleInOrganization, User } from '../../../types';
-import { getErrorMessage } from '../../../utils/errorUtils';
+import type { UserOrganizationRole, UserRoleInOrganization, User } from '@/types';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 const organizationStore = useOrganizationStore();
 const organizationSelectionStore = useOrganizationSelectionStore();

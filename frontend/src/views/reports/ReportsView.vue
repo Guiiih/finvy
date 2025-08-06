@@ -265,9 +265,9 @@ const handleExportReport = async () => {
     // URL.revokeObjectURL(link.href);
 
     toast.add({ severity: 'success', summary: 'Sucesso', detail: `Relatório exportado em ${reportConfig.format.toUpperCase()} com sucesso!`, life: 3000 });
-  } catch (err) {
+  } catch {
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao exportar relatório.', life: 3000 });
-  } finally {
+  }finally {
     loading.value = false;
     showExportModal.value = false;
   }
@@ -291,8 +291,8 @@ const handleSaveConfig = async () => {
     // TODO: Implementar a chamada real da API para salvar configurações do relatório
     // await api.post('/reports/config', { reportId: selectedReport.value, config: reportConfig });
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações do relatório salvas!', life: 3000 });
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar configurações.', life: 3000 });
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao exportar relatório.', life: 3000 });
   } finally {
     loading.value = false;
     showConfigModal.value = false;
@@ -309,8 +309,8 @@ const handleSaveSchedule = async () => {
     // TODO: Implementar a chamada real da API para agendar o relatório
     // await api.post('/reports/schedule', { reportId: selectedReport.value, schedule: scheduleConfig });
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Agendamento do relatório configurado!', life: 3000 });
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao configurar agendamento.', life: 3000 });
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao exportar relatório.', life: 3000 });
   } finally {
     loading.value = false;
     showScheduleModal.value = false;
@@ -327,8 +327,8 @@ const handleCreateCustomReport = async () => {
     // TODO: Implementar a chamada real da API para criar relatório personalizado
     // await api.post('/reports/custom', { customReport });
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Relatório personalizado criado com sucesso!', life: 3000 });
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar relatório personalizado.', life: 3000 });
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao exportar relatório.', life: 3000 });
   } finally {
     loading.value = false;
     showCustomReportModal.value = false;
@@ -369,7 +369,6 @@ const groupedReports = computed(() => {
 
   <main v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
 
-    <!-- Period Selection and Actions -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
@@ -385,7 +384,6 @@ const groupedReports = computed(() => {
       </Button>
     </div>
 
-    <!-- Key Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <Card v-for="(stat, index) in quickStats" :key="index">
         <template #title>
@@ -409,7 +407,6 @@ const groupedReports = computed(() => {
       </Card>
     </div>
 
-    <!-- Financial Health Overview -->
     <Card class="mb-8">
       <template #title>Indicadores de Saúde Financeira</template>
       <template #subtitle>Principais métricas da situação financeira atual</template>
@@ -443,7 +440,6 @@ const groupedReports = computed(() => {
       </template>
     </Card>
 
-    <!-- Reports by Category -->
     <div class="space-y-8">
       <div v-for="(reports, category) in groupedReports" :key="category">
         <h2 class="text-xl font-bold mb-4">{{ category }}</h2>
@@ -488,7 +484,6 @@ const groupedReports = computed(() => {
       </div>
     </div>
 
-    <!-- Report Configuration Modal -->
     <Dialog v-model:visible="showConfigModal" modal header="Configurar Relatório" :style="{ width: '40rem' }">
         <div class="space-y-6 p-4">
             <div class="grid grid-cols-2 gap-4">
@@ -534,7 +529,6 @@ const groupedReports = computed(() => {
         </template>
     </Dialog>
 
-    <!-- Schedule Report Modal -->
     <Dialog v-model:visible="showScheduleModal" modal header="Agendar Relatório" :style="{ width: '40rem' }">
         <div class="space-y-6 p-4">
             <div class="grid grid-cols-2 gap-4">
@@ -583,7 +577,6 @@ const groupedReports = computed(() => {
         </template>
     </Dialog>
 
-    <!-- Custom Report Modal -->
     <Dialog v-model:visible="showCustomReportModal" modal header="Criar Relatório Personalizado" :style="{ width: '50rem' }" contentClass="max-h-[90vh] overflow-y-auto">
         <div class="space-y-6 p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -635,8 +628,7 @@ const groupedReports = computed(() => {
             <Button label="Criar Relatório" @click="handleCreateCustomReport" :loading="loading" />
         </template>
     </Dialog>
-  <!-- Export Report Modal -->
-    <Dialog v-model:visible="showExportModal" modal header="Exportar Relatório" :style="{ width: '30rem' }">
+  <Dialog v-model:visible="showExportModal" modal header="Exportar Relatório" :style="{ width: '30rem' }">
         <div class="space-y-6 p-4">
             <div class="space-y-2">
                 <label>Formato</label>

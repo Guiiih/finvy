@@ -7,7 +7,7 @@ import Skeleton from 'primevue/skeleton'
 import { useToast } from 'primevue/usetoast'
 import Paginator from 'primevue/paginator'
 
-import ProductFormModal from '../../components/ProductFormModal.vue'
+import ProductFormModal from '@/components/ProductFormModal.vue'
 
 const productStore = useProductStore()
 

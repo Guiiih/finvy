@@ -55,11 +55,11 @@ watch(selectedAccountType, async (newType) => {
 
 const flattenHierarchy = (accounts: Account[]) => {
   const accountMap = new Map(accounts.map(acc => [acc.id, { ...acc, children: [] as Account[] }]));
-  const roots: any[] = [];
+  const roots: Account[] = [];
 
   accounts.forEach(acc => {
     if (acc.parent_account_id && accountMap.has(acc.parent_account_id)) {
-      accountMap.get(acc.parent_account_id)!.children.push(acc as any);
+      accountMap.get(acc.parent_account_id)!.children.push(acc as Account);
     } else {
       roots.push(acc);
     }

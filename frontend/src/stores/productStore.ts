@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Product } from '../types/index'
+import type { Product } from '@/types/index'
 import { api } from '@/services/api'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
 

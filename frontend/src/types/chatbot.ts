@@ -1,4 +1,4 @@
-import type { JournalEntry } from '../types';
+import type { JournalEntry } from '@/types';
 
 export interface ChatbotMessage {
   role: 'user' | 'model';

@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useAuthStore } from '../../../stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useToast } from 'primevue/usetoast';
 
 import Button from 'primevue/button';

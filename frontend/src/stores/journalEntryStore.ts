@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { JournalEntry, EntryLine, JournalEntryPayload } from '../types/index'
+import type { JournalEntry, EntryLine, JournalEntryPayload } from '@/types/index'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'

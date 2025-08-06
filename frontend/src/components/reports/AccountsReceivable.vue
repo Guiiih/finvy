@@ -87,7 +87,7 @@ const agingChartOptions = ref({
 const agingChartData = computed(() => ({
     labels: Object.keys(accountsReceivableData.aging).map(k => `${k} dias (${accountsReceivableData.aging[k as keyof typeof accountsReceivableData.aging].percentage}%)`),
     datasets: [{
-        data: Object.values(accountsReceivableData.aging).map((v: any) => v.value),
+        data: Object.values(accountsReceivableData.aging).map((v: { value: number; percentage: number }) => v.value),
         backgroundColor: ['#3B82F6', '#F97316', '#F59E0B', '#EF4444'],
     }]
 }));

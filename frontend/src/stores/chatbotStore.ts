@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { chatbotApiService } from '../services/chatbotApiService';
-import type { ChatbotMessage, ChatbotResponse, ProposedEntry } from '../types/chatbot';
-import type { JournalEntry } from '../types';
+import { chatbotApiService } from '@/services/chatbotApiService';
+import type { ChatbotMessage, ChatbotResponse, ProposedEntry } from '@/types/chatbot';
+import type { JournalEntry } from '@/types';
 
 export const useChatbotStore = defineStore('chatbot', {
   state: () => ({

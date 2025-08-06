@@ -67,8 +67,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useThemeStore } from '../../../stores/themeStore';
-import { useLanguageStore } from '../../../stores/languageStore';
+import { useThemeStore } from '@/stores/themeStore';
+import { useLanguageStore } from '@/stores/languageStore';
 import { useToast } from 'primevue/usetoast';
 import Select from 'primevue/select';
 import InputSwitch from 'primevue/inputswitch';
