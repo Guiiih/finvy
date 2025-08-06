@@ -218,3 +218,19 @@ export interface AuthenticatedRequest extends VercelRequest {
   organizationId?: string;
   token?: string;
 }
+
+export interface UserPresence {
+  user_id: string;
+  organization_id: string;
+  active_accounting_period_id: string;
+  last_seen: string;
+}
+
+export interface UserProfile {
+  username: string;
+  avatar_url: string;
+}
+
+export interface OnlineUser extends UserPresence {
+  profiles: UserProfile[];
+}

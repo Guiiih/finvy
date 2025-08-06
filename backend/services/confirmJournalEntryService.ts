@@ -1,6 +1,7 @@
 import logger from "../utils/logger.js";
 import { getOrCreateAccount } from "./accountService.js";
 import { createJournalEntry } from "./journalEntryService.js";
+import { JournalEntry, EntryLine } from "../types/index.js";
 import { createSimpleEntryLines } from "./entryLineService.js";
 
 interface ProposedEntry {
@@ -15,8 +16,8 @@ export async function confirmProposedJournalEntries(
   proposedEntries: ProposedEntry[],
   organization_id: string,
   active_accounting_period_id: string,
-  token: string,
-): Promise<any[]> {
+    token: string,
+): Promise<Array<JournalEntry & { lines: EntryLine[] }>> {
   logger.info(`[ConfirmJournalEntryService] Confirmando e criando lançamentos propostos.`);
 
   const createdEntries = [];
