@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
 import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
+import Listbox from 'primevue/listbox'
+import Button from 'primevue/button'
+import OverlayPanel from 'primevue/overlaypanel'
 
 import Paginator from 'primevue/paginator'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
@@ -24,11 +27,29 @@ const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
 const showDetails = ref<{ [key: string]: boolean }>({})
+const op = ref()
+
+const selectedStatus = ref(null)
+const statusOptions = ref([
+  { label: 'Todos', value: null },
+  { label: 'Rascunho', value: 'draft' },
+  { label: 'Lançado', value: 'posted' },
+  { label: 'Revisado', value: 'reviewed' },
+])
+
+watch(selectedStatus, (newStatus) => {
+  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, newStatus || null)
+  op.value.hide() // Hide the overlay after selection
+})
+
+function toggleFilter(event: Event) {
+  op.value.toggle(event)
+}
 
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
   itemsPerPage.value = event.rows
-  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
+  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value)
 }
 
 function formatCurrency(value: number) {
@@ -51,7 +72,7 @@ async function handleModalSubmitSuccess() {
   showJournalEntryFormModal.value = false
   isEditing.value = false
   editingEntry.value = null
-  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value) // Refresh entries after add/edit
+  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value) // Refresh entries after add/edit
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
@@ -96,7 +117,7 @@ async function handleDelete(id: string | undefined) {
 }
 
 onMounted(async () => {
-  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
+  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value)
   accountStore.fetchAccounts()
   productStore.fetchProducts(currentPage.value, itemsPerPage.value)
 })
@@ -120,12 +141,31 @@ onMounted(async () => {
           ></i>
         </div>
 
+        <Button
+          type="button"
+          icon="pi pi-filter"
+          @click="toggleFilter"
+          aria-haspopup="true"
+          aria-controls="overlay_panel"
+          class="p-button-outlined p-button-secondary"
+        />
+
         <button
           @click="openNewEntryModal"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
           Novo Lançamento
         </button>
+
+        <OverlayPanel ref="op" appendTo="body" :showCloseIcon="true" id="overlay_panel">
+          <Listbox
+            v-model="selectedStatus"
+            :options="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+          />
+        </OverlayPanel>
       </div>
 
       <JournalEntryFormModal
@@ -141,9 +181,11 @@ onMounted(async () => {
           class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
           <div class="col-span-2">Data</div>
-          <div class="col-span-5">Descrição</div>
-          <div class="col-span-3 text-right">Valor Total</div>
-          <div class="col-span-2 text-center">Ações</div>
+          <div class="col-span-2">Referência</div>
+          <div class="col-span-3">Descrição</div>
+          <div class="col-span-2 text-right">Valor</div>
+          <div class="col-span-2 text-center">Status</div>
+          <div class="col-span-1 text-center">Ações</div>
         </div>
 
         <div v-if="journalEntryStore.loading" class="p-4 space-y-4">
@@ -155,11 +197,17 @@ onMounted(async () => {
             <div class="md:col-span-2">
               <Skeleton height="1rem" width="70%" class="bg-surface-200" />
             </div>
-            <div class="md:col-span-5"><Skeleton height="1rem" class="bg-surface-200" /></div>
-            <div class="md:col-span-3">
+            <div class="md:col-span-2">
+              <Skeleton height="1rem" width="70%" class="bg-surface-200" />
+            </div>
+            <div class="md:col-span-3"><Skeleton height="1rem" class="bg-surface-200" /></div>
+            <div class="md:col-span-2">
               <Skeleton height="1rem" width="50%" class="bg-surface-200" />
             </div>
-            <div class="md:col-span-2 flex justify-center items-center space-x-2">
+            <div class="md:col-span-2">
+              <Skeleton height="1rem" width="80%" class="bg-surface-200" />
+            </div>
+            <div class="md:col-span-1 flex justify-center items-center space-x-2">
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
@@ -187,11 +235,15 @@ onMounted(async () => {
               @click="toggleDetails(entry.id)"
             >
               <div class="md:col-span-2 font-mono text-surface-700">{{ entry.entry_date }}</div>
-              <div class="md:col-span-5 text-surface-800">{{ entry.description }}</div>
-              <div class="md:col-span-3 text-right text-surface-800">
+              <div class="md:col-span-2 text-surface-800">{{ entry.reference }}</div>
+              <div class="md:col-span-3 text-surface-800">{{ entry.description }}</div>
+              <div class="md:col-span-2 text-right text-surface-800">
                 {{ calculateTotal(entry.lines, 'debit') }}
               </div>
-              <div class="md:col-span-2 flex justify-center items-center space-x-2">
+              <div class="md:col-span-2 text-center text-surface-800 capitalize">
+                {{ entry.status }}
+              </div>
+              <div class="md:col-span-1 flex justify-center items-center space-x-2">
                 <button
                   @click.stop="startEdit(entry)"
                   class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"

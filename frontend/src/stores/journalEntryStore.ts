@@ -37,7 +37,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     { deep: true },
   )
 
-  async function fetchJournalEntries(page: number = 1, itemsPerPage: number = 10) {
+  async function fetchJournalEntries(page: number = 1, itemsPerPage: number = 10, status: string | null = null) {
     loading.value = true
     error.value = null
     try {
@@ -54,13 +54,19 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const orgId = activePeriod.organization_id
       const periodId = activePeriod.id
 
+      const params: Record<string, any> = {
+        organization_id: orgId,
+        accounting_period_id: periodId,
+        _page: page,
+        _limit: itemsPerPage,
+      }
+
+      if (status) {
+        params.status = status
+      }
+
       const response = await api.get<{ data: JournalEntry[]; count: number }>('/journal-entries', {
-        params: {
-          organization_id: orgId,
-          accounting_period_id: periodId,
-          _page: page,
-          _limit: itemsPerPage,
-        },
+        params: params,
       })
 
       const entriesData = response.data
