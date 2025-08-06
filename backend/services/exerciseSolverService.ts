@@ -3,10 +3,43 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-// Removidas as importações de services de criação, pois não serão mais feitas aqui
-// import { findAccountByName } from "./accountService.js";
-// import { createJournalEntry } from "./journalEntryService.js";
-// import { createSimpleEntryLines } from "./entryLineService.js";
+
+// --- Início: Interfaces para Tipagem ---
+
+// Interface para uma única linha de débito ou crédito
+interface TransactionLine {
+  account: string;
+  value: number;
+}
+
+// Interface para um lançamento contábil proposto pela IA
+interface ProposedEntry {
+  date: string;
+  description: string;
+  debits: TransactionLine[];
+  credits: TransactionLine[];
+}
+
+// Interface para a resposta JSON bruta da API Gemini
+interface GeminiResponse {
+  entries?: ProposedEntry[];
+  clarifyingQuestions?: string[];
+}
+
+// Tipos para a resposta da função solveExercise
+type SuccessResponse = {
+  message: string;
+  proposedEntries: ProposedEntry[];
+};
+
+type ClarificationResponse = {
+  message: string;
+  clarifyingQuestions: string[];
+};
+
+type SolveExerciseResponse = SuccessResponse | ClarificationResponse;
+
+// --- Fim: Interfaces para Tipagem ---
 
 // Configuração do path para carregar .env da raiz
 const __filename = fileURLToPath(import.meta.url);
@@ -24,10 +57,9 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export async function solveExercise(
   exerciseText: string,
-): Promise<any> {
+): Promise<SolveExerciseResponse> { // CORRIGIDO: Promise<any> -> Promise<SolveExerciseResponse>
   logger.info(`[ExerciseSolverService] Iniciando resolução de exercício.`);
 
-  // 1. Chamar a API do Gemini para obter a estrutura JSON
   const jsonResponse = await getJsonFromGemini(exerciseText);
 
   if (jsonResponse.clarifyingQuestions && Array.isArray(jsonResponse.clarifyingQuestions) && jsonResponse.clarifyingQuestions.length > 0) {
@@ -42,16 +74,16 @@ export async function solveExercise(
     throw new Error("A resposta da IA não contém uma lista de lançamentos válida ou perguntas de esclarecimento.");
   }
 
-  // 2. Validar balanço para cada lançamento proposto e formatar a data
   for (const entry of jsonResponse.entries) {
-    // Formatar a data para YYYY-MM-DD
     if (entry.date) {
       const dateObj = new Date(entry.date);
-      entry.date = dateObj.toISOString().split('T')[0]; // Garante YYYY-MM-DD
+      entry.date = dateObj.toISOString().split('T')[0];
     }
 
-    const totalDebits = entry.debits.reduce((sum: number, d: any) => sum + d.value, 0);
-    const totalCredits = entry.credits.reduce((sum: number, c: any) => sum + c.value, 0);
+    // CORRIGIDO: d: any -> d: TransactionLine
+    const totalDebits = entry.debits.reduce((sum: number, d: TransactionLine) => sum + d.value, 0);
+    // CORRIGIDO: c: any -> c: TransactionLine
+    const totalCredits = entry.credits.reduce((sum: number, c: TransactionLine) => sum + c.value, 0);
 
     if (totalDebits.toFixed(2) !== totalCredits.toFixed(2)) {
       throw new Error(`Lançamento desbalanceado para a descrição "${entry.description}". Débitos: ${totalDebits}, Créditos: ${totalCredits}`);
@@ -59,31 +91,25 @@ export async function solveExercise(
   }
 
   logger.info(`[ExerciseSolverService] Exercício resolvido e proposta de lançamentos gerada.`);
-  // Retorna a proposta de lançamentos para o frontend
-  return { 
+  return {
     message: "Proposta de lançamentos gerada com sucesso!",
-    proposedEntries: jsonResponse.entries 
+    proposedEntries: jsonResponse.entries
   };
 }
 
-async function getJsonFromGemini(exerciseText: string): Promise<any> {
+async function getJsonFromGemini(exerciseText: string): Promise<GeminiResponse> { // CORRIGIDO: Promise<any> -> Promise<GeminiResponse>
   const prompt = `
     Você é um assistente contábil especializado no sistema contábil brasileiro.
     Sua tarefa é analisar o exercício contábil fornecido e determinar se todas as informações necessárias para criar um lançamento contábil completo estão presentes.
-
     As informações necessárias para um lançamento contábil completo são:
     - Data do lançamento (YYYY-MM-DD)
     - Descrição ou histórico do lançamento
     - Contas e valores para todos os débitos
     - Contas e valores para todos os créditos
     - O total dos débitos deve ser igual ao total dos créditos.
-
     Se todas as informações estiverem presentes e o lançamento for balanceado, retorne um objeto JSON com a chave "entries", contendo uma lista de lançamentos contábeis. Cada lançamento deve ter "date", "description", "debits" (lista de objetos {account, value}) e "credits" (lista de objetos {account, value}). A data deve ser inferida do texto ou usar a data atual se não especificada.
-
     Se alguma informação estiver faltando ou for ambígua para criar um lançamento completo e balanceado, retorne um objeto JSON com a chave "clarifyingQuestions", contendo uma lista de strings. Cada string deve ser uma pergunta clara e concisa para obter a informação que falta. Não inclua "entries" neste caso.
-
     Sempre retorne APENAS UMA das chaves: "entries" OU "clarifyingQuestions".
-
     Exercício: "${exerciseText}"
   `;
 
@@ -115,8 +141,8 @@ async function getJsonFromGemini(exerciseText: string): Promise<any> {
               description: "Lista de perguntas para obter informações adicionais, se necessário.",
               items: { type: Type.STRING },
             },
+
           },
-          // Não definimos 'required' aqui porque queremos que o Gemini retorne 'entries' OU 'clarifyingQuestions'
         },
       },
     });
@@ -130,5 +156,3 @@ async function getJsonFromGemini(exerciseText: string): Promise<any> {
     throw new Error("Não foi possível resolver o exercício contábil.");
   }
 }
-
-

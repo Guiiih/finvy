@@ -3,6 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleErrorResponse } from "../utils/supabaseClient.js";
 import formidable from 'formidable';
 import { processDocument } from "../services/documentProcessorService.js";
+import { readFile } from 'fs/promises'; // <-- Adicionado o import aqui
 
 export const config = {
   api: {
@@ -41,7 +42,7 @@ export default async function handler(
 
     // O formidable salva o arquivo temporariamente. Precisamos ler o conteúdo.
     // Para Vercel, o uploadedFile.filepath já é o caminho para o arquivo temporário.
-    const fileBuffer = await require('fs/promises').readFile(uploadedFile.filepath);
+    const fileBuffer = await readFile(uploadedFile.filepath); // <-- Alterado para usar a função importada
 
     const extractedText = await processDocument(fileBuffer, uploadedFile.mimetype || '');
 

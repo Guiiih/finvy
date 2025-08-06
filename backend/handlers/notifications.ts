@@ -9,9 +9,11 @@ export async function getNotifications(req: VercelRequest, res: VercelResponse, 
     try {
         const notifications = await notificationService.getNotificationsByUserId(userId);
         res.status(200).json(notifications);
-    } catch (error: any) {
+    } catch (error: unknown) { // <-- Alterado de 'any' para 'unknown'
         logger.error('Erro ao buscar notificações:', error);
-        handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+        // Adicionada verificação de tipo para acessar 'message' com segurança
+        const message = error instanceof Error ? error.message : 'Erro interno do servidor.';
+        handleErrorResponse(res, 500, message);
     }
 }
 
@@ -19,8 +21,10 @@ export async function markNotificationAsRead(req: VercelRequest, res: VercelResp
     try {
         await notificationService.markAsRead(notificationId, userId);
         res.status(204).send('');
-    } catch (error: any) {
+    } catch (error: unknown) { // <-- Alterado de 'any' para 'unknown'
         logger.error('Erro ao marcar notificação como lida:', error);
-        handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+        // Adicionada verificação de tipo para acessar 'message' com segurança
+        const message = error instanceof Error ? error.message : 'Erro interno do servidor.';
+        handleErrorResponse(res, 500, message);
     }
 }

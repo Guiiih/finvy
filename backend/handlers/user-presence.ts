@@ -15,9 +15,11 @@ export async function updateUserPresence(req: VercelRequest, res: VercelResponse
 
         await userPresenceService.updateUserPresence(userId, organizationId, activeAccountingPeriodId);
         res.status(200).json({ message: 'User presence updated.' });
-    } catch (error: any) {
+    } catch (error: unknown) { // <-- Alterado de 'any' para 'unknown'
         logger.error('Erro ao atualizar presença do usuário:', error);
-        handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+        // Adicionada verificação de tipo para acessar 'message' com segurança
+        const message = error instanceof Error ? error.message : 'Erro interno do servidor.';
+        handleErrorResponse(res, 500, message);
     }
 }
 
@@ -31,8 +33,10 @@ export async function getOnlineUsers(req: VercelRequest, res: VercelResponse): P
 
         const onlineUsers = await userPresenceService.getOnlineUsersInPeriod(organizationId as string, activeAccountingPeriodId as string);
         res.status(200).json(onlineUsers);
-    } catch (error: any) {
+    } catch (error: unknown) { // <-- Alterado de 'any' para 'unknown'
         logger.error('Erro ao buscar usuários online:', error);
-        handleErrorResponse(res, 500, error.message || 'Erro interno do servidor.');
+        // Adicionada verificação de tipo para acessar 'message' com segurança
+        const message = error instanceof Error ? error.message : 'Erro interno do servidor.';
+        handleErrorResponse(res, 500, message);
     }
 }

@@ -1,21 +1,27 @@
+// .eslintrc.cjs
 module.exports = {
   root: true,
   env: {
-    es2021: true,
     node: true,
+    browser: true,
+    es2021: true,
+  },
+  parser: 'vue-eslint-parser',
+  parserOptions: {
+    parser: '@typescript-eslint/parser',
+    ecmaVersion: 'latest',
+    sourceType: 'module',
   },
   extends: [
     'eslint:recommended',
+    'plugin:vue/vue3-recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier',
+    'prettier', // se estiver usando Prettier
   ],
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  plugins: ['@typescript-eslint'],
+  plugins: ['vue', '@typescript-eslint'],
   rules: {
-    // Adicione regras personalizadas aqui, se necessário
+    // Exemplo: permita props não usados em componentes
+    'vue/require-default-prop': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
-};
+}

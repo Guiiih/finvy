@@ -1,7 +1,18 @@
 import { supabase } from '../utils/supabaseClient.js';
 
+// Interface para representar uma notificação
+interface Notification {
+    id: number;
+    user_id: string;
+    organization_id: string;
+    type: string;
+    message: string;
+    read: boolean;
+    created_at: string;
+}
+
 export class NotificationService {
-    public async createNotification(userId: string, organizationId: string, type: string, message: string): Promise<any> {
+    public async createNotification(userId: string, organizationId: string, type: string, message: string): Promise<Notification[]> { // CORRIGIDO: de any para Notification[]
         const { data, error } = await supabase
             .from('notifications')
             .insert([{ user_id: userId, organization_id: organizationId, type, message }])
@@ -13,7 +24,7 @@ export class NotificationService {
         return data;
     }
 
-    public async getNotificationsByUserId(userId: string): Promise<any[]> {
+    public async getNotificationsByUserId(userId: string): Promise<Notification[]> { // CORRIGIDO: de any[] para Notification[]
         const { data, error } = await supabase
             .from('notifications')
             .select('*')
@@ -31,7 +42,7 @@ export class NotificationService {
             .from('notifications')
             .update({ read: true })
             .eq('id', notificationId)
-            .eq('user_id', userId); // Ensure only the owner can mark as read
+            .eq('user_id', userId);
 
         if (error) {
             throw new Error(error.message);

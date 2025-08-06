@@ -66,9 +66,9 @@ export interface EntryLine {
   /** The total net value of the transaction (after taxes/discounts). */
   total_net?: number
   /** The debit amount for this entry line. */
-  debit?: number
+  debit?: number | null
   /** The credit amount for this entry line. */
-  credit?: number
+  credit?: number | null
   /** The ID of the organization this entry line belongs to. */
   organization_id?: string
   /** The ID of the accounting period this entry line belongs to. */

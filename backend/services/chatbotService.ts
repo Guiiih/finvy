@@ -4,14 +4,39 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { solveExercise } from './exerciseSolverService.js'; // Importar o serviço de resolução de exercícios
-import { validateJournalEntry } from './journalEntryValidatorService.js'; // Importar o novo serviço de validação de lançamento
-import { searchJournalEntriesByDescription } from './journalEntrySearchService.js'; // Importar o serviço de busca de lançamentos
+import { solveExercise } from './exerciseSolverService.js';
+import { validateJournalEntry } from './journalEntryValidatorService.js';
+import { searchJournalEntriesByDescription } from './journalEntrySearchService.js';
+
+// --- Início: Interfaces para Tipagem ---
+// Nota: O ideal é mover estas interfaces para um arquivo compartilhado (ex: 'src/types/journal.ts')
+
+// Interface para um lançamento contábil vindo do banco de dados
+interface JournalEntry {
+  id: string;
+  description: string;
+  // Adicione outros campos relevantes do seu banco de dados se necessário
+}
+
+// Interface para uma única linha de débito ou crédito
+interface TransactionLine {
+  account: string;
+  value: number;
+}
+
+// Interface para um lançamento contábil proposto pela IA
+interface ProposedEntry {
+  date: string;
+  description: string;
+  debits: TransactionLine[];
+  credits: TransactionLine[];
+}
+// --- Fim: Interfaces para Tipagem ---
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') }); // Carrega as variáveis de ambiente do .env na raiz do projeto
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -27,10 +52,10 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 export async function sendMessageToChatbot(
   message: string,
   conversationHistory: ChatbotMessage[] = [],
-  user_id: string, // Adicionar user_id
-  token: string, // Adicionar token
-  organization_id: string, // Adicionar organization_id
-  active_accounting_period_id: string, // Adicionar active_accounting_period_id
+  user_id: string,
+  token: string,
+  organization_id: string,
+  active_accounting_period_id: string,
 ): Promise<ChatbotResponse> {
   logger.info(`[ChatbotService] Recebida mensagem: "${message}"`);
 
@@ -65,7 +90,7 @@ export async function sendMessageToChatbot(
     `;
 
     const result = await ai.models.generateContent({
-      model: "gemini-1.5-flash", // Usando o modelo flash mais recente
+      model: "gemini-1.5-flash",
       contents: [...contents, { role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
@@ -85,45 +110,40 @@ export async function sendMessageToChatbot(
     let replyText = responseJson.reply || 'Não foi possível obter uma resposta.';
     let intent = responseJson.intent || 'general_question';
     let clarifyingQuestions: string[] | undefined;
-    let proposedEntries: any[] | undefined;
-    let foundJournalEntry: any | undefined;
+    let proposedEntries: ProposedEntry[] | undefined; // CORRIGIDO: de any[] para ProposedEntry[]
 
-    // Prioriza a intenção atual do chatbot se estiver aguardando a descrição de um lançamento existente
     const lastMessageRoleModel = [...conversationHistory].reverse().find((msg: ChatbotMessage) => msg.role === 'model');
     if (lastMessageRoleModel && lastMessageRoleModel.content.includes("me diga a descrição do lançamento que você quer validar")) {
       intent = 'awaiting_existing_journal_entry_description';
     }
 
-    // Se a intenção for receber texto de exercício, chame o exerciseSolverService
     if (intent === 'exercise_text_received') {
       logger.info(`[ChatbotService] Intenção detectada: exercise_text_received. Chamando exerciseSolverService.`);
       try {
-        const solverResponse = await solveExercise(
-          message,
-        );
+        const solverResponse = await solveExercise(message);
 
-        if (solverResponse.clarifyingQuestions) {
+        if ('clarifyingQuestions' in solverResponse && solverResponse.clarifyingQuestions) {
           replyText = solverResponse.message;
           clarifyingQuestions = solverResponse.clarifyingQuestions;
           intent = 'awaiting_clarification';
-        } else if (solverResponse.proposedEntries) {
+        } else if ('proposedEntries' in solverResponse && solverResponse.proposedEntries) {
           replyText = solverResponse.message;
           proposedEntries = solverResponse.proposedEntries;
-          // A intenção permanece exercise_text_received ou pode ser alterada para algo como 'exercise_solved'
         } else {
           replyText = "Não foi possível processar o exercício. Tente novamente.";
           intent = 'general_question';
         }
-      } catch (solverError: any) {
+      } catch (solverError: unknown) { // CORRIGIDO: de any para unknown
         logger.error("Erro ao resolver exercício no ChatbotService:", solverError);
-        replyText = `Erro ao resolver o exercício: ${solverError.message || "Erro desconhecido"}`;
+        const message = solverError instanceof Error ? solverError.message : "Erro desconhecido";
+        replyText = `Erro ao resolver o exercício: ${message}`;
         intent = 'general_question';
       }
     } else if (intent === 'awaiting_existing_journal_entry_description') {
       logger.info(`[ChatbotService] Intenção detectada: awaiting_existing_journal_entry_description. Buscando lançamentos existentes.`);
       logger.info(`[ChatbotService] Mensagem recebida para busca: "${message}"`);
       try {
-        const foundEntries = await searchJournalEntriesByDescription(
+        const foundEntries: JournalEntry[] = await searchJournalEntriesByDescription(
           message,
           organization_id,
           active_accounting_period_id
@@ -131,19 +151,20 @@ export async function sendMessageToChatbot(
 
         if (foundEntries.length === 1) {
           replyText = `Encontrei 1 lançamento com a descrição "${message}":\n\n${foundEntries[0].description}.\n\nÉ este o lançamento que você quer validar?`;
-          foundJournalEntry = foundEntries[0]; // Armazena o lançamento encontrado
-          intent = 'awaiting_confirmation_for_existing_journal_entry'; // Nova intenção para aguardar confirmação
+          // A variável 'foundJournalEntry' foi removida pois não era utilizada.
+          intent = 'awaiting_confirmation_for_existing_journal_entry';
         } else if (foundEntries.length > 1) {
           const entryList = foundEntries.map(entry => `- ${entry.description}`).join('\n');
           replyText = `Encontrei ${foundEntries.length} lançamentos com a descrição "${message}":\n\n${entryList}\n\nPor favor, seja mais específico ou escolha um dos lançamentos acima.`;
-          intent = 'awaiting_existing_journal_entry_description'; // Continua aguardando descrição mais específica
+          intent = 'awaiting_existing_journal_entry_description';
         } else {
           replyText = `Não encontrei nenhum lançamento com a descrição "${message}". Por favor, tente outra descrição.`;
-          intent = 'awaiting_existing_journal_entry_description'; // Continua aguardando descrição
+          intent = 'awaiting_existing_journal_entry_description';
         }
-      } catch (searchError: any) {
+      } catch (searchError: unknown) { // CORRIGIDO: de any para unknown
         logger.error("Erro ao buscar lançamentos existentes no ChatbotService:", searchError);
-        replyText = `Erro ao buscar lançamentos existentes: ${searchError.message || "Erro desconhecido"}`;
+        const message = searchError instanceof Error ? searchError.message : "Erro desconhecido";
+        replyText = `Erro ao buscar lançamentos existentes: ${message}`;
         intent = 'general_question';
       }
     } else if (intent === 'journal_entry_text_received') {
@@ -151,10 +172,11 @@ export async function sendMessageToChatbot(
       try {
         const validationResult = await validateJournalEntry(message);
         replyText = validationResult;
-        intent = 'general_question'; // Ou uma nova intenção para indicar validação concluída
-      } catch (validationError: any) {
+        intent = 'general_question';
+      } catch (validationError: unknown) { // CORRIGIDO: de any para unknown
         logger.error("Erro ao validar lançamento no ChatbotService:", validationError);
-        replyText = `Erro ao validar o lançamento: ${validationError.message || "Erro desconhecido"}`;
+        const message = validationError instanceof Error ? validationError.message : "Erro desconhecido";
+        replyText = `Erro ao validar o lançamento: ${message}`;
         intent = 'general_question';
       }
     } else if (intent === 'validate_existing_journal_entry_request') {
@@ -181,8 +203,9 @@ export async function sendMessageToChatbot(
       clarifyingQuestions: clarifyingQuestions,
       proposedEntries: proposedEntries,
     };
-  } catch (error: any) {
-    logger.error("Erro ao se comunicar com o Gemini API:", error.message, error.stack);
-    throw new Error("Não foi possível obter uma resposta do assistente contábil.");
+  } catch (error: unknown) { // CORRIGIDO: de any para unknown
+    logger.error("Erro ao se comunicar com o Gemini API:", error);
+    const message = error instanceof Error ? error.message : "Não foi possível obter uma resposta do assistente contábil.";
+    throw new Error(message);
   }
 }

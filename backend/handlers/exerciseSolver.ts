@@ -31,7 +31,7 @@ export default async function handler(
           "Organização ou período contábil não encontrado para o usuário.",
         );
       }
-      const { } = userOrgAndPeriod;
+      // Linha 'const { } = userOrgAndPeriod;' foi removida daqui.
 
       const parsedBody = exerciseSolverRequestSchema.safeParse(req.body);
       if (!parsedBody.success) {
