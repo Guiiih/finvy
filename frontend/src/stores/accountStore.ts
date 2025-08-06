@@ -28,7 +28,7 @@ export const useAccountStore = defineStore('account', () => {
     return Array.from(types)
   })
 
-  async function fetchAccounts({ page = 1, limit = 1000 }: { page?: number; limit?: number } = {}) {
+  async function fetchAccounts() {
     loading.value = true
     error.value = null
     try {
@@ -39,8 +39,8 @@ export const useAccountStore = defineStore('account', () => {
         params: {
           organization_id: accountingPeriodStore.activeAccountingPeriod?.organization_id,
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
-          page,
-          limit,
+          page: 1,
+          limit: 1000, // Buscar todas as contas para paginação no frontend
         },
       })
       accounts.value = Array.isArray(response.data) ? response.data : []
@@ -98,7 +98,7 @@ export const useAccountStore = defineStore('account', () => {
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod.id,
       }
       const addedAccount = await api.post<Account, Omit<Account, 'id'>>('/accounts', payload)
-      await fetchAccounts({ page: 1, limit: 10 })
+      await fetchAccounts()
       return addedAccount
     } catch (err: unknown) {
       console.error('Erro ao adicionar conta:', err)
@@ -133,7 +133,7 @@ export const useAccountStore = defineStore('account', () => {
     error.value = null
     try {
       await api.delete(`/accounts/${id}`)
-      await fetchAccounts({ page: 1, limit: 10 })
+      await fetchAccounts()
     } catch (err: unknown) {
       console.error('Erro ao deletar conta:', err)
       error.value = err instanceof Error ? err.message : 'Falha ao deletar conta.'

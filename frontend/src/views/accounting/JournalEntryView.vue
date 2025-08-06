@@ -8,7 +8,6 @@ import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
 
 import Paginator from 'primevue/paginator'
-import Popover from 'primevue/popover'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
@@ -25,7 +24,6 @@ const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
 const showDetails = ref<{ [key: string]: boolean }>({})
-const op = ref()
 
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
@@ -86,7 +84,7 @@ async function handleDelete(id: string | undefined) {
         detail: 'Lançamento excluído com sucesso!',
         life: 3000,
       })
-      await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
+      editingEntry.value = null // Reset editingEntry after successful deletion
     } catch (err: unknown) {
       console.error('Erro ao deletar lançamento no frontend:', err)
       const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
@@ -123,26 +121,11 @@ onMounted(async () => {
         </div>
 
         <button
-          type="button"
-          @click="op.toggle($event)"
+          @click="openNewEntryModal"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
         >
-          <i class="pi pi-plus"></i>
-          Ações
+          Novo Lançamento
         </button>
-        <Popover ref="op">
-          <div class="flex flex-col space-y-2">
-            <button
-              @click="() => {
-                openNewEntryModal();
-                op.hide();
-              }"
-              class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
-            >
-              Novo Lançamento
-            </button>
-          </div>
-        </Popover>
       </div>
 
       <JournalEntryFormModal

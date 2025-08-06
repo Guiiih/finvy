@@ -3,6 +3,9 @@ import { showToast } from './notificationService'
 
 const handleResponse = async (response: Response) => {
   if (response.ok) {
+    if (response.status === 204) {
+      return null
+    }
     return response.json()
   }
 

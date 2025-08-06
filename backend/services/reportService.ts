@@ -26,6 +26,7 @@ interface SupabaseRawJournalEntry {
   id: string
   entry_date: string
   description: string
+  reference: string
   user_id?: string
   entry_lines: Array<{
     id: string
@@ -58,7 +59,7 @@ async function getJournalEntries(
   let query = userSupabase
     .from('journal_entries')
     .select(
-      'id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)',
+      'id, entry_date, description, reference, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)',
     )
     .eq('organization_id', organization_id)
     .eq('accounting_period_id', accounting_period_id)

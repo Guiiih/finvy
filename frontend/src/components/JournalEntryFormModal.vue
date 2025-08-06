@@ -12,7 +12,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-
+import Imposto from '@/components/ImpostoComponent.vue'
 import JournalEntryBasicForm from '@/components/JournalEntryBasicForm.vue'
 import JournalEntryLinesForm from '@/components/JournalEntryLinesForm.vue'
 import JournalEntryProductForm from '@/components/JournalEntryProductForm.vue'
@@ -51,6 +51,8 @@ const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref(0)
 const selectedProductFromForm = ref<Product | null>(null)
 
+const newEntryStatus = ref('draft')
+
 // Watch for changes in props.visible to control displayModal
 watch(
   () => props.visible,
@@ -61,6 +63,7 @@ watch(
       if (props.isEditing && props.editingEntry) {
         newEntryDate.value = props.editingEntry.entry_date
         newEntryDescription.value = props.editingEntry.description
+        newEntryStatus.value = props.editingEntry.status || 'draft'
         // Parse existing reference into prefix and number
         const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
         if (match) {
@@ -125,14 +128,13 @@ const totalCredits = computed(() =>
   ),
 )
 
-function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
+
 
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
   newEntryDescription.value = ''
   newEntryReferencePrefix.value = ''
+  newEntryStatus.value = 'draft'
   newEntryLines.value = [
     { account_id: '', type: 'debit', amount: 0 },
     { account_id: '', type: 'credit', amount: 0 },
@@ -252,6 +254,7 @@ async function submitEntry() {
     entry_date: newEntryDate.value,
     description: newEntryDescription.value,
     reference: `${newEntryReferencePrefix.value}${generatedSequenceNumber.value}`,
+    status: newEntryStatus.value,
     lines: [] as typeof newEntryLines.value,
   }
 
@@ -351,6 +354,7 @@ async function submitEntry() {
             v-model:entryDate="newEntryDate"
             v-model:entryDescription="newEntryDescription"
             v-model:referencePrefix="newEntryReferencePrefix"
+            v-model:status="newEntryStatus"
           />
         </TabPanel>
         <TabPanel header="Partidas" :value="1">
@@ -367,28 +371,7 @@ async function submitEntry() {
         </TabPanel>
       </TabView>
 
-      <div
-        class="p-4 rounded-lg flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0"
-      >
-        <p class="text-lg">
-          Total Débitos:
-          <span class="font-bold text-green-400">{{ formatCurrency(totalDebits) }}</span>
-        </p>
-        <p class="text-lg">
-          Total Créditos:
-          <span class="font-bold text-red-400">{{ formatCurrency(totalCredits) }}</span>
-        </p>
-        <p
-          class="text-lg"
-          :class="{
-            'text-green-400': totalDebits === totalCredits,
-            'text-yellow-400': totalDebits !== totalCredits,
-          }"
-        >
-          Diferença:
-          <span class="font-bold">{{ formatCurrency(totalDebits - totalCredits) }}</span>
-        </p>
-      </div>
+      
 
       <div class="flex space-x-4">
         <button

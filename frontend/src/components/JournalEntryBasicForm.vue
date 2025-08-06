@@ -1,17 +1,31 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import Dropdown from 'primevue/dropdown'
 
 const props = defineProps<{
   entryDate: string
   entryDescription: string
   referencePrefix: string
+  status: string
 }>()
 
-const emit = defineEmits(['update:entryDate', 'update:entryDescription', 'update:referencePrefix'])
+const emit = defineEmits([
+  'update:entryDate',
+  'update:entryDescription',
+  'update:referencePrefix',
+  'update:status',
+])
 
 const internalEntryDate = ref(props.entryDate)
 const internalEntryDescription = ref(props.entryDescription)
 const internalReferencePrefix = ref(props.referencePrefix)
+const internalStatus = ref(props.status)
+
+const statusOptions = ref([
+  { label: 'Rascunho', value: 'draft' },
+  { label: 'Lançado', value: 'posted' },
+  { label: 'Revisado', value: 'reviewed' },
+])
 
 watch(
   () => props.entryDate,
@@ -34,6 +48,13 @@ watch(
   },
 )
 
+watch(
+  () => props.status,
+  (newValue) => {
+    internalStatus.value = newValue
+  },
+)
+
 watch(internalEntryDate, (newValue) => {
   emit('update:entryDate', newValue)
 })
@@ -44,6 +65,10 @@ watch(internalEntryDescription, (newValue) => {
 
 watch(internalReferencePrefix, (newValue) => {
   emit('update:referencePrefix', newValue)
+})
+
+watch(internalStatus, (newValue) => {
+  emit('update:status', newValue)
 })
 </script>
 
@@ -81,6 +106,19 @@ watch(internalReferencePrefix, (newValue) => {
         placeholder="Ex: NF, DOC"
         required
         class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      />
+    </div>
+    <div class="flex flex-col">
+      <label for="entry-status" class="text-surface-700 font-medium mb-1">Status:</label>
+      <Dropdown
+        id="entry-status"
+        v-model="internalStatus"
+        :options="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecione o Status"
+        class="w-full"
+        required
       />
     </div>
   </div>

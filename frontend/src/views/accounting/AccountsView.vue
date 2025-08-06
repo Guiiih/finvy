@@ -164,6 +164,8 @@ async function handleDeleteAccount(account: Account) {
         detail: 'Conta excluída com sucesso!',
         life: 3000,
       })
+      editingAccount.value = null // Reset editingAccount after successful deletion
+      accountStore.fetchAccounts() // Refresh accounts after successful deletion
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao deletar.'
@@ -173,8 +175,8 @@ async function handleDeleteAccount(account: Account) {
   }
 }
 
-onMounted(() => {
-  accountStore.fetchAccounts()
+onMounted(async () => {
+  await accountStore.fetchAccounts()
 })
 </script>
 

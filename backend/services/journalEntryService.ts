@@ -19,7 +19,7 @@ export async function getJournalEntries(
     count,
   } = await userSupabase
     .from('journal_entries')
-    .select('id, entry_date, description, reference, organization_id, accounting_period_id', {
+    .select('id, entry_date, description, reference, status, organization_id, accounting_period_id', {
       count: 'exact',
     })
     .eq('organization_id', organization_id)

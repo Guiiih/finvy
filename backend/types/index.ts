@@ -85,6 +85,10 @@ export interface JournalEntry {
   entry_date: string
   /** A description of the journal entry. */
   description: string
+  /** The reference number or code for the journal entry. */
+  reference: string
+  /** The status of the journal entry (e.g., draft, posted, reviewed). */
+  status?: 'draft' | 'posted' | 'reviewed'
   /** An array of entry lines that make up this journal entry. */
   lines?: EntryLine[]
   /** The ID of the user who created this journal entry. */

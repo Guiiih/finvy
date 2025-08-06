@@ -49,6 +49,7 @@ export const createJournalEntrySchema = z.object({
   entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido. Use YYYY-MM-DD.'),
   description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
   reference: z.string().min(1, 'Referência é obrigatória.').max(255, 'Referência muito longa.'),
+  status: z.enum(['draft', 'posted', 'reviewed']).optional(),
 })
 
 export const updateJournalEntrySchema = z
@@ -67,6 +68,7 @@ export const updateJournalEntrySchema = z
       .min(1, 'Referência é obrigatória.')
       .max(255, 'Referência muito longa.')
       .optional(),
+    status: z.enum(['draft', 'posted', 'reviewed']).optional(),
   })
   .partial()
 

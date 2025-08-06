@@ -13,8 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const swaggerDoc = fs.readFileSync(swaggerPath, 'utf8')
     res.setHeader('Content-Type', 'application/json')
     res.status(200).send(swaggerDoc)
-  } catch (_error) {
-    // eslint-disable-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     return handleErrorResponse(res, 500, 'Erro ao carregar a documentação da API.')
   }
 }

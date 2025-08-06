@@ -4,6 +4,7 @@ import { api } from '@/services/api'
 import type { AccountingPeriod, TaxRegime, TaxRegimeHistory } from '@/types'
 
 import { useAuthStore } from './authStore'
+import { useOrganizationSelectionStore } from './organizationSelectionStore'
 
 type NewAccountingPeriodPayload = Omit<
   AccountingPeriod,
@@ -17,6 +18,7 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const error = ref<string | null>(null)
 
   const authStore = useAuthStore()
+  const organizationSelectionStore = useOrganizationSelectionStore()
 
   const getAllAccountingPeriods = computed(() => accountingPeriods.value)
   const getActiveAccountingPeriod = computed(() => activeAccountingPeriod.value)
@@ -60,6 +62,14 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
           await api.put('/profile', { active_accounting_period_id: firstPeriod.id })
           authStore.userActiveAccountingPeriodId = firstPeriod.id
         }
+      } else {
+        // Se não houver períodos, garante que activeAccountingPeriod seja null
+        activeAccountingPeriod.value = null
+      }
+
+      // Garante que activeAccountingPeriod.value.organization_id esteja sempre presente
+      if (activeAccountingPeriod.value && !activeAccountingPeriod.value.organization_id) {
+        activeAccountingPeriod.value.organization_id = authStore.userOrganizationId || organizationSelectionStore.activeOrganization?.id || ''
       }
     } catch (err: unknown) {
       console.error('Erro ao buscar períodos contábeis:', err)

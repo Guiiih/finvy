@@ -572,6 +572,29 @@ export default async function handler(
       return res.status(201).json(newLines)
     }
 
+    if (req.method === 'DELETE') {
+      const { journal_entry_id } = req.query
+
+      if (!journal_entry_id) {
+        return handleErrorResponse(res, 400, 'O ID do lançamento de diário é obrigatório.')
+      }
+
+      const userSupabase = getSupabaseClient(token)
+      const { error: dbError } = await userSupabase
+        .from('entry_lines')
+        .delete()
+        .eq('journal_entry_id', journal_entry_id as string)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id)
+
+      if (dbError) {
+        logger.error('Erro ao deletar linhas de lançamento:', dbError)
+        throw dbError
+      }
+
+      return res.status(204).end()
+    }
+
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {

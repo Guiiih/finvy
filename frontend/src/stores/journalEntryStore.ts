@@ -4,9 +4,10 @@ import type { JournalEntry, EntryLine, JournalEntryPayload } from '@/types/index
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
+import { useAuthStore } from './authStore'
 import { supabase } from '@/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { createEntryLine, deleteEntryLinesByJournalEntryId } from '@/services/entryLineService'
+import { createEntryLine } from '@/services/entryLineService'
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const journalEntries = ref<JournalEntry[]>([])
@@ -17,12 +18,19 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   const realtimeChannel = ref<RealtimeChannel | null>(null)
 
   const accountingPeriodStore = useAccountingPeriodStore()
+  const authStore = useAuthStore()
 
   watch(
-    () => accountingPeriodStore.activeAccountingPeriod,
-    (newPeriod, oldPeriod) => {
-      if (newPeriod && newPeriod.id !== oldPeriod?.id) {
+    () => [accountingPeriodStore.activeAccountingPeriod, authStore.profileLoaded],
+    ([newPeriod, isProfileLoaded], [oldPeriod]) => {
+      const currentPeriod = newPeriod as typeof accountingPeriodStore.activeAccountingPeriod
+      const previousPeriod = oldPeriod as typeof accountingPeriodStore.activeAccountingPeriod
+
+      if (currentPeriod && currentPeriod.id !== previousPeriod?.id && isProfileLoaded) {
         unsubscribeFromRealtime()
+        fetchJournalEntries()
+      } else if (isProfileLoaded && !currentPeriod) {
+        // Caso o perfil seja carregado, mas não haja período ativo (ex: primeiro login)
         fetchJournalEntries()
       }
     },
@@ -36,8 +44,15 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         await accountingPeriodStore.fetchAccountingPeriods()
       }
-      const orgId = accountingPeriodStore.activeAccountingPeriod!.organization_id
-      const periodId = accountingPeriodStore.activeAccountingPeriod!.id
+
+      const activePeriod = accountingPeriodStore.activeAccountingPeriod
+      if (!activePeriod || !activePeriod.organization_id || !activePeriod.id) {
+        console.warn('Não foi possível obter organization_id ou accounting_period_id após fetchAccountingPeriods.')
+        return // Sai da função se os IDs ainda não estiverem disponíveis
+      }
+
+      const orgId = activePeriod.organization_id
+      const periodId = activePeriod.id
 
       const response = await api.get<{ data: JournalEntry[]; count: number }>('/journal-entries', {
         params: {
@@ -100,9 +115,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       supabase.removeChannel(realtimeChannel.value as RealtimeChannel)
     }
 
-    if (!orgId || !periodId) {
+    if (!orgId || !periodId || !authStore.profileLoaded) {
       console.warn(
-        'Não é possível assinar o Realtime: organization_id ou accounting_period_id ausente.',
+        'Não é possível assinar o Realtime: organization_id, accounting_period_id ou perfil ausente.',
       )
       return
     }
@@ -123,16 +138,20 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
           const oldEntry = payload.old as JournalEntry
 
           if (payload.eventType === 'INSERT') {
-            if (!journalEntries.value.some((entry) => entry.id === newEntry.id)) {
+            if (newEntry && !journalEntries.value.some((entry) => entry.id === newEntry.id)) {
               journalEntries.value.push({ ...newEntry, lines: [] })
             }
           } else if (payload.eventType === 'UPDATE') {
-            const index = journalEntries.value.findIndex((entry) => entry.id === newEntry.id)
-            if (index !== -1) {
-              journalEntries.value[index] = { ...journalEntries.value[index], ...newEntry }
+            if (newEntry) {
+              const index = journalEntries.value.findIndex((entry) => entry.id === newEntry.id)
+              if (index !== -1) {
+                journalEntries.value[index] = { ...journalEntries.value[index], ...newEntry }
+              }
             }
           } else if (payload.eventType === 'DELETE') {
-            journalEntries.value = journalEntries.value.filter((entry) => entry.id !== oldEntry.id)
+            if (oldEntry) {
+              journalEntries.value = journalEntries.value.filter((entry) => entry.id !== oldEntry.id)
+            }
           }
         },
       )
@@ -204,7 +223,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         newLines.push(processedNewLine)
       }
 
-      await fetchJournalEntries() // Re-fetch all entries to get the complete new entry with lines
+      await fetchJournalEntries()
 
       return newJournalEntry
     } catch (err: unknown) {
@@ -220,7 +239,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     loading.value = true
     error.value = null
     try {
-      const { lines, ...entryHeader } = updatedEntry
+      const { ...entryHeader } = updatedEntry
       const payload: JournalEntryPayload = {
         ...entryHeader,
         organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
@@ -231,49 +250,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         payload,
       )
 
-      await deleteEntryLinesByJournalEntryId(
-        updatedEntry.id,
-        accountingPeriodStore.activeAccountingPeriod!.organization_id,
-        accountingPeriodStore.activeAccountingPeriod!.id,
-      )
-
-      const newLines: EntryLine[] = []
-      for (const line of lines) {
-        if (line.amount <= 0) {
-          throw new Error('O valor do lançamento deve ser maior que zero.')
-        }
-        if (!['debit', 'credit'].includes(line.type)) {
-          throw new Error('O tipo de lançamento (débito/crédito) é inválido.')
-        }
-
-        const lineToSend = {
-          journal_entry_id: updatedEntry.id,
-          account_id: line.account_id,
-          type: line.type,
-          amount: line.amount,
-          debit: line.type === 'debit' ? line.amount : 0,
-          credit: line.type === 'credit' ? line.amount : 0,
-          product_id: line.product_id,
-          quantity: line.quantity,
-          unit_cost: line.unit_cost,
-          total_gross: line.total_gross,
-          icms_value: line.icms_value,
-          total_net: line.total_net,
-          organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
-          accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
-        }
-        console.log('Sending line to API:', lineToSend)
-        const newLine = await createEntryLine(lineToSend)
-        const processedNewLine: EntryLine = {
-          ...newLine,
-          amount: (newLine.debit || 0) > 0 ? newLine.debit || 0 : newLine.credit || 0,
-        }
-        newLines.push(processedNewLine)
-      }
-
       const index = journalEntries.value.findIndex((entry) => entry.id === updatedEntry.id)
       if (index !== -1) {
-        journalEntries.value[index] = { ...updatedEntry, lines: newLines }
+        journalEntries.value[index] = { ...updatedEntry, lines: updatedEntry.lines }
       }
       return updatedEntry
     } catch (err: unknown) {
@@ -292,14 +271,43 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
   async function deleteEntry(id: string) {
     loading.value = true
     error.value = null
-    console.log('JournalEntryStore: Tentando deletar lançamento com ID:', id)
+    console.log(`JournalEntryStore: Tentando deletar lançamento com ID: ${id}`)
+
     try {
+      // 1. Chama a API para deletar o registro no backend.
       await api.delete(`/journal-entries/${id}`)
-      journalEntries.value = journalEntries.value.filter((entry) => entry.id !== id)
-      console.log('JournalEntryStore: Lançamento deletado com sucesso no frontend.')
+
+      // 2. Se a chamada for bem-sucedida, atualiza o estado local imediatamente.
+      const index = journalEntries.value.findIndex((entry) => entry.id === id)
+      if (index !== -1) {
+        journalEntries.value.splice(index, 1)
+        if (totalJournalEntries.value > 0) {
+          totalJournalEntries.value--
+        }
+      }
+
+      console.log(`JournalEntryStore: Lançamento ${id} deletado com sucesso do estado.`)
+
+      // 3. Adiciona uma notificação de sucesso para o usuário.
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Lançamento deletado com sucesso!',
+        life: 3000,
+      })
     } catch (err: unknown) {
-      console.error('JournalEntryStore: Erro ao deletar lançamento:', err)
-      error.value = err instanceof Error ? err.message : 'Falha ao deletar lançamento.'
+      const errorMessage = err instanceof Error ? err.message : 'Falha ao deletar lançamento.'
+      error.value = errorMessage
+      console.error(`JournalEntryStore: Erro ao deletar lançamento ${id}:`, err)
+
+      // 4. Adiciona uma notificação de erro caso a API falhe.
+      toast.add({
+        severity: 'error',
+        summary: 'Erro ao Deletar',
+        detail: String(err),
+        life: 5000,
+      })
+      
       throw err
     } finally {
       loading.value = false
@@ -335,6 +343,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         entry_date: new Date().toISOString().split('T')[0],
         description: `Estorno do Lançamento ${originalEntry.id} - ${originalEntry.description}`,
         reference: `ESTORNO-${originalEntry.reference || originalEntry.id}`,
+        status: 'posted',
         lines: reversedLines,
       }
 

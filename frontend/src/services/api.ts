@@ -38,7 +38,7 @@ export const api = {
   delete: async <T>(
     endpoint: string,
     options?: { params?: Record<string, unknown> },
-  ): Promise<T> => {
+  ): Promise<T | null> => {
     try {
       const url = new URL(endpoint, 'http://localhost')
       if (options?.params) {
@@ -46,7 +46,11 @@ export const api = {
           url.searchParams.append(key, String(value))
         })
       }
-      return await apiClient.delete(url.pathname + url.search)
+      const response = await apiClient.delete(url.pathname + url.search)
+      if (response && response.status === 204) {
+        return null
+      }
+      return response
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }

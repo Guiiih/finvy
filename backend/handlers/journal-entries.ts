@@ -108,9 +108,9 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const { entry_date, description, reference } = parsedBody.data
+      const { entry_date, description, reference, status } = parsedBody.data
 
-      const newEntry = { entry_date, description, reference }
+      const newEntry = { entry_date, description, reference, status }
       const createdEntry = await createJournalEntry(
         newEntry,
         organization_id,
@@ -184,7 +184,7 @@ export default async function handler(
      *         description: Erro interno do servidor.
      */
     if (req.method === 'PUT') {
-      const id = req.query.id as string
+      const id = req.url?.split('?')[0].split('/').pop() as string
       logger.info(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`)
       const parsedBody = updateJournalEntrySchema.safeParse(req.body)
       if (!parsedBody.success) {

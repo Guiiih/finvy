@@ -53,6 +53,7 @@ export interface JournalEntry {
   entry_date: string
   description: string
   reference: string
+  status?: 'draft' | 'posted' | 'reviewed'
   lines: EntryLine[]
   user_id?: string
   organization_id?: string

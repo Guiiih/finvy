@@ -43,6 +43,7 @@ export const useTransactionStore = defineStore('transactionStore', () => {
         entry_date: date,
         description: description,
         reference: '', // Adicionado campo de referência
+        status: 'posted',
         lines: journalEntryLines,
       }
 
