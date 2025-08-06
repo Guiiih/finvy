@@ -78,9 +78,7 @@
           </div>
           <div>
             <p><strong>Destinatário CNPJ:</strong> {{ extractedData.cnpj_dest }}</p>
-            <p>
-              <strong>Destinatário Razão Social:</strong> {{ extractedData.razao_social_dest }}
-            </p>
+            <p><strong>Destinatário Razão Social:</strong> {{ extractedData.razao_social_dest }}</p>
             <p><strong>Destinatário UF:</strong> {{ extractedData.uf_dest }}</p>
             <p><strong>Destinatário Município:</strong> {{ extractedData.municipio_dest }}</p>
           </div>

@@ -1,46 +1,62 @@
 <template>
   <div class="flex flex-col h-full bg-surface-50 rounded-lg shadow-lg">
-
     <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto bg-surface-50">
       <div v-for="(message, index) in chatbotStore.messages" :key="index" class="mb-4">
         <div :class="message.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
           <div
             :class="[
               'max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow',
-              message.role === 'user'
-                ? 'bg-blue-500 text-white'
-                : 'bg-surface-0 text-surface-800',
+              message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-surface-0 text-surface-800',
             ]"
           >
             <p v-if="!message.isSolution" class="text-sm">{{ message.content }}</p>
             <div v-if="message.isSolution">
               <strong>Solução Proposta:</strong>
-              <pre class="mt-2 text-sm bg-surface-100 text-surface-700 p-2 rounded">{{ message.content }}</pre>
+              <pre class="mt-2 text-sm bg-surface-100 text-surface-700 p-2 rounded">{{
+                message.content
+              }}</pre>
             </div>
           </div>
         </div>
       </div>
-      <div v-if="chatbotStore.isLoading || isSolving || isConfirming || isUploading" class="flex justify-start mb-4">
-          <div class="bg-surface-0 text-surface-800 rounded-lg shadow px-4 py-2">
-              <div class="flex items-center space-x-1">
-                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse"></span>
-                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-75"></span>
-                  <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-150"></span>
-              </div>
+      <div
+        v-if="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
+        class="flex justify-start mb-4"
+      >
+        <div class="bg-surface-0 text-surface-800 rounded-lg shadow px-4 py-2">
+          <div class="flex items-center space-x-1">
+            <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse"></span>
+            <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-75"></span>
+            <span class="block w-2 h-2 bg-surface-400 rounded-full animate-pulse delay-150"></span>
           </div>
+        </div>
       </div>
 
-      <div v-if="chatbotStore.clarifyingQuestions.length > 0" class="p-4 my-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+      <div
+        v-if="chatbotStore.clarifyingQuestions.length > 0"
+        class="p-4 my-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800"
+      >
         <h3 class="text-lg font-semibold">Preciso de mais informações:</h3>
         <ul class="list-disc list-inside mt-2">
-          <li v-for="(question, qIdx) in chatbotStore.clarifyingQuestions" :key="qIdx">{{ question }}</li>
+          <li v-for="(question, qIdx) in chatbotStore.clarifyingQuestions" :key="qIdx">
+            {{ question }}
+          </li>
         </ul>
-        <p class="mt-2 text-sm">Por favor, responda às perguntas acima para que eu possa continuar.</p>
+        <p class="mt-2 text-sm">
+          Por favor, responda às perguntas acima para que eu possa continuar.
+        </p>
       </div>
 
-      <div v-if="chatbotStore.proposedEntries.length > 0" class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400">
+      <div
+        v-if="chatbotStore.proposedEntries.length > 0"
+        class="p-4 my-4 bg-blue-50 border-l-4 border-blue-400"
+      >
         <h3 class="text-lg font-semibold text-blue-800">Proposta de Lançamentos:</h3>
-        <div v-for="(entry, idx) in chatbotStore.proposedEntries" :key="idx" class="p-3 mt-2 bg-surface-0 rounded-lg shadow">
+        <div
+          v-for="(entry, idx) in chatbotStore.proposedEntries"
+          :key="idx"
+          class="p-3 mt-2 bg-surface-0 rounded-lg shadow"
+        >
           <p><strong>Data:</strong> {{ entry.date }}</p>
           <p><strong>Descrição:</strong> {{ entry.description }}</p>
           <div class="grid grid-cols-2 gap-4 mt-2">
@@ -82,13 +98,19 @@
         </div>
       </div>
 
-      <div v-if="chatbotStore.currentIntent === 'awaiting_confirmation_for_existing_journal_entry' && chatbotStore.foundJournalEntry" class="p-4 my-4 bg-green-50 border-l-4 border-green-400">
+      <div
+        v-if="
+          chatbotStore.currentIntent === 'awaiting_confirmation_for_existing_journal_entry' &&
+          chatbotStore.foundJournalEntry
+        "
+        class="p-4 my-4 bg-green-50 border-l-4 border-green-400"
+      >
         <h3 class="text-lg font-semibold text-green-800">Lançamento Encontrado:</h3>
         <div class="p-3 mt-2 bg-surface-0 rounded-lg shadow">
           <p><strong>ID:</strong> {{ chatbotStore.foundJournalEntry.id }}</p>
           <p><strong>Data:</strong> {{ chatbotStore.foundJournalEntry.entry_date }}</p>
           <p><strong>Descrição:</strong> {{ chatbotStore.foundJournalEntry.description }}</p>
-          </div>
+        </div>
         <div class="flex justify-end mt-4 space-x-2">
           <button
             type="button"
@@ -129,151 +151,156 @@
           class="flex justify-center items-center rounded-full text-zinc-400 hover:text-white transition h-4 w-4"
           title="Anexar Arquivo"
         >
-          <i class="material-icons" style="font-size: 15px !important;">attach_file</i>
+          <i class="material-icons" style="font-size: 15px !important">attach_file</i>
         </button>
-        <input type="file" @change="handleFileUpload" ref="fileInput" style="display: none;" />
+        <input type="file" @change="handleFileUpload" ref="fileInput" style="display: none" />
         <button
           type="button"
           @click="sendMessage"
           :disabled="chatbotStore.isLoading || isSolving || isConfirming || isUploading"
-          class="flex justify-center items-center rounded-full bg-surface-200 text-surface-500 hover:text-surface-700 transition  h-7 w-7"
+          class="flex justify-center items-center rounded-full bg-surface-200 text-surface-500 hover:text-surface-700 transition h-7 w-7"
           title="Enviar Mensagem"
         >
-          <i class="material-icons" style="font-size: 19px !important;">arrow_upward</i>
+          <i class="material-icons" style="font-size: 19px !important">arrow_upward</i>
         </button>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, watch } from 'vue';
-import { useChatbotStore } from '@/stores/chatbotStore';
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { useChatbotStore } from '@/stores/chatbotStore'
 
-import { confirmJournalEntryApiService } from '@/services/confirmJournalEntryApiService';
-import { documentProcessorApiService } from '@/services/documentProcessorApiService';
+import { confirmJournalEntryApiService } from '@/services/confirmJournalEntryApiService'
+import { documentProcessorApiService } from '@/services/documentProcessorApiService'
 
-const chatbotStore = useChatbotStore();
-const newMessage = ref('');
-const isSolving = ref(false);
-const isConfirming = ref(false);
-const isUploading = ref(false);
+const chatbotStore = useChatbotStore()
+const newMessage = ref('')
+const isSolving = ref(false)
+const isConfirming = ref(false)
+const isUploading = ref(false)
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const messagesContainer = ref<HTMLElement | null>(null);
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null)
+const messagesContainer = ref<HTMLElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
-const adjustTextareaHeight = () => { // Força recompile
+const adjustTextareaHeight = () => {
+  // Força recompile
   if (textareaRef.value) {
-    textareaRef.value.style.height = 'auto';
-    textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px';
+    textareaRef.value.style.height = 'auto'
+    textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
   }
-};
+}
 
 watch(newMessage, () => {
   nextTick(() => {
-    adjustTextareaHeight();
-  });
-});
+    adjustTextareaHeight()
+  })
+})
 
 const inputPlaceholder = computed(() => {
   switch (chatbotStore.currentIntent) {
     case 'awaiting_exercise_text':
-      return 'Por favor, cole o texto do exercício aqui...';
+      return 'Por favor, cole o texto do exercício aqui...'
     case 'awaiting_existing_journal_entry_description':
-      return 'Por favor, digite a descrição do lançamento que você quer validar...';
+      return 'Por favor, digite a descrição do lançamento que você quer validar...'
     case 'awaiting_clarification':
-      return 'Responda às perguntas de esclarecimento...';
+      return 'Responda às perguntas de esclarecimento...'
     default:
-      return 'Envie sua mensagem...';
+      return 'Envie sua mensagem...'
   }
-});
+})
 
 const scrollToBottom = () => {
   nextTick(() => {
     if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  scrollToBottom();
-});
+  scrollToBottom()
+})
 
-watch(() => chatbotStore.messages, () => {
-  scrollToBottom();
-}, { deep: true });
+watch(
+  () => chatbotStore.messages,
+  () => {
+    scrollToBottom()
+  },
+  { deep: true },
+)
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim() && chatbotStore.proposedEntries.length === 0) return;
+  if (!newMessage.value.trim() && chatbotStore.proposedEntries.length === 0) return
 
-  const text = newMessage.value;
-  newMessage.value = '';
-  await chatbotStore.sendMessage(text);
-};
+  const text = newMessage.value
+  newMessage.value = ''
+  await chatbotStore.sendMessage(text)
+}
 
 const handleEnter = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
+    event.preventDefault()
+    sendMessage()
   }
-};
+}
 
 const handleFileUpload = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
+  const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
-    const file = target.files[0];
-    isUploading.value = true;
+    const file = target.files[0]
+    isUploading.value = true
     try {
-      const response = await documentProcessorApiService.uploadDocument(file);
-      newMessage.value = response.extractedText;
-      await chatbotStore.sendMessage(response.extractedText);
+      const response = await documentProcessorApiService.uploadDocument(file)
+      newMessage.value = response.extractedText
+      await chatbotStore.sendMessage(response.extractedText)
     } catch (error) {
-      console.error(error);
-      chatbotStore.setError('Falha ao processar o arquivo.');
+      console.error(error)
+      chatbotStore.setError('Falha ao processar o arquivo.')
     } finally {
-      isUploading.value = false;
-      target.value = '';
+      isUploading.value = false
+      target.value = ''
     }
   }
-};
+}
 
 const handleConfirmEntries = async () => {
-  isConfirming.value = true;
+  isConfirming.value = true
   try {
-    await confirmJournalEntryApiService.confirmEntries(chatbotStore.proposedEntries);
-    chatbotStore.addModelMessage('Lançamentos confirmados com sucesso!');
-    chatbotStore.proposedEntries = [];
+    await confirmJournalEntryApiService.confirmEntries(chatbotStore.proposedEntries)
+    chatbotStore.addModelMessage('Lançamentos confirmados com sucesso!')
+    chatbotStore.proposedEntries = []
   } catch (error) {
-    console.error(error);
-    chatbotStore.setError('Erro ao confirmar os lançamentos.');
+    console.error(error)
+    chatbotStore.setError('Erro ao confirmar os lançamentos.')
   } finally {
-    isConfirming.value = false;
+    isConfirming.value = false
   }
-};
+}
 
 const handleCancelEntries = () => {
-  chatbotStore.proposedEntries = [];
-  chatbotStore.addModelMessage('Proposta de lançamento cancelada.');
-};
+  chatbotStore.proposedEntries = []
+  chatbotStore.addModelMessage('Proposta de lançamento cancelada.')
+}
 
 const handleConfirmFoundJournalEntry = async () => {
   if (chatbotStore.foundJournalEntry) {
     // Aqui você enviaria o lançamento encontrado para validação
     // Por enquanto, apenas adiciona uma mensagem de confirmação
-    chatbotStore.addModelMessage(`Confirmado! Lançamento ${chatbotStore.foundJournalEntry.id} será validado.`);
+    chatbotStore.addModelMessage(
+      `Confirmado! Lançamento ${chatbotStore.foundJournalEntry.id} será validado.`,
+    )
     // Limpa o lançamento encontrado e reseta a intenção
-    chatbotStore.setFoundJournalEntry(null);
-    chatbotStore.currentIntent = 'general_question'; // Ou uma nova intenção para o processo de validação
+    chatbotStore.setFoundJournalEntry(null)
+    chatbotStore.currentIntent = 'general_question' // Ou uma nova intenção para o processo de validação
   }
-};
+}
 
 const handleCancelFoundJournalEntry = () => {
-  chatbotStore.addModelMessage('Busca de lançamento cancelada. Por favor, tente outra descrição.');
-  chatbotStore.setFoundJournalEntry(null);
-  chatbotStore.currentIntent = 'awaiting_existing_journal_entry_description'; // Volta para o estado de aguardar descrição
-};
-
+  chatbotStore.addModelMessage('Busca de lançamento cancelada. Por favor, tente outra descrição.')
+  chatbotStore.setFoundJournalEntry(null)
+  chatbotStore.currentIntent = 'awaiting_existing_journal_entry_description' // Volta para o estado de aguardar descrição
+}
 </script>

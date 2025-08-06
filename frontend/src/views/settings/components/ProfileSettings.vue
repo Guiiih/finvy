@@ -9,8 +9,19 @@
           alt="Avatar"
           class="h-20 w-20 rounded-full object-cover bg-surface-200 cursor-pointer"
         />
-        <input type="file" ref="fileInput" class="hidden" @change="handleAvatarSelect" accept="image/*"/>
-        <button @click="triggerFileInput" class="bg-zinc-900 text-white px-4 py-2 text-sm rounded-md hover:bg-surface-800 transition">Mudar</button>
+        <input
+          type="file"
+          ref="fileInput"
+          class="hidden"
+          @change="handleAvatarSelect"
+          accept="image/*"
+        />
+        <button
+          @click="triggerFileInput"
+          class="bg-zinc-900 text-white px-4 py-2 text-sm rounded-md hover:bg-surface-800 transition"
+        >
+          Mudar
+        </button>
       </div>
     </div>
 
@@ -83,22 +94,13 @@
           />
           <!-- New buttons for zoom and rotate -->
           <div class="cropper-buttons">
-            <Button
-              class="p-button-rounded p-button-text p-button-plain"
-              @click="zoomOut"
-            >
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomOut">
               <i class="pi pi-search-minus"></i>
             </Button>
-            <Button
-              class="p-button-rounded p-button-text p-button-plain"
-              @click="zoomIn"
-            >
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomIn">
               <i class="pi pi-search-plus"></i>
             </Button>
-            <Button
-              class="p-button-rounded p-button-text p-button-plain"
-              @click="rotate"
-            >
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="rotate">
               <i class="pi pi-refresh"></i>
             </Button>
           </div>
@@ -120,17 +122,10 @@
           </div>
         </div>
         <div class="flex justify-between w-full mt-4">
-          <Button
-            @click="cancelCropping"
-            class="p-button-text p-button-secondary"
-          >
+          <Button @click="cancelCropping" class="p-button-text p-button-secondary">
             <i class="pi pi-times"></i> Cancelar
           </Button>
-          <Button
-            @click="saveCroppedImage"
-            :loading="loadingAvatarUpload"
-            class="p-button-emerald"
-          >
+          <Button @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-emerald">
             <i class="pi pi-check"></i> Salvar como foto do perfil
           </Button>
         </div>
@@ -140,115 +135,135 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
-import { useToast } from 'primevue/usetoast';
+import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useToast } from 'primevue/usetoast'
 
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import { Cropper } from 'vue-advanced-cropper';
-import 'vue-advanced-cropper/dist/style.css';
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
-const authStore = useAuthStore();
-const toast = useToast();
+const authStore = useAuthStore()
+const toast = useToast()
 
-const fullName = ref('');
-const handle = ref('');
-const loadingProfile = ref(false);
+const fullName = ref('')
+const handle = ref('')
+const loadingProfile = ref(false)
 
 const displayHandle = computed<string>({
   get() {
-    return handle.value ? `@${handle.value}` : '';
+    return handle.value ? `@${handle.value}` : ''
   },
   set(value: string) {
-    handle.value = value.startsWith('@') ? value.substring(1) : value;
+    handle.value = value.startsWith('@') ? value.substring(1) : value
   },
-});
+})
 
-const showCropperModal = ref(false);
-const imageSrc = ref('');
-const cropperRef = ref<InstanceType<typeof Cropper> | null>(null);
-const loadingAvatarUpload = ref(false);
-const tempAvatarPreview = ref<string | null>(null);
-const croppedImagePreviewUrl = ref<string | null>(null);
-const fileInput = ref<HTMLInputElement | null>(null);
+const showCropperModal = ref(false)
+const imageSrc = ref('')
+const cropperRef = ref<InstanceType<typeof Cropper> | null>(null)
+const loadingAvatarUpload = ref(false)
+const tempAvatarPreview = ref<string | null>(null)
+const croppedImagePreviewUrl = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(() => {
-  fullName.value = authStore.username || '';
-  handle.value = authStore.handle || '';
-});
+  fullName.value = authStore.username || ''
+  handle.value = authStore.handle || ''
+})
 
 const handleAvatarSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
-      imageSrc.value = e.target?.result as string;
-      showCropperModal.value = true;
-      tempAvatarPreview.value = null;
-      croppedImagePreviewUrl.value = null;
-    };
-    reader.readAsDataURL(file);
+      imageSrc.value = e.target?.result as string
+      showCropperModal.value = true
+      tempAvatarPreview.value = null
+      croppedImagePreviewUrl.value = null
+    }
+    reader.readAsDataURL(file)
   }
-};
+}
 
 const triggerFileInput = () => {
-  fileInput.value?.click();
-};
+  fileInput.value?.click()
+}
 
 const onCropperChange = () => {
   if (cropperRef.value) {
-    const { canvas } = cropperRef.value.getResult();
+    const { canvas } = cropperRef.value.getResult()
     if (canvas) {
-      croppedImagePreviewUrl.value = canvas.toDataURL('image/png');
+      croppedImagePreviewUrl.value = canvas.toDataURL('image/png')
     }
   }
-};
+}
 
 const saveCroppedImage = async () => {
   if (cropperRef.value) {
-    loadingAvatarUpload.value = true;
-    const { canvas } = cropperRef.value.getResult();
+    loadingAvatarUpload.value = true
+    const { canvas } = cropperRef.value.getResult()
     if (canvas) {
       canvas.toBlob(async (blob) => {
         if (blob) {
-          const success = await authStore.uploadAvatar(blob);
+          const success = await authStore.uploadAvatar(blob)
           if (success) {
-            toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado!', life: 3000 });
-            showCropperModal.value = false;
-            tempAvatarPreview.value = URL.createObjectURL(blob);
+            toast.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Avatar atualizado!',
+              life: 3000,
+            })
+            showCropperModal.value = false
+            tempAvatarPreview.value = URL.createObjectURL(blob)
           } else {
-            toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar o avatar.', life: 3000 });
+            toast.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: authStore.error || 'Falha ao atualizar o avatar.',
+              life: 3000,
+            })
           }
         } else {
-          toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao obter a imagem cortada.', life: 3000 });
+          toast.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Falha ao obter a imagem cortada.',
+            life: 3000,
+          })
         }
-        loadingAvatarUpload.value = false;
-      }, 'image/png');
+        loadingAvatarUpload.value = false
+      }, 'image/png')
     }
   }
-};
+}
 
 const cancelCropping = () => {
-  showCropperModal.value = false;
-  imageSrc.value = '';
-  croppedImagePreviewUrl.value = null;
-};
+  showCropperModal.value = false
+  imageSrc.value = ''
+  croppedImagePreviewUrl.value = null
+}
 
-const zoomIn = () => cropperRef.value?.zoom(1.1);
-const zoomOut = () => cropperRef.value?.zoom(0.9);
-const rotate = () => cropperRef.value?.rotate(90);
+const zoomIn = () => cropperRef.value?.zoom(1.1)
+const zoomOut = () => cropperRef.value?.zoom(0.9)
+const rotate = () => cropperRef.value?.rotate(90)
 
 const handleUpdateProfile = async () => {
-  loadingProfile.value = true;
-  const profileUpdateSuccess = await authStore.updateUserProfile(fullName.value, handle.value);
+  loadingProfile.value = true
+  const profileUpdateSuccess = await authStore.updateUserProfile(fullName.value, handle.value)
   if (profileUpdateSuccess) {
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado!', life: 3000 });
-    tempAvatarPreview.value = null;
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado!', life: 3000 })
+    tempAvatarPreview.value = null
   } else {
-    toast.add({ severity: 'error', summary: 'Erro', detail: authStore.error || 'Falha ao atualizar o perfil.', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: authStore.error || 'Falha ao atualizar o perfil.',
+      life: 3000,
+    })
   }
-  loadingProfile.value = false;
-};
+  loadingProfile.value = false
+}
 </script>

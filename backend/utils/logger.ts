@@ -1,16 +1,16 @@
-import { pino } from "pino";
+import { pino } from 'pino'
 
 const logger = pino({
   transport:
-    process.env.NODE_ENV !== "production"
+    process.env.NODE_ENV !== 'production'
       ? {
-          target: "pino-pretty",
+          target: 'pino-pretty',
           options: {
             colorize: true,
-            ignore: "pid,hostname",
+            ignore: 'pid,hostname',
           },
         }
       : undefined,
-});
+})
 
-export default logger;
+export default logger

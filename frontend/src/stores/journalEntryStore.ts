@@ -226,7 +226,10 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         organization_id: accountingPeriodStore.activeAccountingPeriod!.organization_id,
         accounting_period_id: accountingPeriodStore.activeAccountingPeriod!.id,
       }
-      await api.put<JournalEntry, JournalEntryPayload>(`/journal-entries/${updatedEntry.id}`, payload)
+      await api.put<JournalEntry, JournalEntryPayload>(
+        `/journal-entries/${updatedEntry.id}`,
+        payload,
+      )
 
       await deleteEntryLinesByJournalEntryId(
         updatedEntry.id,

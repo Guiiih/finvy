@@ -1,14 +1,11 @@
-import logger from "../utils/logger.js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import {
-  handleErrorResponse,
-  getUserOrganizationAndPeriod,
-} from "../utils/supabaseClient.js";
-import { createFinancialTransactionSchema } from "../utils/schemas.js";
+import logger from '../utils/logger.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { createFinancialTransactionSchema } from '../utils/schemas.js'
 import {
   getFinancialTransactions,
   createFinancialTransaction,
-} from "../services/financialTransactionService.js";
+} from '../services/financialTransactionService.js'
 
 /**
  * @swagger
@@ -125,52 +122,61 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  
-
-  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token)
   if (!userOrgAndPeriod) {
     return handleErrorResponse(
       res,
       403,
-      "Organização ou período contábil não encontrado para o usuário.",
-    );
+      'Organização ou período contábil não encontrado para o usuário.',
+    )
   }
-  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod
 
   try {
-    const { type } = req.query;
-    
+    const { type } = req.query
 
-    if (req.method === "GET") {
-      const data = await getFinancialTransactions(type as "payable" | "receivable", user_id, organization_id, active_accounting_period_id, token);
+    if (req.method === 'GET') {
+      const data = await getFinancialTransactions(
+        type as 'payable' | 'receivable',
+        user_id,
+        organization_id,
+        active_accounting_period_id,
+        token,
+      )
       if (!data) {
-        return handleErrorResponse(res, 404, "Transações financeiras não encontradas.");
+        return handleErrorResponse(res, 404, 'Transações financeiras não encontradas.')
       }
-      return res.status(200).json(data);
+      return res.status(200).json(data)
     }
 
-    if (req.method === "POST") {
-      const parsedBody = createFinancialTransactionSchema.safeParse(req.body);
+    if (req.method === 'POST') {
+      const parsedBody = createFinancialTransactionSchema.safeParse(req.body)
       if (!parsedBody.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedBody.error.errors.map((err) => err.message).join(", "),
-        );
+          parsedBody.error.errors.map((err) => err.message).join(', '),
+        )
       }
-      const newTransaction = parsedBody.data;
+      const newTransaction = parsedBody.data
 
-      const createdTransaction = await createFinancialTransaction(type as "payable" | "receivable", newTransaction, user_id, organization_id, active_accounting_period_id, token);
+      const createdTransaction = await createFinancialTransaction(
+        type as 'payable' | 'receivable',
+        newTransaction,
+        user_id,
+        organization_id,
+        active_accounting_period_id,
+        token,
+      )
 
-      return res.status(201).json(createdTransaction);
+      return res.status(201).json(createdTransaction)
     }
 
-    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
+    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error("Erro inesperado na API de transações financeiras:", error);
-    const message =
-      error instanceof Error ? error.message : "Erro interno do servidor.";
-    return handleErrorResponse(res, 500, message);
+    logger.error('Erro inesperado na API de transações financeiras:', error)
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
+    return handleErrorResponse(res, 500, message)
   }
 }

@@ -47,8 +47,8 @@ const zodSchema = z.object({
   description: z.string().optional(),
   unit: z.string().optional(),
   featured: z.boolean().optional(),
-  icms_rate: z
-    .coerce.number({
+  icms_rate: z.coerce
+    .number({
       required_error: 'A alíquota é obrigatória',
       invalid_type_error: 'A alíquota deve ser um número',
     })
@@ -245,7 +245,6 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
             </Field>
             <ErrorMessage name="unit" class="text-red-500 text-sm mt-1" />
           </div>
-          
         </div>
 
         <div class="flex justify-end space-x-4 mt-6">
@@ -269,9 +268,7 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
               animationDuration=".5s"
               aria-label="Custom ProgressSpinner"
             />
-            <span v-else>{{
-              props.isEditing ? 'Atualizar Produto' : 'Adicionar Produto'
-            }}</span>
+            <span v-else>{{ props.isEditing ? 'Atualizar Produto' : 'Adicionar Produto' }}</span>
           </button>
         </div>
       </Form>

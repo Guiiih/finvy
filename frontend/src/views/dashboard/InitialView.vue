@@ -11,7 +11,6 @@ import type { Organization } from '@/types/organization'
 const reportStore = useReportStore()
 const authStore = useAuthStore()
 
-
 const startDate = ref('')
 const endDate = ref('')
 const userName = ref('Usuário')
@@ -38,7 +37,7 @@ onMounted(async () => {
     try {
       const organizations = await api.get<Organization[]>('/organizations')
       const currentOrg = organizations.find(
-        (org: Organization) => org.id === authStore.userOrganizationId
+        (org: Organization) => org.id === authStore.userOrganizationId,
       )
       if (currentOrg) {
         organizationName.value = currentOrg.name
@@ -57,16 +56,16 @@ onMounted(async () => {
         data: [65, 59, 80, 81, 56, 55, 40],
         fill: false,
         borderColor: '#42A5F5',
-        tension: 0.4
+        tension: 0.4,
       },
       {
         label: 'Despesa',
         data: [28, 48, 40, 19, 86, 27, 90],
         fill: false,
         borderColor: '#FFA726',
-        tension: 0.4
-      }
-    ]
+        tension: 0.4,
+      },
+    ],
   }
 
   chartOptions.value = {
@@ -75,28 +74,28 @@ onMounted(async () => {
     plugins: {
       legend: {
         labels: {
-          color: '#495057'
-        }
-      }
+          color: '#495057',
+        },
+      },
     },
     scales: {
       x: {
         ticks: {
-          color: '#495057'
+          color: '#495057',
         },
         grid: {
-          color: '#ebedef'
-        }
+          color: '#ebedef',
+        },
       },
       y: {
         ticks: {
-          color: '#495057'
+          color: '#495057',
         },
         grid: {
-          color: '#ebedef'
-        }
-      }
-    }
+          color: '#ebedef',
+        },
+      },
+    },
   }
 })
 </script>
@@ -104,7 +103,9 @@ onMounted(async () => {
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto">
     <!-- Banner de Boas-Vindas -->
-    <div class="bg-primary-500 text-white p-6 rounded-lg shadow-lg mb-8 flex items-center justify-between">
+    <div
+      class="bg-primary-500 text-white p-6 rounded-lg shadow-lg mb-8 flex items-center justify-between"
+    >
       <div>
         <h1 class="text-3xl font-bold mb-2">Olá, {{ userName }}!</h1>
         <p class="text-lg">Bem-vindo(a) à {{ organizationName }}.</p>

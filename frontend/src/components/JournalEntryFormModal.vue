@@ -3,10 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-import type {
-  JournalEntry,
-  Product,
-} from '@/types/index'
+import type { JournalEntry, Product } from '@/types/index'
 import { useAuthStore } from '@/stores/authStore'
 import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
 import { api } from '@/services/api'
@@ -55,32 +52,37 @@ const activeTab = ref(0)
 const selectedProductFromForm = ref<Product | null>(null)
 
 // Watch for changes in props.visible to control displayModal
-      watch(() => props.visible, async (value) => {
-  displayModal.value = value
-  if (value) {
-    // When modal becomes visible, initialize form based on props
-    if (props.isEditing && props.editingEntry) {
-      newEntryDate.value = props.editingEntry.entry_date
-      newEntryDescription.value = props.editingEntry.description
-      // Parse existing reference into prefix and number
-      const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
-      if (match) {
-        newEntryReferencePrefix.value = match[1]
-        generatedSequenceNumber.value = parseInt(match[2], 10)
+watch(
+  () => props.visible,
+  async (value) => {
+    displayModal.value = value
+    if (value) {
+      // When modal becomes visible, initialize form based on props
+      if (props.isEditing && props.editingEntry) {
+        newEntryDate.value = props.editingEntry.entry_date
+        newEntryDescription.value = props.editingEntry.description
+        // Parse existing reference into prefix and number
+        const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
+        if (match) {
+          newEntryReferencePrefix.value = match[1]
+          generatedSequenceNumber.value = parseInt(match[2], 10)
+        } else {
+          newEntryReferencePrefix.value = ''
+          generatedSequenceNumber.value = 0
+        }
+        newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
       } else {
-        newEntryReferencePrefix.value = ''
-        generatedSequenceNumber.value = 0
-      }
-      newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
-    } else {
-      resetForm()
-      // Generate initial reference number if prefix is already set
-      if (newEntryReferencePrefix.value) {
-        generatedSequenceNumber.value = await generateReferenceNumber(newEntryReferencePrefix.value)
+        resetForm()
+        // Generate initial reference number if prefix is already set
+        if (newEntryReferencePrefix.value) {
+          generatedSequenceNumber.value = await generateReferenceNumber(
+            newEntryReferencePrefix.value,
+          )
+        }
       }
     }
-  }
-})
+  },
+)
 
 watch(selectedProductFromForm, (newProduct) => {
   if (newProduct) {
@@ -106,7 +108,7 @@ onMounted(() => {
 })
 
 const stockAccountId = computed(() => {
-  return accountStore.accounts.find(acc => acc.name === 'Estoques')?.id
+  return accountStore.accounts.find((acc) => acc.name === 'Estoques')?.id
 })
 
 const totalDebits = computed(() =>
@@ -136,8 +138,6 @@ function resetForm() {
     { account_id: '', type: 'credit', amount: 0 },
   ]
 }
-
-
 
 async function generateReferenceNumber(prefix: string) {
   const authStore = useAuthStore()
@@ -181,32 +181,37 @@ watch(newEntryReferencePrefix, async (newPrefix) => {
   }
 })
 
-watch(() => props.visible, async (value) => {
-  displayModal.value = value
-  if (value) {
-    // When modal becomes visible, initialize form based on props
-    if (props.isEditing && props.editingEntry) {
-      newEntryDate.value = props.editingEntry.entry_date
-      newEntryDescription.value = props.editingEntry.description
-      // Parse existing reference into prefix and number
-      const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
-      if (match) {
-        newEntryReferencePrefix.value = match[1]
-        generatedSequenceNumber.value = parseInt(match[2], 10)
+watch(
+  () => props.visible,
+  async (value) => {
+    displayModal.value = value
+    if (value) {
+      // When modal becomes visible, initialize form based on props
+      if (props.isEditing && props.editingEntry) {
+        newEntryDate.value = props.editingEntry.entry_date
+        newEntryDescription.value = props.editingEntry.description
+        // Parse existing reference into prefix and number
+        const match = props.editingEntry.reference.match(/^([A-Za-z]+)(\d+)$/)
+        if (match) {
+          newEntryReferencePrefix.value = match[1]
+          generatedSequenceNumber.value = parseInt(match[2], 10)
+        } else {
+          newEntryReferencePrefix.value = ''
+          generatedSequenceNumber.value = 0
+        }
+        newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
       } else {
-        newEntryReferencePrefix.value = ''
-        generatedSequenceNumber.value = 0
-      }
-      newEntryLines.value = JSON.parse(JSON.stringify(props.editingEntry.lines))
-    } else {
-      resetForm()
-      // Generate initial reference number if prefix is already set
-      if (newEntryReferencePrefix.value) {
-        generatedSequenceNumber.value = await generateReferenceNumber(newEntryReferencePrefix.value)
+        resetForm()
+        // Generate initial reference number if prefix is already set
+        if (newEntryReferencePrefix.value) {
+          generatedSequenceNumber.value = await generateReferenceNumber(
+            newEntryReferencePrefix.value,
+          )
+        }
       }
     }
-  }
-})
+  },
+)
 
 async function submitEntry() {
   if (totalDebits.value !== totalCredits.value) {
@@ -254,7 +259,8 @@ async function submitEntry() {
     // Process stock movements first
     for (const line of newEntryLines.value) {
       if (line.account_id === stockAccountId.value && line.product_id && line.quantity) {
-        if (line.type === 'debit') { // Purchase
+        if (line.type === 'debit') {
+          // Purchase
           await recordProductPurchase(
             line.product_id,
             line.quantity,
@@ -262,7 +268,8 @@ async function submitEntry() {
             organizationId,
             accountingPeriodId,
           )
-        } else if (line.type === 'credit') { // Sale
+        } else if (line.type === 'credit') {
+          // Sale
           const cogs = await calculateCogsForSale(
             line.product_id,
             line.quantity,
@@ -271,7 +278,9 @@ async function submitEntry() {
           )
 
           // Add the COGS entry (Debit to COGS account, Credit to Stock account)
-          const cogsAccountId = accountStore.accounts.find(acc => acc.name === 'Custo da Mercadoria Vendida')?.id
+          const cogsAccountId = accountStore.accounts.find(
+            (acc) => acc.name === 'Custo da Mercadoria Vendida',
+          )?.id
           if (!cogsAccountId) {
             toast.add({
               severity: 'error',
@@ -298,7 +307,10 @@ async function submitEntry() {
     }
 
     if (props.isEditing && props.editingEntry) {
-      await journalEntryStore.updateEntry({ id: props.editingEntry.id!, ...entryData } as JournalEntry)
+      await journalEntryStore.updateEntry({
+        id: props.editingEntry.id!,
+        ...entryData,
+      } as JournalEntry)
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -333,7 +345,7 @@ async function submitEntry() {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
   >
     <form @submit.prevent="submitEntry" class="space-y-4">
-        <TabView v-model:activeIndex="activeTab">
+      <TabView v-model:activeIndex="activeTab">
         <TabPanel header="Básico" :value="0">
           <JournalEntryBasicForm
             v-model:entryDate="newEntryDate"
@@ -342,7 +354,10 @@ async function submitEntry() {
           />
         </TabPanel>
         <TabPanel header="Partidas" :value="1">
-          <JournalEntryLinesForm v-model:entryLines="newEntryLines" :selectedProduct="selectedProductFromForm" />
+          <JournalEntryLinesForm
+            v-model:entryLines="newEntryLines"
+            :selectedProduct="selectedProductFromForm"
+          />
         </TabPanel>
         <TabPanel header="Produtos" :value="2">
           <JournalEntryProductForm @product-selected="selectedProductFromForm = $event" />

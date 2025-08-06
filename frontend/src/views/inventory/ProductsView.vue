@@ -20,10 +20,6 @@ const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-
-
-
-
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
   itemsPerPage.value = event.rows
@@ -130,10 +126,20 @@ onMounted(async () => {
         </div>
 
         <div v-if="productStore.loading" class="p-4 space-y-4">
-          <div v-for="i in itemsPerPage" :key="i" class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center">
-            <div class="md:col-span-6"><Skeleton height="1rem" width="80%" class="bg-surface-200" /></div>
-            <div class="md:col-span-2"><Skeleton height="1rem" width="50%" class="bg-surface-200" /></div>
-            <div class="md:col-span-2"><Skeleton height="1rem" width="50%" class="bg-surface-200" /></div>
+          <div
+            v-for="i in itemsPerPage"
+            :key="i"
+            class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center"
+          >
+            <div class="md:col-span-6">
+              <Skeleton height="1rem" width="80%" class="bg-surface-200" />
+            </div>
+            <div class="md:col-span-2">
+              <Skeleton height="1rem" width="50%" class="bg-surface-200" />
+            </div>
+            <div class="md:col-span-2">
+              <Skeleton height="1rem" width="50%" class="bg-surface-200" />
+            </div>
             <div class="md:col-span-2 flex justify-center items-center space-x-2">
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
@@ -178,13 +184,13 @@ onMounted(async () => {
           </div>
         </div>
         <Paginator
-        v-if="productStore.totalProducts > itemsPerPage"
-        :rows="itemsPerPage"
-        :totalRecords="productStore.totalProducts"
-        :rowsPerPageOptions="[10, 20, 50]"
-        @page="onPageChange"
-        template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-      ></Paginator>
+          v-if="productStore.totalProducts > itemsPerPage"
+          :rows="itemsPerPage"
+          :totalRecords="productStore.totalProducts"
+          :rowsPerPageOptions="[10, 20, 50]"
+          @page="onPageChange"
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+        ></Paginator>
       </div>
     </div>
   </div>

@@ -1,15 +1,15 @@
-import apiClient from './apiClient';
+import apiClient from './apiClient'
 
 export interface ProposedEntry {
-  date: string;
-  description: string;
-  debits: Array<{ account: string; value: number }>;
-  credits: Array<{ account: string; value: number }>;
+  date: string
+  description: string
+  debits: Array<{ account: string; value: number }>
+  credits: Array<{ account: string; value: number }>
 }
 
 export const confirmJournalEntryApiService = {
   async confirmEntries(proposedEntries: ProposedEntry[]): Promise<{ message: string }> {
-    const response = await apiClient.post('/confirm-journal-entries', { proposedEntries });
-    return response.data;
+    const response = await apiClient.post('/confirm-journal-entries', { proposedEntries })
+    return response.data
   },
-};
+}

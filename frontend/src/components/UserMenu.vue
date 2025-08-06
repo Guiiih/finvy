@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
-import { useRouter } from 'vue-router';
-import { useUserPresenceStore } from '@/stores/userPresenceStore';
+import { onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
+import { useUserPresenceStore } from '@/stores/userPresenceStore'
 
-const authStore = useAuthStore();
-const router = useRouter();
-const userPresenceStore = useUserPresenceStore();
+const authStore = useAuthStore()
+const router = useRouter()
+const userPresenceStore = useUserPresenceStore()
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close'])
 
 const handleLogout = async () => {
-  await authStore.signOut();
-  router.push('/login');
-};
+  await authStore.signOut()
+  router.push('/login')
+}
 
 const closeMenu = () => {
-  emit('close');
-};
+  emit('close')
+}
 
 onMounted(() => {
-  userPresenceStore.startPresenceTracking();
-  userPresenceStore.fetchOnlineUsers();
-});
+  userPresenceStore.startPresenceTracking()
+  userPresenceStore.fetchOnlineUsers()
+})
 
 onUnmounted(() => {
-  userPresenceStore.stopPresenceTracking();
-});
+  userPresenceStore.stopPresenceTracking()
+})
 </script>
 
 <template>

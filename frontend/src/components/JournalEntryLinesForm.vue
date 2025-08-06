@@ -6,13 +6,14 @@ import type { EntryLine, Product } from '@/types/index'
 const accountStore = useAccountStore()
 
 const props = defineProps<{
-  entryLines: EntryLine[],
+  entryLines: EntryLine[]
   selectedProduct: Product | null
 }>()
 
 const emit = defineEmits(['update:entryLines'])
 
-const internalEntryLines = computed<EntryLine[]>({ // Use computed with getter/setter
+const internalEntryLines = computed<EntryLine[]>({
+  // Use computed with getter/setter
   get: () => props.entryLines,
   set: (newValue) => emit('update:entryLines', newValue),
 })
@@ -22,17 +23,20 @@ const visibleAccounts = computed(() => {
 })
 
 const stockAccountId = computed(() => {
-  return accountStore.accounts.find(acc => acc.name === 'Estoques')?.id
+  return accountStore.accounts.find((acc) => acc.name === 'Estoques')?.id
 })
 
-watch(() => props.selectedProduct, (newProduct) => {
-  if (newProduct) {
-    const lastLine = internalEntryLines.value[internalEntryLines.value.length - 1]
-    if (lastLine) {
-      lastLine.product_id = newProduct.id
+watch(
+  () => props.selectedProduct,
+  (newProduct) => {
+    if (newProduct) {
+      const lastLine = internalEntryLines.value[internalEntryLines.value.length - 1]
+      if (lastLine) {
+        lastLine.product_id = newProduct.id
+      }
     }
-  }
-})
+  },
+)
 
 function addLine() {
   internalEntryLines.value.push({ account_id: '', type: 'debit', amount: 0 })
@@ -74,7 +78,7 @@ function formatCurrency(value: number) {
       <select
         v-model="line.account_id"
         required
-        :class="line.account_id === stockAccountId ? 'md:col-span-4' : 'md:col-span-5'" 
+        :class="line.account_id === stockAccountId ? 'md:col-span-4' : 'md:col-span-5'"
         class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
       >
         <option value="" disabled>Selecione a Conta</option>
@@ -88,25 +92,25 @@ function formatCurrency(value: number) {
           </option>
         </optgroup>
       </select>
-        <select
-            v-model="line.type"
-            required
-            :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-2'"
-            class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" 
-          >
-            <option value="debit">Débito</option>
-            <option value="credit">Crédito</option>
-          </select>
-          <input
-            type="number"
-            v-model.number="line.amount"
-            placeholder="Valor"
-            step="0.01"
-            min="0"
-            required
-            :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-4'"
-            class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400" 
-          />
+      <select
+        v-model="line.type"
+        required
+        :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-2'"
+        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      >
+        <option value="debit">Débito</option>
+        <option value="credit">Crédito</option>
+      </select>
+      <input
+        type="number"
+        v-model.number="line.amount"
+        placeholder="Valor"
+        step="0.01"
+        min="0"
+        required
+        :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-4'"
+        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      />
       <div class="md:col-span-1 flex items-center space-x-2">
         <button
           type="button"

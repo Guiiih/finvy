@@ -1,11 +1,11 @@
-import { getSupabaseClient, getUserOrganizationAndPeriod } from "../utils/supabaseClient.js";
-import logger from "../utils/logger.js";
-import { getAccounts } from "../services/accountService.js";
+import { getSupabaseClient, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import logger from '../utils/logger.js'
+import { getAccounts } from '../services/accountService.js'
 import type {
   Account,
   JournalEntry,
   LedgerAccount as FrontendLedgerAccount,
-} from "../types/index.js";
+} from '../types/index.js'
 
 // TODO: Para otimização de relatórios com grandes conjuntos de dados:
 // A geração de relatórios contábeis (Balanço, DRE, DFC) geralmente requer o processamento de todos os lançamentos
@@ -14,38 +14,37 @@ import type {
 // onde o relatório é processado por um worker e disponibilizado para download posteriormente.
 // Isso evita timeouts e estouro de memória na função principal da API.
 
-
 interface StockBalance {
-  product_id: string;
-  product_name: string;
-  balance: number;
+  product_id: string
+  product_name: string
+  balance: number
 }
 
-type LedgerAccount = FrontendLedgerAccount;
+type LedgerAccount = FrontendLedgerAccount
 
 interface SupabaseRawJournalEntry {
-  id: string;
-  entry_date: string;
-  description: string;
-  user_id?: string;
+  id: string
+  entry_date: string
+  description: string
+  user_id?: string
   entry_lines: Array<{
-    id: string;
-    account_id: string;
-    debit: number | null;
-    credit: number | null;
-    product_id: string | null;
-    quantity: number | null;
-    unit_cost: number | null;
-    total_gross: number | null;
-    icms_value: number | null;
-    ipi_value: number | null;
-    pis_value: number | null;
-    cofins_value: number | null;
-    mva_rate: number | null;
-    icms_st_value: number | null;
-    total_net: number | null;
-    transaction_type: string | null;
-  }>;
+    id: string
+    account_id: string
+    debit: number | null
+    credit: number | null
+    product_id: string | null
+    quantity: number | null
+    unit_cost: number | null
+    total_gross: number | null
+    icms_value: number | null
+    ipi_value: number | null
+    pis_value: number | null
+    cofins_value: number | null
+    mva_rate: number | null
+    icms_st_value: number | null
+    total_net: number | null
+    transaction_type: string | null
+  }>
 }
 
 async function getJournalEntries(
@@ -55,51 +54,50 @@ async function getJournalEntries(
   startDate?: string,
   endDate?: string,
 ): Promise<JournalEntry[]> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
   let query = userSupabase
-    .from("journal_entries")
+    .from('journal_entries')
     .select(
-      "id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)",
+      'id, entry_date, description, entry_lines(id, account_id, debit, credit, product_id, quantity, unit_cost, total_gross, icms_value, ipi_value, pis_value, cofins_value, mva_rate, icms_st_value, total_net, transaction_type)',
     )
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", accounting_period_id);
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', accounting_period_id)
 
   if (startDate) {
-    query = query.gte("entry_date", startDate);
+    query = query.gte('entry_date', startDate)
   }
   if (endDate) {
-    query = query.lte("entry_date", endDate);
+    query = query.lte('entry_date', endDate)
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query
   if (error) {
-    logger.error(`[getJournalEntries] Erro ao buscar lançamentos contábeis: ${error.message}`);
-    throw new Error(error.message || "Erro ao buscar lançamentos contábeis.");
+    logger.error(`[getJournalEntries] Erro ao buscar lançamentos contábeis: ${error.message}`)
+    throw new Error(error.message || 'Erro ao buscar lançamentos contábeis.')
   }
 
   return data.map((entry: SupabaseRawJournalEntry): JournalEntry => {
-    const { entry_lines, ...restOfEntry } = entry;
+    const { entry_lines, ...restOfEntry } = entry
     return {
       ...restOfEntry,
       lines: entry_lines.map((line) => {
         return {
           account_id: line.account_id,
-          type: (line.debit ?? 0) > 0 ? "debit" : "credit",
-          amount:
-            (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0),
+          type: (line.debit ?? 0) > 0 ? 'debit' : 'credit',
+          amount: (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0),
           debit: line.debit || 0,
           credit: line.credit || 0,
-        };
+        }
       }),
-    };
-  });
+    }
+  })
 }
 
 export function calculateTrialBalance(
   accounts: Account[],
   journalEntries: JournalEntry[],
 ): LedgerAccount[] {
-  const accountsMap = new Map<string, LedgerAccount>();
+  const accountsMap = new Map<string, LedgerAccount>()
   accounts.forEach((account) => {
     accountsMap.set(account.id, {
       account_id: account.id,
@@ -112,52 +110,49 @@ export function calculateTrialBalance(
       debits: 0,
       credits: 0,
       finalBalance: 0,
-    });
-  });
+    })
+  })
 
   journalEntries.forEach((entry) => {
     if (entry.lines) {
       entry.lines.forEach((line) => {
-        const accountData = accountsMap.get(line.account_id);
+        const accountData = accountsMap.get(line.account_id)
         if (accountData) {
           if (line.debit !== null) {
-            accountData.totalDebits += line.debit ?? 0;
+            accountData.totalDebits += line.debit ?? 0
           }
           if (line.credit !== null) {
-            accountData.totalCredits += line.credit ?? 0;
+            accountData.totalCredits += line.credit ?? 0
           }
         }
-      });
+      })
     }
-  });
+  })
 
   accountsMap.forEach((accountData) => {
-    const isDebitNature = ["asset", "expense"].includes(accountData.type);
+    const isDebitNature = ['asset', 'expense'].includes(accountData.type)
     accountData.finalBalance = isDebitNature
       ? accountData.totalDebits - accountData.totalCredits
-      : accountData.totalCredits - accountData.totalDebits;
-  });
+      : accountData.totalCredits - accountData.totalDebits
+  })
 
-  return Array.from(accountsMap.values());
+  return Array.from(accountsMap.values())
 }
 
-export function calculateLedgerDetails(
-  accounts: Account[],
-  journalEntries: JournalEntry[],
-) {
+export function calculateLedgerDetails(accounts: Account[], journalEntries: JournalEntry[]) {
   const ledgerDetails: {
     [accountId: string]: {
-      journalEntryId: string;
-      entryDate: string;
-      description: string;
-      debit: number;
-      credit: number;
-    }[];
-  } = {};
+      journalEntryId: string
+      entryDate: string
+      description: string
+      debit: number
+      credit: number
+    }[]
+  } = {}
 
   accounts.forEach((account) => {
-    ledgerDetails[account.id] = [];
-  });
+    ledgerDetails[account.id] = []
+  })
 
   journalEntries.forEach((entry) => {
     if (entry.lines) {
@@ -169,87 +164,78 @@ export function calculateLedgerDetails(
             description: entry.description,
             debit: line.debit ?? 0,
             credit: line.credit ?? 0,
-          });
+          })
         }
-      });
+      })
     }
-  });
+  })
 
-  return ledgerDetails;
+  return ledgerDetails
 }
 
-export function calculateDreData(
-  accounts: Account[],
-  journalEntries: JournalEntry[],
-) {
-  let totalRevenue = 0;
-  let totalExpenses = 0;
+export function calculateDreData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let totalRevenue = 0
+  let totalExpenses = 0
 
-  const trialBalance = calculateTrialBalance(accounts, journalEntries);
+  const trialBalance = calculateTrialBalance(accounts, journalEntries)
 
   trialBalance.forEach((account) => {
-    if (account.type === "revenue") {
-      totalRevenue += account.finalBalance;
-    } else if (account.type === "expense") {
-      totalExpenses += account.finalBalance;
+    if (account.type === 'revenue') {
+      totalRevenue += account.finalBalance
+    } else if (account.type === 'expense') {
+      totalExpenses += account.finalBalance
     }
-  });
+  })
 
-  const netIncome = totalRevenue - totalExpenses;
+  const netIncome = totalRevenue - totalExpenses
 
   return {
     totalRevenue,
     totalExpenses,
     netIncome,
-  };
+  }
 }
 
-export function calculateBalanceSheetData(
-  accounts: Account[],
-  journalEntries: JournalEntry[],
-) {
-  let totalAssets = 0;
-  let totalLiabilities = 0;
-  let totalEquity = 0;
+export function calculateBalanceSheetData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let totalAssets = 0
+  let totalLiabilities = 0
+  let totalEquity = 0
 
-  const trialBalance = calculateTrialBalance(accounts, journalEntries);
-  const dreData = calculateDreData(accounts, journalEntries); // Get net income
+  const trialBalance = calculateTrialBalance(accounts, journalEntries)
+  const dreData = calculateDreData(accounts, journalEntries) // Get net income
 
   trialBalance.forEach((account) => {
-    if (account.type === "asset") {
-      totalAssets += account.finalBalance;
-    } else if (account.type === "liability") {
-      totalLiabilities += account.finalBalance;
-    } else if (account.type === "equity") {
-      totalEquity += account.finalBalance;
+    if (account.type === 'asset') {
+      totalAssets += account.finalBalance
+    } else if (account.type === 'liability') {
+      totalLiabilities += account.finalBalance
+    } else if (account.type === 'equity') {
+      totalEquity += account.finalBalance
     }
-  });
+  })
 
   // Incorporate net income into equity for the balance sheet
-  totalEquity += dreData.netIncome;
+  totalEquity += dreData.netIncome
 
-  const isBalanced = totalAssets === totalLiabilities + totalEquity;
+  const isBalanced = totalAssets === totalLiabilities + totalEquity
 
   return {
     totalAssets,
     totalLiabilities,
     totalEquity,
     isBalanced,
-  };
+  }
 }
 
-export function calculateDfcData(
-  accounts: Account[],
-  journalEntries: JournalEntry[],
-) {
-  let operatingActivities = 0;
-  let investingActivities = 0;
-  let financingActivities = 0;
+export function calculateDfcData(accounts: Account[], journalEntries: JournalEntry[]) {
+  let operatingActivities = 0
+  let investingActivities = 0
+  let financingActivities = 0
 
   const cashAccountIds = accounts
-    .filter((acc) => acc.name === "Cash" || acc.name === "Bank Account")
-    .map((acc) => acc.id);
-  const accountMap = new Map(accounts.map((acc) => [acc.id, acc]));
+    .filter((acc) => acc.name === 'Cash' || acc.name === 'Bank Account')
+    .map((acc) => acc.id)
+  const accountMap = new Map(accounts.map((acc) => [acc.id, acc]))
 
   journalEntries.forEach((entry) => {
     if (entry.lines) {
@@ -257,69 +243,65 @@ export function calculateDfcData(
         // Only consider lines that affect cash accounts
         if (cashAccountIds.includes(line.account_id)) {
           if (entry.lines) {
-            const relatedAccountLine = entry.lines.find(
-              (l) => l.account_id !== line.account_id,
-            ); // The other side of the entry
-            if (!relatedAccountLine) return; // Should not happen for balanced entries
+            const relatedAccountLine = entry.lines.find((l) => l.account_id !== line.account_id) // The other side of the entry
+            if (!relatedAccountLine) return // Should not happen for balanced entries
 
-            const relatedAccount = accountMap.get(relatedAccountLine.account_id);
-            if (!relatedAccount) return;
+            const relatedAccount = accountMap.get(relatedAccountLine.account_id)
+            if (!relatedAccount) return
 
-            const amount =
-              (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0); // Cash movement amount
+            const amount = (line.debit ?? 0) > 0 ? (line.debit ?? 0) : (line.credit ?? 0) // Cash movement amount
 
             // Determine if cash is flowing in or out from the perspective of the cash account
             // If cash account is debited, it's an inflow. If credited, it's an outflow.
-            const cashFlowDirection = (line.debit ?? 0) > 0 ? 1 : -1;
+            const cashFlowDirection = (line.debit ?? 0) > 0 ? 1 : -1
 
             // Categorization based on related account type and name
-            if (["revenue", "expense"].includes(relatedAccount.type)) {
-              operatingActivities += amount * cashFlowDirection;
+            if (['revenue', 'expense'].includes(relatedAccount.type)) {
+              operatingActivities += amount * cashFlowDirection
             } else if (
-              relatedAccount.name === "Equipment" ||
-              relatedAccount.name.includes("Invest")
+              relatedAccount.name === 'Equipment' ||
+              relatedAccount.name.includes('Invest')
             ) {
               // Example for investing
-              investingActivities += amount * cashFlowDirection;
+              investingActivities += amount * cashFlowDirection
             } else if (
-              ["liability"].includes(relatedAccount.type) || // Liabilities are financing
-              relatedAccount.type === "equity" // Equity is also financing
+              ['liability'].includes(relatedAccount.type) || // Liabilities are financing
+              relatedAccount.type === 'equity' // Equity is also financing
             ) {
               // Example for financing
-              financingActivities += amount * cashFlowDirection;
+              financingActivities += amount * cashFlowDirection
             } else {
               // Fallback for other operating activities if not explicitly categorized
-              operatingActivities += amount * cashFlowDirection;
+              operatingActivities += amount * cashFlowDirection
             }
           }
         }
-      });
+      })
     }
-  });
+  })
 
-  const netCashFlow =
-    operatingActivities + investingActivities + financingActivities;
+  const netCashFlow = operatingActivities + investingActivities + financingActivities
 
   return {
     operatingActivities,
     investingActivities,
     financingActivities,
     netCashFlow,
-  };
+  }
 }
 
 async function getProducts(organization_id: string, token: string) {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
   const { data, error } = await userSupabase
-    .from("products")
-    .select("id, name")
-    .eq("organization_id", organization_id);
+    .from('products')
+    .select('id, name')
+    .eq('organization_id', organization_id)
 
   if (error) {
-    logger.error(`[getProducts] Erro ao buscar produtos: ${error.message}`);
-    throw new Error(error.message || "Erro ao buscar produtos.");
+    logger.error(`[getProducts] Erro ao buscar produtos: ${error.message}`)
+    throw new Error(error.message || 'Erro ao buscar produtos.')
   }
-  return data;
+  return data
 }
 
 function calculateStockFromJournalEntries(
@@ -327,46 +309,48 @@ function calculateStockFromJournalEntries(
   accounts: Account[],
   products: { id: string; name: string }[],
 ): StockBalance[] {
-  const stockBalances = new Map<string, {
-    product_id: string;
-    product_name: string;
-    balance: number;
-  }>();
+  const stockBalances = new Map<
+    string,
+    {
+      product_id: string
+      product_name: string
+      balance: number
+    }
+  >()
 
-  const productMap = new Map(products.map((p) => [p.id, p.name]));
-  const stockAccount = accounts.find((acc) => acc.name === "Estoques");
+  const productMap = new Map(products.map((p) => [p.id, p.name]))
+  const stockAccount = accounts.find((acc) => acc.name === 'Estoques')
 
   if (!stockAccount) {
-    logger.warn("Conta 'Estoques' não encontrada. O balanço de estoque não pode ser calculado.");
-    return [];
+    logger.warn("Conta 'Estoques' não encontrada. O balanço de estoque não pode ser calculado.")
+    return []
   }
 
   journalEntries.forEach((entry) => {
     if (entry.lines) {
       entry.lines.forEach((line) => {
         if (line.product_id && line.quantity && line.account_id === stockAccount.id) {
-          const productName = productMap.get(line.product_id) || "Produto Desconhecido";
+          const productName = productMap.get(line.product_id) || 'Produto Desconhecido'
           const currentBalance = stockBalances.get(line.product_id) || {
             product_id: line.product_id,
             product_name: productName,
             balance: 0,
-          };
-
-          if ((line.debit ?? 0) > 0) {
-            currentBalance.balance += line.quantity;
-          } else if ((line.credit ?? 0) > 0) {
-            currentBalance.balance -= line.quantity;
           }
 
-          stockBalances.set(line.product_id, currentBalance);
+          if ((line.debit ?? 0) > 0) {
+            currentBalance.balance += line.quantity
+          } else if ((line.credit ?? 0) > 0) {
+            currentBalance.balance -= line.quantity
+          }
+
+          stockBalances.set(line.product_id, currentBalance)
         }
-      });
+      })
     }
-  });
+  })
 
-  return Array.from(stockBalances.values());
+  return Array.from(stockBalances.values())
 }
-
 
 export async function generateReports(
   user_id: string,
@@ -374,30 +358,30 @@ export async function generateReports(
   startDate?: string,
   endDate?: string,
 ) {
-  const orgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  const orgAndPeriod = await getUserOrganizationAndPeriod(user_id, token)
   if (!orgAndPeriod) {
-    throw new Error("Organização e período não encontrados para o usuário.");
+    throw new Error('Organização e período não encontrados para o usuário.')
   }
-  const { organization_id, active_accounting_period_id } = orgAndPeriod;
+  const { organization_id, active_accounting_period_id } = orgAndPeriod
 
   const [accountsResponse, journalEntries, products] = await Promise.all([
     getAccounts(organization_id, active_accounting_period_id, token),
     getJournalEntries(organization_id, active_accounting_period_id, token, startDate, endDate),
     getProducts(organization_id, token),
-  ]);
+  ])
 
-  const accounts = accountsResponse.data;
+  const accounts = accountsResponse.data
 
   if (!accounts) {
-    throw new Error("Nenhuma conta encontrada para a organização e período informados.");
+    throw new Error('Nenhuma conta encontrada para a organização e período informados.')
   }
 
-  const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries);
-  const dreData = calculateDreData(accounts, journalEntries);
-  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries);
-  const dfcData = calculateDfcData(accounts, journalEntries);
-  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries);
-  const stockBalances = calculateStockFromJournalEntries(journalEntries, accounts, products);
+  const ledgerAccountsList = calculateTrialBalance(accounts, journalEntries)
+  const dreData = calculateDreData(accounts, journalEntries)
+  const balanceSheetData = calculateBalanceSheetData(accounts, journalEntries)
+  const dfcData = calculateDfcData(accounts, journalEntries)
+  const ledgerDetails = calculateLedgerDetails(accounts, journalEntries)
+  const stockBalances = calculateStockFromJournalEntries(journalEntries, accounts, products)
 
   return {
     accounts: accountsResponse,
@@ -408,5 +392,5 @@ export async function generateReports(
     dfcData,
     ledgerDetails,
     stockBalances,
-  };
+  }
 }

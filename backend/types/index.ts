@@ -130,13 +130,13 @@ export interface Organization {
   /** The name of the organization. */
   name: string
   /** The CNPJ of the organization. */
-  cnpj?: string;
+  cnpj?: string
   /** The social reason (razao social) of the organization. */
-  razao_social?: string;
+  razao_social?: string
   /** The UF (state) of the organization. */
-  uf?: string;
+  uf?: string
   /** The municipality of the organization. */
-  municipio?: string;
+  municipio?: string
   /** The timestamp when the organization was created. */
   created_at?: string
   /** Indicates if this is a personal organization. */
@@ -152,41 +152,41 @@ export interface Organization {
  */
 export interface FinancialTransaction {
   /** The unique identifier for the financial transaction. */
-  id?: string;
+  id?: string
   /** A description of the financial transaction. */
-  description: string;
+  description: string
   /** The monetary amount of the financial transaction. */
-  amount: number;
+  amount: number
   /** The due date of the financial transaction. */
-  due_date: string;
+  due_date: string
   /** The date the financial transaction was paid (if applicable). */
-  paid_date?: string | null;
+  paid_date?: string | null
   /** Indicates if the financial transaction has been paid. */
-  is_paid?: boolean;
+  is_paid?: boolean
   /** The date the financial transaction was received (if applicable). */
-  received_date?: string | null;
+  received_date?: string | null
   /** Indicates if the financial transaction has been received. */
-  is_received?: boolean;
+  is_received?: boolean
   /** The ID of the organization this financial transaction belongs to. */
-  organization_id?: string;
+  organization_id?: string
   /** The ID of the accounting period this financial transaction belongs to. */
-  accounting_period_id?: string;
+  accounting_period_id?: string
 }
 
 /**
  * Represents tax rate settings for an organization.
  */
 export interface TaxSetting {
-  id: string;
-  organization_id: string;
-  effective_date: string;
-  icms_rate: number;
-  ipi_rate: number;
-  pis_rate: number;
-  cofins_rate: number;
-  mva_rate: number;
-  created_at?: string;
-  updated_at?: string;
+  id: string
+  organization_id: string
+  effective_date: string
+  icms_rate: number
+  ipi_rate: number
+  pis_rate: number
+  cofins_rate: number
+  mva_rate: number
+  created_at?: string
+  updated_at?: string
 }
 
 /**
@@ -202,35 +202,35 @@ export enum TaxRegime {
  * Represents the historical tax regime of an organization for a specific period.
  */
 export interface TaxRegimeHistory {
-  id: string;
-  organization_id: string;
-  regime: TaxRegime;
-  start_date: string;
-  end_date: string;
-  created_at?: string;
-  updated_at?: string;
+  id: string
+  organization_id: string
+  regime: TaxRegime
+  start_date: string
+  end_date: string
+  created_at?: string
+  updated_at?: string
 }
 
-import { VercelRequest } from '@vercel/node';
+import { VercelRequest } from '@vercel/node'
 
 export interface AuthenticatedRequest extends VercelRequest {
-  userId?: string;
-  organizationId?: string;
-  token?: string;
+  userId?: string
+  organizationId?: string
+  token?: string
 }
 
 export interface UserPresence {
-  user_id: string;
-  organization_id: string;
-  active_accounting_period_id: string;
-  last_seen: string;
+  user_id: string
+  organization_id: string
+  active_accounting_period_id: string
+  last_seen: string
 }
 
 export interface UserProfile {
-  username: string;
-  avatar_url: string;
+  username: string
+  avatar_url: string
 }
 
 export interface OnlineUser extends UserPresence {
-  profiles: UserProfile[];
+  profiles: UserProfile[]
 }

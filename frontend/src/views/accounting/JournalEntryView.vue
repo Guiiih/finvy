@@ -3,15 +3,12 @@ import { ref, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-import type {
-  JournalEntry,
-  EntryLine as JournalEntryLine,
-} from '@/types/index'
+import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
 
 import Paginator from 'primevue/paginator'
-import Popover from 'primevue/popover';
+import Popover from 'primevue/popover'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
@@ -100,8 +97,6 @@ async function handleDelete(id: string | undefined) {
   }
 }
 
-
-
 onMounted(async () => {
   await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value)
   accountStore.fetchAccounts()
@@ -131,21 +126,23 @@ onMounted(async () => {
           type="button"
           @click="op.toggle($event)"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        ><i class="pi pi-plus"></i>
-          Ações 
+        >
+          <i class="pi pi-plus"></i>
+          Ações
         </button>
         <Popover ref="op">
           <div class="flex flex-col space-y-2">
             <button
-              @click="openNewEntryModal(); op.hide()"
+              @click="() => {
+                openNewEntryModal();
+                op.hide();
+              }"
               class="w-full text-left py-2 px-4 text-surface-700 hover:bg-surface-100 transition duration-300 ease-in-out rounded-md"
             >
               Novo Lançamento
             </button>
-            
           </div>
         </Popover>
-        
       </div>
 
       <JournalEntryFormModal
@@ -155,8 +152,6 @@ onMounted(async () => {
         @update:visible="showJournalEntryFormModal = $event"
         @submitSuccess="handleModalSubmitSuccess"
       />
-
-      
 
       <div class="overflow-hidden">
         <div
@@ -169,10 +164,18 @@ onMounted(async () => {
         </div>
 
         <div v-if="journalEntryStore.loading" class="p-4 space-y-4">
-          <div v-for="i in itemsPerPage" :key="i" class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center">
-            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" class="bg-surface-200" /></div>
+          <div
+            v-for="i in itemsPerPage"
+            :key="i"
+            class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center"
+          >
+            <div class="md:col-span-2">
+              <Skeleton height="1rem" width="70%" class="bg-surface-200" />
+            </div>
             <div class="md:col-span-5"><Skeleton height="1rem" class="bg-surface-200" /></div>
-            <div class="md:col-span-3"><Skeleton height="1rem" width="50%" class="bg-surface-200" /></div>
+            <div class="md:col-span-3">
+              <Skeleton height="1rem" width="50%" class="bg-surface-200" />
+            </div>
             <div class="md:col-span-2 flex justify-center items-center space-x-2">
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
               <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
@@ -183,7 +186,10 @@ onMounted(async () => {
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
           {{ journalEntryStore.error }}
         </p>
-        <p v-else-if="journalEntryStore.journalEntries.length === 0" class="text-surface-400 text-center p-8">
+        <p
+          v-else-if="journalEntryStore.journalEntries.length === 0"
+          class="text-surface-400 text-center p-8"
+        >
           Nenhum lançamento encontrado.
         </p>
 

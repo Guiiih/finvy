@@ -5,7 +5,6 @@ import type { JournalEntry, EntryLine } from '@/types/index'
 
 export const useTransactionStore = defineStore('transactionStore', () => {
   const journalEntryStore = useJournalEntryStore()
-  
 
   async function recordSale(saleDetails: {
     productId: string
@@ -19,14 +18,8 @@ export const useTransactionStore = defineStore('transactionStore', () => {
     description: string
   }) {
     try {
-      const {
-        quantity,
-        salePrice,
-        customerAccountId,
-        revenueAccountId,
-        date,
-        description,
-      } = saleDetails
+      const { quantity, salePrice, customerAccountId, revenueAccountId, date, description } =
+        saleDetails
 
       const journalEntryLines: EntryLine[] = [
         {

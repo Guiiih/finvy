@@ -1,24 +1,16 @@
-import logger from "../utils/logger.js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import {
-  handleErrorResponse,
-  getUserOrganizationAndPeriod,
-} from "../utils/supabaseClient.js";
-import { z } from "zod";
-import {
-  createAccountSchema,
-  updateAccountSchema,
-  uuidSchema,
-} from "../utils/schemas.js";
-import { formatSupabaseError } from "../utils/errorUtils.js";
+import logger from '../utils/logger.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { z } from 'zod'
+import { createAccountSchema, updateAccountSchema, uuidSchema } from '../utils/schemas.js'
+import { formatSupabaseError } from '../utils/errorUtils.js'
 import {
   getAccounts,
   getAccountsByType,
   createAccount,
   updateAccount,
   deleteAccount,
-} from "../services/accountService.js";
-
+} from '../services/accountService.js'
 
 export default async function handler(
   req: VercelRequest,
@@ -26,36 +18,46 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  logger.info("Accounts Handler: user_id recebido:", user_id);
-  
+  logger.info('Accounts Handler: user_id recebido:', user_id)
 
-  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token)
   if (!userOrgAndPeriod) {
     return handleErrorResponse(
       res,
       403,
-      "Organização ou período contábil não encontrado para o usuário.",
-    );
+      'Organização ou período contábil não encontrado para o usuário.',
+    )
   }
-  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod
 
   try {
-    if (req.method === "GET") {
-      if (req.url?.includes("/by-type")) {
-        const type = req.query.type as string;
+    if (req.method === 'GET') {
+      if (req.url?.includes('/by-type')) {
+        const type = req.query.type as string
         if (!type) {
-          return handleErrorResponse(res, 400, "O parâmetro 'type' é obrigatório.");
+          return handleErrorResponse(res, 400, "O parâmetro 'type' é obrigatório.")
         }
-        const { data, count } = await getAccountsByType(organization_id, active_accounting_period_id, type, token);
-        return res.status(200).json({ data, count });
+        const { data, count } = await getAccountsByType(
+          organization_id,
+          active_accounting_period_id,
+          type,
+          token,
+        )
+        return res.status(200).json({ data, count })
       } else {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
+        const page = parseInt(req.query.page as string) || 1
+        const limit = parseInt(req.query.limit as string) || 10
 
-        const { data, count } = await getAccounts(organization_id, active_accounting_period_id, token, page, limit);
-        return res.status(200).json({ data, count });
+        const { data, count } = await getAccounts(
+          organization_id,
+          active_accounting_period_id,
+          token,
+          page,
+          limit,
+        )
+        return res.status(200).json({ data, count })
       }
-    } else if (req.method === "POST") {
+    } else if (req.method === 'POST') {
       /**
        * @swagger
        * /accounts:
@@ -109,20 +111,25 @@ export default async function handler(
        *       500:
        *         description: Erro interno do servidor.
        */
-      const parsedBody = createAccountSchema.safeParse(req.body);
+      const parsedBody = createAccountSchema.safeParse(req.body)
       if (!parsedBody.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedBody.error.errors.map((err) => err.message).join(", "),
-        );
+          parsedBody.error.errors.map((err) => err.message).join(', '),
+        )
       }
-      const { name, type, parent_account_id, code } = parsedBody.data;
+      const { name, type, parent_account_id, code } = parsedBody.data
 
-      const newAccount = { name, type, parent_account_id, code };
-      const createdAccount = await createAccount(newAccount, organization_id, active_accounting_period_id, token);
-      return res.status(201).json(createdAccount);
-    } else if (req.method === "PUT") {
+      const newAccount = { name, type, parent_account_id, code }
+      const createdAccount = await createAccount(
+        newAccount,
+        organization_id,
+        active_accounting_period_id,
+        token,
+      )
+      return res.status(201).json(createdAccount)
+    } else if (req.method === 'PUT') {
       /**
        * @swagger
        * /accounts/{id}:
@@ -183,35 +190,37 @@ export default async function handler(
        *       500:
        *         description: Erro interno do servidor.
        */
-      const id = req.url?.split("?")[0].split("/").pop() as string;
-      const parsedBody = updateAccountSchema.safeParse(req.body);
+      const id = req.url?.split('?')[0].split('/').pop() as string
+      const parsedBody = updateAccountSchema.safeParse(req.body)
       if (!parsedBody.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedBody.error.errors.map((err) => err.message).join(", "),
-        );
+          parsedBody.error.errors.map((err) => err.message).join(', '),
+        )
       }
-      const updateData = parsedBody.data;
+      const updateData = parsedBody.data
 
       if (Object.keys(updateData).length === 0) {
-        return handleErrorResponse(
-          res,
-          400,
-          "Nenhum campo para atualizar fornecido.",
-        );
+        return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.')
       }
 
-      const updatedAccount = await updateAccount(id, updateData, organization_id, active_accounting_period_id, token);
+      const updatedAccount = await updateAccount(
+        id,
+        updateData,
+        organization_id,
+        active_accounting_period_id,
+        token,
+      )
       if (!updatedAccount) {
         return handleErrorResponse(
           res,
           404,
-          "Conta não encontrada ou você não tem permissão para atualizar esta conta.",
-        );
+          'Conta não encontrada ou você não tem permissão para atualizar esta conta.',
+        )
       }
-      return res.status(200).json(updatedAccount);
-    } else if (req.method === "DELETE") {
+      return res.status(200).json(updatedAccount)
+    } else if (req.method === 'DELETE') {
       /**
        * @swagger
        * /accounts/{id}:
@@ -240,34 +249,32 @@ export default async function handler(
        *       500:
        *         description: Erro interno do servidor.
        */
-      const id = req.url?.split("?")[0].split("/").pop() as string;
-      const parsedId = uuidSchema.safeParse(id);
+      const id = req.url?.split('?')[0].split('/').pop() as string
+      const parsedId = uuidSchema.safeParse(id)
       if (!parsedId.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedId.error.errors
-            .map((err: z.ZodIssue) => err.message)
-            .join(", "),
-        );
+          parsedId.error.errors.map((err: z.ZodIssue) => err.message).join(', '),
+        )
       }
-      const deleted = await deleteAccount(id, organization_id, active_accounting_period_id, token);
+      const deleted = await deleteAccount(id, organization_id, active_accounting_period_id, token)
 
       if (!deleted) {
         return handleErrorResponse(
           res,
           404,
-          "Conta não encontrada ou você não tem permissão para deletar esta conta.",
-        );
+          'Conta não encontrada ou você não tem permissão para deletar esta conta.',
+        )
       }
-      return res.status(204).send("");
+      return res.status(204).send('')
     } else {
-      res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-      return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
+      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
+      return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
     }
   } catch (error: unknown) {
-    logger.error("Erro inesperado na API de contas:", error);
-    const message = formatSupabaseError(error);
-    return handleErrorResponse(res, 500, message);
+    logger.error('Erro inesperado na API de contas:', error)
+    const message = formatSupabaseError(error)
+    return handleErrorResponse(res, 500, message)
   }
 }

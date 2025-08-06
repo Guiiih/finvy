@@ -7,7 +7,6 @@ import type { Product } from '@/types/index'
 
 const productStore = useProductStore()
 
-
 const selectedProduct = ref(null)
 
 const emit = defineEmits(['product-selected'])
@@ -36,7 +35,9 @@ watch(selectedProduct, (newValue: Product | null) => {
     </div>
 
     <div class="flex flex-col">
-      <label for="existing-product" class="text-surface-700 font-medium mb-1">Produto Existente:</label>
+      <label for="existing-product" class="text-surface-700 font-medium mb-1"
+        >Produto Existente:</label
+      >
       <Dropdown
         v-model="selectedProduct"
         :options="productStore.products"

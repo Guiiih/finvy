@@ -162,11 +162,11 @@
             >Método de Custeio</label
           >
           <select
-              id="editCostingMethod"
-              v-model="editingPeriod.costing_method as 'average' | 'fifo' | 'lifo'"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
+            id="editCostingMethod"
+            v-model="editingPeriod.costing_method as 'average' | 'fifo' | 'lifo'"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          >
             <option v-for="method in costingMethods" :key="method.value" :value="method.value">
               {{ method.label }}
             </option>
@@ -175,10 +175,10 @@
         <div class="md:col-span-3 flex justify-end space-x-2">
           <button
             type="button"
-            @click="
+            @click="() => {
               showEditPeriodForm = false;
-              editingPeriod = null
-            "
+              editingPeriod = null;
+            }"
             class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
           >
             Cancelar
@@ -214,7 +214,9 @@
               {{ formatDate(period.end_date) }})
             </p>
             <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
-            <p class="text-sm text-gray-600">Custeio: {{ formatCostingMethod(period.costing_method) }}</p>
+            <p class="text-sm text-gray-600">
+              Custeio: {{ formatCostingMethod(period.costing_method) }}
+            </p>
             <span
               :class="[
                 period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
@@ -443,7 +445,7 @@ const newPeriod = ref<AccountingPeriod>({
   created_at: '',
   regime: null,
   costing_method: 'average',
-});
+})
 
 const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
 
@@ -527,7 +529,7 @@ const handleCreatePeriod = async () => {
       detail: 'Período contábil criado e ativado com sucesso!',
       life: 3000,
     })
-            newPeriod.value = {
+    newPeriod.value = {
       id: '',
       organization_id: '',
       name: '',
@@ -537,7 +539,7 @@ const handleCreatePeriod = async () => {
       created_at: '',
       regime: null,
       costing_method: 'average',
-    }; // Limpa o formulário
+    } // Limpa o formulário
     showCreatePeriodForm.value = false // Fecha o formulário após a criação
   } catch (err: unknown) {
     toast.add({

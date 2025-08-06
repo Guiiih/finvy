@@ -1,27 +1,26 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useUserPresenceStore } from '@/stores/userPresenceStore';
-
+import { computed } from 'vue'
+import { useUserPresenceStore } from '@/stores/userPresenceStore'
 
 interface UserPresence {
-  user_id: string;
-  username: string;
-  last_seen: string;
-  avatar_url?: string;
+  user_id: string
+  username: string
+  last_seen: string
+  avatar_url?: string
 }
 
 const props = defineProps<{
-  user: UserPresence;
-  currentUserId: string | undefined;
-}>();
+  user: UserPresence
+  currentUserId: string | undefined
+}>()
 
-const userPresenceStore = useUserPresenceStore();
+const userPresenceStore = useUserPresenceStore()
 
 const isOnline = computed(() => {
   return userPresenceStore.onlineUsers.some(
-    (onlineUser) => onlineUser.user_id === props.user.user_id
-  );
-});
+    (onlineUser) => onlineUser.user_id === props.user.user_id,
+  )
+})
 </script>
 
 <template>

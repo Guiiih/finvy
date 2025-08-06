@@ -3,10 +3,7 @@ import { getNextReferenceNumber } from '../services/referenceService.js'
 import { handleErrorResponse } from '../utils/supabaseClient.js'
 import logger from '../utils/logger.js'
 
-export default async function referenceGeneratorHandler(
-  req: VercelRequest,
-  res: VercelResponse,
-) {
+export default async function referenceGeneratorHandler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return handleErrorResponse(res, 405, 'Método não permitido.')
   }
@@ -24,11 +21,7 @@ export default async function referenceGeneratorHandler(
   }
 
   try {
-    const nextNumber = await getNextReferenceNumber(
-      prefix,
-      organization_id,
-      accounting_period_id,
-    )
+    const nextNumber = await getNextReferenceNumber(prefix, organization_id, accounting_period_id)
     res.status(200).json({ nextNumber })
   } catch (error) {
     logger.error('Erro ao gerar referência:', error)

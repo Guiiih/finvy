@@ -25,21 +25,24 @@ const props = defineProps<{
 const emit = defineEmits(['update:visible', 'submitSuccess'])
 
 const displayModal = ref(props.visible)
-const selectedAccountType = ref<AccountType | ''>((''))
+const selectedAccountType = ref<AccountType | ''>('')
 const parentAccounts = ref<Account[]>([])
 
 const flattenedParentAccounts = computed(() => {
   return flattenHierarchy(parentAccounts.value)
 })
 
-watch(() => props.visible, (value) => {
-  displayModal.value = value
-  if (value && props.isEditing && props.editingAccount) {
-    selectedAccountType.value = props.editingAccount.type
-  } else {
-    selectedAccountType.value = ''
-  }
-})
+watch(
+  () => props.visible,
+  (value) => {
+    displayModal.value = value
+    if (value && props.isEditing && props.editingAccount) {
+      selectedAccountType.value = props.editingAccount.type
+    } else {
+      selectedAccountType.value = ''
+    }
+  },
+)
 
 watch(displayModal, (value) => {
   emit('update:visible', value)
@@ -54,32 +57,36 @@ watch(selectedAccountType, async (newType) => {
 })
 
 const flattenHierarchy = (accounts: Account[]) => {
-  const accountMap = new Map(accounts.map(acc => [acc.id, { ...acc, children: [] as Account[] }]));
-  const roots: Account[] = [];
+  const accountMap = new Map(accounts.map((acc) => [acc.id, { ...acc, children: [] as Account[] }]))
+  const roots: Account[] = []
 
-  accounts.forEach(acc => {
+  accounts.forEach((acc) => {
     if (acc.parent_account_id && accountMap.has(acc.parent_account_id)) {
-      accountMap.get(acc.parent_account_id)!.children.push(acc as Account);
+      accountMap.get(acc.parent_account_id)!.children.push(acc as Account)
     } else {
-      roots.push(acc);
+      roots.push(acc)
     }
-  });
+  })
 
-  const flattened: { id: string; name: string }[] = [];
+  const flattened: { id: string; name: string }[] = []
   const traverse = (account: Account, depth: number) => {
     flattened.push({
       id: account.id,
-      name: `${'\u00A0\u00A0\u00A0\u00A0'.repeat(depth)} ${account.code} - ${account.name}`
-    });
-    const children = accountMap.get(account.id)?.children;
+      name: `${'\u00A0\u00A0\u00A0\u00A0'.repeat(depth)} ${account.code} - ${account.name}`,
+    })
+    const children = accountMap.get(account.id)?.children
     if (children) {
-      children.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })).forEach(child => traverse(child, depth + 1));
+      children
+        .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
+        .forEach((child) => traverse(child, depth + 1))
     }
-  };
+  }
 
-  roots.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })).forEach(root => traverse(root, 0));
-  return flattened;
-};
+  roots
+    .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
+    .forEach((root) => traverse(root, 0))
+  return flattened
+}
 
 const zodSchema = z.object({
   name: z
@@ -192,9 +199,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
           <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
         </div>
         <div class="flex flex-col">
-          <label for="accountName" class="text-surface-700 font-medium mb-1"
-            >Nome da Conta:</label
-          >
+          <label for="accountName" class="text-surface-700 font-medium mb-1">Nome da Conta:</label>
           <Field
             name="name"
             type="text"

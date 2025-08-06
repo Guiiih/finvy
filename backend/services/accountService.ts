@@ -1,23 +1,23 @@
-import { getSupabaseClient } from "../utils/supabaseClient.js";
-import logger from "../utils/logger.js";
-import { Account } from "../types/index.js";
-import { GoogleGenAI, Type } from "@google/genai";
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { getSupabaseClient } from '../utils/supabaseClient.js'
+import logger from '../utils/logger.js'
+import { Account } from '../types/index.js'
+import { GoogleGenAI, Type } from '@google/genai'
+import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 if (!GEMINI_API_KEY) {
-  logger.error("GEMINI_API_KEY não está configurada para o Account Service.");
-  throw new Error("GEMINI_API_KEY não está configurada.");
+  logger.error('GEMINI_API_KEY não está configurada para o Account Service.')
+  throw new Error('GEMINI_API_KEY não está configurada.')
 }
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 
 export async function getAccounts(
   organization_id: string,
@@ -26,29 +26,33 @@ export async function getAccounts(
   page: number = 1,
   limit: number = 10,
 ): Promise<{ data: Account[]; count: number }> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * limit
 
   // No cache for paginated results, as cache key would be too granular
 
-  const { data, error: dbError, count } = await userSupabase
-    .from("accounts")
+  const {
+    data,
+    error: dbError,
+    count,
+  } = await userSupabase
+    .from('accounts')
     .select(
-      "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
-      { count: 'exact' }
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected',
+      { count: 'exact' },
     )
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id)
-    .order("name", { ascending: true })
-    .range(offset, offset + limit - 1);
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', active_accounting_period_id)
+    .order('name', { ascending: true })
+    .range(offset, offset + limit - 1)
 
   if (dbError) {
-    logger.error("Accounts Service: Erro ao buscar contas:", dbError);
-    throw dbError;
+    logger.error('Accounts Service: Erro ao buscar contas:', dbError)
+    throw dbError
   }
 
-  return { data: data as Account[], count: count || 0 };
+  return { data: data as Account[], count: count || 0 }
 }
 
 export async function getAccountsByType(
@@ -57,25 +61,29 @@ export async function getAccountsByType(
   type: string,
   token: string,
 ): Promise<{ data: Account[]; count: number }> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
-  const { data, error: dbError, count } = await userSupabase
-    .from("accounts")
+  const {
+    data,
+    error: dbError,
+    count,
+  } = await userSupabase
+    .from('accounts')
     .select(
-      "id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected",
-      { count: 'exact' }
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected',
+      { count: 'exact' },
     )
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id)
-    .eq("type", type)
-    .order("name", { ascending: true });
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', active_accounting_period_id)
+    .eq('type', type)
+    .order('name', { ascending: true })
 
   if (dbError) {
-    logger.error("Accounts Service: Erro ao buscar contas por tipo:", dbError);
-    throw dbError;
+    logger.error('Accounts Service: Erro ao buscar contas por tipo:', dbError)
+    throw dbError
   }
 
-  return { data: data as Account[], count: count || 0 };
+  return { data: data as Account[], count: count || 0 }
 }
 
 export async function createAccount(
@@ -84,113 +92,123 @@ export async function createAccount(
   active_accounting_period_id: string,
   token: string,
 ): Promise<Account | null> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
-  let newAccountCode: string;
-  let newAccountType: Account['type'];
-  let parentAccount: Account | null = null;
+  let newAccountCode: string
+  let newAccountType: Account['type']
+  let parentAccount: Account | null = null
 
   // 1. Determinar o tipo da nova conta
   if (accountData.type) {
-    newAccountType = accountData.type; // Prioriza o tipo fornecido explicitamente
+    newAccountType = accountData.type // Prioriza o tipo fornecido explicitamente
   } else if (accountData.parent_account_id) {
     // Se houver conta pai, busca e herda o tipo dela
     const { data: fetchedParent, error: parentError } = await userSupabase
-      .from("accounts")
-      .select("id, code, type")
-      .eq("id", accountData.parent_account_id)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", active_accounting_period_id)
-      .single();
+      .from('accounts')
+      .select('id, code, type')
+      .eq('id', accountData.parent_account_id)
+      .eq('organization_id', organization_id)
+      .eq('accounting_period_id', active_accounting_period_id)
+      .single()
 
     if (parentError || !fetchedParent) {
-      logger.error("Accounts Service: Erro ao buscar conta pai para determinar tipo:", parentError);
-      throw new Error("Conta pai não encontrada ou inacessível para determinar o tipo.");
+      logger.error('Accounts Service: Erro ao buscar conta pai para determinar tipo:', parentError)
+      throw new Error('Conta pai não encontrada ou inacessível para determinar o tipo.')
     }
-    parentAccount = fetchedParent as Account;
-    newAccountType = parentAccount.type;
+    parentAccount = fetchedParent as Account
+    newAccountType = parentAccount.type
   } else {
     // Se não houver tipo explícito nem conta pai, usa um padrão ou infere de contas de nível superior
     const { data: topLevelAccounts, error: topLevelError } = await userSupabase
-      .from("accounts")
-      .select("code, type")
-      .is("parent_account_id", null)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", active_accounting_period_id)
-      .order("code", { ascending: false });
+      .from('accounts')
+      .select('code, type')
+      .is('parent_account_id', null)
+      .eq('organization_id', organization_id)
+      .eq('accounting_period_id', active_accounting_period_id)
+      .order('code', { ascending: false })
 
     if (topLevelError) {
-      logger.error("Accounts Service: Erro ao buscar contas de nível superior para determinar tipo:", topLevelError);
-      throw topLevelError;
+      logger.error(
+        'Accounts Service: Erro ao buscar contas de nível superior para determinar tipo:',
+        topLevelError,
+      )
+      throw topLevelError
     }
 
     if (topLevelAccounts && topLevelAccounts.length > 0) {
-      newAccountType = topLevelAccounts[0].type;
+      newAccountType = topLevelAccounts[0].type
     } else {
-      newAccountType = 'asset'; // Padrão se for a primeira conta de nível superior
+      newAccountType = 'asset' // Padrão se for a primeira conta de nível superior
     }
   }
 
   // 2. Gerar o código da nova conta
   if (accountData.parent_account_id) {
     // Se tiver conta pai, busca novamente para garantir que 'parentAccount' está preenchido para a lógica de código
-    if (!parentAccount) { // Se não foi preenchido na etapa de tipo
+    if (!parentAccount) {
+      // Se não foi preenchido na etapa de tipo
       const { data: fetchedParent, error: parentError } = await userSupabase
-        .from("accounts")
-        .select("id, code, type")
-        .eq("id", accountData.parent_account_id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .single();
+        .from('accounts')
+        .select('id, code, type')
+        .eq('id', accountData.parent_account_id)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id)
+        .single()
 
       if (parentError || !fetchedParent) {
-        logger.error("Accounts Service: Erro ao buscar conta pai para gerar código:", parentError);
-        throw new Error("Conta pai não encontrada ou inacessível para gerar o código.");
+        logger.error('Accounts Service: Erro ao buscar conta pai para gerar código:', parentError)
+        throw new Error('Conta pai não encontrada ou inacessível para gerar o código.')
       }
-      parentAccount = fetchedParent as Account;
+      parentAccount = fetchedParent as Account
     }
 
     const { data: children, error: childrenError } = await userSupabase
-      .from("accounts")
-      .select("code")
-      .eq("parent_account_id", parentAccount.id)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", active_accounting_period_id)
-      .order("code", { ascending: false });
+      .from('accounts')
+      .select('code')
+      .eq('parent_account_id', parentAccount.id)
+      .eq('organization_id', organization_id)
+      .eq('accounting_period_id', active_accounting_period_id)
+      .order('code', { ascending: false })
 
     if (childrenError) {
-      logger.error("Accounts Service: Erro ao buscar contas filhas para gerar código:", childrenError);
-      throw childrenError;
+      logger.error(
+        'Accounts Service: Erro ao buscar contas filhas para gerar código:',
+        childrenError,
+      )
+      throw childrenError
     }
 
-    let lastChildNumber = 0;
+    let lastChildNumber = 0
     if (children && children.length > 0) {
-      const lastChildCode = children[0].code;
-      const parts = lastChildCode.split('.');
-      lastChildNumber = parseInt(parts[parts.length - 1]) || 0;
+      const lastChildCode = children[0].code
+      const parts = lastChildCode.split('.')
+      lastChildNumber = parseInt(parts[parts.length - 1]) || 0
     }
-    newAccountCode = `${parentAccount.code}.${lastChildNumber + 1}`;
+    newAccountCode = `${parentAccount.code}.${lastChildNumber + 1}`
   } else {
     // Conta de nível superior (sem pai)
     const { data: topLevelAccounts, error: topLevelError } = await userSupabase
-      .from("accounts")
-      .select("code")
-      .is("parent_account_id", null)
-      .eq("organization_id", organization_id)
-      .eq("accounting_period_id", active_accounting_period_id)
-      .order("code", { ascending: false });
+      .from('accounts')
+      .select('code')
+      .is('parent_account_id', null)
+      .eq('organization_id', organization_id)
+      .eq('accounting_period_id', active_accounting_period_id)
+      .order('code', { ascending: false })
 
     if (topLevelError) {
-      logger.error("Accounts Service: Erro ao buscar contas de nível superior para gerar código:", topLevelError);
-      throw topLevelError;
+      logger.error(
+        'Accounts Service: Erro ao buscar contas de nível superior para gerar código:',
+        topLevelError,
+      )
+      throw topLevelError
     }
 
-    let lastTopLevelNumber = 0;
+    let lastTopLevelNumber = 0
     if (topLevelAccounts && topLevelAccounts.length > 0) {
-      const lastTopLevelCode = topLevelAccounts[0].code;
-      lastTopLevelNumber = parseInt(lastTopLevelCode) || 0;
+      const lastTopLevelCode = topLevelAccounts[0].code
+      lastTopLevelNumber = parseInt(lastTopLevelCode) || 0
     }
-    newAccountCode = `${lastTopLevelNumber + 1}`;
+    newAccountCode = `${lastTopLevelNumber + 1}`
   }
 
   const accountToInsert = {
@@ -200,20 +218,19 @@ export async function createAccount(
     type: newAccountType,
     organization_id,
     accounting_period_id: active_accounting_period_id,
-  };
-
-  const { data, error: dbError } = await userSupabase
-    .from("accounts")
-    .insert(accountToInsert)
-    .select();
-
-  if (dbError) {
-    logger.error("Accounts Service: Erro ao criar conta:", dbError);
-    throw dbError;
   }
 
-  
-  return data[0] as Account;
+  const { data, error: dbError } = await userSupabase
+    .from('accounts')
+    .insert(accountToInsert)
+    .select()
+
+  if (dbError) {
+    logger.error('Accounts Service: Erro ao criar conta:', dbError)
+    throw dbError
+  }
+
+  return data[0] as Account
 }
 
 export async function updateAccount(
@@ -223,27 +240,26 @@ export async function updateAccount(
   active_accounting_period_id: string,
   token: string,
 ): Promise<Account | null> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
   const { data, error: dbError } = await userSupabase
-    .from("accounts")
+    .from('accounts')
     .update(updateData)
-    .eq("id", id)
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id)
-    .select();
+    .eq('id', id)
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', active_accounting_period_id)
+    .select()
 
   if (dbError) {
-    logger.error("Accounts Service: Erro ao atualizar conta:", dbError);
-    throw dbError;
+    logger.error('Accounts Service: Erro ao atualizar conta:', dbError)
+    throw dbError
   }
 
   if (!data || data.length === 0) {
-    return null;
+    return null
   }
 
-  
-  return data[0] as Account;
+  return data[0] as Account
 }
 
 export async function deleteAccount(
@@ -252,44 +268,43 @@ export async function deleteAccount(
   active_accounting_period_id: string,
   token: string,
 ): Promise<boolean> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
   // Primeiro, verifique se a conta está protegida
   const { data: accountData, error: fetchError } = await userSupabase
-    .from("accounts")
-    .select("is_protected")
-    .eq("id", id)
-    .eq("organization_id", organization_id)
-    .single();
+    .from('accounts')
+    .select('is_protected')
+    .eq('id', id)
+    .eq('organization_id', organization_id)
+    .single()
 
   if (fetchError) {
-    logger.error("Accounts Service: Erro ao buscar conta para verificar proteção:", fetchError);
-    throw fetchError;
+    logger.error('Accounts Service: Erro ao buscar conta para verificar proteção:', fetchError)
+    throw fetchError
   }
 
   if (accountData?.is_protected) {
-    logger.warn(`Accounts Service: Tentativa de deletar conta protegida com ID: ${id}`);
-    throw new Error("Esta conta está protegida e não pode ser deletada.");
+    logger.warn(`Accounts Service: Tentativa de deletar conta protegida com ID: ${id}`)
+    throw new Error('Esta conta está protegida e não pode ser deletada.')
   }
 
   const { error: dbError, count } = await userSupabase
-    .from("accounts")
+    .from('accounts')
     .delete()
-    .eq("id", id)
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id);
+    .eq('id', id)
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', active_accounting_period_id)
 
   if (dbError) {
-    logger.error("Accounts Service: Erro ao deletar conta:", dbError);
-    throw dbError;
+    logger.error('Accounts Service: Erro ao deletar conta:', dbError)
+    throw dbError
   }
 
   if (count === 0) {
-    return false;
+    return false
   }
 
-  
-  return true;
+  return true
 }
 
 export async function findAccountByName(
@@ -298,25 +313,26 @@ export async function findAccountByName(
   active_accounting_period_id: string,
   token: string,
 ): Promise<Account | null> {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
   const { data, error: dbError } = await userSupabase
-    .from("accounts")
-    .select("*")
-    .eq("name", accountName)
-    .eq("organization_id", organization_id)
-    .eq("accounting_period_id", active_accounting_period_id)
-    .single();
+    .from('accounts')
+    .select('*')
+    .eq('name', accountName)
+    .eq('organization_id', organization_id)
+    .eq('accounting_period_id', active_accounting_period_id)
+    .single()
 
   if (dbError) {
-    if (dbError.code === 'PGRST116') { // No rows found
-      return null;
+    if (dbError.code === 'PGRST116') {
+      // No rows found
+      return null
     }
-    logger.error("Accounts Service: Erro ao buscar conta por nome:", dbError);
-    throw dbError;
+    logger.error('Accounts Service: Erro ao buscar conta por nome:', dbError)
+    throw dbError
   }
 
-  return data as Account;
+  return data as Account
 }
 
 export async function getOrCreateAccount(
@@ -325,7 +341,7 @@ export async function getOrCreateAccount(
   active_accounting_period_id: string,
   token: string,
   contextText: string, // Texto do exercício para dar contexto ao Gemini
-  processingStack: string[] = [] // Adicionar pilha de processamento para detectar ciclos
+  processingStack: string[] = [], // Adicionar pilha de processamento para detectar ciclos
 ): Promise<Account> {
   // 1. Tentar encontrar a conta existente
   const existingAccount = await findAccountByName(
@@ -333,23 +349,27 @@ export async function getOrCreateAccount(
     organization_id,
     active_accounting_period_id,
     token,
-  );
+  )
 
   if (existingAccount) {
-    logger.info(`[AccountService] Conta "${accountName}" encontrada.`);
-    return existingAccount;
+    logger.info(`[AccountService] Conta "${accountName}" encontrada.`)
+    return existingAccount
   }
 
   // Detectar ciclo na recursão
   if (processingStack.includes(accountName)) {
-    logger.warn(`[AccountService] Ciclo detectado para a conta "${accountName}". Interrompendo recursão.`);
-    throw new Error(`Ciclo de criação de conta detectado para "${accountName}".`);
+    logger.warn(
+      `[AccountService] Ciclo detectado para a conta "${accountName}". Interrompendo recursão.`,
+    )
+    throw new Error(`Ciclo de criação de conta detectado para "${accountName}".`)
   }
 
-  logger.warn(`[AccountService] Conta "${accountName}" não encontrada. Tentando criar automaticamente.`);
+  logger.warn(
+    `[AccountService] Conta "${accountName}" não encontrada. Tentando criar automaticamente.`,
+  )
 
   // Adicionar a conta atual à pilha de processamento
-  processingStack.push(accountName);
+  processingStack.push(accountName)
 
   // 2. Se não existir, pedir ao Gemini para sugerir o tipo da conta
   const prompt = `
@@ -377,40 +397,50 @@ export async function getOrCreateAccount(
     Exemplo: {"type": "asset", "parentAccountName": "Caixa e Equivalentes de Caixa"}
     Exemplo: {"type": "asset", "parentAccountName": "Ativo Imobilizado"}
     Exemplo: {"type": "asset", "parentAccountName": null}
-  `;
+  `
 
-  let suggestedType: Account['type'] = 'asset'; // Default para evitar erros
-  let parentAccountId: string | null = null; // Declarar aqui
+  let suggestedType: Account['type'] = 'asset' // Default para evitar erros
+  let parentAccountId: string | null = null // Declarar aqui
 
   try {
     const result = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            type: { type: Type.STRING, enum: ['asset', 'liability', 'equity', 'revenue', 'expense'] },
+            type: {
+              type: Type.STRING,
+              enum: ['asset', 'liability', 'equity', 'revenue', 'expense'],
+            },
             parentAccountName: { type: Type.STRING, nullable: true },
           },
           required: ['type'],
         },
       },
-    });
-    const geminiResponse = JSON.parse(result.text || '{}');
+    })
+    const geminiResponse = JSON.parse(result.text || '{}')
 
     // Validar o tipo sugerido
-    const validTypes: Account['type'][] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+    const validTypes: Account['type'][] = ['asset', 'liability', 'equity', 'revenue', 'expense']
     if (geminiResponse.type && validTypes.includes(geminiResponse.type as Account['type'])) {
-      suggestedType = geminiResponse.type as Account['type'];
-      logger.info(`[AccountService] Gemini sugeriu o tipo "${suggestedType}" para a conta "${accountName}".`);
+      suggestedType = geminiResponse.type as Account['type']
+      logger.info(
+        `[AccountService] Gemini sugeriu o tipo "${suggestedType}" para a conta "${accountName}".`,
+      )
     } else {
-      logger.warn(`[AccountService] Gemini sugeriu um tipo inválido ou vazio para "${accountName}": "${geminiResponse.type}". Usando tipo padrão: asset.`);
+      logger.warn(
+        `[AccountService] Gemini sugeriu um tipo inválido ou vazio para "${accountName}": "${geminiResponse.type}". Usando tipo padrão: asset.`,
+      )
     }
 
-    if (geminiResponse.parentAccountName && geminiResponse.parentAccountName !== accountName) { // Evitar que a conta seja seu próprio pai
-      logger.info(`[AccountService] Gemini sugeriu conta pai: "${geminiResponse.parentAccountName}" para "${accountName}".`);
+    if (geminiResponse.parentAccountName && geminiResponse.parentAccountName !== accountName) {
+      // Evitar que a conta seja seu próprio pai
+      logger.info(
+        `[AccountService] Gemini sugeriu conta pai: "${geminiResponse.parentAccountName}" para "${accountName}".`,
+      )
       try {
         // Tenta encontrar ou criar a conta pai recursivamente
         const parentAccount = await getOrCreateAccount(
@@ -419,30 +449,46 @@ export async function getOrCreateAccount(
           active_accounting_period_id,
           token,
           contextText, // Passa o contexto para a chamada recursiva
-          processingStack // Passa a pilha de processamento
-        );
+          processingStack, // Passa a pilha de processamento
+        )
         if (parentAccount) {
-          parentAccountId = parentAccount.id;
-          logger.info(`[AccountService] Conta pai "${geminiResponse.parentAccountName}" encontrada/criada com ID: ${parentAccountId}.`);
+          parentAccountId = parentAccount.id
+          logger.info(
+            `[AccountService] Conta pai "${geminiResponse.parentAccountName}" encontrada/criada com ID: ${parentAccountId}.`,
+          )
         } else {
-          logger.warn(`[AccountService] Falha ao encontrar/criar conta pai "${geminiResponse.parentAccountName}". Criando conta "${accountName}" sem pai.`);
+          logger.warn(
+            `[AccountService] Falha ao encontrar/criar conta pai "${geminiResponse.parentAccountName}". Criando conta "${accountName}" sem pai.`,
+          )
         }
       } catch (parentProcessError) {
-        logger.error(`[AccountService] Erro ao processar conta pai "${geminiResponse.parentAccountName}":`, parentProcessError);
-        logger.warn(`[AccountService] Criando conta "${accountName}" sem pai devido a erro no processamento da conta pai.`);
+        logger.error(
+          `[AccountService] Erro ao processar conta pai "${geminiResponse.parentAccountName}":`,
+          parentProcessError,
+        )
+        logger.warn(
+          `[AccountService] Criando conta "${accountName}" sem pai devido a erro no processamento da conta pai.`,
+        )
       }
     } else if (geminiResponse.parentAccountName === accountName) {
-      logger.warn(`[AccountService] Gemini sugeriu a própria conta "${accountName}" como conta pai. Ignorando sugestão de pai.`);
+      logger.warn(
+        `[AccountService] Gemini sugeriu a própria conta "${accountName}" como conta pai. Ignorando sugestão de pai.`,
+      )
     }
-    } catch (error) {
-    logger.error(`[AccountService] Erro ao pedir sugestão de tipo ou conta pai para "${accountName}" ao Gemini:`, error);
-    logger.error("Erro detalhado do Gemini:", error);
-    logger.warn(`[AccountService] Usando tipo padrão 'asset' e sem conta pai para a conta "${accountName}" devido a erro na sugestão do Gemini.`);
+  } catch (error) {
+    logger.error(
+      `[AccountService] Erro ao pedir sugestão de tipo ou conta pai para "${accountName}" ao Gemini:`,
+      error,
+    )
+    logger.error('Erro detalhado do Gemini:', error)
+    logger.warn(
+      `[AccountService] Usando tipo padrão 'asset' e sem conta pai para a conta "${accountName}" devido a erro na sugestão do Gemini.`,
+    )
   } finally {
     // Remover a conta atual da pilha de processamento ao sair
-    const index = processingStack.indexOf(accountName);
+    const index = processingStack.indexOf(accountName)
     if (index > -1) {
-      processingStack.splice(index, 1);
+      processingStack.splice(index, 1)
     }
   }
 
@@ -452,12 +498,14 @@ export async function getOrCreateAccount(
     organization_id,
     active_accounting_period_id,
     token,
-  );
+  )
 
   if (!newAccount) {
-    throw new Error(`Falha crítica ao criar a conta "${accountName}" automaticamente.`);
+    throw new Error(`Falha crítica ao criar a conta "${accountName}" automaticamente.`)
   }
 
-  logger.info(`[AccountService] Conta "${accountName}" criada automaticamente com tipo "${newAccount.type}" e conta pai ${newAccount.parent_account_id || 'nenhuma'}.`);
-  return newAccount;
+  logger.info(
+    `[AccountService] Conta "${accountName}" criada automaticamente com tipo "${newAccount.type}" e conta pai ${newAccount.parent_account_id || 'nenhuma'}.`,
+  )
+  return newAccount
 }

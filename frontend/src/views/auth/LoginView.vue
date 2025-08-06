@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useForm, useField } from 'vee-validate'
@@ -116,23 +116,23 @@ const { handleSubmit } = useForm({
 const { value: email, errorMessage: emailError } = useField<string>('email')
 const { value: password, errorMessage: passwordError } = useField<string>('password')
 
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 
 const onSubmit = handleSubmit(async (values) => {
-  loading.value = true;
-  await authStore.signIn(values.email, values.password);
+  loading.value = true
+  await authStore.signIn(values.email, values.password)
   if (authStore.error) {
     toast.add({
       severity: 'error',
       summary: 'Erro no Login',
       detail: authStore.error,
       life: 3000,
-    });
+    })
   } else {
-    router.push({ name: 'Dashboard' });
+    router.push({ name: 'Dashboard' })
   }
-  loading.value = false;
-});
+  loading.value = false
+})
 </script>
 
 <style scoped>

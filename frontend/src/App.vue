@@ -14,7 +14,6 @@ import ChatbotWindow from '@/components/ChatbotWindow.vue'
 import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
 
-
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
 
@@ -52,16 +51,16 @@ const toggleChatbotMaximize = () => {
 }
 
 onMounted(() => {
-  setToast(toast);
-  authStore.initAuthListener();
-  userPresenceStore.startPresenceTracking();
-  window.addEventListener('click', closeUserMenu);
-});
+  setToast(toast)
+  authStore.initAuthListener()
+  userPresenceStore.startPresenceTracking()
+  window.addEventListener('click', closeUserMenu)
+})
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeUserMenu);
-  userPresenceStore.stopPresenceTracking();
-});
+  window.removeEventListener('click', closeUserMenu)
+  userPresenceStore.stopPresenceTracking()
+})
 
 const shouldHideNavbar = computed(() => {
   return route.meta.hideNavbar || false
@@ -125,7 +124,6 @@ const logoSrc = computed(() => {
       </nav>
 
       <div class="flex justify-end items-center space-x-4">
-
         <div class="flex items-center space-x-2">
           <UserAvatarWithPresence
             v-for="user in userPresenceStore.onlineUsers"
@@ -156,12 +154,11 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-          <img
+            <img
               :src="authStore.avatarUrl ?? undefined"
               alt="Avatar do usuário"
               class="w-9 rounded-full"
             />
-
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
@@ -210,7 +207,7 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-          <img
+            <img
               :src="authStore.avatarUrl ?? undefined"
               alt="Avatar do usuário"
               class="w-9 rounded-full"
@@ -312,18 +309,22 @@ const logoSrc = computed(() => {
         v-if="globalChatbotStore.isChatbotModalVisible"
         :class="{
           'fixed bottom-24 right-4 w-96 h-[75vh]': !isChatbotMaximized,
-          'fixed bottom-24  right-4 w-165 h-[87vh]': isChatbotMaximized
+          'fixed bottom-24  right-4 w-165 h-[87vh]': isChatbotMaximized,
         }"
-        class="bg-surface-100 shadow-lg rounded-[1rem] border border-surface-200 flex flex-col z-50 overflow-hidden transition-all duration-300 ease-in-out">
+        class="bg-surface-100 shadow-lg rounded-[1rem] border border-surface-200 flex flex-col z-50 overflow-hidden transition-all duration-300 ease-in-out"
+      >
         <div
-          class="flex items-center justify-between p-4 border-b border-surface-200 bg-surface-50 text-surface-900">
+          class="flex items-center justify-between p-4 border-b border-surface-200 bg-surface-50 text-surface-900"
+        >
           <div class="flex items-center space-x-2">
             <img :src="logoSrc" alt="Finvy Logo" class="h-9 w-9" />
             <span class="text-sm font-semibold">Assistente</span>
           </div>
           <div class="flex items-center space-x-2">
             <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900">
-              <i class="material-icons" style="font-size: 15px !important;" >{{ isChatbotMaximized ? 'close_fullscreen' : 'open_in_full' }}</i>
+              <i class="material-icons" style="font-size: 15px !important">{{
+                isChatbotMaximized ? 'close_fullscreen' : 'open_in_full'
+              }}</i>
             </button>
           </div>
         </div>
@@ -332,7 +333,6 @@ const logoSrc = computed(() => {
       </div>
     </div>
 
-
     <!-- Floating Chatbot Button -->
 
     <button
@@ -340,7 +340,7 @@ const logoSrc = computed(() => {
       aria-label="Abrir Chatbot"
       @click="globalChatbotStore.toggleChatbotModal()"
     >
-      <span class="material-icons" style="font-size: 20px !important;">{{
+      <span class="material-icons" style="font-size: 20px !important">{{
         globalChatbotStore.isChatbotModalVisible ? 'south_east' : 'chat_bubble'
       }}</span>
     </button>

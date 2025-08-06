@@ -1,7 +1,7 @@
-import logger from "../utils/logger.js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleErrorResponse } from "../utils/supabaseClient.js";
-import { yearEndClosingSchema } from "../utils/schemas.js";
+import logger from '../utils/logger.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { handleErrorResponse } from '../utils/supabaseClient.js'
+import { yearEndClosingSchema } from '../utils/schemas.js'
 
 /**
  * @swagger
@@ -44,26 +44,25 @@ import { yearEndClosingSchema } from "../utils/schemas.js";
  *         description: Erro interno do servidor.
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const parsedBody = yearEndClosingSchema.safeParse(req.body);
+  const parsedBody = yearEndClosingSchema.safeParse(req.body)
   if (!parsedBody.success) {
     return handleErrorResponse(
       res,
       400,
-      parsedBody.error.errors.map((err) => err.message).join(", "),
-    );
+      parsedBody.error.errors.map((err) => err.message).join(', '),
+    )
   }
-  const { closingDate } = parsedBody.data;
+  const { closingDate } = parsedBody.data
 
   try {
-    const netIncome = 1234.56;
+    const netIncome = 1234.56
 
     res.status(200).json({
       message: `Fechamento de exercício para ${closingDate} realizado com sucesso. Lucro Líquido: R$ ${netIncome.toFixed(2)}`,
-    });
+    })
   } catch (error: unknown) {
-    logger.error("Erro ao processar fechamento de exercício:", error);
-    const message =
-      error instanceof Error ? error.message : "Erro desconhecido";
-    handleErrorResponse(res, 500, `Erro no servidor: ${message}`);
+    logger.error('Erro ao processar fechamento de exercício:', error)
+    const message = error instanceof Error ? error.message : 'Erro desconhecido'
+    handleErrorResponse(res, 500, `Erro no servidor: ${message}`)
   }
 }

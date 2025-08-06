@@ -1,371 +1,292 @@
-import { z } from "zod";
+import { z } from 'zod'
 
-export const uuidSchema = z
-  .string()
-  .uuid({ message: "ID inválido. Deve ser um UUID válido." });
+export const uuidSchema = z.string().uuid({ message: 'ID inválido. Deve ser um UUID válido.' })
 
 export const idSchema = z.object({
-  id: z.string().uuid({ message: "ID inválido. Deve ser um UUID válido." }),
-});
+  id: z.string().uuid({ message: 'ID inválido. Deve ser um UUID válido.' }),
+})
 
 export const createAccountSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Nome da conta é obrigatório.")
-    .max(100, "Nome da conta muito longo."),
-  type: z.enum(["asset", "liability", "equity", "revenue", "expense"], {
-    message: "Tipo de conta inválido.",
-  }).optional(),
+  name: z.string().min(1, 'Nome da conta é obrigatório.').max(100, 'Nome da conta muito longo.'),
+  type: z
+    .enum(['asset', 'liability', 'equity', 'revenue', 'expense'], {
+      message: 'Tipo de conta inválido.',
+    })
+    .optional(),
   code: z
     .string()
-    .min(1, "Código da conta é obrigatório.")
-    .max(20, "Código da conta muito longo.")
+    .min(1, 'Código da conta é obrigatório.')
+    .max(20, 'Código da conta muito longo.')
     .optional(), // Tornando o campo 'code' opcional
   parent_account_id: z
     .string()
-    .uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." })
+    .uuid({ message: 'ID da conta pai inválido. Deve ser um UUID válido.' })
     .optional()
     .nullable(),
-});
+})
 
 export const updateAccountSchema = z
   .object({
     name: z
       .string()
-      .min(1, "Nome da conta é obrigatório.")
-      .max(100, "Nome da conta muito longo.")
+      .min(1, 'Nome da conta é obrigatório.')
+      .max(100, 'Nome da conta muito longo.')
       .optional(),
     type: z
-      .enum(["asset", "liability", "equity", "revenue", "expense"], {
-        message: "Tipo de conta inválido.",
+      .enum(['asset', 'liability', 'equity', 'revenue', 'expense'], {
+        message: 'Tipo de conta inválido.',
       })
       .optional(),
     parent_account_id: z
       .string()
-      .uuid({ message: "ID da conta pai inválido. Deve ser um UUID válido." })
+      .uuid({ message: 'ID da conta pai inválido. Deve ser um UUID válido.' })
       .optional()
       .nullable(),
   })
-  .partial();
+  .partial()
 
 export const createJournalEntrySchema = z.object({
-  entry_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD."),
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória.")
-    .max(255, "Descrição muito longa."),
-  reference: z
-    .string()
-    .min(1, "Referência é obrigatória.")
-    .max(255, "Referência muito longa."),
-});
+  entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido. Use YYYY-MM-DD.'),
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  reference: z.string().min(1, 'Referência é obrigatória.').max(255, 'Referência muito longa.'),
+})
 
 export const updateJournalEntrySchema = z
   .object({
     entry_date: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD.")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido. Use YYYY-MM-DD.')
       .optional(),
     description: z
       .string()
-      .min(1, "Descrição é obrigatória.")
-      .max(255, "Descrição muito longa.")
+      .min(1, 'Descrição é obrigatória.')
+      .max(255, 'Descrição muito longa.')
       .optional(),
     reference: z
       .string()
-      .min(1, "Referência é obrigatória.")
-      .max(255, "Referência muito longa.")
+      .min(1, 'Referência é obrigatória.')
+      .max(255, 'Referência muito longa.')
       .optional(),
   })
-  .partial();
+  .partial()
 
-export const createEntryLineSchema = z
-  .object({
-    journal_entry_id: z
-      .string()
-      .uuid({ message: "Journal Entry ID inválido. Deve ser um UUID válido." }),
-    account_id: z
-      .string()
-      .uuid({ message: "Account ID inválido. Deve ser um UUID válido." }),
-    type: z.enum(["debit", "credit"], {
-      message: "Tipo de lançamento inválido. Deve ser 'debit' ou 'credit'.",
-    }),
-    amount: z
-      .number()
-      .positive("Valor do lançamento deve ser um número positivo."),
-    product_id: z
-      .string()
-      .uuid({ message: "Product ID inválido. Deve ser um UUID válido." })
-      .optional(),
-    quantity: z
-      .number()
-      .int()
-      .nonnegative("Quantidade deve ser um número inteiro não negativo.")
-      .optional(),
-    unit_cost: z
-      .number()
-      .nonnegative("Custo unitário deve ser um valor não negativo.")
-      .optional(),
-    total_gross: z
-      .number()
-      .nonnegative("Valor total bruto deve ser um valor não negativo.")
-      .optional(),
-    
-    icms_st_value: z
-      .number()
-      .nonnegative("Valor do ICMS-ST deve ser um valor não negativo.")
-      .optional(),
-    ipi_value: z
-      .number()
-      .nonnegative("Valor do IPI deve ser um valor não negativo.")
-      .optional(),
-    pis_value: z
-      .number()
-      .nonnegative("Valor do PIS deve ser um valor não negativo.")
-      .optional(),
-    cofins_value: z
-      .number()
-      .nonnegative("Valor do COFINS deve ser um valor não negativo.")
-      .optional(),
-    total_net: z
-      .number()
-      .nonnegative("Valor total líquido deve ser um valor não negativo.")
-      .nullable()
-      .optional(),
-    transaction_type: z
-      .enum(["sale", "purchase"], {
-        message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
-      })
-      .optional(),
-  });
+export const createEntryLineSchema = z.object({
+  journal_entry_id: z
+    .string()
+    .uuid({ message: 'Journal Entry ID inválido. Deve ser um UUID válido.' }),
+  account_id: z.string().uuid({ message: 'Account ID inválido. Deve ser um UUID válido.' }),
+  type: z.enum(['debit', 'credit'], {
+    message: "Tipo de lançamento inválido. Deve ser 'debit' ou 'credit'.",
+  }),
+  amount: z.number().positive('Valor do lançamento deve ser um número positivo.'),
+  product_id: z
+    .string()
+    .uuid({ message: 'Product ID inválido. Deve ser um UUID válido.' })
+    .optional(),
+  quantity: z
+    .number()
+    .int()
+    .nonnegative('Quantidade deve ser um número inteiro não negativo.')
+    .optional(),
+  unit_cost: z.number().nonnegative('Custo unitário deve ser um valor não negativo.').optional(),
+  total_gross: z
+    .number()
+    .nonnegative('Valor total bruto deve ser um valor não negativo.')
+    .optional(),
+
+  icms_st_value: z
+    .number()
+    .nonnegative('Valor do ICMS-ST deve ser um valor não negativo.')
+    .optional(),
+  ipi_value: z.number().nonnegative('Valor do IPI deve ser um valor não negativo.').optional(),
+  pis_value: z.number().nonnegative('Valor do PIS deve ser um valor não negativo.').optional(),
+  cofins_value: z
+    .number()
+    .nonnegative('Valor do COFINS deve ser um valor não negativo.')
+    .optional(),
+  total_net: z
+    .number()
+    .nonnegative('Valor total líquido deve ser um valor não negativo.')
+    .nullable()
+    .optional(),
+  transaction_type: z
+    .enum(['sale', 'purchase'], {
+      message: "Tipo de transação inválido. Deve ser 'sale' ou 'purchase'.",
+    })
+    .optional(),
+})
 
 export const updateEntryLineSchema = z
   .object({
     account_id: z
       .string()
-      .uuid({ message: "Account ID inválido. Deve ser um UUID válido." })
+      .uuid({ message: 'Account ID inválido. Deve ser um UUID válido.' })
       .optional(),
-    debit: z
-      .number()
-      .nonnegative("Débito deve ser um valor não negativo.")
-      .nullable()
-      .optional(),
-    credit: z
-      .number()
-      .nonnegative("Crédito deve ser um valor não negativo.")
-      .nullable()
-      .optional(),
+    debit: z.number().nonnegative('Débito deve ser um valor não negativo.').nullable().optional(),
+    credit: z.number().nonnegative('Crédito deve ser um valor não negativo.').nullable().optional(),
     product_id: z
       .string()
-      .uuid({ message: "Product ID inválido. Deve ser um UUID válido." })
+      .uuid({ message: 'Product ID inválido. Deve ser um UUID válido.' })
       .optional(),
     quantity: z
       .number()
       .int()
-      .nonnegative("Quantidade deve ser um número inteiro não negativo.")
+      .nonnegative('Quantidade deve ser um número inteiro não negativo.')
       .optional(),
-    unit_cost: z
-      .number()
-      .nonnegative("Custo unitário deve ser um valor não negativo.")
-      .optional(),
+    unit_cost: z.number().nonnegative('Custo unitário deve ser um valor não negativo.').optional(),
     total_gross: z
       .number()
-      .nonnegative("Valor total bruto deve ser um valor não negativo.")
+      .nonnegative('Valor total bruto deve ser um valor não negativo.')
       .optional(),
-    icms_value: z
-      .number()
-      .nonnegative("Valor do ICMS deve ser um valor não negativo.")
-      .optional(),
+    icms_value: z.number().nonnegative('Valor do ICMS deve ser um valor não negativo.').optional(),
     total_net: z
       .number()
-      .nonnegative("Valor total líquido deve ser um valor não negativo.")
+      .nonnegative('Valor total líquido deve ser um valor não negativo.')
       .optional(),
   })
-  .partial();
+  .partial()
 
 export const createProductSchema = z.object({
   name: z
     .string()
-    .min(1, "Nome do produto é obrigatório.")
-    .max(100, "Nome do produto muito longo."),
-  description: z.string().max(255, "Descrição muito longa.").optional(),
+    .min(1, 'Nome do produto é obrigatório.')
+    .max(100, 'Nome do produto muito longo.'),
+  description: z.string().max(255, 'Descrição muito longa.').optional(),
   sku: z.string().optional(),
-  category: z.string().min(1, "Categoria do produto é obrigatória.").max(100, "Categoria do produto muito longa."),
-});
+  category: z
+    .string()
+    .min(1, 'Categoria do produto é obrigatória.')
+    .max(100, 'Categoria do produto muito longa.'),
+})
 
 export const updateProductSchema = z
   .object({
     name: z
       .string()
-      .min(1, "Nome do produto é obrigatório.")
-      .max(100, "Nome do produto muito longo.")
+      .min(1, 'Nome do produto é obrigatório.')
+      .max(100, 'Nome do produto muito longo.')
       .optional(),
-    description: z.string().max(255, "Descrição muito longa.").optional(),
+    description: z.string().max(255, 'Descrição muito longa.').optional(),
     sku: z.string().optional(),
-    category: z.string().min(1, "Categoria do produto é obrigatória.").max(100, "Categoria do produto muito longa.").optional(),
+    category: z
+      .string()
+      .min(1, 'Categoria do produto é obrigatória.')
+      .max(100, 'Categoria do produto muito longa.')
+      .optional(),
     icms_rate: z
       .number()
-      .nonnegative("Alíquota de ICMS deve ser um valor não negativo.")
+      .nonnegative('Alíquota de ICMS deve ser um valor não negativo.')
       .optional(),
   })
-  .partial();
+  .partial()
 
 export const createAccountsPayableSchema = z.object({
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória.")
-    .max(255, "Descrição muito longa."),
-  amount: z.number().nonnegative("Valor deve ser não negativo."),
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
   due_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de vencimento inválido. Use YYYY-MM-DD.",
-    ),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
   paid_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de pagamento inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de pagamento inválido. Use YYYY-MM-DD.')
     .optional()
     .nullable(),
   is_paid: z.boolean().optional(),
-});
+})
 
-export const updateAccountsPayableSchema =
-  createAccountsPayableSchema.partial();
+export const updateAccountsPayableSchema = createAccountsPayableSchema.partial()
 
 export const createAccountsReceivableSchema = z.object({
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória.")
-    .max(255, "Descrição muito longa."),
-  amount: z.number().nonnegative("Valor deve ser não negativo."),
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
   due_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de vencimento inválido. Use YYYY-MM-DD.",
-    ),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
   received_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de recebimento inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de recebimento inválido. Use YYYY-MM-DD.')
     .optional()
     .nullable(),
   is_received: z.boolean().optional(),
-});
+})
 
-export const updateAccountsReceivableSchema =
-  createAccountsReceivableSchema.partial();
+export const updateAccountsReceivableSchema = createAccountsReceivableSchema.partial()
 
 export const createFinancialTransactionSchema = z.object({
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória.")
-    .max(255, "Descrição muito longa."),
-  amount: z.number().nonnegative("Valor deve ser não negativo."),
+  description: z.string().min(1, 'Descrição é obrigatória.').max(255, 'Descrição muito longa.'),
+  amount: z.number().nonnegative('Valor deve ser não negativo.'),
   due_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de vencimento inválido. Use YYYY-MM-DD.",
-    ),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de vencimento inválido. Use YYYY-MM-DD.'),
   paid_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de pagamento inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de pagamento inválido. Use YYYY-MM-DD.')
     .optional()
     .nullable(),
   received_date: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de recebimento inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de recebimento inválido. Use YYYY-MM-DD.')
     .optional()
     .nullable(),
   is_paid: z.boolean().optional(),
   is_received: z.boolean().optional(),
-});
+})
 
-export const updateFinancialTransactionSchema =
-  createFinancialTransactionSchema.partial();
+export const updateFinancialTransactionSchema = createFinancialTransactionSchema.partial()
 
 export const updateProfileSchema = z
   .object({
     username: z
       .string()
-      .min(1, "Nome de usuário é obrigatório.")
-      .max(100, "Nome de usuário muito longo.")
+      .min(1, 'Nome de usuário é obrigatório.')
+      .max(100, 'Nome de usuário muito longo.')
       .optional(),
     handle: z
       .string()
-      .min(1, "Handle é obrigatório.")
-      .max(50, "Handle muito longo.")
-      .regex(/^[a-z0-9_]+$/, "Handle deve conter apenas letras minúsculas, números e underscores.")
+      .min(1, 'Handle é obrigatório.')
+      .max(50, 'Handle muito longo.')
+      .regex(/^[a-z0-9_]+$/, 'Handle deve conter apenas letras minúsculas, números e underscores.')
       .optional(),
-    avatar_url: z.string().url("URL do avatar inválida.").optional().nullable(),
+    avatar_url: z.string().url('URL do avatar inválida.').optional().nullable(),
     organization_id: z
       .string()
-      .uuid("ID da organização inválido. Deve ser um UUID válido.")
+      .uuid('ID da organização inválido. Deve ser um UUID válido.')
       .optional(),
     active_accounting_period_id: z
       .string()
-      .uuid("ID do período contábil ativo inválido. Deve ser um UUID válido.")
+      .uuid('ID do período contábil ativo inválido. Deve ser um UUID válido.')
       .optional(),
   })
-  .partial();
+  .partial()
 
 export const yearEndClosingSchema = z.object({
-  closingDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use YYYY-MM-DD."),
-});
+  closingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido. Use YYYY-MM-DD.'),
+})
 
 export const reportQuerySchema = z.object({
   startDate: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de início inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de início inválido. Use YYYY-MM-DD.')
     .optional(),
   endDate: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de fim inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de fim inválido. Use YYYY-MM-DD.')
     .optional(),
-});
+})
 
 export const exportReportSchema = z.object({
-  reportType: z.enum(["trialBalance", "dre", "balanceSheet", "ledgerDetails"], {
-    message: "Tipo de relatório inválido.",
+  reportType: z.enum(['trialBalance', 'dre', 'balanceSheet', 'ledgerDetails'], {
+    message: 'Tipo de relatório inválido.',
   }),
   startDate: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de início inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de início inválido. Use YYYY-MM-DD.')
     .optional(),
   endDate: z
     .string()
-    .regex(
-      /^\d{4}-\d{2}-\d{2}$/,
-      "Formato de data de fim inválido. Use YYYY-MM-DD.",
-    )
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de fim inválido. Use YYYY-MM-DD.')
     .optional(),
-  format: z.enum(["xlsx", "csv", "pdf"], {
-    message: "Formato de exportação inválido.",
+  format: z.enum(['xlsx', 'csv', 'pdf'], {
+    message: 'Formato de exportação inválido.',
   }),
-});
+})

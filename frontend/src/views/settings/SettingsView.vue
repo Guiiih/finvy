@@ -3,14 +3,12 @@
     <div class="max-w-4xl mx-auto">
       <div class="mb-8">
         <h1 class="text-2xl sm:text-3xl mb-3">Configurações da Conta</h1>
-        <p class="text-muted-foreground">
-          Gerencie suas preferências e configurações da conta
-        </p>
+        <p class="text-muted-foreground">Gerencie suas preferências e configurações da conta</p>
       </div>
 
       <!-- Tabs Navigation -->
       <div class="w-full">
-        <div class="flex flex-wrap gap-4 sm:gap-8  mb-8 sm:mb-12">
+        <div class="flex flex-wrap gap-4 sm:gap-8 mb-8 sm:mb-12">
           <button
             v-for="tab in tabs"
             :key="tab.id"
@@ -20,10 +18,9 @@
               'whitespace-nowrap transition-colors',
               activeTab === tab.id
                 ? 'border-foreground text-foreground'
-                : 'border-transparent text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                : 'border-transparent text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground',
             ]"
           >
-            
             <span class="hidden sm:inline">{{ tab.name }}</span>
             <span class="sm:hidden">{{ tab.shortName || tab.name }}</span>
           </button>
@@ -60,7 +57,7 @@ const activeTab = ref('perfil')
 const tabs = [
   { id: 'perfil', name: 'Perfil' },
   { id: 'seguranca', name: 'Segurança' },
-  { id: 'preferencias', name: 'Preferências'},
+  { id: 'preferencias', name: 'Preferências' },
   { id: 'organizacoes', name: 'Organizações', shortName: 'Orgs' },
 ]
 </script>

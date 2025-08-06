@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 export const useGlobalChatbotStore = defineStore('globalChatbot', {
   state: () => ({
@@ -6,10 +6,10 @@ export const useGlobalChatbotStore = defineStore('globalChatbot', {
   }),
   actions: {
     setChatbotModalVisibility(visible: boolean) {
-      this.isChatbotModalVisible = visible;
+      this.isChatbotModalVisible = visible
     },
     toggleChatbotModal() {
-      this.isChatbotModalVisible = !this.isChatbotModalVisible;
+      this.isChatbotModalVisible = !this.isChatbotModalVisible
     },
   },
-});
+})

@@ -1,7 +1,6 @@
 import { useAuthStore } from '@/stores/authStore'
 import { showToast } from './notificationService'
 
-
 const handleResponse = async (response: Response) => {
   if (response.ok) {
     return response.json()
@@ -18,7 +17,11 @@ const handleResponse = async (response: Response) => {
     const errorMessages = errorData.errors.map((err: { message: string }) => err.message).join('\n')
     showToast('error', 'Erro de Validação', errorMessages)
   } else if (response.status >= 500) {
-    showToast('error', 'Erro no Servidor', 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.')
+    showToast(
+      'error',
+      'Erro no Servidor',
+      'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.',
+    )
   } else if (errorData && errorData.message) {
     showToast('error', 'Erro', errorData.message)
   }

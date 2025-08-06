@@ -52,7 +52,7 @@ const router = createRouter({
       component: () => import('../views/reports/ReportsView.vue'),
       meta: { requiresAuth: true, title: 'Relatórios' },
     },
-    
+
     {
       path: '/accounting-periods',
       name: 'accounting-periods',
@@ -119,7 +119,6 @@ const router = createRouter({
       component: () => import('../views/settings/SettingsView.vue'),
       meta: { requiresAuth: true, title: 'Configurações' },
     },
-    
   ],
 })
 
@@ -132,7 +131,11 @@ router.beforeEach(async (to, _from, next) => {
   if (requiresAuth && !session) {
     next('/login')
   } else if (
-    (to.path === '/login' || to.path === '/register' || to.path === '/forgot-password' || to.path === '/' || to.path === '/registration-success') &&
+    (to.path === '/login' ||
+      to.path === '/register' ||
+      to.path === '/forgot-password' ||
+      to.path === '/' ||
+      to.path === '/registration-success') &&
     session
   ) {
     next('/dashboard')

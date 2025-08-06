@@ -17,7 +17,8 @@ export async function getNextReferenceNumber(
 
     let nextNumber = 1
 
-    if (error && error.code === 'PGRST116') { // No rows found
+    if (error && error.code === 'PGRST116') {
+      // No rows found
       // Insert new sequence
       const { error: insertError } = await supabase.from('reference_sequences').insert({
         prefix,
@@ -43,6 +44,8 @@ export async function getNextReferenceNumber(
     return nextNumber
   } catch (err) {
     logger.error(`Erro ao obter o próximo número de referência para ${prefix}:`, err)
-    throw new Error(`Falha ao gerar número de referência: ${err instanceof Error ? err.message : 'Erro desconhecido'}`)
+    throw new Error(
+      `Falha ao gerar número de referência: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+    )
   }
 }

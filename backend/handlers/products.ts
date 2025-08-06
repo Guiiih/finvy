@@ -1,12 +1,12 @@
-import logger from "../utils/logger.js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import logger from '../utils/logger.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
-} from "../utils/supabaseClient.js";
-import { createProductSchema, updateProductSchema } from "../utils/schemas.js";
-import { formatSupabaseError } from "../utils/errorUtils.js";
+} from '../utils/supabaseClient.js'
+import { createProductSchema, updateProductSchema } from '../utils/schemas.js'
+import { formatSupabaseError } from '../utils/errorUtils.js'
 
 export default async function handler(
   req: VercelRequest,
@@ -14,36 +14,35 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  const userSupabase = getSupabaseClient(token);
+  const userSupabase = getSupabaseClient(token)
 
-  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token);
+  const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token)
   if (!userOrgAndPeriod) {
     return handleErrorResponse(
       res,
       403,
-      "Organização ou período contábil não encontrado para o usuário.",
-    );
+      'Organização ou período contábil não encontrado para o usuário.',
+    )
   }
-  const { organization_id, active_accounting_period_id } = userOrgAndPeriod;
+  const { organization_id, active_accounting_period_id } = userOrgAndPeriod
 
   try {
-    if (req.method === "GET") {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+    if (req.method === 'GET') {
+      const page = parseInt(req.query.page as string) || 1
+      const limit = parseInt(req.query.limit as string) || 10
 
       // No cache for paginated results, as cache key would be too granular
       const { data, count } = await userSupabase
-        .from("products")
-        .select(
-          "id, name, description, unit_cost, organization_id, accounting_period_id",
-          { count: 'exact' }
-        )
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .order("name", { ascending: true })
-        .range((page - 1) * limit, page * limit - 1);
+        .from('products')
+        .select('id, name, description, unit_cost, organization_id, accounting_period_id', {
+          count: 'exact',
+        })
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id)
+        .order('name', { ascending: true })
+        .range((page - 1) * limit, page * limit - 1)
 
-      return res.status(200).json({ data, count });
+      return res.status(200).json({ data, count })
     }
 
     /**
@@ -107,19 +106,19 @@ export default async function handler(
      * 500:
      * description: Erro interno do servidor.
      */
-    if (req.method === "POST") {
-      const parsedBody = createProductSchema.safeParse(req.body);
+    if (req.method === 'POST') {
+      const parsedBody = createProductSchema.safeParse(req.body)
       if (!parsedBody.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedBody.error.errors.map((err) => err.message).join(", "),
-        );
+          parsedBody.error.errors.map((err) => err.message).join(', '),
+        )
       }
-      const { name, description, sku, category } = parsedBody.data;
+      const { name, description, sku, category } = parsedBody.data
 
       const { data, error: dbError } = await userSupabase
-        .from("products")
+        .from('products')
         .insert([
           {
             name,
@@ -130,52 +129,54 @@ export default async function handler(
             accounting_period_id: active_accounting_period_id,
           },
         ])
-        .select();
+        .select()
 
-      if (dbError) throw dbError;
+      if (dbError) throw dbError
 
-      return res.status(201).json(data[0]);
+      return res.status(201).json(data[0])
     }
 
     // New POST route for recording product purchases
-    if (req.method === "POST" && req.url === "/products/purchase") {
-      const { product_id, quantity, unit_cost } = req.body;
+    if (req.method === 'POST' && req.url === '/products/purchase') {
+      const { product_id, quantity, unit_cost } = req.body
       if (!product_id || !quantity || !unit_cost) {
-        return handleErrorResponse(res, 400, "product_id, quantity, and unit_cost are required.");
+        return handleErrorResponse(res, 400, 'product_id, quantity, and unit_cost are required.')
       }
       try {
-        await userSupabase.rpc("record_purchase", {
+        await userSupabase.rpc('record_purchase', {
           p_product_id: product_id,
           p_quantity: quantity,
           p_unit_cost: unit_cost,
           p_organization_id: organization_id,
           p_accounting_period_id: active_accounting_period_id,
-        });
-        return res.status(200).json({ message: "Purchase recorded successfully." });
-      } catch (rpcError: unknown) { // <-- Alterado de 'any' para 'unknown'
-        logger.error("Error calling record_purchase RPC:", rpcError);
-        return handleErrorResponse(res, 500, formatSupabaseError(rpcError));
+        })
+        return res.status(200).json({ message: 'Purchase recorded successfully.' })
+      } catch (rpcError: unknown) {
+        // <-- Alterado de 'any' para 'unknown'
+        logger.error('Error calling record_purchase RPC:', rpcError)
+        return handleErrorResponse(res, 500, formatSupabaseError(rpcError))
       }
     }
 
     // New POST route for calculating COGS
-    if (req.method === "POST" && req.url === "/products/calculate-cogs") {
-      const { product_id, quantity_sold } = req.body;
+    if (req.method === 'POST' && req.url === '/products/calculate-cogs') {
+      const { product_id, quantity_sold } = req.body
       if (!product_id || !quantity_sold) {
-        return handleErrorResponse(res, 400, "product_id and quantity_sold are required.");
+        return handleErrorResponse(res, 400, 'product_id and quantity_sold are required.')
       }
       try {
-        const { data: cogs, error: rpcError } = await userSupabase.rpc("calculate_cogs_for_sale", {
+        const { data: cogs, error: rpcError } = await userSupabase.rpc('calculate_cogs_for_sale', {
           p_product_id: product_id,
           p_quantity_sold: quantity_sold,
           p_organization_id: organization_id,
           p_accounting_period_id: active_accounting_period_id,
-        });
-        if (rpcError) throw rpcError;
-        return res.status(200).json({ cogs });
-      } catch (rpcError: unknown) { // <-- Alterado de 'any' para 'unknown'
-        logger.error("Error calling calculate_cogs_for_sale RPC:", rpcError);
-        return handleErrorResponse(res, 500, formatSupabaseError(rpcError));
+        })
+        if (rpcError) throw rpcError
+        return res.status(200).json({ cogs })
+      } catch (rpcError: unknown) {
+        // <-- Alterado de 'any' para 'unknown'
+        logger.error('Error calling calculate_cogs_for_sale RPC:', rpcError)
+        return handleErrorResponse(res, 500, formatSupabaseError(rpcError))
       }
     }
 
@@ -247,44 +248,40 @@ export default async function handler(
      * 500:
      * description: Erro interno do servidor.
      */
-    if (req.method === "PUT") {
-      const id = req.url?.split("?")[0].split("/").pop() as string;
-      const parsedBody = updateProductSchema.safeParse(req.body);
+    if (req.method === 'PUT') {
+      const id = req.url?.split('?')[0].split('/').pop() as string
+      const parsedBody = updateProductSchema.safeParse(req.body)
       if (!parsedBody.success) {
         return handleErrorResponse(
           res,
           400,
-          parsedBody.error.errors.map((err) => err.message).join(", "),
-        );
+          parsedBody.error.errors.map((err) => err.message).join(', '),
+        )
       }
-      const updateData = parsedBody.data;
+      const updateData = parsedBody.data
 
       if (Object.keys(updateData).length === 0) {
-        return handleErrorResponse(
-          res,
-          400,
-          "Nenhum campo para atualizar fornecido.",
-        );
+        return handleErrorResponse(res, 400, 'Nenhum campo para atualizar fornecido.')
       }
 
       const { data, error: dbError } = await userSupabase
-        .from("products")
+        .from('products')
         .update(updateData)
-        .eq("id", id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id)
-        .select();
+        .eq('id', id)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id)
+        .select()
 
-      if (dbError) throw dbError;
+      if (dbError) throw dbError
       if (!data || data.length === 0) {
         return handleErrorResponse(
           res,
           404,
-          "Produto não encontrado ou você não tem permissão para atualizar.",
-        );
+          'Produto não encontrado ou você não tem permissão para atualizar.',
+        )
       }
 
-      return res.status(200).json(data[0]);
+      return res.status(200).json(data[0])
     }
 
     /**
@@ -315,32 +312,32 @@ export default async function handler(
      * 500:
      * description: Erro interno do servidor.
      */
-    if (req.method === "DELETE") {
-      const id = req.url?.split("?")[0].split("/").pop() as string;
+    if (req.method === 'DELETE') {
+      const id = req.url?.split('?')[0].split('/').pop() as string
       const { error: dbError, count } = await userSupabase
-        .from("products")
+        .from('products')
         .delete()
-        .eq("id", id)
-        .eq("organization_id", organization_id)
-        .eq("accounting_period_id", active_accounting_period_id);
+        .eq('id', id)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id)
 
-      if (dbError) throw dbError;
+      if (dbError) throw dbError
       if (count === 0) {
         return handleErrorResponse(
           res,
           404,
-          "Produto não encontrado ou você não tem permissão para deletar.",
-        );
+          'Produto não encontrado ou você não tem permissão para deletar.',
+        )
       }
 
-      return res.status(204).end();
+      return res.status(204).end()
     }
 
-    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
+    return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error("Erro inesperado na API de produtos:", error);
-    const message = formatSupabaseError(error);
-    return handleErrorResponse(res, 500, message);
+    logger.error('Erro inesperado na API de produtos:', error)
+    const message = formatSupabaseError(error)
+    return handleErrorResponse(res, 500, message)
   }
 }

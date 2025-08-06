@@ -42,8 +42,9 @@ const applyFilter = (type: AccountType) => {
 const groupedAndFilteredAccounts = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
   const filtered = accountStore.accounts.filter((account) => {
-    const typeMatch = selectedAccountTypes.value.length === 0 || selectedAccountTypes.value.includes(account.type)
-    const searchMatch = 
+    const typeMatch =
+      selectedAccountTypes.value.length === 0 || selectedAccountTypes.value.includes(account.type)
+    const searchMatch =
       !account.is_protected &&
       (account.name.toLowerCase().includes(lowerCaseSearchTerm) ||
         account.code?.toString().includes(lowerCaseSearchTerm) ||
@@ -195,20 +196,20 @@ onMounted(() => {
           ></i>
         </div>
 
-        <Button
-          icon="pi pi-filter"
-          class="p-button-secondary p-button-outlined"
-          @click="toggle"
-        />
-        <OverlayPanel ref="op" style="min-width: 250px;">
+        <Button icon="pi pi-filter" class="p-button-secondary p-button-outlined" @click="toggle" />
+        <OverlayPanel ref="op" style="min-width: 250px">
           <div class="flex flex-col space-y-2 p-4">
             <div
-              v-for="type in Object.keys(accountTypeTranslations)" :key="type"
+              v-for="type in Object.keys(accountTypeTranslations)"
+              :key="type"
               class="flex items-center justify-between p-2 hover:bg-surface-100 cursor-pointer"
               @click="applyFilter(type as AccountType)"
             >
               <span>{{ accountTypeTranslations[type as AccountType] }}</span>
-              <i v-if="selectedAccountTypes.includes(type as AccountType)" class="pi pi-check text-surface-500"></i>
+              <i
+                v-if="selectedAccountTypes.includes(type as AccountType)"
+                class="pi pi-check text-surface-500"
+              ></i>
             </div>
           </div>
         </OverlayPanel>

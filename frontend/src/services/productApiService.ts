@@ -22,7 +22,15 @@ export async function calculateCogsForSale(
   organization_id: string,
   accounting_period_id: string,
 ): Promise<number> {
-  const response = await api.post<{ cogs: number }, { product_id: string; quantity_sold: number; organization_id: string; accounting_period_id: string }>('/products/calculate-cogs', {
+  const response = await api.post<
+    { cogs: number },
+    {
+      product_id: string
+      quantity_sold: number
+      organization_id: string
+      accounting_period_id: string
+    }
+  >('/products/calculate-cogs', {
     product_id,
     quantity_sold,
     organization_id,

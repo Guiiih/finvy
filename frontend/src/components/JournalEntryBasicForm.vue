@@ -7,27 +7,32 @@ const props = defineProps<{
   referencePrefix: string
 }>()
 
-const emit = defineEmits([
-  'update:entryDate',
-  'update:entryDescription',
-  'update:referencePrefix',
-])
+const emit = defineEmits(['update:entryDate', 'update:entryDescription', 'update:referencePrefix'])
 
 const internalEntryDate = ref(props.entryDate)
 const internalEntryDescription = ref(props.entryDescription)
 const internalReferencePrefix = ref(props.referencePrefix)
 
-watch(() => props.entryDate, (newValue) => {
-  internalEntryDate.value = newValue
-})
+watch(
+  () => props.entryDate,
+  (newValue) => {
+    internalEntryDate.value = newValue
+  },
+)
 
-watch(() => props.entryDescription, (newValue) => {
-  internalEntryDescription.value = newValue
-})
+watch(
+  () => props.entryDescription,
+  (newValue) => {
+    internalEntryDescription.value = newValue
+  },
+)
 
-watch(() => props.referencePrefix, (newValue) => {
-  internalReferencePrefix.value = newValue
-})
+watch(
+  () => props.referencePrefix,
+  (newValue) => {
+    internalReferencePrefix.value = newValue
+  },
+)
 
 watch(internalEntryDate, (newValue) => {
   emit('update:entryDate', newValue)
@@ -66,7 +71,9 @@ watch(internalReferencePrefix, (newValue) => {
       />
     </div>
     <div class="flex flex-col">
-      <label for="entry-reference-prefix" class="text-surface-700 font-medium mb-1">Prefixo da Referência:</label>
+      <label for="entry-reference-prefix" class="text-surface-700 font-medium mb-1"
+        >Prefixo da Referência:</label
+      >
       <input
         type="text"
         id="entry-reference-prefix"
