@@ -89,6 +89,32 @@ function toggleDetails(id: string | undefined) {
   }
 }
 
+async function handleDuplicate(entry: JournalEntry) {
+  try {
+    const duplicatedEntry = {
+      ...entry,
+      id: undefined, // Remove o ID para que o backend crie um novo
+      reference: `${entry.reference}-COPY`,
+      description: `[CÓPIA] ${entry.description}`,
+      entry_date: new Date().toISOString().split('T')[0], // Data atual
+      status: 'draft', // Define como rascunho
+      lines: entry.lines.map(line => ({ ...line })) // Copia as linhas
+    };
+    await journalEntryStore.addJournalEntry(duplicatedEntry as Omit<JournalEntry, 'id'>);
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Lançamento duplicado com sucesso!',
+      life: 3000,
+    });
+    await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value); // Atualiza a lista
+  } catch (err: unknown) {
+    console.error('Erro ao duplicar lançamento:', err);
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao duplicar.';
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+  }
+}
+
 async function handleDelete(id: string | undefined) {
   console.log('handleDelete chamado com ID:', id)
   if (!id) {
@@ -250,6 +276,13 @@ onMounted(async () => {
                   title="Editar"
                 >
                   <i class="pi pi-pencil w-5 h-5"></i>
+                </button>
+                <button
+                  @click.stop="handleDuplicate(entry)"
+                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition duration-300 ease-in-out"
+                  title="Duplicar"
+                >
+                  <i class="pi pi-copy w-5 h-5"></i>
                 </button>
                 <button
                   @click.stop="handleDelete(entry.id)"
