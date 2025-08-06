@@ -31,7 +31,6 @@ import { getNotifications, markNotificationAsRead } from '../backend/handlers/no
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
 import referenceGeneratorHandler from '../backend/handlers/referenceGenerator.js'
 
-
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
   req: VercelRequest,
@@ -129,15 +128,13 @@ async function protectedRoutesHandler(
       return getNotifications(req, res, user_id)
     }
     if (req.method === 'PUT' && finalUrlPath.endsWith('/read')) {
-      const notificationId = finalUrlPath.split('/')[2]; // Extract ID from /notifications/:id/read
+      const notificationId = finalUrlPath.split('/')[2] // Extract ID from /notifications/:id/read
       return markNotificationAsRead(req, res, user_id, notificationId)
     }
   }
   if (finalUrlPath.startsWith('/generate-reference')) {
     return referenceGeneratorHandler(req, res)
   }
-
-  
 
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')
 }
@@ -162,9 +159,6 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   if (urlPath === '/api/docs') {
     return await swaggerDocsHandler(req, res)
   }
-
-  
-  
 
   // Para todas as outras rotas /api, aplicar o middleware de autenticação
   if (urlPath.startsWith('/api/')) {

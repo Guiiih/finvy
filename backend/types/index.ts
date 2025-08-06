@@ -97,6 +97,14 @@ export interface JournalEntry {
   organization_id?: string
   /** The ID of the accounting period this journal entry belongs to. */
   accounting_period_id?: string
+  /** The name of the user who created this journal entry. */
+  created_by_name?: string
+  /** The email of the user who created this journal entry. */
+  created_by_email?: string
+  /** The username of the user who created this journal entry. */
+  created_by_username?: string
+  /** The timestamp when the journal entry was created. */
+  created_at?: string
 }
 
 /**

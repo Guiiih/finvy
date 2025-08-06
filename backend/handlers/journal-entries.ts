@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getUserOrganizationAndPeriod, getUserProfileInfo } from '../utils/supabaseClient.js'
 import { createJournalEntrySchema, updateJournalEntrySchema } from '../utils/schemas.js'
 import { formatSupabaseError } from '../utils/errorUtils.js'
 import {
@@ -110,7 +110,20 @@ export default async function handler(
       }
       const { entry_date, description, reference, status } = parsedBody.data
 
-      const newEntry = { entry_date, description, reference, status }
+      const userProfile = await getUserProfileInfo(user_id, token)
+      if (!userProfile) {
+        return handleErrorResponse(res, 404, 'Perfil do usuário não encontrado.')
+      }
+
+      const newEntry = {
+        entry_date,
+        description,
+        reference,
+        status,
+        created_by_name: userProfile.username || userProfile.handle || userProfile.email || 'Desconhecido',
+        created_by_email: userProfile.email || 'Desconhecido',
+        created_by_username: userProfile.handle || userProfile.username || 'Desconhecido',
+      }
       const createdEntry = await createJournalEntry(
         newEntry,
         organization_id,

@@ -78,3 +78,37 @@ export async function getUserOrganizationAndPeriod(
     active_accounting_period_id: data.active_accounting_period_id,
   }
 }
+
+export async function getUserProfileInfo(
+  user_id: string,
+  token: string,
+): Promise<{
+  username: string | null
+  email: string | null
+  handle: string | null
+} | null> {
+  logger.info(`[SupabaseClient] getUserProfileInfo: Buscando perfil para user_id: ${user_id}`)
+  const userSupabase = getSupabaseClient(token)
+  const { data, error } = await userSupabase
+    .from('profiles')
+    .select('username, email, handle')
+    .eq('id', user_id)
+    .single()
+
+  if (error) {
+    logger.error(`[SupabaseClient] Erro ao buscar informações do perfil para o usuário ${user_id}:`, error)
+    return null
+  }
+
+  if (!data) {
+    logger.warn(`[SupabaseClient] Perfil não encontrado para o usuário: ${user_id}`)
+    return null
+  }
+
+  logger.info(`[SupabaseClient] Perfil encontrado para user_id ${user_id}. Username: ${data.username}, Email: ${data.email}, Handle: ${data.handle}`)
+  return {
+    username: data.username,
+    email: data.email,
+    handle: data.handle,
+  }
+}
