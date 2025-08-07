@@ -47,12 +47,77 @@ export async function getJournalEntries(
       query = query.ilike('created_by_name', `%${filters.createdBy}%`)
     }
 
-    // TODO: Implementar filtros de amountFrom, amountTo, hasProduct, hasTaxes e accounts
-    // Estes filtros exigem joins ou subconsultas com a tabela 'entry_lines' e podem ser mais complexos.
-    // Exemplo para accounts (requer join com entry_lines):
-    // if (filters.accounts && filters.accounts.length > 0) {
-    //   query = query.in('id', userSupabase.from('entry_lines').select('journal_entry_id').in('account_id', filters.accounts))
-    // }
+    // Filters requiring subqueries on 'entry_lines'
+    if (filters.hasProduct) {
+      const { data: productEntryIds, error: productError } = await userSupabase
+        .from('entry_lines')
+        .select('journal_entry_id')
+        .not('product_id', 'is', null)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id);
+
+      if (productError) {
+        logger.error('Erro ao buscar IDs de lançamentos com produto:', productError);
+        throw productError;
+      }
+      const ids = productEntryIds.map(item => item.journal_entry_id);
+      if (ids.length > 0) {
+        query = query.in('id', ids);
+      } else {
+        // If no matching entry_lines, ensure no journal entries are returned
+        query = query.eq('id', 'non_existent_id');
+      }
+    }
+
+    if (filters.hasTaxes) {
+      const { data: taxEntryIds, error: taxError } = await userSupabase
+        .from('entry_lines')
+        .select('journal_entry_id')
+        .not('icms_value', 'is', null) // Assuming icms_value indicates taxes
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id);
+
+      if (taxError) {
+        logger.error('Erro ao buscar IDs de lançamentos com impostos:', taxError);
+        throw taxError;
+      }
+      const ids = taxEntryIds.map(item => item.journal_entry_id);
+      if (ids.length > 0) {
+        query = query.in('id', ids);
+      } else {
+        query = query.eq('id', 'non_existent_id');
+      }
+    }
+
+    if (filters.accounts && filters.accounts.length > 0) {
+      const { data: accountEntryIds, error: accountError } = await userSupabase
+        .from('entry_lines')
+        .select('journal_entry_id')
+        .in('account_id', filters.accounts)
+        .eq('organization_id', organization_id)
+        .eq('accounting_period_id', active_accounting_period_id);
+
+      if (accountError) {
+        logger.error('Erro ao buscar IDs de lançamentos por conta:', accountError);
+        throw accountError;
+      }
+      const ids = accountEntryIds.map(item => item.journal_entry_id);
+      if (ids.length > 0) {
+        query = query.in('id', ids);
+      } else {
+        query = query.eq('id', 'non_existent_id');
+      }
+    }
+
+    // Amount filters (amountFrom, amountTo) are complex as they require aggregation on entry_lines
+    // and then filtering on the aggregated sum. This is not directly supported by Supabase client-side
+    // query builder for joins/aggregations on related tables in a single query.
+    // A common solution is to create a PostgreSQL function or view in Supabase that calculates
+    // the total amount for each journal entry and then query that function/view.
+    // For now, these filters will not be implemented directly here.
+    if (filters.amountFrom !== null || filters.amountTo !== null) {
+      logger.warn('Amount filters (amountFrom, amountTo) are not fully implemented due to Supabase client-side query limitations for aggregation on related tables. Consider using a PostgreSQL function or view for this.');
+    }
   }
 
   const { data, error: dbError, count } = await query
