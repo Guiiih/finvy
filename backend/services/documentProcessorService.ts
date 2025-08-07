@@ -13,7 +13,7 @@ export async function processDocument(fileBuffer: Buffer, mimetype: string): Pro
       extractedText = data.text
       logger.info('[DocumentProcessorService] Texto extraído de PDF.')
     } catch (error) {
-      logger.error('Erro ao extrair texto de PDF:', { error })
+      logger.error({ error }, 'Erro ao extrair texto de PDF:')
       throw new Error('Não foi possível extrair texto do PDF.')
     }
   } else if (mimetype.startsWith('image/')) {
@@ -29,7 +29,7 @@ export async function processDocument(fileBuffer: Buffer, mimetype: string): Pro
       extractedText = text
       logger.info('[DocumentProcessorService] Texto extraído de imagem via OCR.')
     } catch (error) {
-      logger.error('Erro ao extrair texto de imagem com Tesseract.js:', { error })
+      logger.error({ error }, 'Erro ao extrair texto de imagem com Tesseract.js:')
       throw new Error('Não foi possível extrair texto da imagem.')
     } finally {
       if (worker) {

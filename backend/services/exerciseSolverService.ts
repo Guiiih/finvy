@@ -179,7 +179,7 @@ async function getJsonFromGemini(exerciseText: string): Promise<GeminiResponse> 
     logger.info(`[ExerciseSolverService] Resposta JSON recebida e parseada do Gemini.`)
     return jsonResponse
   } catch (error) {
-    logger.error('Erro ao resolver exercício com Gemini API:', { error })
+    logger.error({ error }, 'Erro ao resolver exercício com Gemini API:')
     throw new Error('Não foi possível resolver o exercício contábil.')
   }
 }

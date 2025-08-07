@@ -18,7 +18,7 @@ export async function getTaxSettings(
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 means no rows found
-    logger.error('Tax Settings Service: Erro ao buscar configurações de impostos:', { error })
+    logger.error({ error }, 'Tax Settings Service: Erro ao buscar configurações de impostos:')
     throw error
   }
 

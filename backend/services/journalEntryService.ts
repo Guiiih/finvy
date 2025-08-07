@@ -60,7 +60,7 @@ export async function getJournalEntries(
         .eq('accounting_period_id', active_accounting_period_id)
 
       if (productError) {
-        logger.error('Erro ao buscar IDs de lançamentos com produto:', { productError })
+        logger.error({ productError }, 'Erro ao buscar IDs de lançamentos com produto:')
         throw productError
       }
       const ids = productEntryIds.map((item) => item.journal_entry_id)
@@ -81,7 +81,7 @@ export async function getJournalEntries(
         .eq('accounting_period_id', active_accounting_period_id)
 
       if (taxError) {
-        logger.error('Erro ao buscar IDs de lançamentos com impostos:', { taxError })
+        logger.error({ taxError }, 'Erro ao buscar IDs de lançamentos com impostos:')
         throw taxError
       }
       const ids = taxEntryIds.map((item) => item.journal_entry_id)
@@ -101,7 +101,7 @@ export async function getJournalEntries(
         .eq('accounting_period_id', active_accounting_period_id)
 
       if (accountError) {
-        logger.error('Erro ao buscar IDs de lançamentos por conta:', { accountError })
+        logger.error({ accountError }, 'Erro ao buscar IDs de lançamentos por conta:')
         throw accountError
       }
       const ids = accountEntryIds.map((item) => item.journal_entry_id)
@@ -132,7 +132,7 @@ export async function getJournalEntries(
   } = await query.order('entry_date', { ascending: false }).range(offset, offset + limit - 1)
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao buscar lançamentos de diário:', { dbError })
+    logger.error({ dbError }, 'Journal Entries Service: Erro ao buscar lançamentos de diário:')
     throw dbError
   }
 
@@ -159,7 +159,7 @@ export async function createJournalEntry(
     .select()
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao criar lançamento de diário:', { dbError })
+    logger.error({ dbError }, 'Journal Entries Service: Erro ao criar lançamento de diário:')
     throw dbError
   }
 
@@ -184,7 +184,7 @@ export async function updateJournalEntry(
     .select()
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao atualizar lançamento de diário:', { dbError })
+    logger.error({ dbError }, 'Journal Entries Service: Erro ao atualizar lançamento de diário:')
     throw dbError
   }
 
@@ -212,10 +212,7 @@ export async function deleteJournalEntry(
   })
 
   if (dbError) {
-    logger.error(
-      `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`,
-      { dbError },
-    )
+    logger.error({ dbError }, `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`)
     throw dbError
   }
 
@@ -235,7 +232,7 @@ export async function checkDoubleEntryBalance(
       .eq('journal_entry_id', journal_entry_id)
 
     if (error) {
-      logger.error(`Error fetching entry lines for journal entry ${journal_entry_id}:`, { error })
+      logger.error({ error }, `Error fetching entry lines for journal entry ${journal_entry_id}:`)
       return false
     }
 
@@ -262,10 +259,7 @@ export async function checkDoubleEntryBalance(
 
     return isBalanced
   } catch (error) {
-    logger.error(
-      `Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`,
-      error,
-    )
+    logger.error(error, `Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`)
     return false
   }
 }

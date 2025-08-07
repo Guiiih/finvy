@@ -25,7 +25,7 @@ export async function getFinancialTransactions(
     .order('created_at', { ascending: false })
 
   if (dbError) {
-    logger.error('Financial Transactions Service: Erro ao buscar transações financeiras:', { dbError })
+    logger.error({ dbError }, 'Financial Transactions Service: Erro ao buscar transações financeiras:')
     throw dbError
   }
   return data
@@ -56,7 +56,7 @@ export async function createFinancialTransaction(
     .single()
 
   if (dbError) {
-    logger.error('Financial Transactions Service: Erro ao criar transação financeira:', { dbError })
+    logger.error({ dbError }, 'Financial Transactions Service: Erro ao criar transação financeira:')
     throw dbError
   }
 

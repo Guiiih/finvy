@@ -22,7 +22,7 @@ export class UserPresenceService {
       .select()
 
     if (error) {
-      logger.error('Erro ao atualizar presença do usuário:', { error })
+      logger.error({ error }, 'Erro ao atualizar presença do usuário:')
       throw new Error(error.message)
     }
     return data[0]
@@ -45,7 +45,7 @@ export class UserPresenceService {
       .gte('last_seen', fiveMinutesAgo)
 
     if (error) {
-      logger.error('Erro ao buscar usuários online:', { error })
+      logger.error({ error }, 'Erro ao buscar usuários online:')
       throw new Error(error.message)
     }
     return data || []

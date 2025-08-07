@@ -55,14 +55,14 @@ export async function searchJournalEntriesByDescription(
     logger.info(`[JournalEntrySearchService] Dados retornados: ${JSON.stringify(data)}`)
 
     if (error) {
-      logger.error('Erro ao buscar lançamentos no Supabase:', { error })
+      logger.error({ error }, 'Erro ao buscar lançamentos no Supabase:')
       throw new Error(`Erro ao buscar lançamentos: ${error.message}`)
     }
 
     logger.info(`[JournalEntrySearchService] Encontrados ${data?.length || 0} lançamentos.`)
     return data || []
   } catch (error) {
-    logger.error('Erro inesperado no Journal Entry Search Service:', { error })
+    logger.error({ error }, 'Erro inesperado no Journal Entry Search Service:')
     throw error
   }
 }

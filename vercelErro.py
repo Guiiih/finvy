@@ -1,4 +1,4 @@
-vercel dev
+ vercel dev
 Vercel CLI 44.7.3
 > Creating initial build
 
@@ -6,12 +6,12 @@ Vercel CLI 44.7.3
 > run-p type-check "build-only {@}" --
 
 
-> frontend@0.0.0 type-check
-> vue-tsc --noEmit -p tsconfig.app.json
-
-
 > frontend@0.0.0 build-only
 > vite build
+
+
+> frontend@0.0.0 type-check
+> vue-tsc --noEmit -p tsconfig.app.json
 
 vite v5.4.19 building for production...
 ✓ 530 modules transformed.
@@ -72,328 +72,50 @@ dist/assets/zod-CeQqTxIs.js                          55.76 kB │ gzip:  13.10 k
 dist/assets/vue-CbqkvMrs.js                         182.94 kB │ gzip:  60.64 kB
 dist/assets/vendor-mmAUbjib.js                      625.22 kB │ gzip: 147.93 kB
 dist/assets/primevue-CNUZ-WPR.js                    679.67 kB │ gzip: 156.80 kB
-✓ built in 4.06s
+✓ built in 3.99s
 > Success! Build completed
 > Ready! Available at http://localhost:3000
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
-(node:27396) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-[15:03:11.596] INFO: [ChatbotService] GEMINI_API_KEY carregada (primeiros 5 chars): AIzaS
-[15:03:11.686] INFO: [API Router] Roteando o pedido para: GET /api/profile
-[15:03:11.727] INFO: [API Router] Roteando o pedido protegido para: GET /profile
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
 [dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 [dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
 [dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
-backend/handlers/reports/generate.ts:34:47 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+(node:28204) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[15:10:55.301] INFO: [ChatbotService] GEMINI_API_KEY carregada (primeiros 5 chars): AIzaS
+[15:10:55.379] INFO: [API Router] Roteando o pedido para: GET /api/profile
+[15:10:55.317] INFO: [ChatbotService] GEMINI_API_KEY carregada (primeiros 5 chars): AIzaS
+[15:10:55.398] INFO: [API Router] Roteando o pedido para: GET /api/profile
+[15:10:55.436] INFO: [API Router] Roteando o pedido protegido para: GET /profile
+[15:10:55.426] INFO: [API Router] Roteando o pedido protegido para: GET /profile
+backend/services/accountService.ts:464:11 - error TS2345: Argument of type '{ parentProcessError: unknown; }' is not assignable to parameter of type 'undefined'.
 
-34     logger.error('Erro ao gerar relatórios:', { error })
-                                                 ~~~~~~~~~
-
-backend/handlers/sharing.ts:286:65 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-286     logger.error('Erro inesperado na API de compartilhamento:', { error })
-                                                                    ~~~~~~~~~
-
-backend/handlers/tax-regime-history.ts:293:79 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-293     logger.error('Erro inesperado na API de histórico de regime tributário:', { error })
-                                                                                  ~~~~~~~~~
-
-backend/handlers/user-organization-roles.ts:334:70 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-334     logger.error('Erro inesperado na API de papéis de organização:', { error })
-                                                                         ~~~~~~~~~
-
-backend/handlers/user-presence.ts:28:60 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-28     logger.error('Erro ao atualizar presença do usuário:', { error })
-                                                              ~~~~~~~~~
-
-backend/handlers/user-presence.ts:54:53 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-54     logger.error('Erro ao buscar usuários online:', { error })
-                                                       ~~~~~~~~~
-
-backend/handlers/users.ts:56:57 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-56     logger.error('Erro inesperado na API de usuários:', { error })
-                                                           ~~~~~~~~~
-
-backend/handlers/year-end-closing.ts:64:64 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-64     logger.error('Erro ao processar fechamento de exercício:', { error })
-                                                                  ~~~~~~~~~
-
-backend/services/accountService.ts:51:62 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-51     logger.error('Accounts Service: Erro ao buscar contas:', { dbError })
-                                                                ~~~~~~~~~~~
-
-backend/services/accountService.ts:82:71 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-82     logger.error('Accounts Service: Erro ao buscar contas por tipo:', { dbError })
-                                                                         ~~~~~~~~~~~
-
-backend/services/accountService.ts:115:88 - error TS2345: Argument of type '{ parentError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-115       logger.error('Accounts Service: Erro ao buscar conta pai para determinar tipo:', { parentError })
-                                                                                           ~~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:133:9 - error TS2345: Argument of type '{ topLevelError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-133         { topLevelError },
-            ~~~~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:159:87 - error TS2345: Argument of type '{ parentError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-159         logger.error('Accounts Service: Erro ao buscar conta pai para gerar código:', { parentError })
-                                                                                          ~~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:176:9 - error TS2345: Argument of type '{ childrenError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-176         { childrenError },
-            ~~~~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:201:9 - error TS2345: Argument of type '{ topLevelError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-201         { topLevelError },
-            ~~~~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:229:60 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-229     logger.error('Accounts Service: Erro ao criar conta:', { dbError })
-                                                               ~~~~~~~~~~~
-
-backend/services/accountService.ts:254:64 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-254     logger.error('Accounts Service: Erro ao atualizar conta:', { dbError })
-                                                                   ~~~~~~~~~~~
-
-backend/services/accountService.ts:282:85 - error TS2345: Argument of type '{ fetchError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-282     logger.error('Accounts Service: Erro ao buscar conta para verificar proteção:', { fetchError })
-                                                                                        ~~~~~~~~~~~~~~
-
-backend/services/accountService.ts:299:62 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-299     logger.error('Accounts Service: Erro ao deletar conta:', { dbError })
-                                                                 ~~~~~~~~~~~
-
-backend/services/accountService.ts:331:70 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-331     logger.error('Accounts Service: Erro ao buscar conta por nome:', { dbError })
-                                                                         ~~~~~~~~~~~
-
-backend/services/accountService.ts:467:11 - error TS2345: Argument of type '{ parentProcessError: unknown; }' is not assignable to parameter of type 'undefined'.
-
-467           { parentProcessError },
+464           { parentProcessError },
               ~~~~~~~~~~~~~~~~~~~~~~
 
-backend/services/accountService.ts:481:7 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
+backend/services/accountService.ts:478:7 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
 
-481       { error },
+478       { error },
           ~~~~~~~~~
 
-backend/services/accountService.ts:483:47 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
+backend/services/accountService.ts:480:47 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
 
-483     logger.error('Erro detalhado do Gemini:', { error })
+480     logger.error('Erro detalhado do Gemini:', { error })
                                                   ~~~~~~~~~
 
-backend/services/chatbotService.ts:152:71 - error TS2345: Argument of type '{ solverError: unknown; }' is not assignable to parameter of type 'undefined'.
+backend/services/journalEntryService.ts:264:7 - error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined'.
 
-152         logger.error('Erro ao resolver exercício no ChatbotService:', { solverError })
-                                                                          ~~~~~~~~~~~~~~~
-
-backend/services/chatbotService.ts:183:82 - error TS2345: Argument of type '{ searchError: unknown; }' is not assignable to parameter of type 'undefined'.
-
-183         logger.error('Erro ao buscar lançamentos existentes no ChatbotService:', { searchError })
-                                                                                     ~~~~~~~~~~~~~~~
-
-backend/services/chatbotService.ts:198:71 - error TS2345: Argument of type '{ validationError: unknown; }' is not assignable to parameter of type 'undefined'.
-
-198         logger.error('Erro ao validar lançamento no ChatbotService:', { validationError })
-                                                                          ~~~~~~~~~~~~~~~~~~~
-
-backend/services/chatbotService.ts:232:60 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-232     logger.error('Erro ao se comunicar com o Gemini API:', { error })
-                                                               ~~~~~~~~~
-
-backend/services/confirmJournalEntryService.ts:68:7 - error TS2345: Argument of type '{ linesToCreate: ({ account_id: string; debit: number; credit: null; } | { account_id: string; debit: null; credit: number; })[]; }' is not assignable to parameter of type 'undefined'.
-
-68       { linesToCreate },
-         ~~~~~~~~~~~~~~~~~
-
-backend/services/documentProcessorService.ts:16:53 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-16       logger.error('Erro ao extrair texto de PDF:', { error })
-                                                       ~~~~~~~~~
-
-backend/services/documentProcessorService.ts:32:73 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-32       logger.error('Erro ao extrair texto de imagem com Tesseract.js:', { error })
-                                                                           ~~~~~~~~~
-
-backend/services/entryLineService.ts:32:65 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-32     logger.error('Erro ao criar linhas de lançamento simples:', { error })
-                                                                   ~~~~~~~~~
-
-backend/services/exerciseSolverService.ts:182:64 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-182     logger.error('Erro ao resolver exercício com Gemini API:', { error })
-                                                                   ~~~~~~~~~
-
-backend/services/financialTransactionService.ts:28:92 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-28     logger.error('Financial Transactions Service: Erro ao buscar transações financeiras:', { dbError })
-                                                                                              ~~~~~~~~~~~
-
-backend/services/financialTransactionService.ts:59:89 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-59     logger.error('Financial Transactions Service: Erro ao criar transação financeira:', { dbError })
-                                                                                           ~~~~~~~~~~~
-
-backend/services/journalEntrySearchService.ts:58:63 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-58       logger.error('Erro ao buscar lançamentos no Supabase:', { error })
-                                                                 ~~~~~~~~~
-
-backend/services/journalEntrySearchService.ts:65:70 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
-
-65     logger.error('Erro inesperado no Journal Entry Search Service:', { error })
-                                                                        ~~~~~~~~~
-
-backend/services/journalEntryService.ts:63:72 - error TS2345: Argument of type '{ productError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-63         logger.error('Erro ao buscar IDs de lançamentos com produto:', { productError })
-                                                                          ~~~~~~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:84:73 - error TS2345: Argument of type '{ taxError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-84         logger.error('Erro ao buscar IDs de lançamentos com impostos:', { taxError })
-                                                                           ~~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:104:70 - error TS2345: Argument of type '{ accountError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-104         logger.error('Erro ao buscar IDs de lançamentos por conta:', { accountError })
-                                                                         ~~~~~~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:135:84 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-135     logger.error('Journal Entries Service: Erro ao buscar lançamentos de diário:', { dbError })
-                                                                                       ~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:162:82 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-162     logger.error('Journal Entries Service: Erro ao criar lançamento de diário:', { dbError })
-                                                                                     ~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:187:86 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-187     logger.error('Journal Entries Service: Erro ao atualizar lançamento de diário:', { dbError })
-                                                                                         ~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:217:7 - error TS2345: Argument of type '{ dbError: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-217       { dbError },
-          ~~~~~~~~~~~
-
-backend/services/journalEntryService.ts:238:89 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-238       logger.error(`Error fetching entry lines for journal entry ${journal_entry_id}:`, { error })
-                                                                                            ~~~~~~~~~
-
-backend/services/journalEntryService.ts:267:7 - error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined'.
-
-267       error,
+264       error,
           ~~~~~
 
-backend/services/journalEntryValidatorService.ts:55:64 - error TS2345: Argument of type '{ error: unknown; }' is not assignable to parameter of type 'undefined'.
 
-55     logger.error('Erro ao validar lançamento com Gemini API:', { error })
-                                                                  ~~~~~~~~~
-
-backend/services/referenceService.ts:46:82 - error TS2345: Argument of type '{ err: unknown; }' is not assignable to parameter of type 'undefined'.
-
-46     logger.error(`Erro ao obter o próximo número de referência para ${prefix}:`, { err })
-                                                                                    ~~~~~~~
-
-backend/services/taxSettingService.ts:21:85 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-21     logger.error('Tax Settings Service: Erro ao buscar configurações de impostos:', { error })
-                                                                                       ~~~~~~~~~
-
-backend/services/userPresenceService.ts:25:62 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-25       logger.error('Erro ao atualizar presença do usuário:', { error })
-                                                                ~~~~~~~~~
-
-backend/services/userPresenceService.ts:48:55 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-48       logger.error('Erro ao buscar usuários online:', { error })
-                                                         ~~~~~~~~~
-
-backend/utils/middleware.ts:52:47 - error TS2345: Argument of type '{ message: string; }' is not assignable to parameter of type 'undefined'.
-
-52         logger.error('Erro de autenticação:', { message: authError?.message || 'Usuário não encontrado.' })
-                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-backend/utils/middleware.ts:71:11 - error TS2345: Argument of type '{ message: string; }' is not assignable to parameter of type 'undefined'.
-
-71           { message: profileError?.message || 'Perfil não encontrado.' },
-             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-backend/utils/middleware.ts:78:70 - error TS2345: Argument of type '{ err: unknown; }' is not assignable to parameter of type 'undefined'.
-
-78       logger.error('Erro inesperado no middleware de autenticação:', { err })
-                                                                        ~~~~~~~
-
-backend/utils/supabaseClient.ts:56:7 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-56       { error },
-         ~~~~~~~~~
-
-backend/utils/supabaseClient.ts:101:7 - error TS2345: Argument of type '{ error: PostgrestError; }' is not assignable to parameter of type 'undefined'.
-
-101       { error },
-          ~~~~~~~~~
-
-
-Found 55 errors in 22 files.
+Found 4 errors in 2 files.
 
 Errors  Files
-     1  backend/handlers/reports/generate.ts:34
-     1  backend/handlers/sharing.ts:286
-     1  backend/handlers/tax-regime-history.ts:293
-     1  backend/handlers/user-organization-roles.ts:334
-     2  backend/handlers/user-presence.ts:28
-     1  backend/handlers/users.ts:56
-     1  backend/handlers/year-end-closing.ts:64
-    15  backend/services/accountService.ts:51
-     4  backend/services/chatbotService.ts:152
-     1  backend/services/confirmJournalEntryService.ts:68
-     2  backend/services/documentProcessorService.ts:16
-     1  backend/services/entryLineService.ts:32
-     1  backend/services/exerciseSolverService.ts:182
-     2  backend/services/financialTransactionService.ts:28
-     2  backend/services/journalEntrySearchService.ts:58
-     9  backend/services/journalEntryService.ts:63
-     1  backend/services/journalEntryValidatorService.ts:55
-     1  backend/services/referenceService.ts:46
-     1  backend/services/taxSettingService.ts:21
-     2  backend/services/userPresenceService.ts:25
-     3  backend/utils/middleware.ts:52
-     2  backend/utils/supabaseClient.ts:56
+     3  backend/services/accountService.ts:464
+     1  backend/services/journalEntryService.ts:264

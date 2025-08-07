@@ -25,7 +25,7 @@ export async function updateUserPresence(
     res.status(200).json({ message: 'User presence updated.' })
   } catch (error: unknown) {
     // <-- Alterado de 'any' para 'unknown'
-    logger.error('Erro ao atualizar presença do usuário:', { error })
+    logger.error({ error }, 'Erro ao atualizar presença do usuário:')
     // Adicionada verificação de tipo para acessar 'message' com segurança
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     handleErrorResponse(res, 500, message)
@@ -51,7 +51,7 @@ export async function getOnlineUsers(req: VercelRequest, res: VercelResponse): P
     res.status(200).json(onlineUsers)
   } catch (error: unknown) {
     // <-- Alterado de 'any' para 'unknown'
-    logger.error('Erro ao buscar usuários online:', { error })
+    logger.error({ error }, 'Erro ao buscar usuários online:')
     // Adicionada verificação de tipo para acessar 'message' com segurança
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     handleErrorResponse(res, 500, message)
