@@ -10,6 +10,8 @@ export interface Account {
   organization_id?: string
   accounting_period_id?: string
   is_protected?: boolean
+  balance?: number // Adicionado para refletir o saldo da conta
+  is_active?: boolean // Adicionado para indicar se a conta está ativa
 }
 
 export interface Product {

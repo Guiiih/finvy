@@ -39,7 +39,7 @@ export async function getAccounts(
   } = await userSupabase
     .from('accounts')
     .select(
-      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected',
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active',
       { count: 'exact' },
     )
     .eq('organization_id', organization_id)
@@ -52,7 +52,7 @@ export async function getAccounts(
     throw dbError
   }
 
-  return { data: data as Account[], count: count || 0 }
+  return { data: data.map(acc => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
 }
 
 export async function getAccountsByType(
@@ -70,7 +70,7 @@ export async function getAccountsByType(
   } = await userSupabase
     .from('accounts')
     .select(
-      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected',
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active',
       { count: 'exact' },
     )
     .eq('organization_id', organization_id)
@@ -83,7 +83,7 @@ export async function getAccountsByType(
     throw dbError
   }
 
-  return { data: data as Account[], count: count || 0 }
+  return { data: data.map(acc => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
 }
 
 export async function createAccount(

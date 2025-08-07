@@ -11,6 +11,7 @@ import Button from 'primevue/button'
 import OverlayPanel from 'primevue/overlaypanel'
 
 import AccountFormModal from '@/components/AccountFormModal.vue'
+import AccountAnalyticsModal from '@/components/AccountAnalyticsModal.vue'
 
 const accountStore = useAccountStore()
 const toast = useToast()
@@ -22,6 +23,8 @@ const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const selectedAccountTypes = ref<AccountType[]>([]) // Alterado para array
+
+const showAnalyticsModal = ref(false)
 
 const op = ref<InstanceType<typeof OverlayPanel> | undefined>()
 
@@ -183,7 +186,6 @@ onMounted(async () => {
 <template>
   <div>
     <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center"></div>
 
       <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
@@ -216,6 +218,13 @@ onMounted(async () => {
           </div>
         </OverlayPanel>
 
+        <Button
+          label="Análise"
+          icon="pi pi-chart-bar"
+          class="p-button-secondary p-button-outlined"
+          @click="showAnalyticsModal = true"
+        />
+
         <button
           @click="openNewAccountModal"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
@@ -230,6 +239,11 @@ onMounted(async () => {
         :editingAccount="editingAccount"
         @update:visible="displayModal = $event"
         @submitSuccess="handleModalSubmitSuccess"
+      />
+
+      <AccountAnalyticsModal
+        :visible="showAnalyticsModal"
+        @update:visible="showAnalyticsModal = $event"
       />
 
       <div class="overflow-hidden">
