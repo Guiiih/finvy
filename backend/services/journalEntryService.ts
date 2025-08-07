@@ -8,22 +8,54 @@ export async function getJournalEntries(
   token: string,
   page: number = 1,
   limit: number = 10,
+  status: string | null = null,
+  filters: {
+    dateFrom?: string | null;
+    dateTo?: string | null;
+    amountFrom?: number | null;
+    amountTo?: number | null;
+    createdBy?: string | null;
+    hasProduct?: boolean;
+    hasTaxes?: boolean;
+    accounts?: string[];
+  } | null = null,
 ): Promise<{ data: JournalEntry[]; count: number }> {
   const userSupabase = getSupabaseClient(token)
 
   const offset = (page - 1) * limit
 
-  const {
-    data,
-    error: dbError,
-    count,
-  } = await userSupabase
+  let query = userSupabase
     .from('journal_entries')
     .select('id, entry_date, description, reference, status, organization_id, accounting_period_id, created_by_name, created_by_email, created_by_username, created_at', {
       count: 'exact',
     })
     .eq('organization_id', organization_id)
     .eq('accounting_period_id', active_accounting_period_id)
+
+  if (status) {
+    query = query.eq('status', status)
+  }
+
+  if (filters) {
+    if (filters.dateFrom) {
+      query = query.gte('entry_date', filters.dateFrom)
+    }
+    if (filters.dateTo) {
+      query = query.lte('entry_date', filters.dateTo)
+    }
+    if (filters.createdBy) {
+      query = query.ilike('created_by_name', `%${filters.createdBy}%`)
+    }
+
+    // TODO: Implementar filtros de amountFrom, amountTo, hasProduct, hasTaxes e accounts
+    // Estes filtros exigem joins ou subconsultas com a tabela 'entry_lines' e podem ser mais complexos.
+    // Exemplo para accounts (requer join com entry_lines):
+    // if (filters.accounts && filters.accounts.length > 0) {
+    //   query = query.in('id', userSupabase.from('entry_lines').select('journal_entry_id').in('account_id', filters.accounts))
+    // }
+  }
+
+  const { data, error: dbError, count } = await query
     .order('entry_date', { ascending: false })
     .range(offset, offset + limit - 1)
 

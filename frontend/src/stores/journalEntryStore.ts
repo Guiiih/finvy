@@ -37,7 +37,21 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     { deep: true },
   )
 
-  async function fetchJournalEntries(page: number = 1, itemsPerPage: number = 10, status: string | null = null) {
+  async function fetchJournalEntries(
+    page: number = 1,
+    itemsPerPage: number = 10,
+    status: string | null = null,
+    filters: {
+      dateFrom: string | null;
+      dateTo: string | null;
+      amountFrom: number | null;
+      amountTo: number | null;
+      createdBy: string | null;
+      hasProduct: boolean;
+      hasTaxes: boolean;
+      accounts: string[];
+    } | null = null,
+  ) {
     loading.value = true
     error.value = null
     try {
@@ -47,7 +61,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       const activePeriod = accountingPeriodStore.activeAccountingPeriod
       if (!activePeriod || !activePeriod.organization_id || !activePeriod.id) {
-        console.warn('Não foi possível obter organization_id ou accounting_period_id após fetchAccountingPeriods.')
+        console.warn(
+          'Não foi possível obter organization_id ou accounting_period_id após fetchAccountingPeriods.',
+        )
         return // Sai da função se os IDs ainda não estiverem disponíveis
       }
 
@@ -63,6 +79,18 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
 
       if (status) {
         params.status = status
+      }
+
+      // Adicionar filtros avançados aos parâmetros
+      if (filters) {
+        if (filters.dateFrom) params.dateFrom = filters.dateFrom
+        if (filters.dateTo) params.dateTo = filters.dateTo
+        if (filters.amountFrom !== null) params.amountFrom = filters.amountFrom
+        if (filters.amountTo !== null) params.amountTo = filters.amountTo
+        if (filters.createdBy) params.createdBy = filters.createdBy
+        if (filters.hasProduct) params.hasProduct = filters.hasProduct
+        if (filters.hasTaxes) params.hasTaxes = filters.hasTaxes
+        if (filters.accounts && filters.accounts.length > 0) params.accounts = filters.accounts.join(',') // Enviar como string separada por vírgulas
       }
 
       const response = await api.get<{ data: JournalEntry[]; count: number }>('/journal-entries', {

@@ -12,6 +12,7 @@ import OverlayPanel from 'primevue/overlaypanel'
 
 import Paginator from 'primevue/paginator'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
+import JournalEntryAdvancedFiltersModal from '@/components/JournalEntryAdvancedFiltersModal.vue' // Importar o novo componente
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
@@ -37,8 +38,21 @@ const statusOptions = ref([
   { label: 'Revisado', value: 'reviewed' },
 ])
 
+// Novos estados para filtros avançados
+const showAdvancedFiltersModal = ref(false)
+const advancedFilters = ref({
+  dateFrom: null as string | null,
+  dateTo: null as string | null,
+  amountFrom: null as number | null,
+  amountTo: null as number | null,
+  createdBy: null as string | null,
+  hasProduct: false,
+  hasTaxes: false,
+  accounts: [] as string[],
+})
+
 watch(selectedStatus, (newStatus) => {
-  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, newStatus || null)
+  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, newStatus || null, advancedFilters.value)
   op.value.hide() // Hide the overlay after selection
 })
 
@@ -49,7 +63,7 @@ function toggleFilter(event: Event) {
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
   itemsPerPage.value = event.rows
-  journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value)
+  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value)
 }
 
 function formatCurrency(value: number) {
@@ -72,7 +86,7 @@ async function handleModalSubmitSuccess() {
   showJournalEntryFormModal.value = false
   isEditing.value = false
   editingEntry.value = null
-  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value) // Refresh entries after add/edit
+  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value) // Refresh entries after add/edit
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
@@ -107,7 +121,7 @@ async function handleDuplicate(entry: JournalEntry) {
       detail: 'Lançamento duplicado com sucesso!',
       life: 3000,
     });
-    await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value); // Atualiza a lista
+    await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value); // Atualiza a lista
   } catch (err: unknown) {
     console.error('Erro ao duplicar lançamento:', err);
     const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao duplicar.';
@@ -142,11 +156,44 @@ async function handleDelete(id: string | undefined) {
   }
 }
 
+// Função para buscar lançamentos com todos os filtros
+async function fetchEntriesWithFilters(
+  page: number,
+  limit: number,
+  status: string | null,
+  filters: typeof advancedFilters.value
+) {
+  await journalEntryStore.fetchJournalEntries(page, limit, status, filters)
+}
+
+// Lidar com a aplicação de filtros avançados
+async function handleApplyAdvancedFilters(filters: typeof advancedFilters.value) {
+  advancedFilters.value = filters;
+  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
+}
+
+// Lidar com a limpeza de filtros avançados (agora é parte do apply-filters com filtros vazios)
+function handleClearAdvancedFilters() {
+  // Esta função não é mais diretamente chamada pelo modal, mas é mantida para clareza
+  // A limpeza é feita dentro do modal e emitida via apply-filters
+  advancedFilters.value = {
+    dateFrom: null,
+    dateTo: null,
+    amountFrom: null,
+    amountTo: null,
+    createdBy: null,
+    hasProduct: false,
+    hasTaxes: false,
+    accounts: [],
+  };
+  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
+}
+
 onMounted(async () => {
-  await journalEntryStore.fetchJournalEntries(currentPage.value, itemsPerPage.value, selectedStatus.value)
-  accountStore.fetchAccounts()
-  productStore.fetchProducts(currentPage.value, itemsPerPage.value)
-})
+  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
+  await accountStore.fetchAccounts(); // Garante que as contas estejam carregadas para o modal
+  productStore.fetchProducts(currentPage.value, itemsPerPage.value);
+});
 </script>
 
 <template>
@@ -176,6 +223,14 @@ onMounted(async () => {
           class="p-button-outlined p-button-secondary"
         />
 
+        <Button
+          type="button"
+          icon="pi pi-sliders-h"
+          label="Filtros Avançados"
+          @click="showAdvancedFiltersModal = true"
+          class="p-button-outlined p-button-secondary"
+        />
+
         <button
           @click="openNewEntryModal"
           class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
@@ -194,12 +249,67 @@ onMounted(async () => {
         </OverlayPanel>
       </div>
 
+      <!-- Display Active Filters -->
+      <div
+        v-if="
+          advancedFilters.dateFrom ||
+          advancedFilters.dateTo ||
+          advancedFilters.amountFrom ||
+          advancedFilters.amountTo ||
+          advancedFilters.createdBy ||
+          advancedFilters.hasProduct ||
+          advancedFilters.hasTaxes ||
+          advancedFilters.accounts.length > 0
+        "
+        class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center gap-2"
+      >
+        <span class="font-medium text-blue-900">Filtros Ativos:</span>
+        <span v-if="advancedFilters.dateFrom" class="p-tag p-tag-info"
+          >De: {{ new Date(advancedFilters.dateFrom).toLocaleDateString('pt-BR') }}</span
+        >
+        <span v-if="advancedFilters.dateTo" class="p-tag p-tag-info"
+          >Até: {{ new Date(advancedFilters.dateTo).toLocaleDateString('pt-BR') }}</span
+        >
+        <span v-if="advancedFilters.amountFrom" class="p-tag p-tag-info"
+          >Valor Min: {{ advancedFilters.amountFrom.toLocaleString('pt-BR') }}</span
+        >
+        <span v-if="advancedFilters.amountTo" class="p-tag p-tag-info"
+          >Valor Max: {{ advancedFilters.amountTo.toLocaleString('pt-BR') }}</span
+        >
+        <span v-if="advancedFilters.createdBy" class="p-tag p-tag-info"
+          >Criado por: {{ advancedFilters.createdBy }}</span
+        >
+        <span v-if="advancedFilters.hasProduct" class="p-tag p-tag-info"
+          >Com Produto</span
+        >
+        <span v-if="advancedFilters.hasTaxes" class="p-tag p-tag-info"
+          >Com Impostos</span
+        >
+        <span v-if="advancedFilters.accounts.length > 0" class="p-tag p-tag-info"
+          >Contas: {{ advancedFilters.accounts.join(', ') }}</span
+        >
+        <Button
+          label="Limpar Filtros"
+          icon="pi pi-times"
+          class="p-button-sm p-button-text p-button-danger ml-auto"
+          @click="handleClearAdvancedFilters"
+        />
+      </div>
+
       <JournalEntryFormModal
         :visible="showJournalEntryFormModal"
         :isEditing="isEditing"
         :editingEntry="editingEntry"
         @update:visible="showJournalEntryFormModal = $event"
         @submitSuccess="handleModalSubmitSuccess"
+      />
+
+      <JournalEntryAdvancedFiltersModal
+        :visible="showAdvancedFiltersModal"
+        :accounts="accountStore.accounts"
+        :initialFilters="advancedFilters"
+        @update:visible="showAdvancedFiltersModal = $event"
+        @apply-filters="handleApplyAdvancedFilters"
       />
 
       <div class="overflow-hidden">
