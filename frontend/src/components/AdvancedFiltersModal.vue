@@ -26,11 +26,14 @@ const filters = ref({
   selectedAccounts: [],
 })
 
-watch(() => props.visible, (newVal) => {
-  if (!newVal) {
-    // Reset filters when modal is closed without applying
-  }
-})
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (!newVal) {
+      // Reset filters when modal is closed without applying
+    }
+  },
+)
 
 function applyFilters() {
   emit('apply-filters', filters.value)
@@ -75,11 +78,21 @@ function clearFilters() {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex flex-col">
           <label for="amountFrom" class="mb-2 font-semibold">Valor Mínimo (R$)</label>
-          <InputText v-model="filters.amountFrom" type="number" placeholder="0,00" inputId="amountFrom" />
+          <InputText
+            v-model="filters.amountFrom"
+            type="number"
+            placeholder="0,00"
+            inputId="amountFrom"
+          />
         </div>
         <div class="flex flex-col">
           <label for="amountTo" class="mb-2 font-semibold">Valor Máximo (R$)</label>
-          <InputText v-model="filters.amountTo" type="number" placeholder="0,00" inputId="amountTo" />
+          <InputText
+            v-model="filters.amountTo"
+            type="number"
+            placeholder="0,00"
+            inputId="amountTo"
+          />
         </div>
       </div>
 
@@ -115,8 +128,18 @@ function clearFilters() {
     </div>
 
     <template #footer>
-      <Button label="Limpar Filtros" icon="pi pi-filter-slash" class="p-button-text" @click="clearFilters" />
-      <Button label="Cancelar" icon="pi pi-times" class="p-button-outlined" @click="$emit('update:visible', false)" />
+      <Button
+        label="Limpar Filtros"
+        icon="pi pi-filter-slash"
+        class="p-button-text"
+        @click="clearFilters"
+      />
+      <Button
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined"
+        @click="$emit('update:visible', false)"
+      />
       <Button label="Aplicar Filtros" icon="pi pi-check" @click="applyFilters" />
     </template>
   </Dialog>

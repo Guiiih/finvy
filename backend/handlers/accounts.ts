@@ -18,7 +18,7 @@ export default async function handler(
   user_id: string,
   token: string,
 ) {
-  logger.info('Accounts Handler: user_id recebido:', user_id)
+  logger.info({ user_id }, 'Accounts Handler: user_id recebido:')
 
   const userOrgAndPeriod = await getUserOrganizationAndPeriod(user_id, token)
   if (!userOrgAndPeriod) {
@@ -273,7 +273,7 @@ export default async function handler(
       return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
     }
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de contas:', error)
+    logger.error({ error }, 'Erro inesperado na API de contas:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

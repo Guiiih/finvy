@@ -149,7 +149,7 @@ export async function sendMessageToChatbot(
         }
       } catch (solverError: unknown) {
         // CORRIGIDO: de any para unknown
-        logger.error('Erro ao resolver exercício no ChatbotService:', solverError)
+        logger.error('Erro ao resolver exercício no ChatbotService:', { solverError })
         const message = solverError instanceof Error ? solverError.message : 'Erro desconhecido'
         replyText = `Erro ao resolver o exercício: ${message}`
         intent = 'general_question'
@@ -180,7 +180,7 @@ export async function sendMessageToChatbot(
         }
       } catch (searchError: unknown) {
         // CORRIGIDO: de any para unknown
-        logger.error('Erro ao buscar lançamentos existentes no ChatbotService:', searchError)
+        logger.error('Erro ao buscar lançamentos existentes no ChatbotService:', { searchError })
         const message = searchError instanceof Error ? searchError.message : 'Erro desconhecido'
         replyText = `Erro ao buscar lançamentos existentes: ${message}`
         intent = 'general_question'
@@ -195,7 +195,7 @@ export async function sendMessageToChatbot(
         intent = 'general_question'
       } catch (validationError: unknown) {
         // CORRIGIDO: de any para unknown
-        logger.error('Erro ao validar lançamento no ChatbotService:', validationError)
+        logger.error('Erro ao validar lançamento no ChatbotService:', { validationError })
         const message =
           validationError instanceof Error ? validationError.message : 'Erro desconhecido'
         replyText = `Erro ao validar o lançamento: ${message}`
@@ -229,7 +229,7 @@ export async function sendMessageToChatbot(
     }
   } catch (error: unknown) {
     // CORRIGIDO: de any para unknown
-    logger.error('Erro ao se comunicar com o Gemini API:', error)
+    logger.error('Erro ao se comunicar com o Gemini API:', { error })
     const message =
       error instanceof Error
         ? error.message

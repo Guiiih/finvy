@@ -52,7 +52,7 @@ export async function validateJournalEntry(journalEntryDescription: string): Pro
     logger.info(`[JournalEntryValidatorService] Análise do Gemini recebida.`)
     return text
   } catch (error) {
-    logger.error('Erro ao validar lançamento com Gemini API:', error)
+    logger.error('Erro ao validar lançamento com Gemini API:', { error })
     throw new Error('Não foi possível validar o lançamento contábil.')
   }
 }

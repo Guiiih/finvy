@@ -175,10 +175,12 @@
         <div class="md:col-span-3 flex justify-end space-x-2">
           <button
             type="button"
-            @click="() => {
-              showEditPeriodForm = false;
-              editingPeriod = null;
-            }"
+            @click="
+              () => {
+                showEditPeriodForm = false
+                editingPeriod = null
+              }
+            "
             class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
           >
             Cancelar

@@ -42,14 +42,14 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     itemsPerPage: number = 10,
     status: string | null = null,
     filters: {
-      dateFrom: string | null;
-      dateTo: string | null;
-      amountFrom: number | null;
-      amountTo: number | null;
-      createdBy: string | null;
-      hasProduct: boolean;
-      hasTaxes: boolean;
-      accounts: string[];
+      dateFrom: string | null
+      dateTo: string | null
+      amountFrom: number | null
+      amountTo: number | null
+      createdBy: string | null
+      hasProduct: boolean
+      hasTaxes: boolean
+      accounts: string[]
     } | null = null,
   ) {
     loading.value = true
@@ -90,7 +90,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         if (filters.createdBy) params.createdBy = filters.createdBy
         if (filters.hasProduct) params.hasProduct = filters.hasProduct
         if (filters.hasTaxes) params.hasTaxes = filters.hasTaxes
-        if (filters.accounts && filters.accounts.length > 0) params.accounts = filters.accounts.join(',') // Enviar como string separada por vírgulas
+        if (filters.accounts && filters.accounts.length > 0)
+          params.accounts = filters.accounts.join(',') // Enviar como string separada por vírgulas
       }
 
       const response = await api.get<{ data: JournalEntry[]; count: number }>('/journal-entries', {
@@ -184,7 +185,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
             }
           } else if (payload.eventType === 'DELETE') {
             if (oldEntry) {
-              journalEntries.value = journalEntries.value.filter((entry) => entry.id !== oldEntry.id)
+              journalEntries.value = journalEntries.value.filter(
+                (entry) => entry.id !== oldEntry.id,
+              )
             }
           }
         },
@@ -341,7 +344,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
         detail: String(err),
         life: 5000,
       })
-      
+
       throw err
     } finally {
       loading.value = false

@@ -10,14 +10,14 @@ export async function getJournalEntries(
   limit: number = 10,
   status: string | null = null,
   filters: {
-    dateFrom?: string | null;
-    dateTo?: string | null;
-    amountFrom?: number | null;
-    amountTo?: number | null;
-    createdBy?: string | null;
-    hasProduct?: boolean;
-    hasTaxes?: boolean;
-    accounts?: string[];
+    dateFrom?: string | null
+    dateTo?: string | null
+    amountFrom?: number | null
+    amountTo?: number | null
+    createdBy?: string | null
+    hasProduct?: boolean
+    hasTaxes?: boolean
+    accounts?: string[]
   } | null = null,
 ): Promise<{ data: JournalEntry[]; count: number }> {
   const userSupabase = getSupabaseClient(token)
@@ -26,9 +26,12 @@ export async function getJournalEntries(
 
   let query = userSupabase
     .from('journal_entries')
-    .select('id, entry_date, description, reference, status, organization_id, accounting_period_id, created_by_name, created_by_email, created_by_username, created_at', {
-      count: 'exact',
-    })
+    .select(
+      'id, entry_date, description, reference, status, organization_id, accounting_period_id, created_by_name, created_by_email, created_by_username, created_at',
+      {
+        count: 'exact',
+      },
+    )
     .eq('organization_id', organization_id)
     .eq('accounting_period_id', active_accounting_period_id)
 
@@ -54,18 +57,18 @@ export async function getJournalEntries(
         .select('journal_entry_id')
         .not('product_id', 'is', null)
         .eq('organization_id', organization_id)
-        .eq('accounting_period_id', active_accounting_period_id);
+        .eq('accounting_period_id', active_accounting_period_id)
 
       if (productError) {
-        logger.error('Erro ao buscar IDs de lançamentos com produto:', productError);
-        throw productError;
+        logger.error('Erro ao buscar IDs de lançamentos com produto:', { productError })
+        throw productError
       }
-      const ids = productEntryIds.map(item => item.journal_entry_id);
+      const ids = productEntryIds.map((item) => item.journal_entry_id)
       if (ids.length > 0) {
-        query = query.in('id', ids);
+        query = query.in('id', ids)
       } else {
         // If no matching entry_lines, ensure no journal entries are returned
-        query = query.eq('id', 'non_existent_id');
+        query = query.eq('id', 'non_existent_id')
       }
     }
 
@@ -75,17 +78,17 @@ export async function getJournalEntries(
         .select('journal_entry_id')
         .not('icms_value', 'is', null) // Assuming icms_value indicates taxes
         .eq('organization_id', organization_id)
-        .eq('accounting_period_id', active_accounting_period_id);
+        .eq('accounting_period_id', active_accounting_period_id)
 
       if (taxError) {
-        logger.error('Erro ao buscar IDs de lançamentos com impostos:', taxError);
-        throw taxError;
+        logger.error('Erro ao buscar IDs de lançamentos com impostos:', { taxError })
+        throw taxError
       }
-      const ids = taxEntryIds.map(item => item.journal_entry_id);
+      const ids = taxEntryIds.map((item) => item.journal_entry_id)
       if (ids.length > 0) {
-        query = query.in('id', ids);
+        query = query.in('id', ids)
       } else {
-        query = query.eq('id', 'non_existent_id');
+        query = query.eq('id', 'non_existent_id')
       }
     }
 
@@ -95,17 +98,17 @@ export async function getJournalEntries(
         .select('journal_entry_id')
         .in('account_id', filters.accounts)
         .eq('organization_id', organization_id)
-        .eq('accounting_period_id', active_accounting_period_id);
+        .eq('accounting_period_id', active_accounting_period_id)
 
       if (accountError) {
-        logger.error('Erro ao buscar IDs de lançamentos por conta:', accountError);
-        throw accountError;
+        logger.error('Erro ao buscar IDs de lançamentos por conta:', { accountError })
+        throw accountError
       }
-      const ids = accountEntryIds.map(item => item.journal_entry_id);
+      const ids = accountEntryIds.map((item) => item.journal_entry_id)
       if (ids.length > 0) {
-        query = query.in('id', ids);
+        query = query.in('id', ids)
       } else {
-        query = query.eq('id', 'non_existent_id');
+        query = query.eq('id', 'non_existent_id')
       }
     }
 
@@ -116,16 +119,20 @@ export async function getJournalEntries(
     // the total amount for each journal entry and then query that function/view.
     // For now, these filters will not be implemented directly here.
     if (filters.amountFrom !== null || filters.amountTo !== null) {
-      logger.warn('Amount filters (amountFrom, amountTo) are not fully implemented due to Supabase client-side query limitations for aggregation on related tables. Consider using a PostgreSQL function or view for this.');
+      logger.warn(
+        'Amount filters (amountFrom, amountTo) are not fully implemented due to Supabase client-side query limitations for aggregation on related tables. Consider using a PostgreSQL function or view for this.',
+      )
     }
   }
 
-  const { data, error: dbError, count } = await query
-    .order('entry_date', { ascending: false })
-    .range(offset, offset + limit - 1)
+  const {
+    data,
+    error: dbError,
+    count,
+  } = await query.order('entry_date', { ascending: false }).range(offset, offset + limit - 1)
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao buscar lançamentos de diário:', dbError)
+    logger.error('Journal Entries Service: Erro ao buscar lançamentos de diário:', { dbError })
     throw dbError
   }
 
@@ -152,7 +159,7 @@ export async function createJournalEntry(
     .select()
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao criar lançamento de diário:', dbError)
+    logger.error('Journal Entries Service: Erro ao criar lançamento de diário:', { dbError })
     throw dbError
   }
 
@@ -177,7 +184,7 @@ export async function updateJournalEntry(
     .select()
 
   if (dbError) {
-    logger.error('Journal Entries Service: Erro ao atualizar lançamento de diário:', dbError)
+    logger.error('Journal Entries Service: Erro ao atualizar lançamento de diário:', { dbError })
     throw dbError
   }
 
@@ -207,7 +214,7 @@ export async function deleteJournalEntry(
   if (dbError) {
     logger.error(
       `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`,
-      dbError,
+      { dbError },
     )
     throw dbError
   }
@@ -228,7 +235,7 @@ export async function checkDoubleEntryBalance(
       .eq('journal_entry_id', journal_entry_id)
 
     if (error) {
-      logger.error(`Error fetching entry lines for journal entry ${journal_entry_id}:`, error)
+      logger.error(`Error fetching entry lines for journal entry ${journal_entry_id}:`, { error })
       return false
     }
 

@@ -31,7 +31,7 @@ export default async function handler(
 
     res.status(200).json(reports)
   } catch (error: unknown) {
-    logger.error('Erro ao gerar relatórios:', error)
+    logger.error('Erro ao gerar relatórios:', { error })
     const message = error instanceof Error ? error.message : 'Erro desconhecido'
     handleErrorResponse(res, 500, `Erro no servidor: ${message}`)
   }

@@ -189,7 +189,7 @@ export default async function handler(
       return handleErrorResponse(res, 400, 'Formato de exportação não suportado.')
     }
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de exportação de relatórios consolidados:', error)
+    logger.error({ error }, 'Erro inesperado na API de exportação de relatórios consolidados:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

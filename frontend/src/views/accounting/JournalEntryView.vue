@@ -52,7 +52,12 @@ const advancedFilters = ref({
 })
 
 watch(selectedStatus, (newStatus) => {
-  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, newStatus || null, advancedFilters.value)
+  fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    newStatus || null,
+    advancedFilters.value,
+  )
   op.value.hide() // Hide the overlay after selection
 })
 
@@ -63,7 +68,12 @@ function toggleFilter(event: Event) {
 function onPageChange(event: { page: number; first: number; rows: number; pageCount?: number }) {
   currentPage.value = event.page + 1
   itemsPerPage.value = event.rows
-  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value)
+  fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  )
 }
 
 function formatCurrency(value: number) {
@@ -86,7 +96,12 @@ async function handleModalSubmitSuccess() {
   showJournalEntryFormModal.value = false
   isEditing.value = false
   editingEntry.value = null
-  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value) // Refresh entries after add/edit
+  await fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  ) // Refresh entries after add/edit
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
@@ -112,20 +127,25 @@ async function handleDuplicate(entry: JournalEntry) {
       description: `[CÓPIA] ${entry.description}`,
       entry_date: new Date().toISOString().split('T')[0], // Data atual
       status: 'draft', // Define como rascunho
-      lines: entry.lines.map(line => ({ ...line })) // Copia as linhas
-    };
-    await journalEntryStore.addJournalEntry(duplicatedEntry as Omit<JournalEntry, 'id'>);
+      lines: entry.lines.map((line) => ({ ...line })), // Copia as linhas
+    }
+    await journalEntryStore.addJournalEntry(duplicatedEntry as Omit<JournalEntry, 'id'>)
     toast.add({
       severity: 'success',
       summary: 'Sucesso',
       detail: 'Lançamento duplicado com sucesso!',
       life: 3000,
-    });
-    await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value); // Atualiza a lista
+    })
+    await fetchEntriesWithFilters(
+      currentPage.value,
+      itemsPerPage.value,
+      selectedStatus.value,
+      advancedFilters.value,
+    ) // Atualiza a lista
   } catch (err: unknown) {
-    console.error('Erro ao duplicar lançamento:', err);
-    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao duplicar.';
-    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+    console.error('Erro ao duplicar lançamento:', err)
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao duplicar.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
   }
 }
 
@@ -161,15 +181,20 @@ async function fetchEntriesWithFilters(
   page: number,
   limit: number,
   status: string | null,
-  filters: typeof advancedFilters.value
+  filters: typeof advancedFilters.value,
 ) {
   await journalEntryStore.fetchJournalEntries(page, limit, status, filters)
 }
 
 // Lidar com a aplicação de filtros avançados
 async function handleApplyAdvancedFilters(filters: typeof advancedFilters.value) {
-  advancedFilters.value = filters;
-  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
+  advancedFilters.value = filters
+  await fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  )
 }
 
 // Lidar com a limpeza de filtros avançados (agora é parte do apply-filters com filtros vazios)
@@ -185,15 +210,25 @@ function handleClearAdvancedFilters() {
     hasProduct: false,
     hasTaxes: false,
     accounts: [],
-  };
-  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
+  }
+  fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  )
 }
 
 onMounted(async () => {
-  await fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, selectedStatus.value, advancedFilters.value);
-  await accountStore.fetchAccounts(); // Garante que as contas estejam carregadas para o modal
-  productStore.fetchProducts(currentPage.value, itemsPerPage.value);
-});
+  await fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  )
+  await accountStore.fetchAccounts() // Garante que as contas estejam carregadas para o modal
+  productStore.fetchProducts(currentPage.value, itemsPerPage.value)
+})
 </script>
 
 <template>
@@ -279,12 +314,8 @@ onMounted(async () => {
         <span v-if="advancedFilters.createdBy" class="p-tag p-tag-info"
           >Criado por: {{ advancedFilters.createdBy }}</span
         >
-        <span v-if="advancedFilters.hasProduct" class="p-tag p-tag-info"
-          >Com Produto</span
-        >
-        <span v-if="advancedFilters.hasTaxes" class="p-tag p-tag-info"
-          >Com Impostos</span
-        >
+        <span v-if="advancedFilters.hasProduct" class="p-tag p-tag-info">Com Produto</span>
+        <span v-if="advancedFilters.hasTaxes" class="p-tag p-tag-info">Com Impostos</span>
         <span v-if="advancedFilters.accounts.length > 0" class="p-tag p-tag-info"
           >Contas: {{ advancedFilters.accounts.join(', ') }}</span
         >

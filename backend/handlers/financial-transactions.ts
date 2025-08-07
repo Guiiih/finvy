@@ -175,7 +175,7 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de transações financeiras:', error)
+    logger.error({ error }, 'Erro inesperado na API de transações financeiras:')
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     return handleErrorResponse(res, 500, message)
   }

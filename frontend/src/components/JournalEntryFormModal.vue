@@ -128,8 +128,6 @@ const totalCredits = computed(() =>
   ),
 )
 
-
-
 function resetForm() {
   newEntryDate.value = new Date().toISOString().split('T')[0]
   newEntryDescription.value = ''
@@ -370,8 +368,6 @@ async function submitEntry() {
           <Imposto />
         </TabPanel>
       </TabView>
-
-      
 
       <div class="flex space-x-4">
         <button

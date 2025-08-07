@@ -290,7 +290,7 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de histórico de regime tributário:', error)
+    logger.error('Erro inesperado na API de histórico de regime tributário:', { error })
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

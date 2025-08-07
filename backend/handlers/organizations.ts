@@ -121,10 +121,10 @@ export default async function handler(
 
       if (rpcError) {
         logger.error(`[Organizations] Erro ao buscar organizações acessíveis: ${rpcError.message}`)
-        logger.error(`[Organizations] Detalhes do erro RPC:`, rpcError)
+        logger.error({ rpcError }, `[Organizations] Detalhes do erro RPC:`)
         throw rpcError
       }
-      logger.info(`[Organizations] Dados brutos da RPC:`, data)
+      logger.info({ data }, `[Organizations] Dados brutos da RPC:`)
       logger.info(
         `[Organizations] Organizações encontradas: ${(data as AccessibleOrganization[]).length}`,
       )
@@ -266,7 +266,7 @@ export default async function handler(
     res.setHeader('Allow', ['POST', 'GET', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de organizações:', error)
+    logger.error({ error }, 'Erro inesperado na API de organizações:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

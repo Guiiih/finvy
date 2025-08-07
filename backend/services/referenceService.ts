@@ -43,7 +43,7 @@ export async function getNextReferenceNumber(
 
     return nextNumber
   } catch (err) {
-    logger.error(`Erro ao obter o próximo número de referência para ${prefix}:`, err)
+    logger.error(`Erro ao obter o próximo número de referência para ${prefix}:`, { err })
     throw new Error(
       `Falha ao gerar número de referência: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
     )

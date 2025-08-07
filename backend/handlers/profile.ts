@@ -72,7 +72,7 @@ export default async function handler(
         .single()
 
       if (dbError) {
-        logger.error('Erro ao buscar perfil:', dbError)
+        logger.error({ dbError }, 'Erro ao buscar perfil:')
         throw dbError
       }
 
@@ -82,7 +82,7 @@ export default async function handler(
 
       return res.status(200).json(profile)
     } catch (error: unknown) {
-      logger.error('Erro inesperado na API de perfil:', error)
+      logger.error({ error }, 'Erro inesperado na API de perfil:')
       const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
       return handleErrorResponse(res, 500, message)
     }
@@ -92,13 +92,13 @@ export default async function handler(
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id)
 
       if (deleteError) {
-        logger.error('Erro ao deletar usuário:', deleteError)
+        logger.error({ deleteError }, 'Erro ao deletar usuário:')
         throw deleteError
       }
 
       return res.status(200).json({ message: 'Usuário excluído com sucesso.' })
     } catch (error: unknown) {
-      logger.error('Erro inesperado ao excluir usuário:', error)
+      logger.error({ error }, 'Erro inesperado ao excluir usuário:')
       const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
       return handleErrorResponse(res, 500, message)
     }
@@ -136,7 +136,7 @@ export default async function handler(
 
       return res.status(200).json(data)
     } catch (error: unknown) {
-      logger.error('Erro inesperado na API de atualização de perfil:', error)
+      logger.error({ error }, 'Erro inesperado na API de atualização de perfil:')
       const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
       return handleErrorResponse(res, 500, message)
     }

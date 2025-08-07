@@ -29,7 +29,7 @@ export async function createSimpleEntryLines(
   const { data, error } = await userSupabase.from('entry_lines').insert(linesToInsert).select()
 
   if (error) {
-    logger.error('Erro ao criar linhas de lançamento simples:', error)
+    logger.error('Erro ao criar linhas de lançamento simples:', { error })
     throw error
   }
 

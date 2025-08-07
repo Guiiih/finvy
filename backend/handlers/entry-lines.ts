@@ -588,7 +588,7 @@ export default async function handler(
         .eq('accounting_period_id', active_accounting_period_id)
 
       if (dbError) {
-        logger.error('Erro ao deletar linhas de lançamento:', dbError)
+        logger.error({ dbError }, 'Erro ao deletar linhas de lançamento:')
         throw dbError
       }
 
@@ -598,7 +598,7 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de linhas de lançamento:', error)
+    logger.error({ error }, 'Erro inesperado na API de linhas de lançamento:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

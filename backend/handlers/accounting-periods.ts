@@ -460,7 +460,7 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de períodos contábeis:', error)
+    logger.error({ error }, 'Erro inesperado na API de períodos contábeis:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

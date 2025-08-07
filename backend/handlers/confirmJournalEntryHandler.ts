@@ -78,8 +78,8 @@ export default async function handler(
     res.setHeader('Allow', ['POST'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de confirmação de lançamentos:', error)
-    logger.error('Detalhes do erro:', error)
+    logger.error({ error }, 'Erro inesperado na API de confirmação de lançamentos:')
+    logger.error({ error }, 'Detalhes do erro:')
     return handleErrorResponse(
       res,
       500,

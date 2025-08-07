@@ -49,7 +49,7 @@ export function withAuth(handler: ApiHandler) {
       } = await anonSupabase.auth.getUser(token)
 
       if (authError || !user) {
-        logger.error('Erro de autenticação:', authError?.message || 'Usuário não encontrado.')
+        logger.error('Erro de autenticação:', { message: authError?.message || 'Usuário não encontrado.' })
         const status = authError instanceof AuthApiError ? authError.status : 401
         return handleErrorResponse(
           res,
@@ -68,14 +68,14 @@ export function withAuth(handler: ApiHandler) {
       if (profileError || !profileData) {
         logger.error(
           'Erro ao buscar perfil do usuário:',
-          profileError?.message || 'Perfil não encontrado.',
+          { message: profileError?.message || 'Perfil não encontrado.' },
         )
         return handleErrorResponse(res, 500, 'Perfil do usuário não encontrado ou erro ao buscar.')
       }
 
       await handler(req, res, user.id, token, profileData.role)
     } catch (err: unknown) {
-      logger.error('Erro inesperado no middleware de autenticação:', err)
+      logger.error('Erro inesperado no middleware de autenticação:', { err })
       const message = err instanceof Error ? err.message : 'Erro interno ao verificar autenticação.'
       return handleErrorResponse(res, 500, message)
     }

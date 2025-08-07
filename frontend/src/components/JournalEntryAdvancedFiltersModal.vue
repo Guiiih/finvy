@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { ref, watch, defineEmits, defineProps } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Calendar from 'primevue/calendar';
-import Checkbox from 'primevue/checkbox';
-import MultiSelect from 'primevue/multiselect';
-import type { Account } from '@/types'; // Importar o tipo Account
+import { ref, watch, defineEmits, defineProps } from 'vue'
+import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Calendar from 'primevue/calendar'
+import Checkbox from 'primevue/checkbox'
+import MultiSelect from 'primevue/multiselect'
+import type { Account } from '@/types' // Importar o tipo Account
 
 const props = defineProps<{
-  visible: boolean;
-  accounts: Account[]; // Alterado para receber accounts diretamente
+  visible: boolean
+  accounts: Account[] // Alterado para receber accounts diretamente
   initialFilters: {
-    dateFrom: string | null;
-    dateTo: string | null;
-    amountFrom: number | null;
-    amountTo: number | null;
-    createdBy: string | null;
-    hasProduct: boolean;
-    hasTaxes: boolean;
-    accounts: string[];
-  };
-}>();
+    dateFrom: string | null
+    dateTo: string | null
+    amountFrom: number | null
+    amountTo: number | null
+    createdBy: string | null
+    hasProduct: boolean
+    hasTaxes: boolean
+    accounts: string[]
+  }
+}>()
 
-const emit = defineEmits(['update:visible', 'apply-filters']); // Alterado o nome do evento
+const emit = defineEmits(['update:visible', 'apply-filters']) // Alterado o nome do evento
 
 const filters = ref({
   dateFrom: null as Date | null,
@@ -34,20 +34,29 @@ const filters = ref({
   hasProduct: false,
   hasTaxes: false,
   selectedAccounts: [] as string[],
-});
+})
 
-watch(() => props.visible, (newVal) => {
-  if (newVal) {
-    filters.value.dateFrom = props.initialFilters.dateFrom ? new Date(props.initialFilters.dateFrom) : null;
-    filters.value.dateTo = props.initialFilters.dateTo ? new Date(props.initialFilters.dateTo) : null;
-    filters.value.amountFrom = props.initialFilters.amountFrom !== null ? String(props.initialFilters.amountFrom) : null;
-    filters.value.amountTo = props.initialFilters.amountTo !== null ? String(props.initialFilters.amountTo) : null;
-    filters.value.createdBy = props.initialFilters.createdBy || '';
-    filters.value.hasProduct = props.initialFilters.hasProduct;
-    filters.value.hasTaxes = props.initialFilters.hasTaxes;
-    filters.value.selectedAccounts = props.initialFilters.accounts;
-  }
-});
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      filters.value.dateFrom = props.initialFilters.dateFrom
+        ? new Date(props.initialFilters.dateFrom)
+        : null
+      filters.value.dateTo = props.initialFilters.dateTo
+        ? new Date(props.initialFilters.dateTo)
+        : null
+      filters.value.amountFrom =
+        props.initialFilters.amountFrom !== null ? String(props.initialFilters.amountFrom) : null
+      filters.value.amountTo =
+        props.initialFilters.amountTo !== null ? String(props.initialFilters.amountTo) : null
+      filters.value.createdBy = props.initialFilters.createdBy || ''
+      filters.value.hasProduct = props.initialFilters.hasProduct
+      filters.value.hasTaxes = props.initialFilters.hasTaxes
+      filters.value.selectedAccounts = props.initialFilters.accounts
+    }
+  },
+)
 
 function applyFilters() {
   emit('apply-filters', {
@@ -59,9 +68,9 @@ function applyFilters() {
     hasProduct: filters.value.hasProduct,
     hasTaxes: filters.value.hasTaxes,
     accounts: filters.value.selectedAccounts,
-  });
-  emit('update:visible', false);
-};
+  })
+  emit('update:visible', false)
+}
 
 function clearFilters() {
   filters.value = {
@@ -73,10 +82,10 @@ function clearFilters() {
     hasProduct: false,
     hasTaxes: false,
     selectedAccounts: [],
-  };
-  emit('apply-filters', filters.value); // Aplica os filtros limpos
-  emit('update:visible', false);
-};
+  }
+  emit('apply-filters', filters.value) // Aplica os filtros limpos
+  emit('update:visible', false)
+}
 </script>
 
 <template>
@@ -142,8 +151,18 @@ function clearFilters() {
     </div>
 
     <template #footer>
-      <Button label="Limpar Filtros" icon="pi pi-filter-slash" class="p-button-text" @click="clearFilters" />
-      <Button label="Cancelar" icon="pi pi-times" class="p-button-outlined" @click="$emit('update:visible', false)" />
+      <Button
+        label="Limpar Filtros"
+        icon="pi pi-filter-slash"
+        class="p-button-text"
+        @click="clearFilters"
+      />
+      <Button
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined"
+        @click="$emit('update:visible', false)"
+      />
       <Button label="Aplicar Filtros" icon="pi pi-check" @click="applyFilters" />
     </template>
   </Dialog>

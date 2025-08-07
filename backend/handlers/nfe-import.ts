@@ -156,14 +156,14 @@ export default async function handler(
       items: items,
     }
 
-    logger.info(`[NFe Import] Dados extraídos e regime determinado:`, extractedData)
+    logger.info({ extractedData }, `[NFe Import] Dados extraídos e regime determinado:`)
 
     return res.status(200).json({
       message: 'XML processado com sucesso!',
       data: extractedData,
     })
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de importação de NF-e:', error)
+    logger.error({ error }, 'Erro inesperado na API de importação de NF-e:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

@@ -53,7 +53,7 @@ export async function getUserOrganizationAndPeriod(
   if (error) {
     logger.error(
       `[SupabaseClient] Erro ao buscar organization_id e active_accounting_period_id para o usuário ${user_id}:`,
-      error,
+      { error },
     )
     return null
   }
@@ -96,7 +96,10 @@ export async function getUserProfileInfo(
     .single()
 
   if (error) {
-    logger.error(`[SupabaseClient] Erro ao buscar informações do perfil para o usuário ${user_id}:`, error)
+    logger.error(
+      `[SupabaseClient] Erro ao buscar informações do perfil para o usuário ${user_id}:`,
+      { error },
+    )
     return null
   }
 
@@ -105,7 +108,9 @@ export async function getUserProfileInfo(
     return null
   }
 
-  logger.info(`[SupabaseClient] Perfil encontrado para user_id ${user_id}. Username: ${data.username}, Email: ${data.email}, Handle: ${data.handle}`)
+  logger.info(
+    `[SupabaseClient] Perfil encontrado para user_id ${user_id}. Username: ${data.username}, Email: ${data.email}, Handle: ${data.handle}`,
+  )
   return {
     username: data.username,
     email: data.email,

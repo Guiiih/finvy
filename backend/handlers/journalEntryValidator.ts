@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Allow', ['POST'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API do validador de lançamentos:', error)
+    logger.error({ error }, 'Erro inesperado na API do validador de lançamentos:')
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     return handleErrorResponse(
       res,

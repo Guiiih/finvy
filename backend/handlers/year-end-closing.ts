@@ -61,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: `Fechamento de exercício para ${closingDate} realizado com sucesso. Lucro Líquido: R$ ${netIncome.toFixed(2)}`,
     })
   } catch (error: unknown) {
-    logger.error('Erro ao processar fechamento de exercício:', error)
+    logger.error('Erro ao processar fechamento de exercício:', { error })
     const message = error instanceof Error ? error.message : 'Erro desconhecido'
     handleErrorResponse(res, 500, `Erro no servidor: ${message}`)
   }

@@ -129,10 +129,12 @@
             </span>
             <Button
               v-if="organizationStore.isCurrentUserOwnerOrAdmin"
-              @click="() => {
-                showAddMemberForm = !showAddMemberForm;
-                editingMember = null;
-              }"
+              @click="
+                () => {
+                  showAddMemberForm = !showAddMemberForm
+                  editingMember = null
+                }
+              "
               :label="showAddMemberForm ? 'Fechar' : 'Convidar Membro'"
               icon="pi pi-plus"
             />

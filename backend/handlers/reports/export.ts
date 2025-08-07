@@ -356,7 +356,7 @@ export default async function handler(
       return handleErrorResponse(res, 400, 'Formato de exportação inválido.')
     }
   } catch (error: unknown) {
-    logger.error('Erro ao exportar relatório:', error)
+    logger.error({ error }, 'Erro ao exportar relatório:')
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     handleErrorResponse(res, 500, `Erro no servidor: ${message}`)
   }

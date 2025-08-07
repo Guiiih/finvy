@@ -69,7 +69,8 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
 
       // Garante que activeAccountingPeriod.value.organization_id esteja sempre presente
       if (activeAccountingPeriod.value && !activeAccountingPeriod.value.organization_id) {
-        activeAccountingPeriod.value.organization_id = authStore.userOrganizationId || organizationSelectionStore.activeOrganization?.id || ''
+        activeAccountingPeriod.value.organization_id =
+          authStore.userOrganizationId || organizationSelectionStore.activeOrganization?.id || ''
       }
     } catch (err: unknown) {
       console.error('Erro ao buscar períodos contábeis:', err)

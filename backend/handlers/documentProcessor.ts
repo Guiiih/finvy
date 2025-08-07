@@ -48,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     logger.info(`[DocumentProcessorHandler] Texto extraído com sucesso.`)
     return res.status(200).json({ extractedText })
   } catch (error: unknown) {
-    logger.error('Erro ao processar documento:', error)
+    logger.error({ error }, 'Erro ao processar documento:')
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     return handleErrorResponse(
       res,

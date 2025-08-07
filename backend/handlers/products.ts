@@ -153,7 +153,7 @@ export default async function handler(
         return res.status(200).json({ message: 'Purchase recorded successfully.' })
       } catch (rpcError: unknown) {
         // <-- Alterado de 'any' para 'unknown'
-        logger.error('Error calling record_purchase RPC:', rpcError)
+        logger.error({ rpcError }, 'Error calling record_purchase RPC:')
         return handleErrorResponse(res, 500, formatSupabaseError(rpcError))
       }
     }
@@ -175,7 +175,7 @@ export default async function handler(
         return res.status(200).json({ cogs })
       } catch (rpcError: unknown) {
         // <-- Alterado de 'any' para 'unknown'
-        logger.error('Error calling calculate_cogs_for_sale RPC:', rpcError)
+        logger.error({ rpcError }, 'Error calling calculate_cogs_for_sale RPC:')
         return handleErrorResponse(res, 500, formatSupabaseError(rpcError))
       }
     }
@@ -336,7 +336,7 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API de produtos:', error)
+    logger.error({ error }, 'Erro inesperado na API de produtos:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

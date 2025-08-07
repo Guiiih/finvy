@@ -54,7 +54,7 @@ export default async function handler(
     res.setHeader('Allow', ['POST'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API do resolvedor de exercícios:', error)
+    logger.error({ error }, 'Erro inesperado na API do resolvedor de exercícios:')
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     return handleErrorResponse(
       res,

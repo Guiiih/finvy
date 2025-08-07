@@ -15,7 +15,7 @@ export async function getNotifications(
     res.status(200).json(notifications)
   } catch (error: unknown) {
     // <-- Alterado de 'any' para 'unknown'
-    logger.error('Erro ao buscar notificações:', error)
+    logger.error({ error }, 'Erro ao buscar notificações:')
     // Adicionada verificação de tipo para acessar 'message' com segurança
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     handleErrorResponse(res, 500, message)
@@ -33,7 +33,7 @@ export async function markNotificationAsRead(
     res.status(204).send('')
   } catch (error: unknown) {
     // <-- Alterado de 'any' para 'unknown'
-    logger.error('Erro ao marcar notificação como lida:', error)
+    logger.error({ error }, 'Erro ao marcar notificação como lida:')
     // Adicionada verificação de tipo para acessar 'message' com segurança
     const message = error instanceof Error ? error.message : 'Erro interno do servidor.'
     handleErrorResponse(res, 500, message)

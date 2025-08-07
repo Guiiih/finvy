@@ -1,6 +1,10 @@
 import logger from '../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod, getUserProfileInfo } from '../utils/supabaseClient.js'
+import {
+  handleErrorResponse,
+  getUserOrganizationAndPeriod,
+  getUserProfileInfo,
+} from '../utils/supabaseClient.js'
 import { createJournalEntrySchema, updateJournalEntrySchema } from '../utils/schemas.js'
 import { formatSupabaseError } from '../utils/errorUtils.js'
 import {
@@ -101,7 +105,7 @@ export default async function handler(
       logger.info('Journal Entries Handler: Processando POST para criar lançamento.')
       const parsedBody = createJournalEntrySchema.safeParse(req.body)
       if (!parsedBody.success) {
-        logger.error('Journal Entries Handler: Erro de validação no POST:', parsedBody.error.errors)
+        logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no POST:')
         return handleErrorResponse(
           res,
           400,
@@ -120,7 +124,8 @@ export default async function handler(
         description,
         reference,
         status,
-        created_by_name: userProfile.username || userProfile.handle || userProfile.email || 'Desconhecido',
+        created_by_name:
+          userProfile.username || userProfile.handle || userProfile.email || 'Desconhecido',
         created_by_email: userProfile.email || 'Desconhecido',
         created_by_username: userProfile.handle || userProfile.username || 'Desconhecido',
       }
@@ -201,7 +206,7 @@ export default async function handler(
       logger.info(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`)
       const parsedBody = updateJournalEntrySchema.safeParse(req.body)
       if (!parsedBody.success) {
-        logger.error('Journal Entries Handler: Erro de validação no PUT:', parsedBody.error.errors)
+        logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no PUT:')
         return handleErrorResponse(
           res,
           400,
@@ -295,7 +300,7 @@ export default async function handler(
     console.warn(`Journal Entries Handler: Método ${req.method} não permitido.`)
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Journal Entries Handler: Erro inesperado na API de lançamentos:', error)
+    logger.error({ error }, 'Journal Entries Handler: Erro inesperado na API de lançamentos:')
     const message = formatSupabaseError(error)
     return handleErrorResponse(res, 500, message)
   }

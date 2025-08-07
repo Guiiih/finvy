@@ -68,7 +68,7 @@ export default async function handler(
     res.setHeader('Allow', ['POST'])
     return handleErrorResponse(res, 405, `Method ${req.method} Not Allowed`)
   } catch (error: unknown) {
-    logger.error('Erro inesperado na API do chatbot:', error)
+    logger.error({ error }, 'Erro inesperado na API do chatbot:')
     return handleErrorResponse(res, 500, 'Erro interno do servidor.')
   }
 }

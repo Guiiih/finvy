@@ -14,7 +14,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Content-Type', 'application/json')
     res.status(200).send(swaggerDoc)
   } catch (_error: unknown) {
-     
     return handleErrorResponse(res, 500, 'Erro ao carregar a documentação da API.')
   }
 }

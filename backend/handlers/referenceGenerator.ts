@@ -24,7 +24,7 @@ export default async function referenceGeneratorHandler(req: VercelRequest, res:
     const nextNumber = await getNextReferenceNumber(prefix, organization_id, accounting_period_id)
     res.status(200).json({ nextNumber })
   } catch (error) {
-    logger.error('Erro ao gerar referência:', error)
+    logger.error({ error }, 'Erro ao gerar referência:')
     handleErrorResponse(res, 500, 'Falha ao gerar referência.')
   }
 }
