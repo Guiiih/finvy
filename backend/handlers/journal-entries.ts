@@ -12,6 +12,8 @@ import {
   createJournalEntry,
   updateJournalEntry,
   deleteJournalEntry,
+  bulkDeleteJournalEntries,
+  bulkUpdateJournalEntryStatus,
 } from '../services/journalEntryService.js'
 
 export default async function handler(
@@ -102,41 +104,89 @@ export default async function handler(
      *         description: Erro interno do servidor.
      */
     if (req.method === 'POST') {
-      logger.info('Journal Entries Handler: Processando POST para criar lançamento.')
-      const parsedBody = createJournalEntrySchema.safeParse(req.body)
-      if (!parsedBody.success) {
-        logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no POST:')
-        return handleErrorResponse(
-          res,
-          400,
-          parsedBody.error.errors.map((err) => err.message).join(', '),
+      const requestPath = req.url?.split('?')[0]
+      if (requestPath === '/api/journal-entries/bulk-delete') {
+        logger.info('Journal Entries Handler: Processando POST para exclusão em massa de lançamentos.')
+        const { ids } = req.body
+        if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string')) {
+          return handleErrorResponse(res, 400, 'IDs inválidos fornecidos para exclusão em massa.')
+        }
+
+        const userProfile = await getUserProfileInfo(user_id, token)
+        if (!userProfile) {
+          return handleErrorResponse(res, 404, 'Perfil do usuário não encontrado.')
+        }
+
+        const deleted = await bulkDeleteJournalEntries(
+          ids,
+          organization_id,
+          active_accounting_period_id,
+          token,
+          user_id,
         )
-      }
-      const { entry_date, description, reference, status } = parsedBody.data
 
-      const userProfile = await getUserProfileInfo(user_id, token)
-      if (!userProfile) {
-        return handleErrorResponse(res, 404, 'Perfil do usuário não encontrado.')
-      }
+        if (!deleted) {
+          return handleErrorResponse(res, 500, 'Falha ao deletar um ou mais lançamentos.')
+        }
+        logger.info(`Journal Entries Handler: ${ids.length} lançamentos deletados com sucesso.`)
+        return res.status(200).json({ message: `${ids.length} lançamentos deletados com sucesso.` })
+      } else if (requestPath === '/api/journal-entries/bulk-update-status') {
+        logger.info('Journal Entries Handler: Processando POST para atualização em massa de status de lançamentos.')
+        const { ids, status } = req.body
+        if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string') || typeof status !== 'string') {
+          return handleErrorResponse(res, 400, 'IDs ou status inválidos fornecidos para atualização em massa.')
+        }
 
-      const newEntry = {
-        entry_date,
-        description,
-        reference,
-        status,
-        created_by_name:
-          userProfile.username || userProfile.handle || userProfile.email || 'Desconhecido',
-        created_by_email: userProfile.email || 'Desconhecido',
-        created_by_username: userProfile.handle || userProfile.username || 'Desconhecido',
+        const updated = await bulkUpdateJournalEntryStatus(
+          ids,
+          status,
+          organization_id,
+          active_accounting_period_id,
+          token,
+        )
+
+        if (!updated) {
+          return handleErrorResponse(res, 500, 'Falha ao atualizar o status de um ou mais lançamentos.')
+        }
+        logger.info(`Journal Entries Handler: Status de ${ids.length} lançamentos atualizado para ${status}.`)
+        return res.status(200).json({ message: `Status de ${ids.length} lançamentos atualizado para ${status}.` })
+      } else {
+        logger.info('Journal Entries Handler: Processando POST para criar lançamento.')
+        const parsedBody = createJournalEntrySchema.safeParse(req.body)
+        if (!parsedBody.success) {
+          logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no POST:')
+          return handleErrorResponse(
+            res,
+            400,
+            parsedBody.error.errors.map((err) => err.message).join(', '),
+          )
+        }
+        const { entry_date, description, reference, status } = parsedBody.data
+
+        const userProfile = await getUserProfileInfo(user_id, token)
+        if (!userProfile) {
+          return handleErrorResponse(res, 404, 'Perfil do usuário não encontrado.')
+        }
+
+        const newEntry = {
+          entry_date,
+          description,
+          reference,
+          status,
+          created_by_name:
+            userProfile.username || userProfile.handle || userProfile.email || 'Desconhecido',
+          created_by_email: userProfile.email || 'Desconhecido',
+          created_by_username: userProfile.handle || userProfile.username || 'Desconhecido',
+        }
+        const createdEntry = await createJournalEntry(
+          newEntry,
+          organization_id,
+          active_accounting_period_id,
+          token,
+        )
+        logger.info('Journal Entries Handler: Lançamento criado com sucesso.')
+        return res.status(201).json(createdEntry)
       }
-      const createdEntry = await createJournalEntry(
-        newEntry,
-        organization_id,
-        active_accounting_period_id,
-        token,
-      )
-      logger.info('Journal Entries Handler: Lançamento criado com sucesso.')
-      return res.status(201).json(createdEntry)
     }
 
     /**

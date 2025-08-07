@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue' // Adicionado 'computed'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
@@ -9,10 +9,12 @@ import Skeleton from 'primevue/skeleton'
 import Listbox from 'primevue/listbox'
 import Button from 'primevue/button'
 import OverlayPanel from 'primevue/overlaypanel'
+import Checkbox from 'primevue/checkbox'
 
 import Paginator from 'primevue/paginator'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
-import JournalEntryAdvancedFiltersModal from '@/components/JournalEntryAdvancedFiltersModal.vue' // Importar o novo componente
+import JournalEntryAdvancedFiltersModal from '@/components/JournalEntryAdvancedFiltersModal.vue'
+import JournalEntryBulkActionsModal from '@/components/JournalEntryBulkActionsModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
@@ -38,7 +40,6 @@ const statusOptions = ref([
   { label: 'Revisado', value: 'reviewed' },
 ])
 
-// Novos estados para filtros avançados
 const showAdvancedFiltersModal = ref(false)
 const advancedFilters = ref({
   dateFrom: null as string | null,
@@ -51,6 +52,15 @@ const advancedFilters = ref({
   accounts: [] as string[],
 })
 
+const showBulkActionsModal = ref(false)
+const selectedEntries = ref<string[]>([])
+
+// ----- LÓGICA CORRIGIDA (1/4): Propriedade computada para ver se tudo está selecionado -----
+const areAllEntriesSelected = computed(() => {
+  const entries = journalEntryStore.journalEntries
+  return entries.length > 0 && selectedEntries.value.length === entries.length
+})
+
 watch(selectedStatus, (newStatus) => {
   fetchEntriesWithFilters(
     currentPage.value,
@@ -58,7 +68,7 @@ watch(selectedStatus, (newStatus) => {
     newStatus || null,
     advancedFilters.value,
   )
-  op.value.hide() // Hide the overlay after selection
+  op.value.hide()
 })
 
 function toggleFilter(event: Event) {
@@ -101,7 +111,7 @@ async function handleModalSubmitSuccess() {
     itemsPerPage.value,
     selectedStatus.value,
     advancedFilters.value,
-  ) // Refresh entries after add/edit
+  )
 }
 
 function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): number {
@@ -122,12 +132,12 @@ async function handleDuplicate(entry: JournalEntry) {
   try {
     const duplicatedEntry = {
       ...entry,
-      id: undefined, // Remove o ID para que o backend crie um novo
+      id: undefined,
       reference: `${entry.reference}-COPY`,
       description: `[CÓPIA] ${entry.description}`,
-      entry_date: new Date().toISOString().split('T')[0], // Data atual
-      status: 'draft', // Define como rascunho
-      lines: entry.lines.map((line) => ({ ...line })), // Copia as linhas
+      entry_date: new Date().toISOString().split('T')[0],
+      status: 'draft',
+      lines: entry.lines.map((line) => ({ ...line })),
     }
     await journalEntryStore.addJournalEntry(duplicatedEntry as Omit<JournalEntry, 'id'>)
     toast.add({
@@ -141,7 +151,7 @@ async function handleDuplicate(entry: JournalEntry) {
       itemsPerPage.value,
       selectedStatus.value,
       advancedFilters.value,
-    ) // Atualiza a lista
+    )
   } catch (err: unknown) {
     console.error('Erro ao duplicar lançamento:', err)
     const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido ao duplicar.'
@@ -150,13 +160,10 @@ async function handleDuplicate(entry: JournalEntry) {
 }
 
 async function handleDelete(id: string | undefined) {
-  console.log('handleDelete chamado com ID:', id)
   if (!id) {
-    console.log('ID é indefinido ou nulo, retornando.')
     return
   }
   if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-    console.log('Confirmação de exclusão aceita para ID:', id)
     try {
       await journalEntryStore.deleteEntry(id)
       toast.add({
@@ -165,18 +172,15 @@ async function handleDelete(id: string | undefined) {
         detail: 'Lançamento excluído com sucesso!',
         life: 3000,
       })
-      editingEntry.value = null // Reset editingEntry after successful deletion
+      editingEntry.value = null
     } catch (err: unknown) {
       console.error('Erro ao deletar lançamento no frontend:', err)
       const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
       toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
     }
-  } else {
-    console.log('Confirmação de exclusão cancelada.')
   }
 }
 
-// Função para buscar lançamentos com todos os filtros
 async function fetchEntriesWithFilters(
   page: number,
   limit: number,
@@ -186,7 +190,6 @@ async function fetchEntriesWithFilters(
   await journalEntryStore.fetchJournalEntries(page, limit, status, filters)
 }
 
-// Lidar com a aplicação de filtros avançados
 async function handleApplyAdvancedFilters(filters: typeof advancedFilters.value) {
   advancedFilters.value = filters
   await fetchEntriesWithFilters(
@@ -197,10 +200,7 @@ async function handleApplyAdvancedFilters(filters: typeof advancedFilters.value)
   )
 }
 
-// Lidar com a limpeza de filtros avançados (agora é parte do apply-filters com filtros vazios)
 function handleClearAdvancedFilters() {
-  // Esta função não é mais diretamente chamada pelo modal, mas é mantida para clareza
-  // A limpeza é feita dentro do modal e emitida via apply-filters
   advancedFilters.value = {
     dateFrom: null,
     dateTo: null,
@@ -219,6 +219,35 @@ function handleClearAdvancedFilters() {
   )
 }
 
+// ----- LÓGICA CORRIGIDA (2/4): Função não precisa mais de parâmetro -----
+function handleSelectEntry(id: string) {
+  const index = selectedEntries.value.indexOf(id)
+  if (index > -1) {
+    selectedEntries.value.splice(index, 1) // Remove se já existe
+  } else {
+    selectedEntries.value.push(id) // Adiciona se não existe
+  }
+}
+
+// ----- LÓGICA CORRIGIDA (3/4): Função não precisa mais de parâmetro -----
+function handleSelectAll() {
+  if (areAllEntriesSelected.value) {
+    selectedEntries.value = [] // Desmarca todos
+  } else {
+    selectedEntries.value = journalEntryStore.journalEntries.map((entry) => entry.id as string) // Marca todos
+  }
+}
+
+function handleBulkActionSuccess() {
+  selectedEntries.value = []
+  fetchEntriesWithFilters(
+    currentPage.value,
+    itemsPerPage.value,
+    selectedStatus.value,
+    advancedFilters.value,
+  )
+}
+
 onMounted(async () => {
   await fetchEntriesWithFilters(
     currentPage.value,
@@ -226,7 +255,7 @@ onMounted(async () => {
     selectedStatus.value,
     advancedFilters.value,
   )
-  await accountStore.fetchAccounts() // Garante que as contas estejam carregadas para o modal
+  await accountStore.fetchAccounts()
   productStore.fetchProducts(currentPage.value, itemsPerPage.value)
 })
 </script>
@@ -284,7 +313,31 @@ onMounted(async () => {
         </OverlayPanel>
       </div>
 
-      <!-- Display Active Filters -->
+      <div
+        v-if="selectedEntries.length > 0"
+        class="mb-4 flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-blue-900">
+            {{ selectedEntries.length }} lançamento(s) selecionado(s)
+          </span>
+        </div>
+        <div class="flex gap-2">
+          <Button
+            size="small"
+            severity="secondary"
+            outlined
+            @click="showBulkActionsModal = true"
+          >
+            <i class="pi pi-ellipsis-v mr-2"></i>
+            Ações em Lote
+          </Button>
+          <Button size="small" severity="secondary" text @click="selectedEntries = []">
+            Limpar Seleção
+          </Button>
+        </div>
+      </div>
+
       <div
         v-if="
           advancedFilters.dateFrom ||
@@ -343,13 +396,27 @@ onMounted(async () => {
         @apply-filters="handleApplyAdvancedFilters"
       />
 
+      <JournalEntryBulkActionsModal
+        :visible="showBulkActionsModal"
+        :selectedEntries="selectedEntries"
+        @update:visible="showBulkActionsModal = $event"
+        @bulkActionSuccess="handleBulkActionSuccess"
+      />
+
       <div class="overflow-hidden">
         <div
           class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
+          <div class="col-span-1 flex justify-center items-center">
+             <Checkbox
+              :binary="true"
+              :modelValue="areAllEntriesSelected"
+              @change="handleSelectAll"
+            />
+          </div>
           <div class="col-span-2">Data</div>
           <div class="col-span-2">Referência</div>
-          <div class="col-span-3">Descrição</div>
+          <div class="col-span-2">Descrição</div>
           <div class="col-span-2 text-right">Valor</div>
           <div class="col-span-2 text-center">Status</div>
           <div class="col-span-1 text-center">Ações</div>
@@ -361,23 +428,15 @@ onMounted(async () => {
             :key="i"
             class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center"
           >
-            <div class="md:col-span-2">
-              <Skeleton height="1rem" width="70%" class="bg-surface-200" />
-            </div>
-            <div class="md:col-span-2">
-              <Skeleton height="1rem" width="70%" class="bg-surface-200" />
-            </div>
-            <div class="md:col-span-3"><Skeleton height="1rem" class="bg-surface-200" /></div>
-            <div class="md:col-span-2">
-              <Skeleton height="1rem" width="50%" class="bg-surface-200" />
-            </div>
-            <div class="md:col-span-2">
-              <Skeleton height="1rem" width="80%" class="bg-surface-200" />
-            </div>
+            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" /></div>
+            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" /></div>
+            <div class="md:col-span-3"><Skeleton height="1rem" /></div>
+            <div class="md:col-span-2"><Skeleton height="1rem" width="50%" /></div>
+            <div class="md:col-span-2"><Skeleton height="1rem" width="80%" /></div>
             <div class="md:col-span-1 flex justify-center items-center space-x-2">
-              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
-              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
-              <Skeleton shape="circle" size="1.5rem" class="bg-surface-200" />
+              <Skeleton shape="circle" size="1.5rem" />
+              <Skeleton shape="circle" size="1.5rem" />
+              <Skeleton shape="circle" size="1.5rem" />
             </div>
           </div>
         </div>
@@ -401,11 +460,19 @@ onMounted(async () => {
               class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition cursor-pointer"
               @click="toggleDetails(entry.id)"
             >
+              <div class="col-span-1 flex justify-center items-center">
+                <Checkbox
+                  :binary="true"
+                  :modelValue="selectedEntries.includes(entry.id)"
+                  @change="handleSelectEntry(entry.id)"
+                  @click.stop
+                />
+              </div>
               <div class="md:col-span-2 font-mono text-surface-700">{{ entry.entry_date }}</div>
               <div class="md:col-span-2 text-surface-800">{{ entry.reference }}</div>
-              <div class="md:col-span-3 text-surface-800">{{ entry.description }}</div>
+              <div class="md:col-span-2 text-surface-800">{{ entry.description }}</div>
               <div class="md:col-span-2 text-right text-surface-800">
-                {{ calculateTotal(entry.lines, 'debit') }}
+                {{ formatCurrency(calculateTotal(entry.lines, 'debit')) }}
               </div>
               <div class="md:col-span-2 text-center text-surface-800 capitalize">
                 {{ entry.status }}
@@ -413,28 +480,28 @@ onMounted(async () => {
               <div class="md:col-span-1 flex justify-center items-center space-x-2">
                 <button
                   @click.stop="startEdit(entry)"
-                  class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition duration-300 ease-in-out"
+                  class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition"
                   title="Editar"
                 >
                   <i class="pi pi-pencil w-5 h-5"></i>
                 </button>
                 <button
                   @click.stop="handleDuplicate(entry)"
-                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition duration-300 ease-in-out"
+                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition"
                   title="Duplicar"
                 >
                   <i class="pi pi-copy w-5 h-5"></i>
                 </button>
                 <button
                   @click.stop="handleDelete(entry.id)"
-                  class="p-2 rounded-full hover:bg-red-100 text-red-600 transition duration-300 ease-in-out"
+                  class="p-2 rounded-full hover:bg-red-100 text-red-600 transition"
                   title="Excluir"
                 >
                   <i class="pi pi-trash w-5 h-5"></i>
                 </button>
                 <button
                   @click.stop="toggleDetails(entry.id)"
-                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition duration-300 ease-in-out"
+                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition"
                   title="Ver Detalhes"
                 >
                   <i class="pi pi-eye w-5 h-5"></i>

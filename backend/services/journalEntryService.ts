@@ -263,3 +263,61 @@ export async function checkDoubleEntryBalance(
     return false
   }
 }
+
+export async function bulkDeleteJournalEntries(
+  ids: string[],
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+  user_id: string,
+): Promise<boolean> {
+  const userSupabase = getSupabaseClient(token)
+
+  try {
+    const { data, error: dbError } = await userSupabase.rpc('delete_multiple_journal_entries_and_lines', {
+      p_journal_entry_ids: ids,
+      p_organization_id: organization_id,
+      p_accounting_period_id: active_accounting_period_id,
+      p_user_id: user_id,
+    })
+
+    if (dbError) {
+      logger.error({ dbError }, `Journal Entries Service: Erro ao deletar múltiplos lançamentos via RPC:`)
+      throw dbError
+    }
+
+    return data // A função RPC retorna TRUE se deletado, FALSE caso contrário
+  } catch (error) {
+    logger.error(error, `Unexpected error in bulkDeleteJournalEntries:`)
+    throw error
+  }
+}
+
+export async function bulkUpdateJournalEntryStatus(
+  ids: string[],
+  status: string,
+  organization_id: string,
+  active_accounting_period_id: string,
+  token: string,
+): Promise<boolean> {
+  const userSupabase = getSupabaseClient(token)
+
+  try {
+    const { error: dbError } = await userSupabase
+      .from('journal_entries')
+      .update({ status: status })
+      .in('id', ids)
+      .eq('organization_id', organization_id)
+      .eq('accounting_period_id', active_accounting_period_id)
+
+    if (dbError) {
+      logger.error({ dbError }, `Journal Entries Service: Erro ao atualizar status de múltiplos lançamentos:`)
+      throw dbError
+    }
+
+    return true
+  } catch (error) {
+    logger.error(error, `Unexpected error in bulkUpdateJournalEntryStatus:`)
+    throw error
+  }
+}

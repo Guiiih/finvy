@@ -351,6 +351,39 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
   }
 
+  async function deleteMultipleEntries(ids: string[]) {
+    loading.value = true
+    error.value = null
+    try {
+      await api.post('/journal-entries/bulk-delete', { ids })
+      journalEntries.value = journalEntries.value.filter((entry) => !ids.includes(entry.id as string))
+      totalJournalEntries.value -= ids.length
+    } catch (err: unknown) {
+      console.error('Erro ao deletar múltiplos lançamentos:', err)
+      error.value = err instanceof Error ? err.message : 'Falha ao deletar múltiplos lançamentos.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateMultipleEntriesStatus(ids: string[], status: 'draft' | 'posted' | 'reviewed') {
+    loading.value = true
+    error.value = null
+    try {
+      await api.post('/journal-entries/bulk-update-status', { ids, status })
+      journalEntries.value = journalEntries.value.map((entry) =>
+        ids.includes(entry.id as string) ? { ...entry, status } : entry,
+      )
+    } catch (err: unknown) {
+      console.error('Erro ao atualizar status de múltiplos lançamentos:', err)
+      error.value = err instanceof Error ? err.message : 'Falha ao atualizar status de múltiplos lançamentos.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function reverseJournalEntry(originalEntryId: string) {
     loading.value = true
     error.value = null
@@ -408,6 +441,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     addJournalEntry,
     updateEntry,
     deleteEntry,
+    deleteMultipleEntries,
+    updateMultipleEntriesStatus,
     reverseJournalEntry,
     loading,
     error,
