@@ -41,8 +41,12 @@ export interface EntryLine {
   quantity?: number
   unit_cost?: number
   icms_rate?: number
+  pis_rate?: number
+  cofins_rate?: number
   total_gross?: number
   icms_value?: number
+  pis_value?: number
+  cofins_value?: number
   total_net?: number
   debit?: number
   credit?: number
@@ -231,4 +235,14 @@ export interface TaxSimulationResult {
   valorPIS: number
   valorCOFINS: number
   calculationDetails: string[]
+}
+
+export interface JournalEntryHistory {
+  id: string
+  journal_entry_id: string
+  user_id?: string
+  action_type: string
+  details: any
+  changed_at: string
+  changed_by_name?: string
 }

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { JournalEntry, EntryLine, JournalEntryPayload } from '@/types/index'
+import type { JournalEntry, EntryLine, JournalEntryPayload, JournalEntryHistory } from '@/types/index'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
@@ -433,6 +433,18 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
   }
 
+  async function fetchJournalEntryHistory(entryId: string): Promise<JournalEntryHistory[]> {
+    try {
+      const response = await api.get<JournalEntryHistory[]>(`/journal-entries/${entryId}/history`)
+      return response
+    } catch (err: unknown) {
+      console.error('Erro ao buscar histórico do lançamento:', err)
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
+      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+      return []
+    }
+  }
+
   return {
     journalEntries,
     getAllJournalEntries,
@@ -448,5 +460,6 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error,
     unsubscribeFromRealtime,
     totalJournalEntries,
+    fetchJournalEntryHistory,
   }
 })

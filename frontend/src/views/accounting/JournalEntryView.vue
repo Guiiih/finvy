@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue' // Adicionado 'computed'
+import { ref, onMounted, watch } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
@@ -15,6 +15,7 @@ import Paginator from 'primevue/paginator'
 import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
 import JournalEntryAdvancedFiltersModal from '@/components/JournalEntryAdvancedFiltersModal.vue'
 import JournalEntryBulkActionsModal from '@/components/JournalEntryBulkActionsModal.vue'
+import JournalEntryViewModal from '@/components/JournalEntryViewModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()
@@ -25,11 +26,14 @@ const showJournalEntryFormModal = ref(false)
 const isEditing = ref(false)
 const editingEntry = ref<JournalEntry | null>(null)
 
+const showViewModal = ref(false)
+const viewingEntry = ref<JournalEntry | null>(null)
+
 const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-const showDetails = ref<{ [key: string]: boolean }>({})
+
 const op = ref()
 
 const selectedStatus = ref(null)
@@ -55,11 +59,7 @@ const advancedFilters = ref({
 const showBulkActionsModal = ref(false)
 const selectedEntries = ref<string[]>([])
 
-// ----- LÓGICA CORRIGIDA (1/4): Propriedade computada para ver se tudo está selecionado -----
-const areAllEntriesSelected = computed(() => {
-  const entries = journalEntryStore.journalEntries
-  return entries.length > 0 && selectedEntries.value.length === entries.length
-})
+
 
 watch(selectedStatus, (newStatus) => {
   fetchEntriesWithFilters(
@@ -90,6 +90,11 @@ function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+function formatDateToYYYYMMDD(dateString: string): string {
+  const [year, month, day] = dateString.split('-')
+  return `${year}/${month}/${day}`
+}
+
 function openNewEntryModal() {
   isEditing.value = false
   editingEntry.value = null
@@ -118,14 +123,11 @@ function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): nu
   return lines.reduce((sum, line) => (line.type === type ? sum + (line.amount || 0) : sum), 0)
 }
 
-function getAccountName(accountId: string): string {
-  return accountStore.getAccountById(accountId)?.name || 'N/A'
-}
 
-function toggleDetails(id: string | undefined) {
-  if (id) {
-    showDetails.value[id] = !showDetails.value[id]
-  }
+
+function toggleDetails(entry: JournalEntry) {
+  viewingEntry.value = entry
+  showViewModal.value = true
 }
 
 async function handleDuplicate(entry: JournalEntry) {
@@ -159,27 +161,7 @@ async function handleDuplicate(entry: JournalEntry) {
   }
 }
 
-async function handleDelete(id: string | undefined) {
-  if (!id) {
-    return
-  }
-  if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-    try {
-      await journalEntryStore.deleteEntry(id)
-      toast.add({
-        severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Lançamento excluído com sucesso!',
-        life: 3000,
-      })
-      editingEntry.value = null
-    } catch (err: unknown) {
-      console.error('Erro ao deletar lançamento no frontend:', err)
-      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
-      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
-    }
-  }
-}
+
 
 async function fetchEntriesWithFilters(
   page: number,
@@ -219,22 +201,20 @@ function handleClearAdvancedFilters() {
   )
 }
 
-// ----- LÓGICA CORRIGIDA (2/4): Função não precisa mais de parâmetro -----
-function handleSelectEntry(id: string) {
-  const index = selectedEntries.value.indexOf(id)
-  if (index > -1) {
-    selectedEntries.value.splice(index, 1) // Remove se já existe
+function handleSelectEntry(id: string, checked: boolean) {
+  if (checked) {
+    selectedEntries.value.push(id)
   } else {
-    selectedEntries.value.push(id) // Adiciona se não existe
+    selectedEntries.value = selectedEntries.value.filter((entryId) => entryId !== id)
   }
 }
 
-// ----- LÓGICA CORRIGIDA (3/4): Função não precisa mais de parâmetro -----
-function handleSelectAll() {
-  if (areAllEntriesSelected.value) {
-    selectedEntries.value = [] // Desmarca todos
+function handleSelectAll(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.checked) {
+    selectedEntries.value = journalEntryStore.journalEntries.map((entry) => entry.id as string)
   } else {
-    selectedEntries.value = journalEntryStore.journalEntries.map((entry) => entry.id as string) // Marca todos
+    selectedEntries.value = []
   }
 }
 
@@ -403,22 +383,31 @@ onMounted(async () => {
         @bulkActionSuccess="handleBulkActionSuccess"
       />
 
+      <JournalEntryViewModal
+        :visible="showViewModal"
+        :viewingEntry="viewingEntry"
+        @update:visible="showViewModal = $event"
+        @edit="startEdit"
+        @duplicate="handleDuplicate"
+        @delete="handleModalSubmitSuccess"
+      />
+
       <div class="overflow-hidden">
         <div
           class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
-          <div class="col-span-1 flex justify-center items-center">
+          <div class="col-span-2 flex items-center">
              <Checkbox
               :binary="true"
-              :modelValue="areAllEntriesSelected"
+              :modelValue="selectedEntries.length === journalEntryStore.journalEntries.length && journalEntryStore.journalEntries.length > 0"
               @change="handleSelectAll"
             />
+            <span class="ml-3">Data</span>
           </div>
-          <div class="col-span-2">Data</div>
           <div class="col-span-2">Referência</div>
-          <div class="col-span-2">Descrição</div>
-          <div class="col-span-2 text-right">Valor</div>
-          <div class="col-span-2 text-center">Status</div>
+          <div class="col-span-4">Descrição</div>
+          <div class="col-span-2">Valor</div>
+          <div class="col-span-1 text-center">Status</div>
           <div class="col-span-1 text-center">Ações</div>
         </div>
 
@@ -428,16 +417,15 @@ onMounted(async () => {
             :key="i"
             class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center"
           >
-            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" /></div>
-            <div class="md:col-span-2"><Skeleton height="1rem" width="70%" /></div>
-            <div class="md:col-span-3"><Skeleton height="1rem" /></div>
-            <div class="md:col-span-2"><Skeleton height="1rem" width="50%" /></div>
-            <div class="md:col-span-2"><Skeleton height="1rem" width="80%" /></div>
-            <div class="md:col-span-1 flex justify-center items-center space-x-2">
-              <Skeleton shape="circle" size="1.5rem" />
-              <Skeleton shape="circle" size="1.5rem" />
-              <Skeleton shape="circle" size="1.5rem" />
+            <div class="md:col-span-2 flex items-center">
+              <Skeleton shape="square" size="1.25rem" class="mr-3" />
+              <Skeleton height="0.75rem" width="70%" />
             </div>
+            <div class="md:col-span-2"><Skeleton height="0.75rem" width="90%" /></div>
+            <div class="md:col-span-4"><Skeleton height="0.75rem" width="95%" /></div>
+            <div class="md:col-span-2"><Skeleton height="0.75rem" width="60%" /></div>
+            <div class="md:col-span-1 flex justify-center items-center"><Skeleton shape="circle" size="1rem" /></div>
+            <div class="md:col-span-1 flex justify-center items-center"><Skeleton shape="circle" size="1rem" /></div>
           </div>
         </div>
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
@@ -458,49 +446,38 @@ onMounted(async () => {
           >
             <div
               class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition cursor-pointer"
-              @click="toggleDetails(entry.id)"
+              @click="toggleDetails(entry)"
             >
-              <div class="col-span-1 flex justify-center items-center">
+              <div class="col-span-2 flex items-center">
                 <Checkbox
                   :binary="true"
                   :modelValue="selectedEntries.includes(entry.id)"
-                  @change="handleSelectEntry(entry.id)"
+                  @update:modelValue="(checked) => handleSelectEntry(entry.id, checked)"
                   @click.stop
                 />
+                <span class="ml-3 font-mono text-surface-700">{{ formatDateToYYYYMMDD(entry.entry_date) }}</span>
               </div>
-              <div class="md:col-span-2 font-mono text-surface-700">{{ entry.entry_date }}</div>
               <div class="md:col-span-2 text-surface-800">{{ entry.reference }}</div>
-              <div class="md:col-span-2 text-surface-800">{{ entry.description }}</div>
+              <div class="md:col-span-4 text-surface-800">{{ entry.description }}</div>
               <div class="md:col-span-2 text-right text-surface-800">
                 {{ formatCurrency(calculateTotal(entry.lines, 'debit')) }}
               </div>
-              <div class="md:col-span-2 text-center text-surface-800 capitalize">
-                {{ entry.status }}
+              <div class="md:col-span-1 text-center">
+                <span
+                  :class="{
+                    'bg-blue-100 text-blue-800': entry.status === 'draft',
+                    'bg-green-100 text-green-800': entry.status === 'posted',
+                    'bg-yellow-100 text-yellow-800': entry.status === 'reviewed',
+                    'px-2.5 py-0.5 rounded-full text-xs font-medium': true,
+                  }"
+                  class="capitalize"
+                >
+                  {{ entry.status }}
+                </span>
               </div>
-              <div class="md:col-span-1 flex justify-center items-center space-x-2">
+              <div class="md:col-span-1 flex justify-center items-center">
                 <button
-                  @click.stop="startEdit(entry)"
-                  class="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition"
-                  title="Editar"
-                >
-                  <i class="pi pi-pencil w-5 h-5"></i>
-                </button>
-                <button
-                  @click.stop="handleDuplicate(entry)"
-                  class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition"
-                  title="Duplicar"
-                >
-                  <i class="pi pi-copy w-5 h-5"></i>
-                </button>
-                <button
-                  @click.stop="handleDelete(entry.id)"
-                  class="p-2 rounded-full hover:bg-red-100 text-red-600 transition"
-                  title="Excluir"
-                >
-                  <i class="pi pi-trash w-5 h-5"></i>
-                </button>
-                <button
-                  @click.stop="toggleDetails(entry.id)"
+                  @click.stop="toggleDetails(entry)"
                   class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition"
                   title="Ver Detalhes"
                 >
@@ -509,34 +486,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <div v-if="showDetails[entry.id]">
-              <div
-                class="grid grid-cols-3 gap-4 p-2 font-medium text-surface-400 border border-surface-200"
-              >
-                <div>CONTA</div>
-                <div>TIPO</div>
-                <div class="text-right">VALOR</div>
-              </div>
-              <div
-                v-for="(line, index) in entry.lines"
-                :key="index"
-                class="grid grid-cols-3 gap-4 p-2 items-center border-b border-surface-200 last:border-b-0 hover:bg-surface-50 transition"
-              >
-                <div class="text-surface-700">{{ getAccountName(line.account_id) }}</div>
-                <div
-                  class="capitalize"
-                  :class="{
-                    'text-emerald-400': line.type === 'debit',
-                    'text-red-400': line.type === 'credit',
-                  }"
-                >
-                  {{ line.type }}
-                </div>
-                <div class="text-right font-mono surface-600">
-                  {{ formatCurrency(line.amount) }}
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+console.log('Forcing backend rebuild');
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { withAuth } from '../backend/utils/middleware.js'
 import { handleErrorResponse } from '../backend/utils/supabaseClient.js'
@@ -30,6 +31,7 @@ import documentProcessorHandler from '../backend/handlers/documentProcessor.js'
 import { getNotifications, markNotificationAsRead } from '../backend/handlers/notifications.js'
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
 import referenceGeneratorHandler from '../backend/handlers/referenceGenerator.js'
+import { getJournalEntryHistory } from '../backend/handlers/journal-entry-history.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -56,6 +58,10 @@ async function protectedRoutesHandler(
     return productsHandler(req, res, user_id, token)
   }
   if (finalUrlPath.startsWith('/journal-entries')) {
+    if (req.method === 'GET' && finalUrlPath.includes('/history')) {
+      const entryId = finalUrlPath.split('/')[2]
+      return getJournalEntryHistory(req, res, entryId)
+    }
     return journalEntriesHandler(req, res, user_id, token)
   }
   if (finalUrlPath.startsWith('/entry-lines')) {
