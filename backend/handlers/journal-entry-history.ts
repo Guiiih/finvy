@@ -2,7 +2,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from '../utils/supabaseClient.js'
 
 export const getJournalEntryHistory = async (req: VercelRequest, res: VercelResponse, entryId: string) => {
-  const { id } = req.query
 
   try {
     const { data, error } = await supabase
@@ -14,7 +13,8 @@ export const getJournalEntryHistory = async (req: VercelRequest, res: VercelResp
     if (error) throw error
 
     res.status(200).json(data)
-  } catch (error: any) {
-    res.status(500).json({ error: error.message })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'An unknown error occurred.'
+    res.status(500).json({ error: message })
   }
 }

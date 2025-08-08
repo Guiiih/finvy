@@ -28,6 +28,10 @@ export interface Product {
   organization_id?: string
   accounting_period_id?: string
   quantity_in_stock?: number // Adicionado para refletir a nova coluna
+  cost?: number // Adicionado para o custo unitário
+  currentStock?: number // Adicionado para o estoque atual
+  unitType?: string // Adicionado para o tipo de unidade
+  costingMethod?: 'average' | 'fifo' | 'lifo' // Adicionado para o método de custeio
 }
 
 export type EntryType = 'debit' | 'credit'
@@ -237,12 +241,48 @@ export interface TaxSimulationResult {
   calculationDetails: string[]
 }
 
+export interface JournalEntryHistoryDetails {
+  old_status?: string;
+  new_status?: string;
+}
+
 export interface JournalEntryHistory {
   id: string
   journal_entry_id: string
   user_id?: string
   action_type: string
-  details: any
+  details: JournalEntryHistoryDetails;
   changed_at: string
   changed_by_name?: string
+}
+
+export interface TaxItem {
+  rate: number;
+  amount: number;
+}
+
+export interface TaxData {
+  icms?: TaxItem;
+  ipi?: TaxItem;
+  pis?: TaxItem;
+  cofins?: TaxItem;
+  irrf?: TaxItem;
+  csll?: TaxItem;
+  inss?: TaxItem;
+}
+
+export interface FiscalOperationData {
+  operationType: 'Compra' | 'Venda' | null;
+  productServiceType: 'Produto' | 'Serviço' | null;
+  ufOrigin: string | null;
+  ufDestination: string | null;
+  cfop: string | null;
+  totalAmount: number;
+  freight: number;
+  insurance: number;
+  discount: number;
+  icmsSt: boolean;
+  ipiIncides: boolean;
+  industrialOperation: boolean;
+  taxData?: TaxData;
 }

@@ -44,7 +44,7 @@ watch(
       try {
         await accountStore.fetchAccounts()
         await productStore.fetchProducts(1, 1000)
-      } catch (error) {
+      } catch {
         toast.add({
           severity: 'error',
           summary: 'Erro',
@@ -184,7 +184,7 @@ async function handleDelete() {
       })
       emit('delete')
       localVisible.value = false
-    } catch (error) {
+    } catch {
       toast.add({
         severity: 'error',
         summary: 'Erro',
@@ -208,7 +208,12 @@ function getHistoryIcon(action: string): string {
   }
 }
 
-function formatHistoryTitle(action: string, details: any): string {
+interface HistoryDetails {
+  old_status?: string;
+  new_status?: string;
+}
+
+function formatHistoryTitle(action: string, details: HistoryDetails): string {
   switch (action) {
     case 'CREATED':
       return 'Lançamento criado'

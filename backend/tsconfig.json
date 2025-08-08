@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/types/*": ["../frontend/src/types/*"]
+      "@/types/*": ["types/*"]
     }
   },
   "include": ["**/*.ts"],

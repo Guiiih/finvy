@@ -69,12 +69,13 @@ const handleBulkAction = async (action: 'delete' | 'approve') => {
         }
         emit('bulkActionSuccess')
         closeDialog()
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Erro ao realizar ação em lote (${action}):`, error)
+        const message = error instanceof Error ? error.message : `Ocorreu um erro ao ${action === 'delete' ? 'excluir' : 'aprovar'} os lançamentos.`
         toast.add({
           severity: 'error',
           summary: 'Erro',
-          detail: error.message || `Ocorreu um erro ao ${action === 'delete' ? 'excluir' : 'aprovar'} os lançamentos.`,
+          detail: message,
           life: 3000,
         })
       } finally {

@@ -238,6 +238,13 @@ export default async function handler(
         total_gross,
         transaction_type,
         total_net, // total_net from input
+        // Novas alíquotas de impostos do frontend
+        icms_rate,
+        pis_rate,
+        cofins_rate,
+        irrf_rate,
+        csll_rate,
+        inss_rate,
       } = parsedBody.data
 
       const debit = type === 'debit' ? amount : null // Derivado
@@ -250,7 +257,14 @@ export default async function handler(
       let calculated_icms_st_value = 0
       let final_total_net = total_net || total_gross || 0
 
-      if (transaction_type === 'sale' || transaction_type === 'purchase') {
+      // Usar as alíquotas do frontend se fornecidas, caso contrário, buscar as configurações
+      let effective_icms_rate = icms_rate;
+      let effective_ipi_rate = 0; // IPI não está no taxData do frontend, mas pode vir do produto ou ser calculado
+      let effective_pis_rate = pis_rate;
+      let effective_cofins_rate = cofins_rate;
+      let effective_mva_rate = 0; // MVA não está no taxData do frontend
+
+      if (!effective_icms_rate || !effective_pis_rate || !effective_cofins_rate) {
         const taxSettings = await getTaxSettings(organization_id, token)
         if (!taxSettings) {
           return handleErrorResponse(
@@ -259,14 +273,21 @@ export default async function handler(
             'Configurações de impostos não encontradas para a organização.',
           )
         }
+        effective_icms_rate = taxSettings.icms_rate;
+        effective_ipi_rate = taxSettings.ipi_rate;
+        effective_pis_rate = taxSettings.pis_rate;
+        effective_cofins_rate = taxSettings.cofins_rate;
+        effective_mva_rate = taxSettings.mva_rate;
+      }
 
+      if (transaction_type === 'sale' || transaction_type === 'purchase') {
         const taxResults = calculateTaxes({
           total_gross,
-          icms_rate: taxSettings.icms_rate,
-          ipi_rate: taxSettings.ipi_rate,
-          pis_rate: taxSettings.pis_rate,
-          cofins_rate: taxSettings.cofins_rate,
-          mva_rate: taxSettings.mva_rate,
+          icms_rate: effective_icms_rate,
+          ipi_rate: effective_ipi_rate,
+          pis_rate: effective_pis_rate,
+          cofins_rate: effective_cofins_rate,
+          mva_rate: effective_mva_rate,
           transaction_type,
           total_net,
         })
@@ -316,6 +337,9 @@ export default async function handler(
             'Estoque de Produtos Acabados',
             'PIS sobre Faturamento', // Expense account for PIS
             'COFINS sobre Faturamento', // Expense account for COFINS
+            'IRRF a Recolher', // Adicionado
+            'CSLL a Recolher', // Adicionado
+            'INSS a Recolher', // Adicionado
           ])
 
         if (accountsError) throw accountsError
@@ -332,6 +356,9 @@ export default async function handler(
         const finishedGoodsStockAccount = accountMap.get('Estoque de Produtos Acabados')
         const pisExpenseAccount = accountMap.get('PIS sobre Faturamento')
         const cofinsExpenseAccount = accountMap.get('COFINS sobre Faturamento')
+        const irrfPayableAccount = accountMap.get('IRRF a Recolher') // Adicionado
+        const csllPayableAccount = accountMap.get('CSLL a Recolher') // Adicionado
+        const inssPayableAccount = accountMap.get('INSS a Recolher') // Adicionado
 
         if (
           !revenueAccount ||
@@ -343,7 +370,10 @@ export default async function handler(
           !cmvAccount ||
           !finishedGoodsStockAccount ||
           !pisExpenseAccount ||
-          !cofinsExpenseAccount
+          !cofinsExpenseAccount ||
+          !irrfPayableAccount ||
+          !csllPayableAccount ||
+          !inssPayableAccount
         ) {
           return handleErrorResponse(
             res,
@@ -366,6 +396,12 @@ export default async function handler(
           pis_value: calculated_pis_value,
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
+          icms_rate: effective_icms_rate, // Adicionado
+          pis_rate: effective_pis_rate, // Adicionado
+          cofins_rate: effective_cofins_rate, // Adicionado
+          irrf_rate: irrf_rate, // Adicionado
+          csll_rate: csll_rate, // Adicionado
+          inss_rate: inss_rate, // Adicionado
           total_net: final_total_net,
           organization_id,
           accounting_period_id: active_accounting_period_id,
@@ -465,6 +501,69 @@ export default async function handler(
           })
         }
 
+        // IRRF Entry (Debit IRRF sobre Faturamento, Credit IRRF a Recolher) - Adicionado
+        if (irrf_rate && irrf_rate > 0) {
+          const irrf_value = (total_gross || 0) * (irrf_rate / 100);
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: accountMap.get('IRRF sobre Faturamento'), // Assumindo que existe
+            debit: irrf_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: irrfPayableAccount,
+            debit: null,
+            credit: irrf_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
+        // CSLL Entry (Debit CSLL sobre Faturamento, Credit CSLL a Recolher) - Adicionado
+        if (csll_rate && csll_rate > 0) {
+          const csll_value = (total_gross || 0) * (csll_rate / 100);
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: accountMap.get('CSLL sobre Faturamento'), // Assumindo que existe
+            debit: csll_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: csllPayableAccount,
+            debit: null,
+            credit: csll_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
+        // INSS Entry (Debit INSS sobre Faturamento, Credit INSS a Recolher) - Adicionado
+        if (inss_rate && inss_rate > 0) {
+          const inss_value = (total_gross || 0) * (inss_rate / 100);
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: accountMap.get('INSS sobre Faturamento'), // Assumindo que existe
+            debit: inss_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: inssPayableAccount,
+            debit: null,
+            credit: inss_value,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
         // CMV Entry (Debit Custo da Mercadoria Vendida, Credit Estoque de Produtos Acabados)
         if (product_id && quantity && unit_cost) {
           const cmv_value = quantity * unit_cost
@@ -495,6 +594,10 @@ export default async function handler(
           .in('name', [
             'Estoque de Mercadorias', // For retailer purchases
             'Fornecedores', // For retailer purchases
+            'ICMS a Recuperar', // Adicionado
+            'IPI a Recuperar', // Adicionado
+            'PIS a Recuperar', // Adicionado
+            'COFINS a Recuperar', // Adicionado
           ])
 
         if (accountsError) throw accountsError
@@ -503,8 +606,19 @@ export default async function handler(
 
         const merchandiseStockAccount = accountMap.get('Estoque de Mercadorias')
         const suppliersAccount = accountMap.get('Fornecedores')
+        const icmsRecoverableAccount = accountMap.get('ICMS a Recuperar') // Adicionado
+        const ipiRecoverableAccount = accountMap.get('IPI a Recuperar') // Adicionado
+        const pisRecoverableAccount = accountMap.get('PIS a Recuperar') // Adicionado
+        const cofinsRecoverableAccount = accountMap.get('COFINS a Recuperar') // Adicionado
 
-        if (!merchandiseStockAccount || !suppliersAccount) {
+        if (
+          !merchandiseStockAccount ||
+          !suppliersAccount ||
+          !icmsRecoverableAccount ||
+          !ipiRecoverableAccount ||
+          !pisRecoverableAccount ||
+          !cofinsRecoverableAccount
+        ) {
           return handleErrorResponse(
             res,
             500,
@@ -528,6 +642,12 @@ export default async function handler(
           pis_value: calculated_pis_value,
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
+          icms_rate: effective_icms_rate, // Adicionado
+          pis_rate: effective_pis_rate, // Adicionado
+          cofins_rate: effective_cofins_rate, // Adicionado
+          irrf_rate: irrf_rate, // Adicionado
+          csll_rate: csll_rate, // Adicionado
+          inss_rate: inss_rate, // Adicionado
           total_net: final_total_net,
           organization_id,
           accounting_period_id: active_accounting_period_id,
@@ -540,6 +660,55 @@ export default async function handler(
           organization_id,
           accounting_period_id: active_accounting_period_id,
         })
+
+        // ICMS a Recuperar (Debit)
+        if (calculated_icms_value > 0) {
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: icmsRecoverableAccount,
+            debit: calculated_icms_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
+        // IPI a Recuperar (Debit)
+        if (calculated_ipi_value > 0) {
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: ipiRecoverableAccount,
+            debit: calculated_ipi_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
+        // PIS a Recuperar (Debit)
+        if (calculated_pis_value > 0) {
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: pisRecoverableAccount,
+            debit: calculated_pis_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
+        // COFINS a Recuperar (Debit)
+        if (calculated_cofins_value > 0) {
+          entryLinesToInsert.push({
+            journal_entry_id,
+            account_id: cofinsRecoverableAccount,
+            debit: calculated_cofins_value,
+            credit: null,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+          });
+        }
+
       } else {
         // Default or other types, for now, just insert the main line
         entryLinesToInsert.push({
@@ -556,6 +725,12 @@ export default async function handler(
           pis_value: calculated_pis_value,
           cofins_value: calculated_cofins_value,
           icms_st_value: calculated_icms_st_value,
+          icms_rate: effective_icms_rate, // Adicionado
+          pis_rate: effective_pis_rate, // Adicionado
+          cofins_rate: effective_cofins_rate, // Adicionado
+          irrf_rate: irrf_rate, // Adicionado
+          csll_rate: csll_rate, // Adicionado
+          inss_rate: inss_rate, // Adicionado
           total_net: final_total_net,
           organization_id,
           accounting_period_id: active_accounting_period_id,

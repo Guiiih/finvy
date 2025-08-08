@@ -96,6 +96,13 @@ export const createEntryLineSchema = z.object({
     .nonnegative('Valor total bruto deve ser um valor não negativo.')
     .optional(),
 
+  icms_rate: z.number().nonnegative('Alíquota de ICMS deve ser um valor não negativo.').optional(),
+  pis_rate: z.number().nonnegative('Alíquota de PIS deve ser um valor não negativo.').optional(),
+  cofins_rate: z.number().nonnegative('Alíquota de COFINS deve ser um valor não negativo.').optional(),
+  irrf_rate: z.number().nonnegative('Alíquota de IRRF deve ser um valor não negativo.').optional(),
+  csll_rate: z.number().nonnegative('Alíquota de CSLL deve ser um valor não negativo.').optional(),
+  inss_rate: z.number().nonnegative('Alíquota de INSS deve ser um valor não negativo.').optional(),
+
   icms_st_value: z
     .number()
     .nonnegative('Valor do ICMS-ST deve ser um valor não negativo.')
@@ -140,6 +147,12 @@ export const updateEntryLineSchema = z
       .number()
       .nonnegative('Valor total bruto deve ser um valor não negativo.')
       .optional(),
+    icms_rate: z.number().nonnegative('Alíquota de ICMS deve ser um valor não negativo.').optional(),
+    pis_rate: z.number().nonnegative('Alíquota de PIS deve ser um valor não negativo.').optional(),
+    cofins_rate: z.number().nonnegative('Alíquota de COFINS deve ser um valor não negativo.').optional(),
+    irrf_rate: z.number().nonnegative('Alíquota de IRRF deve ser um valor não negativo.').optional(),
+    csll_rate: z.number().nonnegative('Alíquota de CSLL deve ser um valor não negativo.').optional(),
+    inss_rate: z.number().nonnegative('Alíquota de INSS deve ser um valor não negativo.').optional(),
     icms_value: z.number().nonnegative('Valor do ICMS deve ser um valor não negativo.').optional(),
     total_net: z
       .number()

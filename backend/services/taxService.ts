@@ -4,6 +4,9 @@ interface TaxCalculationParams {
   ipi_rate?: number
   pis_rate?: number
   cofins_rate?: number
+  irrf_rate?: number // Adicionado
+  csll_rate?: number // Adicionado
+  inss_rate?: number // Adicionado
   mva_rate?: number
   transaction_type?: 'sale' | 'purchase'
   total_net?: number | null // For purchases, total_net might be provided
@@ -14,6 +17,9 @@ interface TaxCalculationResult {
   calculated_ipi_value: number
   calculated_pis_value: number
   calculated_cofins_value: number
+  calculated_irrf_value: number // Adicionado
+  calculated_csll_value: number // Adicionado
+  calculated_inss_value: number // Adicionado
   calculated_icms_st_value: number
   final_total_net: number
 }
@@ -25,6 +31,9 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
     ipi_rate,
     pis_rate,
     cofins_rate,
+    irrf_rate,
+    csll_rate,
+    inss_rate,
     mva_rate,
     transaction_type,
     total_net,
@@ -34,6 +43,9 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
   let calculated_ipi_value = 0
   let calculated_pis_value = 0
   let calculated_cofins_value = 0
+  let calculated_irrf_value = 0 // Adicionado
+  let calculated_csll_value = 0 // Adicionado
+  let calculated_inss_value = 0 // Adicionado
   let calculated_icms_st_value = 0
   let base_for_icms_and_pis_cofins = total_gross || 0
   let final_total_net = total_net || 0 // Use the provided total_net for purchase/default
@@ -59,7 +71,18 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
       calculated_cofins_value = total_gross * (cofins_rate / 100)
     }
 
-    // 4. Calculate ICMS-ST
+    // 4. Calculate IRRF, CSLL, INSS (Retenções) - Adicionado
+    if (total_gross !== undefined && irrf_rate !== undefined) {
+      calculated_irrf_value = total_gross * (irrf_rate / 100)
+    }
+    if (total_gross !== undefined && csll_rate !== undefined) {
+      calculated_csll_value = total_gross * (csll_rate / 100)
+    }
+    if (total_gross !== undefined && inss_rate !== undefined) {
+      calculated_inss_value = total_gross * (inss_rate / 100)
+    }
+
+    // 5. Calculate ICMS-ST
     if (
       base_for_icms_and_pis_cofins !== undefined &&
       mva_rate !== undefined &&
@@ -90,6 +113,15 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
     if (total_gross !== undefined && cofins_rate !== undefined) {
       calculated_cofins_value = total_gross * (cofins_rate / 100)
     }
+    if (total_gross !== undefined && irrf_rate !== undefined) {
+      calculated_irrf_value = total_gross * (irrf_rate / 100)
+    }
+    if (total_gross !== undefined && csll_rate !== undefined) {
+      calculated_csll_value = total_gross * (csll_rate / 100)
+    }
+    if (total_gross !== undefined && inss_rate !== undefined) {
+      calculated_inss_value = total_gross * (inss_rate / 100)
+    }
     if (total_gross !== undefined && mva_rate !== undefined && icms_rate !== undefined) {
       const base_icms_st = total_gross * (1 + mva_rate / 100)
       const icms_st_total = base_icms_st * (icms_rate / 100)
@@ -102,6 +134,9 @@ export function calculateTaxes(params: TaxCalculationParams): TaxCalculationResu
     calculated_ipi_value,
     calculated_pis_value,
     calculated_cofins_value,
+    calculated_irrf_value,
+    calculated_csll_value,
+    calculated_inss_value,
     calculated_icms_st_value,
     final_total_net,
   }

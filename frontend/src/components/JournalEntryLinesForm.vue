@@ -3,11 +3,17 @@ import { computed, watch } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { EntryLine, Product } from '@/types/index'
 
+interface SelectedProductData {
+  product: Product;
+  quantity?: number;
+  unitCost?: number;
+}
+
 const accountStore = useAccountStore()
 
 const props = defineProps<{
   entryLines: EntryLine[]
-  selectedProduct: Product | null
+  selectedProduct: SelectedProductData | null
 }>()
 
 const emit = defineEmits(['update:entryLines'])
@@ -28,11 +34,17 @@ const stockAccountId = computed(() => {
 
 watch(
   () => props.selectedProduct,
-  (newProduct) => {
-    if (newProduct) {
+  (newProductData) => {
+    if (newProductData && newProductData.product) {
+      const product = newProductData.product;
+      const quantity = newProductData.quantity;
+      const unitCost = newProductData.unitCost;
+
       const lastLine = internalEntryLines.value[internalEntryLines.value.length - 1]
       if (lastLine) {
-        lastLine.product_id = newProduct.id
+        lastLine.product_id = product.id
+        lastLine.quantity = quantity
+        lastLine.unit_cost = unitCost
       }
     }
   },

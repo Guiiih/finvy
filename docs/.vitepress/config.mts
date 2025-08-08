@@ -1,139 +1,103 @@
-import { withMermaid } from "vitepress-plugin-mermaid";
+import { defineConfig } from 'vitepress'
+// import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default withMermaid({
-  base: '/docs/',
-  title: 'Finvy',
-  description: 'Documentação do Finvy',
-  appearance: 'dark',
+// https://vitepress.dev/reference/site-config
+export default defineConfig({
+  title: "Finvy Docs",
+  description: "Documentação oficial do Finvy",
   themeConfig: {
+    // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Documentação', link: '/guide/introduction' },
-      { text: 'Conceitos', link: '/concepts/what-is-finvy' },
+      { text: 'Home', link: '/' },
+      { text: 'Guia', link: '/guide/getting-started' },
       { text: 'API', link: '/api/introduction' },
+      { text: 'Conceitos', link: '/concepts/what-is-finvy' },
       { text: 'Changelog', link: '/changelog/product-updates' },
-      { text: 'Políticas', link: '/policies/terms-of-service' }
     ],
 
     sidebar: {
       '/guide/': [
         {
-          text: 'Guia do Usuário',
+          text: 'Introdução',
           items: [
-            { text: 'Introdução', link: '/guide/introduction' },
-            { text: 'Início Rápido', link: '/guide/quickstart' },
-            { text: 'Gestão de Organizações', link: '/guide/organizations' },
-            { text: 'Gestão de Períodos Contábeis', link: '/guide/accounting-periods' },
-            { text: 'Plano de Contas', link: '/guide/accounts' },
-            { text: 'Lançamentos Contábeis', link: '/guide/journal-entries' },
-            { text: 'Controle de Estoque e Produtos', link: '/guide/products-stock' },
-            { text: 'Importação de NF-e', link: '/guide/nfe-import' },
-            { text: 'Contas a Pagar e Receber', link: '/guide/financial-transactions' },
-            { text: 'Geração de Relatórios', link: '/guide/reports' },
+            { text: 'O que é o Finvy?', link: '/guide/getting-started' },
+            { text: 'Primeiros Passos', link: '/guide/quickstart' },
             { text: 'Recursos de IA', link: '/guide/ai-features' },
+          ]
+        },
+        {
+          text: 'Módulos',
+          items: [
+            { text: 'Lançamentos Contábeis', link: '/guide/journal-entries' },
+            { text: 'Contas', link: '/guide/accounts' },
+            { text: 'Períodos Contábeis', link: '/guide/accounting-periods' },
+            { text: 'Organizações', link: '/guide/organizations' },
+            { text: 'Produtos e Estoque', link: '/guide/products-stock' },
+            { text: 'Transações Financeiras', link: '/guide/financial-transactions' },
+            { text: 'Relatórios', link: '/guide/reports' },
+            { text: 'Importação de NF-e', link: '/guide/nfe-import' },
             { text: 'Compartilhamento e Colaboração', link: '/guide/sharing-collaboration' },
           ]
         }
       ],
-
       '/api/': [
         {
           text: 'Introdução',
           items: [
-            { text: 'Visão Geral', link: '/api/introduction' },
+            { text: 'Visão Geral da API', link: '/api/introduction' },
           ]
         },
         {
-          text: 'Contabilidade (Core)',
+          text: 'Módulos da API',
           items: [
-            { text: 'Contas (Plano de Contas)', link: '/api/core/accounts' },
-            { text: 'Lançamentos Contábeis', link: '/api/core/journal-entries' },
-            { text: 'Linhas de Lançamento', link: '/api/core/entry-lines' },
-            { text: 'Produtos e Estoque', link: '/api/core/products' },
-            { text: 'Encerramento do Exercício', link: '/api/core/year-end-closing' },
-          ]
-        },
-        {
-          text: 'Gestão',
-          items: [
-            { text: 'Organizações', link: '/api/management/organizations' },
-            { text: 'Períodos Contábeis', link: '/api/management/accounting-periods' },
-            { text: 'Membros e Papéis', link: '/api/management/user-organization-roles' },
-            { text: 'Perfil do Usuário', link: '/api/management/profile' },
-            { text: 'Regimes Tributários', link: '/api/management/tax-regime-history' },
-          ]
-        },
-        {
-          text: 'Operações Financeiras',
-          items: [
-            { text: 'Importação de NF-e', link: '/api/financials/nfe-import' },
-            { text: 'Contas a Pagar/Receber', link: '/api/financials/financial-transactions' },
-            { text: 'Relatórios', link: '/api/financials/reports' },
-          ]
-        },
-        {
-          text: 'Recursos de IA e Automação',
-          items: [
-            { text: 'Chatbot Contábil', link: '/api/ai/chatbot' },
-            { text: 'Processador de Documentos', link: '/api/ai/document-processor' },
-            { text: 'Resolvedor de Exercícios', link: '/api/ai/exercise-solver' },
-            { text: 'Validador de Lançamentos', link: '/api/ai/journal-entry-validator' },
-          ]
-        },
-        {
-          text: 'Colaboração e Utilidades',
-          items: [
-            { text: 'Compartilhamento', link: '/api/collaboration/sharing' },
-            { text: 'Notificações', link: '/api/collaboration/notifications' },
-            { text: 'Presença de Usuário', link: '/api/collaboration/user-presence' },
-            { text: 'Busca de Usuários', link: '/api/collaboration/users' },
+            { text: 'API de Administração', link: '/api/admin/introduction' },
+            { text: 'API de IA', link: '/api/ai/introduction' },
+            { text: 'API de Assistente', link: '/api/assistant/introduction' },
+            { text: 'API de Colaboração', link: '/api/collaboration/introduction' },
+            { text: 'API Core', link: '/api/core/introduction' },
+            { text: 'API Financeira', link: '/api/financials/introduction' },
+            { text: 'API de Gerenciamento', link: '/api/management/introduction' },
           ]
         }
       ],
-
-      '/changelog/': [
-        {
-          text: 'Changelog',
-          items: [
-            { text: '2025-08-04 - Major Update', link: '/changelog/20250804_major_update' },
-            { text: 'Product Updates', link: '/changelog/product-updates' },
-          ]
-        }
-      ],
-
-      '/policies/': [
-        {
-          text: 'Políticas',
-          items: [
-            { text: 'Termos de Serviço', link: '/policies/terms-of-service' },
-            { text: 'Política de Privacidade', link: '/policies/privacy-policy' }
-          ]
-        }
-      ],
-
       '/concepts/': [
         {
           text: 'Conceitos Fundamentais',
           items: [
             { text: 'O que é o Finvy?', link: '/concepts/what-is-finvy' },
-            { text: 'Plano de Contas', link: '/concepts/chart-of-accounts' },
             { text: 'Lançamentos Contábeis', link: '/concepts/journal-entries' },
+            { text: 'Plano de Contas', link: '/concepts/chart-of-accounts' },
           ]
         },
         {
           text: 'Fluxos de Trabalho',
           items: [
-            { text: 'Arquitetura Geral', link: '/concepts/flows/architecture' },
-            { text: 'Interação do Usuário', link: '/concepts/flows/user-interaction' },
-            { text: 'Configuração Inicial', link: '/concepts/flows/initial-setup' },
-            { text: 'Operações Diárias', link: '/concepts/flows/daily-operations' },
-            { text: 'Relatórios e Encerramento', link: '/concepts/flows/reporting-closing' },
+            { text: 'Fluxos de Trabalho', link: '/concepts/flows/introduction' },
+          ]
+        }
+      ],
+      '/changelog/': [
+        {
+          text: 'Histórico de Alterações',
+          items: [
+            { text: 'Atualizações de Produto', link: '/changelog/product-updates' },
+            { text: 'Atualização Principal (04/08/2025)', link: '/changelog/20250804_major_update' },
+          ]
+        }
+      ],
+      '/policies/': [
+        {
+          text: 'Políticas',
+          items: [
+            { text: 'Política de Privacidade', link: '/policies/privacy-policy' },
+            { text: 'Termos de Serviço', link: '/policies/terms-of-service' },
           ]
         }
       ]
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/your-repo/finvy' }
+      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
     ]
   }
-});
+})

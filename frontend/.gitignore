@@ -29,3 +29,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Vite temporary files
+*.timestamp-*.mjs

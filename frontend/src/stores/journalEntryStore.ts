@@ -70,7 +70,24 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const orgId = activePeriod.organization_id
       const periodId = activePeriod.id
 
-      const params: Record<string, any> = {
+      interface JournalEntrySearchParams {
+        organization_id: string;
+        accounting_period_id: string;
+        _page: number;
+        _limit: number;
+        status?: string | null;
+        dateFrom?: string | null;
+        dateTo?: string | null;
+        amountFrom?: number | null;
+        amountTo?: number | null;
+        createdBy?: string | null;
+        hasProduct?: boolean;
+        hasTaxes?: boolean;
+        accounts?: string;
+        [key: string]: unknown; // Adiciona a assinatura de índice
+      }
+
+      const params: JournalEntrySearchParams = {
         organization_id: orgId,
         accounting_period_id: periodId,
         _page: page,

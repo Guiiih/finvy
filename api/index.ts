@@ -1,4 +1,4 @@
-console.log('Forcing backend rebuild');
+console.log('Forcing backend rebuild')
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { withAuth } from '../backend/utils/middleware.js'
 import { handleErrorResponse } from '../backend/utils/supabaseClient.js'
@@ -32,6 +32,7 @@ import { getNotifications, markNotificationAsRead } from '../backend/handlers/no
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/user-presence.js'
 import referenceGeneratorHandler from '../backend/handlers/referenceGenerator.js'
 import { getJournalEntryHistory } from '../backend/handlers/journal-entry-history.js'
+import { calculateFiscalTaxesHandler } from '../backend/handlers/tax-calculation.js'
 
 // This handler contains the logic for protected routes
 async function protectedRoutesHandler(
@@ -140,6 +141,9 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith('/generate-reference')) {
     return referenceGeneratorHandler(req, res)
+  }
+  if (finalUrlPath.startsWith('/calculate-fiscal-taxes')) {
+    return calculateFiscalTaxesHandler(req, res)
   }
 
   return handleErrorResponse(res, 404, 'Endpoint protegido não encontrado.')

@@ -246,3 +246,8 @@ export interface UserProfile {
 export interface OnlineUser extends UserPresence {
   profiles: UserProfile[]
 }
+
+import { FiscalOperationData, TaxData } from './tax.js'
+
+export type { FiscalOperationData, TaxData }
+

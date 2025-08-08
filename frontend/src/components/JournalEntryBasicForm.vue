@@ -7,6 +7,7 @@ const props = defineProps<{
   entryDescription: string
   referencePrefix: string
   status: string
+  hasStockRelatedAccount: boolean
 }>()
 
 const emit = defineEmits([
@@ -74,42 +75,45 @@ watch(internalStatus, (newValue) => {
 
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col">
-      <label for="entry-date" class="text-surface-700 font-medium mb-1">Data:</label>
-      <input
-        type="date"
-        id="entry-date"
-        v-model="internalEntryDate"
-        required
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-      />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label for="entry-date" class="text-sm font-medium">Data *</label>
+        <input
+          type="date"
+          id="entry-date"
+          v-model="internalEntryDate"
+          required
+          class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label for="entry-reference-prefix" class="text-sm font-medium">Referência *</label>
+        <input
+          type="text"
+          id="entry-reference-prefix"
+          v-model="internalReferencePrefix"
+          placeholder="Ex: NF001, DOC002"
+          required
+          class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
     </div>
-    <div class="flex flex-col">
-      <label for="entry-description" class="text-surface-700 font-medium mb-1">Descrição:</label>
-      <input
-        type="text"
+
+    <div class="space-y-2">
+      <label for="entry-description" class="text-sm font-medium">Descrição *</label>
+      <textarea
         id="entry-description"
         v-model="internalEntryDescription"
-        placeholder="Descrição do lançamento"
+        placeholder="Descreva a natureza da transação..."
         required
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-      />
+        rows="3"
+        class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+      ></textarea>
     </div>
-    <div class="flex flex-col">
-      <label for="entry-reference-prefix" class="text-surface-700 font-medium mb-1"
-        >Prefixo da Referência:</label
-      >
-      <input
-        type="text"
-        id="entry-reference-prefix"
-        v-model="internalReferencePrefix"
-        placeholder="Ex: NF, DOC"
-        required
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-      />
-    </div>
-    <div class="flex flex-col">
-      <label for="entry-status" class="text-surface-700 font-medium mb-1">Status:</label>
+
+    <div class="space-y-2">
+      <label for="entry-status" class="text-sm font-medium">Status</label>
       <Dropdown
         id="entry-status"
         v-model="internalStatus"
@@ -120,6 +124,17 @@ watch(internalStatus, (newValue) => {
         class="w-full"
         required
       />
+    </div>
+
+    <div v-if="hasStockRelatedAccount" class="p-4 bg-blue-50 rounded-lg">
+      <div class="flex items-center gap-2 mb-2">
+        <i class="pi pi-box h-4 w-4 text-blue-600"></i>
+        <span class="font-medium text-blue-900">Conta de Estoque Detectada</span>
+      </div>
+      <p class="text-sm text-blue-800">
+        Este lançamento afeta o estoque. Configure o produto na aba "Produto" que apareceu
+        automaticamente.
+      </p>
     </div>
   </div>
 </template>
