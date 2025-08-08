@@ -1,12 +1,14 @@
-feat: Implementa cálculo de impostos e importação de NF-e
+feat: Implementa funcionalidade completa de cálculo de impostos
 
-Este commit introduz as seguintes funcionalidades e melhorias:
+Este commit integra a funcionalidade de cálculo de impostos no Finvy, utilizando alíquotas dinâmicas do Supabase e uma lógica de cálculo mais abrangente.
 
-- **Cálculo de Impostos:** Adiciona lógica para cálculo de impostos (ICMS, IPI, PIS, COFINS, IRRF, CSLL, INSS) em lançamentos contábeis, permitindo a entrada de alíquotas e valores.
-- **Importação de NF-e:** Implementa um componente para importação de arquivos XML de NF-e, extraindo dados relevantes para a criação de lançamentos.
-- **Refatoração de Componentes:** Atualiza diversos componentes do frontend (`ImpostoComponent`, `JournalEntryFormModal`, `JournalEntryLinesForm`, `JournalEntryProductForm`, etc.) para suportar as novas funcionalidades de impostos e produtos.
-- **Estrutura de Módulos:** Ajusta a estrutura de arquivos no backend e frontend para melhor organização dos módulos de impostos e importação.
-- **Atualizações de Banco de Dados:** Inclui uma nova migração para o Supabase para adicionar colunas de alíquotas de impostos na tabela `entry_lines`.
-- **Documentação:** Atualiza a documentação do projeto para refletir as novas funcionalidades.
-
-Essas mudanças visam aprimorar a gestão fiscal e contábil do sistema, automatizando processos e fornecendo maior controle sobre as operações financeiras.
+Principais alterações:
+- Backend:
+  - `backend/handlers/tax-calculation.ts`: Atualizado para buscar configurações de impostos do Supabase e usar `taxService.ts` para cálculo.
+  - `backend/services/taxCalculationService.ts`: Removido, pois sua funcionalidade foi substituída.
+  - `backend/types/tax.ts`: `TaxData` atualizada para refletir a estrutura de `TaxCalculationResult`.
+- Frontend:
+  - `frontend/src/components/ImpostoComponent.vue`: Atualizado para exibir os impostos calculados detalhadamente e CFOPs com labels.
+  - `frontend/src/components/JournalEntryFormModal.vue`: Corrigido para usar a nova estrutura de `TaxData` e remover importações não utilizadas.
+  - `frontend/src/types/index.ts`: `TaxData` e `FiscalOperationData` atualizadas para a nova estrutura.
+  - `frontend/src/utils/taxHelpers.ts`: Funções de cálculo e importação de `TaxData` removidas, pois a lógica foi centralizada no backend.

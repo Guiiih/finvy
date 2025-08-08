@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
-import type { JournalEntry, Product, TaxData, FiscalOperationData } from '@/types/index'
+import type { JournalEntry, Product, FiscalOperationData } from '@/types/index'
 import { useAuthStore } from '@/stores/authStore'
 import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
 import { api } from '@/services/api'
@@ -81,7 +81,17 @@ const fiscalOperationData = ref<FiscalOperationData>({
   icmsSt: false,
   ipiIncides: false,
   industrialOperation: false,
-  taxData: {},
+  taxData: {
+    calculated_icms_value: 0,
+    calculated_ipi_value: 0,
+    calculated_pis_value: 0,
+    calculated_cofins_value: 0,
+    calculated_irrf_value: 0,
+    calculated_csll_value: 0,
+    calculated_inss_value: 0,
+    calculated_icms_st_value: 0,
+    final_total_net: 0,
+  },
 })
 const newEntryStatus = ref('draft')
 
@@ -269,31 +279,26 @@ async function submitEntry() {
     // Process stock movements first
     for (const line of newEntryLines.value) {
       // Adicionar dados de impostos da taxData para cada linha
-      type TaxKeyMap = {
-        [K in keyof TaxData]: {
-          rateKey: keyof EntryLine;
-          valueKey: keyof EntryLine;
-        };
-      };
+      const taxKeyMap = {
+        icms: 'calculated_icms_value',
+        ipi: 'calculated_ipi_value',
+        pis: 'calculated_pis_value',
+        cofins: 'calculated_cofins_value',
+        irrf: 'calculated_irrf_value',
+        csll: 'calculated_csll_value',
+        inss: 'calculated_inss_value',
+      } as const;
 
-      const taxKeyMap: TaxKeyMap = {
-        icms: { rateKey: 'icms_rate', valueKey: 'icms_value' },
-        ipi: { rateKey: 'ipi_rate', valueKey: 'ipi_value' },
-        pis: { rateKey: 'pis_rate', valueKey: 'pis_value' },
-        cofins: { rateKey: 'cofins_rate', valueKey: 'cofins_value' },
-        irrf: { rateKey: 'irrf_rate', valueKey: 'irrf_value' },
-        csll: { rateKey: 'csll_rate', valueKey: 'csll_value' },
-        inss: { rateKey: 'inss_rate', valueKey: 'inss_value' },
-      };
+      type TaxMapKey = keyof typeof taxKeyMap;
 
-      const taxKeys: (keyof TaxData)[] = ['icms', 'ipi', 'pis', 'cofins', 'irrf', 'csll', 'inss'];
+      const taxKeys: TaxMapKey[] = ['icms', 'ipi', 'pis', 'cofins', 'irrf', 'csll', 'inss'];
+
       taxKeys.forEach(taxKey => {
-        if (fiscalOperationData.value.taxData && fiscalOperationData.value.taxData[taxKey]) {
-          const mapping = taxKeyMap[taxKey];
-          if (mapping) {
-            (line[mapping.rateKey] as number | undefined) = fiscalOperationData.value.taxData[taxKey]?.rate;
-            (line[mapping.valueKey] as number | undefined) = fiscalOperationData.value.taxData[taxKey]?.amount;
-          }
+        const calculatedValueKey = taxKeyMap[taxKey];
+        if (fiscalOperationData.value.taxData && fiscalOperationData.value.taxData[calculatedValueKey] !== undefined) {
+          // Atribuir o valor calculado diretamente
+          const lineKey = `${taxKey}_value` as keyof EntryLine;
+          (line[lineKey] as number | undefined) = fiscalOperationData.value.taxData[calculatedValueKey];
         }
       });
 

@@ -51,7 +51,18 @@ const ufOptions = [
   { name: 'Minas Gerais', code: 'MG' },
   { name: 'Bahia', code: 'BA' },
 ]
-const cfopOptions = ['5101', '5102', '5401', '5403', '5405']
+const cfopOptions = [
+  { label: '1102 - Compra para comercialização', value: '1102' },
+  { label: '1124 - Industrialização encomendada a outra empresa', value: '1124' },
+  { label: '1403 - Compra para industrialização', value: '1403' },
+  { label: '5101 - Venda de produção do estabelecimento', value: '5101' },
+  { label: '5102 - Venda de mercadoria adquirida ou recebida de terceiros', value: '5102' },
+  { label: '5401 - Venda de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária', value: '5401' },
+  { label: '5403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária', value: '5403' },
+  { label: '5405 - Venda de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária, na condição de contribuinte substituído', value: '5405' },
+  { label: '6102 - Venda de mercadoria adquirida ou recebida de terceiros (interestadual)', value: '6102' },
+  { label: '6403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária (interestadual)', value: '6403' },
+]
 
 const calculateTaxes = async () => {
   validationErrors.value = []
@@ -170,6 +181,8 @@ const calculateTaxes = async () => {
             id="cfop"
             v-model="localFiscalOperationData.cfop"
             :options="cfopOptions"
+            optionLabel="label"
+            optionValue="value"
             placeholder="Selecione o CFOP..."
             class="w-full"
           />
@@ -263,6 +276,54 @@ const calculateTaxes = async () => {
               <li v-for="error in validationErrors" :key="error">{{ error }}</li>
             </ul>
           </Message>
+        </div>
+      </template>
+    </Card>
+
+    <Card class="p-4" v-if="localFiscalOperationData.taxData">
+      <template #title>
+        <h5 class="font-medium mb-4 flex items-center gap-2">
+          <i class="pi pi-calculator"></i> Impostos Calculados
+        </h5>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">ICMS:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">IPI:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_ipi_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">PIS:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_pis_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">COFINS:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_cofins_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">IRRF:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_irrf_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">CSLL:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_csll_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">INSS:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_inss_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">ICMS-ST:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_st_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-surface-700">Total Líquido:</span>
+            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.final_total_net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+          </div>
         </div>
       </template>
     </Card>

@@ -256,19 +256,16 @@ export interface JournalEntryHistory {
   changed_by_name?: string
 }
 
-export interface TaxItem {
-  rate: number;
-  amount: number;
-}
-
 export interface TaxData {
-  icms?: TaxItem;
-  ipi?: TaxItem;
-  pis?: TaxItem;
-  cofins?: TaxItem;
-  irrf?: TaxItem;
-  csll?: TaxItem;
-  inss?: TaxItem;
+  calculated_icms_value: number;
+  calculated_ipi_value: number;
+  calculated_pis_value: number;
+  calculated_cofins_value: number;
+  calculated_irrf_value: number;
+  calculated_csll_value: number;
+  calculated_inss_value: number;
+  calculated_icms_st_value: number;
+  final_total_net: number;
 }
 
 export interface FiscalOperationData {
