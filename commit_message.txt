@@ -1,0 +1,12 @@
+feat: Implementa cálculo de impostos e importação de NF-e
+
+Este commit introduz as seguintes funcionalidades e melhorias:
+
+- **Cálculo de Impostos:** Adiciona lógica para cálculo de impostos (ICMS, IPI, PIS, COFINS, IRRF, CSLL, INSS) em lançamentos contábeis, permitindo a entrada de alíquotas e valores.
+- **Importação de NF-e:** Implementa um componente para importação de arquivos XML de NF-e, extraindo dados relevantes para a criação de lançamentos.
+- **Refatoração de Componentes:** Atualiza diversos componentes do frontend (`ImpostoComponent`, `JournalEntryFormModal`, `JournalEntryLinesForm`, `JournalEntryProductForm`, etc.) para suportar as novas funcionalidades de impostos e produtos.
+- **Estrutura de Módulos:** Ajusta a estrutura de arquivos no backend e frontend para melhor organização dos módulos de impostos e importação.
+- **Atualizações de Banco de Dados:** Inclui uma nova migração para o Supabase para adicionar colunas de alíquotas de impostos na tabela `entry_lines`.
+- **Documentação:** Atualiza a documentação do projeto para refletir as novas funcionalidades.
+
+Essas mudanças visam aprimorar a gestão fiscal e contábil do sistema, automatizando processos e fornecendo maior controle sobre as operações financeiras.

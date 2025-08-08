@@ -45,9 +45,9 @@ O Finvy oferece a geração de relatórios financeiros fundamentais, todos com a
 
 ## **Tecnologias Utilizadas**
 
-* **Frontend:** Vue.js 3 (Composition API), Pinia, Vue Router, Axios, TypeScript.
+* **Frontend:** Vue.js 3 (Composition API), Pinia, Vue Router, Axios, TypeScript, PrimeVue, TailwindCSS.
 * **Backend (API):** Node.js com Vercel Functions (Serverless), Supabase (Banco de Dados PostgreSQL e Autenticação), Zod (Validação de esquemas).
-* **Estilização:** CSS puro (scoped).
+* **Estilização:** TailwindCSS, PrimeVue.
 
 ## **Estrutura do Projeto**
 O projeto Finvy é organizado como um monorepo, contendo o frontend, o backend e as configurações de banco de dados.

@@ -4,6 +4,25 @@ Bem-vindo ao Changelog do Finvy! Aqui você encontrará as últimas atualizaçõ
 
 ---
 
+## Agosto de 2025 - Cálculo de Impostos e Importação de NF-e
+
+Esta atualização introduz funcionalidades avançadas para cálculo de impostos e importação de Notas Fiscais Eletrônicas (NF-e), aprimorando a gestão fiscal e contábil.
+
+### Novas Funcionalidades
+
+*   **Cálculo de Impostos:**
+    *   Adicionada lógica para cálculo de impostos (ICMS, IPI, PIS, COFINS, IRRF, CSLL, INSS) em lançamentos contábeis, permitindo a entrada de alíquotas e valores.
+    *   Integração com o fluxo de lançamentos para aplicação automática dos impostos.
+*   **Importação de NF-e:**
+    *   Implementado um componente para importação de arquivos XML de NF-e, extraindo dados relevantes para a criação de lançamentos.
+    *   Extração de dados do emitente, destinatário, totais e itens da NF-e.
+    *   Sugestão de lançamentos contábeis completos com base nos dados da NF-e, incluindo impostos e movimentação de estoque.
+*   **Refatoração de Componentes:**
+    *   Atualização de diversos componentes do frontend (`ImpostoComponent`, `JournalEntryFormModal`, `JournalEntryLinesForm`, `JournalEntryProductForm`, etc.) para suportar as novas funcionalidades de impostos e produtos.
+    *   Refatoração do modal de lançamento contábil com interface em abas para "Básico", "Partidas", "Produtos" e "Impostos".
+
+---
+
 ## Agosto de 2025 - Histórico de Lançamentos e Ajustes de UI
 
 Esta atualização introduz a funcionalidade de histórico para lançamentos contábeis e aprimora a interface do usuário para uma melhor experiência visual e usabilidade.
@@ -28,35 +47,6 @@ Esta atualização introduz a funcionalidade de histórico para lançamentos con
 
 ---
 
-# Atualizações do Produto
-
-Bem-vindo ao Changelog do Finvy! Aqui você encontrará as últimas atualizações, melhorias e novos recursos da plataforma.
-
----
-
-## Agosto de 2025 - Histórico de Lançamentos e Ajustes de UI
-
-Esta atualização introduz a funcionalidade de histórico para lançamentos contábeis e aprimora a interface do usuário para uma melhor experiência visual e usabilidade.
-
-### Novas Funcionalidades
-
-*   **Histórico de Lançamentos:**
-    *   Agora é possível visualizar um histórico detalhado de todas as alterações feitas em um lançamento contábil, incluindo criação, mudanças de status e edições.
-    *   Cada entrada no histórico registra o tipo de ação, detalhes relevantes e o usuário responsável pela alteração.
-
-### Melhorias na Interface do Usuário
-
-*   **Tabela de Lançamentos (JournalEntryView):**
-    *   **Layout de Colunas Otimizado:** As larguras das colunas "Data", "Referência", "Descrição", "Valor", "Status" e "Ações" foram ajustadas para melhor aproveitamento do espaço e legibilidade.
-    *   **Checkbox Integrado:** O checkbox de seleção de lançamentos foi movido para a mesma coluna da "Data", com espaçamento aprimorado para uma visualização mais limpa.
-    *   **Skeleton Loader Aprimorado:** O skeleton loader foi redesenhado para refletir com precisão o layout e os tamanhos das colunas da tabela, proporcionando uma experiência de carregamento mais fluida.
-    *   **Formato de Data Consistente:** A data agora é exibida no formato `YYYY/MM/DD` para maior clareza.
-    *   **Estilo Visual do Status:** O status dos lançamentos agora utiliza um design de "tag" colorido, similar ao estilo dos tipos de conta, para uma identificação visual rápida e intuitiva.
-*   **Modal de Visualização de Lançamento (JournalEntryViewModal):**
-    *   Adicionado um botão "Excluir" no rodapé do modal, permitindo a exclusão direta do lançamento.
-    *   A aba "Histórico" agora exibe os dados reais do histórico de alterações do lançamento.
-
----
 
 ## Agosto de 2025 - Análise e Cards de Resumo do Plano de Contas
 

@@ -56,6 +56,7 @@ export default defineConfig({
             { text: 'API de Colaboração', link: '/api/collaboration/introduction' },
             { text: 'API Core', link: '/api/core/introduction' },
             { text: 'API Financeira', link: '/api/financials/introduction' },
+            { text: 'Cálculo de Impostos Fiscais', link: '/api/financials/tax-calculation' },
             { text: 'API de Gerenciamento', link: '/api/management/introduction' },
           ]
         }
