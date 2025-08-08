@@ -28,6 +28,40 @@ Cada conta possui um **código** (ex: `1.1.01.001` para Caixa) que reflete sua p
     *   Selecione a conta e clique em "Excluir".
     *   **Atenção:** Contas que possuem lançamentos associados ou subcontas não podem ser excluídas diretamente. Você precisará primeiro remover os lançamentos ou as subcontas.
 
+## Análise do Plano de Contas
+
+O Finvy agora oferece uma funcionalidade de análise avançada para o seu Plano de Contas, proporcionando uma visão mais profunda da sua estrutura contábil.
+
+Para acessar a análise:
+
+1.  Navegue até a seção "Contas Contábeis" no menu principal.
+2.  Clique no botão "Análise" para abrir o modal de análise.
+
+Neste modal, você encontrará:
+
+*   **Métricas Chave:** Visão geral do total de contas, contas ativas, contas com saldo e o número de níveis na hierarquia do seu plano.
+*   **Distribuição por Tipo:** Gráficos (futuramente) e dados sobre a proporção de contas em cada categoria contábil (Ativo, Passivo, Patrimônio Líquido, Receita, Despesa).
+*   **Análise de Saldos:** Informações sobre o valor total por tipo de conta.
+*   **Estrutura Hierárquica:** Detalhes sobre a distribuição de contas por nível organizacional.
+*   **Insights do Sistema:** Análises automáticas e recomendações para otimizar seu plano de contas.
+
+## Análise do Plano de Contas
+
+O Finvy agora oferece uma funcionalidade de análise avançada para o seu Plano de Contas, proporcionando uma visão mais profunda da sua estrutura contábil.
+
+Para acessar a análise:
+
+1.  Navegue até a seção "Contas Contábeis" no menu principal.
+2.  Clique no botão "Análise" para abrir o modal de análise.
+
+Neste modal, você encontrará:
+
+*   **Métricas Chave:** Visão geral do total de contas, contas ativas, contas com saldo e o número de níveis na hierarquia do seu plano.
+*   **Distribuição por Tipo:** Gráficos (futuramente) e dados sobre a proporção de contas em cada categoria contábil (Ativo, Passivo, Patrimônio Líquido, Receita, Despesa).
+*   **Análise de Saldos:** Informações sobre o valor total por tipo de conta.
+*   **Estrutura Hierárquica:** Detalhes sobre a distribuição de contas por nível organizacional.
+*   **Insights do Sistema:** Análises automáticas e recomendações para otimizar seu plano de contas.
+
 ## Importância de um Bom Plano de Contas
 
 Um plano de contas bem estruturado é vital para:

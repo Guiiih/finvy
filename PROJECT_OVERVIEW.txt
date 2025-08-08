@@ -17,12 +17,16 @@ Estudantes e professores de contabilidade, profissionais que buscam aprimorar su
 
 ### Gestão de Lançamentos
 -   **Lançamentos Financeiros:** Registro detalhado de receitas e despesas.
+-   **Gestão de Status:** Defina e acompanhe o status de cada lançamento (Rascunho, Lançado, Revisado).
+-   **Rastreabilidade e Auditoria:** Lançamentos incluem informações do criador e timestamp de última atualização para auditoria.
+-   **Histórico de Lançamentos:** Acompanhe todas as alterações e eventos relacionados a cada lançamento contábil.
 -   **Importação de NF-e (Nota Fiscal Eletrônica):** Automatize a entrada de dados financeiros e de estoque diretamente das suas notas fiscais.
 -   **Simulador de Impostos:** Calcule e simule alíquotas de impostos (ex: ICMS) sobre compras e vendas, com segregação de valores para apuração.
 -   **Contas a Pagar e Receber:** Controle total sobre suas obrigações e direitos financeiros.
 
 ### Gestão de Contas e Produtos
 -   **Plano de Contas Personalizável:** Organize suas finanças de acordo com suas necessidades.
+-   **Análise do Plano de Contas:** Visualize métricas e insights sobre a estrutura do seu plano de contas, incluindo total de contas, contas ativas, contas com saldo e níveis hierárquicos.
 -   **Cadastro de Produtos e Serviços:** Gerencie seu portfólio com detalhes de custo, preço e impostos.
 -   **Controle de Estoque:**
     -   **Cálculo Automatizado de Custo Médio Ponderado:** Acompanhe o valor do seu estoque com precisão, considerando compras e vendas.
@@ -58,7 +62,7 @@ Estudantes e professores de contabilidade, profissionais que buscam aprimorar su
 -   **Segurança:** Seus dados financeiros protegidos com as melhores práticas de segurança.
 
 ## 7. Tecnologias Utilizadas
--   **Frontend:** Vue.js, Pinia (gerenciamento de estado), PrimeVue (componentes UI), TailwindCSS (estilização).
+-   **Frontend:** Vue.js, Pinia (gerenciamento de estado), PrimeVue (componentes UI), TailwindCSS (estilização), LightningCSS (otimização de CSS).
 -   **Backend:** Node.js, Express.js, TypeScript.
 -   **Banco de Dados/Baas:** Supabase (PostgreSQL, Autenticação, Realtime).
 
