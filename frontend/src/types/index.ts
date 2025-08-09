@@ -286,6 +286,11 @@ export interface FiscalOperationData {
   taxData?: TaxData;
 }
 
+export interface InferredOperationTypeDetails {
+  type: 'Compra' | 'Venda' | null;
+  confidence: 'high' | 'medium' | 'low' | 'ambiguous';
+}
+
 export interface TaxRule {
   id: string;
   uf_origin: string;

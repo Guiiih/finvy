@@ -8,10 +8,11 @@ import Message from 'primevue/message'
 import Button from 'primevue/button'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
-import type { FiscalOperationData, TaxData } from '@/types'
+import type { FiscalOperationData, TaxData, InferredOperationTypeDetails } from '@/types'
 
 const props = defineProps<{
-  fiscalOperationData: FiscalOperationData
+  fiscalOperationData: FiscalOperationData,
+  inferredOperationTypeDetails: InferredOperationTypeDetails
 }>()
 
 const emit = defineEmits(['update:fiscalOperationData'])
@@ -129,6 +130,35 @@ const calculateTaxes = async () => {
               placeholder="Selecione o tipo"
               class="w-full"
             />
+          </div>
+          <div>
+            <label
+              for="operationType"
+              class="block text-sm font-medium text-surface-700 mb-1"
+              >Tipo de Operação Fiscal *</label
+            >
+            <Dropdown
+              id="operationType"
+              v-model="localFiscalOperationData.operationType"
+              :options="['Compra', 'Venda']"
+              placeholder="Selecione o tipo"
+              class="w-full"
+              :disabled="inferredOperationTypeDetails.confidence === 'high'"
+            />
+            <Message
+              v-if="inferredOperationTypeDetails.confidence === 'ambiguous' || inferredOperationTypeDetails.confidence === 'low'"
+              severity="warn"
+              :closable="false"
+              class="mt-2"
+            >
+              <div class="flex items-center">
+                <i class="pi pi-exclamation-triangle mr-2"></i>
+                <span>
+                  A inferência do tipo de operação não é 100% confiável.
+                  Por favor, revise e ajuste se necessário.
+                </span>
+              </div>
+            </Message>
           </div>
           <div>
             <label for="ufOrigin" class="block text-sm font-medium text-surface-700 mb-1"
