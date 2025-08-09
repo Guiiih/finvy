@@ -68,8 +68,30 @@ const generatedSequenceNumber = ref(0)
 const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref('Básico')
 const selectedProductFromForm = ref<SelectedProductData | null>(null)
+const inferredOperationType = computed<'Compra' | 'Venda' | null>(() => {
+  let isSale = false
+  let isPurchase = false
+
+  for (const line of newEntryLines.value) {
+    const account = accountStore.accounts.find(acc => acc.id === line.account_id)
+    if (account) {
+      if (line.type === 'credit' && account.type === 'revenue') {
+        isSale = true
+      }
+      if (line.type === 'debit' && (account.type === 'expense' || account.type === 'asset')) {
+        // Assuming asset debits can indicate purchases (e.g., inventory)
+        isPurchase = true
+      }
+    }
+  }
+
+  if (isSale) return 'Venda'
+  if (isPurchase) return 'Compra'
+  return null
+})
+
 const fiscalOperationData = ref<FiscalOperationData>({
-  operationType: null,
+  operationType: inferredOperationType.value, // Use inferred value
   productServiceType: null,
   ufOrigin: null,
   ufDestination: null,
@@ -101,6 +123,17 @@ const hasStockRelatedAccount = computed(() => {
 
 const stockAccountId = computed(() => {
   return accountStore.accounts.find((acc) => acc.name === 'Estoques')?.id
+})
+
+const isTaxRelatedAccount = (accountId: string) => {
+  const account = accountStore.accounts.find((acc) => acc.id === accountId)
+  if (!account) return false
+  const taxKeywords = ['ICMS', 'IPI', 'PIS', 'COFINS', 'IRRF', 'CSLL', 'INSS', 'Imposto']
+  return taxKeywords.some(keyword => account.name.includes(keyword))
+}
+
+const hasTaxRelatedAccount = computed(() => {
+  return newEntryLines.value.some(line => isTaxRelatedAccount(line.account_id))
 })
 
 const totalDebits = computed(() =>
@@ -168,6 +201,10 @@ watch(selectedProductFromForm, (newProductData) => {
 
 watch(totalDebits, (newTotalDebits) => {
   fiscalOperationData.value.totalAmount = newTotalDebits;
+});
+
+watch(inferredOperationType, (newOperationType) => {
+  fiscalOperationData.value.operationType = newOperationType;
 });
 
 watch(displayModal, (value) => {
@@ -437,6 +474,7 @@ async function submitEntry() {
                 ? 'bg-white text-primary shadow'
                 : 'bg-transparent text-surface-600 hover:bg-surface-200',
             ]"
+            v-if="hasTaxRelatedAccount"
           >
             Impostos
           </button>
@@ -463,7 +501,7 @@ async function submitEntry() {
         <div v-if="activeTab === 'Produtos'">
           <JournalEntryProductForm @product-selected="selectedProductFromForm = $event" />
         </div>
-        <div v-if="activeTab === 'Impostos'">
+        <div v-if="activeTab === 'Impostos' && hasTaxRelatedAccount">
           <Imposto v-model:fiscalOperationData="fiscalOperationData" />
         </div>
       </div>

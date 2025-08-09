@@ -43,7 +43,6 @@ watch(
 
 const validationErrors = ref<string[]>([])
 
-const operationTypeOptions = ['Compra', 'Venda']
 const productServiceTypeOptions = ['Produto', 'Serviço']
 const ufOptions = [
   { name: 'São Paulo', code: 'SP' },
@@ -66,12 +65,10 @@ const cfopOptions = [
 
 const calculateTaxes = async () => {
   validationErrors.value = []
-  if (!localFiscalOperationData.value.operationType) validationErrors.value.push('Tipo de Operação é obrigatório.')
   if (!localFiscalOperationData.value.productServiceType) validationErrors.value.push('Tipo de Produto/Serviço é obrigatório.')
   if (!localFiscalOperationData.value.ufOrigin) validationErrors.value.push('UF de origem é obrigatória.')
   if (!localFiscalOperationData.value.ufDestination) validationErrors.value.push('UF de destino é obrigatória.')
   if (!localFiscalOperationData.value.cfop) validationErrors.value.push('CFOP é obrigatório.')
-  if (localFiscalOperationData.value.totalAmount <= 0) validationErrors.value.push('Valor total deve ser maior que zero.')
 
   if (validationErrors.value.length === 0) {
     try {
@@ -118,18 +115,7 @@ const calculateTaxes = async () => {
           Configure os dados necessários para o cálculo automático dos impostos
         </p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="operationType" class="block text-sm font-medium text-surface-700 mb-1"
-              >Tipo de Operação *</label
-            >
-            <Dropdown
-              id="operationType"
-              v-model="localFiscalOperationData.operationType"
-              :options="operationTypeOptions"
-              placeholder="Selecione o tipo de operação"
-              class="w-full"
-            />
-          </div>
+          
           <div>
             <label
               for="productServiceType"
@@ -189,19 +175,7 @@ const calculateTaxes = async () => {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div>
-            <label for="totalAmount" class="block text-sm font-medium text-surface-700 mb-1"
-              >Valor Total *</label
-            >
-            <InputNumber
-              id="totalAmount"
-              v-model="localFiscalOperationData.totalAmount"
-              mode="decimal"
-              :min="0"
-              :maxFractionDigits="2"
-              class="w-full"
-            />
-          </div>
+          
           <div>
             <label for="freight" class="block text-sm font-medium text-surface-700 mb-1"
               ><i class="pi pi-truck mr-1"></i> Frete</label
