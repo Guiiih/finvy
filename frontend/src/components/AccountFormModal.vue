@@ -6,6 +6,7 @@ import type { Account, AccountType } from '@/types'
 import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
+import AutoComplete from 'primevue/autocomplete'
 
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -27,6 +28,29 @@ const emit = defineEmits(['update:visible', 'submitSuccess'])
 const displayModal = ref(props.visible)
 const selectedAccountType = ref<AccountType | ''>('')
 const parentAccounts = ref<Account[]>([])
+
+const fiscalOperationItems = ref<string[]>([])
+const suggestedFiscalOperations = [
+  'Venda de Mercadorias',
+  'Venda de Serviços',
+  'Compra de Matéria-Prima',
+  'Compra de Serviços',
+  'Compra para Revenda',
+  'Devolução de Venda',
+  'Devolução de Compra',
+]
+
+const searchFiscalOperation = (event: { query: string }) => {
+  setTimeout(() => {
+    if (!event.query.trim().length) {
+      fiscalOperationItems.value = [...suggestedFiscalOperations]
+    } else {
+      fiscalOperationItems.value = suggestedFiscalOperations.filter((item) => {
+        return item.toLowerCase().startsWith(event.query.toLowerCase())
+      })
+    }
+  }, 250)
+}
 
 const flattenedParentAccounts = computed(() => {
   return flattenHierarchy(parentAccounts.value)
@@ -94,6 +118,7 @@ const zodSchema = z.object({
     .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   account_type: z.string({ required_error: 'O tipo de conta é obrigatório.' }),
   parent_account_id: z.string({ required_error: 'A conta pai é obrigatória.' }),
+  fiscal_operation_type: z.string().optional().nullable(),
 })
 
 const accountSchema = toTypedSchema(zodSchema)
@@ -107,6 +132,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
         name: values.name,
         parent_account_id: values.parent_account_id,
         type: values.account_type as AccountType,
+        fiscal_operation_type: values.fiscal_operation_type,
       }
       await accountStore.updateAccount(
         props.editingAccount.id,
@@ -123,6 +149,7 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
         name: values.name,
         parent_account_id: values.parent_account_id,
         type: values.account_type as AccountType,
+        fiscal_operation_type: values.fiscal_operation_type,
       }
 
       await accountStore.addAccount({
@@ -206,9 +233,25 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
             id="accountName"
             class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
-          <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
+          '''<ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
         </div>
-        <div class="flex space-x-4">
+        <div class="flex flex-col">
+          <label for="fiscalOperationType" class="text-surface-700 font-medium mb-1"
+            >Tipo de Operação Fiscal (Opcional):</label
+          >
+          <Field name="fiscal_operation_type" v-slot="{ value, handleChange }">
+            <AutoComplete
+              :modelValue="value"
+              @update:modelValue="handleChange"
+              :suggestions="fiscalOperationItems"
+              @complete="searchFiscalOperation"
+              placeholder="Ex: Venda de Mercadorias"
+              class="w-full"
+            />
+          </Field>
+          <ErrorMessage name="fiscal_operation_type" class="text-red-500 text-sm mt-1" />
+        </div>
+        <div class="flex space-x-4">''
           <button
             type="submit"
             :disabled="isSubmitting"

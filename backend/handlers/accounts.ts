@@ -119,9 +119,9 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const { name, type, parent_account_id, code } = parsedBody.data
+      const { name, type, parent_account_id, code, fiscal_operation_type } = parsedBody.data
 
-      const newAccount = { name, type, parent_account_id, code }
+      const newAccount = { name, type, parent_account_id, code, fiscal_operation_type }
       const createdAccount = await createAccount(
         newAccount,
         organization_id,

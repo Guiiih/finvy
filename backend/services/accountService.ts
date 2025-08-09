@@ -39,7 +39,7 @@ export async function getAccounts(
   } = await userSupabase
     .from('accounts')
     .select(
-      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active',
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active, fiscal_operation_type',
       { count: 'exact' },
     )
     .eq('organization_id', organization_id)
@@ -70,7 +70,7 @@ export async function getAccountsByType(
   } = await userSupabase
     .from('accounts')
     .select(
-      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active',
+      'id, name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected, is_active, fiscal_operation_type',
       { count: 'exact' },
     )
     .eq('organization_id', organization_id)
@@ -87,7 +87,7 @@ export async function getAccountsByType(
 }
 
 export async function createAccount(
-  accountData: { name: string; parent_account_id?: string | null; type?: Account['type'] },
+  accountData: { name: string; parent_account_id?: string | null; type?: Account['type']; fiscal_operation_type?: string | null },
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -213,6 +213,7 @@ export async function createAccount(
     parent_account_id: accountData.parent_account_id,
     code: newAccountCode,
     type: newAccountType,
+    fiscal_operation_type: accountData.fiscal_operation_type,
     organization_id,
     accounting_period_id: active_accounting_period_id,
   }

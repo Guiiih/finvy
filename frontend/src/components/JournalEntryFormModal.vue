@@ -69,6 +69,21 @@ const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref('Básico')
 const selectedProductFromForm = ref<SelectedProductData | null>(null)
 const inferredOperationType = computed<'Compra' | 'Venda' | null>(() => {
+  // First pass: check for explicit fiscal_operation_type
+  for (const line of newEntryLines.value) {
+    const account = accountStore.accounts.find(acc => acc.id === line.account_id)
+    if (account && account.fiscal_operation_type) {
+      const fiscalType = account.fiscal_operation_type.toLowerCase();
+      if (fiscalType.includes('venda')) {
+        return 'Venda';
+      }
+      if (fiscalType.includes('compra')) {
+        return 'Compra';
+      }
+    }
+  }
+
+  // Fallback to original logic if no explicit type is found
   let isSale = false
   let isPurchase = false
 

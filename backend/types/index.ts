@@ -30,6 +30,8 @@ export interface Account {
   accounting_period_id?: string
   /** Indicates if the account is protected and cannot be deleted. */
   is_protected?: boolean
+  /** The specific fiscal operation type for the account (e.g., 'Venda de Mercadoria'). */
+  fiscal_operation_type?: string | null
 }
 
 /**

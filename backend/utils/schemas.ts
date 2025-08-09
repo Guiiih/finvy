@@ -23,6 +23,7 @@ export const createAccountSchema = z.object({
     .uuid({ message: 'ID da conta pai inválido. Deve ser um UUID válido.' })
     .optional()
     .nullable(),
+  fiscal_operation_type: z.string().optional().nullable(),
 })
 
 export const updateAccountSchema = z
@@ -42,6 +43,7 @@ export const updateAccountSchema = z
       .uuid({ message: 'ID da conta pai inválido. Deve ser um UUID válido.' })
       .optional()
       .nullable(),
+    fiscal_operation_type: z.string().optional().nullable(),
   })
   .partial()
 
