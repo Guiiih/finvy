@@ -7,6 +7,7 @@ O Finvy oferece um sistema integrado para gerenciar seus produtos e controlar o 
 Cada item que sua organização compra, vende ou utiliza deve ser cadastrado como um produto no Finvy. As informações essenciais incluem:
 
 *   **Nome:** Identificação principal do produto.
+*   **NCM (Nomenclatura Comum do Mercosul):** Código de 8 dígitos para classificação fiscal do produto (opcional).
 *   **SKU (Stock Keeping Unit):** Código único para identificação interna do produto (opcional).
 *   **Categoria:** Classificação do produto (ex: "Informática", "Mobiliário").
 *   **Marca:** Fabricante do produto (opcional).

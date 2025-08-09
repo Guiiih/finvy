@@ -1,14 +1,24 @@
-feat: Implementa funcionalidade completa de cálculo de impostos
+feat: Implement tax variations and NCM integration
 
-Este commit integra a funcionalidade de cálculo de impostos no Finvy, utilizando alíquotas dinâmicas do Supabase e uma lógica de cálculo mais abrangente.
+This commit introduces significant improvements to the tax calculation system:
 
-Principais alterações:
-- Backend:
-  - `backend/handlers/tax-calculation.ts`: Atualizado para buscar configurações de impostos do Supabase e usar `taxService.ts` para cálculo.
-  - `backend/services/taxCalculationService.ts`: Removido, pois sua funcionalidade foi substituída.
-  - `backend/types/tax.ts`: `TaxData` atualizada para refletir a estrutura de `TaxCalculationResult`.
-- Frontend:
-  - `frontend/src/components/ImpostoComponent.vue`: Atualizado para exibir os impostos calculados detalhadamente e CFOPs com labels.
-  - `frontend/src/components/JournalEntryFormModal.vue`: Corrigido para usar a nova estrutura de `TaxData` e remover importações não utilizadas.
-  - `frontend/src/types/index.ts`: `TaxData` e `FiscalOperationData` atualizadas para a nova estrutura.
-  - `frontend/src/utils/taxHelpers.ts`: Funções de cálculo e importação de `TaxData` removidas, pois a lógica foi centralizada no backend.
+- **NCM Integration:**
+  - Added `ncm` column to the `products` table in the database.
+  - Updated backend schemas, handlers, and services to support NCM for products.
+  - Modified `taxService.ts` to allow NCM to influence tax calculations (e.g., IPI rates).
+  - Integrated NCM field into frontend product forms and product display.
+
+- **State/Municipal Tax Variations:**
+  - Created `tax_rules` table in the database to store tax rates based on origin/destination UF and NCM.
+  - Implemented full CRUD operations for `tax_rules` in the backend (handler and service).
+  - Developed a new "Tax Rules" section in the frontend settings for managing these rules.
+  - Updated `taxService.ts` to dynamically fetch and apply tax rates from `tax_rules` based on transaction details (UF origin/destination, NCM).
+  - Added `uf_origin` and `uf_destination` columns to `entry_lines` table.
+
+- **Database Migrations:**
+  - Created new migrations for `add_ncm_to_products`, `create_tax_rules_and_add_uf_columns`, `create_moddatetime_function`, and `create_check_user_organization_access_function`.
+  - Ensured correct migration order by adjusting timestamps and handling `IF NOT EXISTS` clauses.
+
+- **Bug Fixes & Refinements:**
+  - Addressed TypeScript compilation errors in `entry-lines.ts` and `tax-calculation.ts` related to `calculateTaxes` becoming asynchronous and requiring `organization_id` and `token`.
+  - Corrected linting errors in frontend and backend.

@@ -22,6 +22,7 @@ Este endpoint permite calcular impostos fiscais para uma operação de compra ou
 | `icmsSt`           | `boolean` | Sim         | Indica se incide ICMS-ST (Substituição Tributária).                  | `true`                                |
 | `ipiIncides`       | `boolean` | Sim         | Indica se incide IPI.                                                | `true`                                |
 | `industrialOperation` | `boolean` | Sim         | Indica se é uma operação industrial.                                 | `false`                               |
+| `transactionDate`   | `string`  | Sim         | Data da transação no formato YYYY-MM-DD.                             | `2025-08-08`                          |
 
 ## Resposta (JSON)
 
@@ -42,6 +43,10 @@ Retorna um objeto `calculatedTaxes` com os valores dos impostos calculados.
   }
 }
 ```
+
+## Notas Importantes
+
+*   As alíquotas de impostos (ICMS, IPI, PIS, COFINS, etc.) são determinadas com base nas configurações de impostos da organização e nas regras de impostos cadastradas, considerando a UF de origem, UF de destino e, se aplicável, o NCM do produto.
 
 ## Códigos de Status HTTP
 
