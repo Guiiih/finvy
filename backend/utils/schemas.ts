@@ -175,6 +175,9 @@ export const createProductSchema = z.object({
     .string()
     .min(1, 'Categoria do produto é obrigatória.')
     .max(100, 'Categoria do produto muito longa.'),
+  product_service_type: z.enum(['Produto', 'Serviço']).optional(),
+  default_cfop_purchase: z.string().optional(),
+  default_cfop_sale: z.string().optional(),
 })
 
 export const updateProductSchema = z
@@ -196,6 +199,9 @@ export const updateProductSchema = z
       .number()
       .nonnegative('Alíquota de ICMS deve ser um valor não negativo.')
       .optional(),
+    product_service_type: z.enum(['Produto', 'Serviço']).optional(),
+    default_cfop_purchase: z.string().optional(),
+    default_cfop_sale: z.string().optional(),
   })
   .partial()
 

@@ -187,6 +187,19 @@ export interface FinancialTransaction {
   accounting_period_id?: string
 }
 
+export interface TaxRule {
+  id: string;
+  uf_origin: string;
+  uf_destination: string;
+  ncm_pattern?: string;
+  tax_type: string;
+  rate: number;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  organization_id?: string;
+}
+
 /**
  * Represents tax rate settings for an organization.
  */
@@ -231,6 +244,7 @@ export interface AuthenticatedRequest extends VercelRequest {
   userId?: string
   organizationId?: string
   token?: string
+  accountingPeriodId?: string
 }
 
 export interface UserPresence {

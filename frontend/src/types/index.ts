@@ -34,6 +34,9 @@ export interface Product {
   currentStock?: number // Adicionado para o estoque atual
   unitType?: string // Adicionado para o tipo de unidade
   costingMethod?: 'average' | 'fifo' | 'lifo' // Adicionado para o método de custeio
+  product_service_type?: 'Produto' | 'Serviço';
+  default_cfop_purchase?: string;
+  default_cfop_sale?: string;
 }
 
 export type EntryType = 'debit' | 'credit'

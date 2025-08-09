@@ -1,5 +1,6 @@
 import { getSupabaseClient } from '../utils/supabaseClient.js'
 import logger from '../utils/logger.js'
+import { PostgrestError } from '@supabase/supabase-js'
 
 export async function recordProductPurchase(
   product_id: string,
@@ -21,14 +22,21 @@ export async function recordProductPurchase(
     })
 
     if (rpcError) {
-      logger.error(`Error calling RPC record_purchase for product_id: ${product_id}`, rpcError)
-      throw new Error(`Error recording product purchase: ${rpcError.message}`)
+      const typedError = rpcError as PostgrestError;
+      logger.error({ err: typedError }, `Error calling RPC record_purchase for product_id: ${product_id}`);
+      throw new Error(`Error recording product purchase: ${typedError.message}`);
     }
 
     logger.info(`Product (ID: ${product_id}) purchase recorded via RPC.`)
   } catch (error: unknown) {
-    logger.error('Error in recordProductPurchase:', error)
-    throw error
+    if (error instanceof Error) {
+      const typedError = error as PostgrestError;
+      logger.error({ err: typedError }, 'Error in recordProductPurchase:');
+      throw new Error(typedError.message);
+    } else {
+      logger.error({ err: error }, 'Unknown error in recordProductPurchase:');
+      throw new Error('An unknown error occurred.');
+    }
   }
 }
 
@@ -50,17 +58,24 @@ export async function calculateCogsForSale(
     })
 
     if (rpcError) {
+      const typedError = rpcError as PostgrestError;
       logger.error(
+        { err: typedError },
         `Error calling RPC calculate_cogs_for_sale for product_id: ${product_id}`,
-        rpcError,
-      )
-      throw new Error(`Error calculating COGS for sale: ${rpcError.message}`)
+      );
+      throw new Error(`Error calculating COGS for sale: ${typedError.message}`);
     }
 
     logger.info(`COGS for product (ID: ${product_id}) calculated via RPC.`)
     return cogs as number
   } catch (error: unknown) {
-    logger.error('Error in calculateCogsForSale:', error)
-    throw error
+    if (error instanceof Error) {
+      const typedError = error as PostgrestError;
+      logger.error({ err: typedError }, 'Error in calculateCogsForSale:');
+      throw new Error(typedError.message);
+    } else {
+      logger.error({ err: error }, 'Unknown error in calculateCogsForSale:');
+      throw new Error('An unknown error occurred.');
+    }
   }
 }

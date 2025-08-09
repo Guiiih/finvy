@@ -1,6 +1,6 @@
 import type { AuthenticatedRequest } from '../types/index.js'
 import type { VercelResponse } from '@vercel/node'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getSupabaseClient } from '../utils/supabaseClient.js'
 import { calculateTaxes } from '../services/taxService.js'
 import { getTaxSettings, getTaxRegimeHistory } from '../services/taxSettingService.js'
 import { z } from 'zod'
@@ -19,6 +19,7 @@ const fiscalOperationSchema = z.object({
   ipiIncides: z.boolean(),
   industrialOperation: z.boolean(),
   transactionDate: z.string().datetime(), // Adicionado
+  journalEntryId: z.string().uuid().optional().nullable(), // Adicionado
 });
 
 export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res: VercelResponse) => {
@@ -64,6 +65,25 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       organization_id,
       token,
     });
+
+    const supabase = getSupabaseClient(token);
+
+    // Save tax calculation history
+    const { error: dbError } = await supabase
+      .from('tax_calculation_history')
+      .insert({
+        journal_entry_id: fiscalData.journalEntryId,
+        fiscal_operation_data: fiscalData,
+        tax_calculation_result: calculatedTaxes,
+        details: calculatedTaxes.details,
+        organization_id: organization_id,
+        accounting_period_id: req.accountingPeriodId, // Assuming middleware adds this
+      });
+
+    if (dbError) {
+      console.error('Error saving tax calculation history:', dbError);
+      // Do not return error to user, as tax calculation was successful
+    }
 
     res.status(200).json({ calculatedTaxes });
   } catch (error: unknown) {

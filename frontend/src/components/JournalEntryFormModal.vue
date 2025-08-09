@@ -257,6 +257,21 @@ watch(selectedProductFromForm, (newProductData) => {
       lastLine.quantity = quantity
       lastLine.unit_cost = unitCost
     }
+
+    // Populate fiscalOperationData based on product
+    if (product.product_service_type) {
+      fiscalOperationData.value.productServiceType = product.product_service_type;
+    }
+
+    // Determine CFOP based on inferred operation type
+    const operationType = inferredOperationTypeDetails.value.type;
+    if (operationType === 'Compra' && product.default_cfop_purchase) {
+      fiscalOperationData.value.cfop = product.default_cfop_purchase;
+    } else if (operationType === 'Venda' && product.default_cfop_sale) {
+      fiscalOperationData.value.cfop = product.default_cfop_sale;
+    } else {
+      fiscalOperationData.value.cfop = null; // Clear if no default CFOP applies
+    }
   }
 })
 

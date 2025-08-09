@@ -31,6 +31,16 @@ interface TaxCalculationResult {
   calculated_inss_value: number
   calculated_icms_st_value: number
   final_total_net: number
+  details: TaxCalculationDetail[];
+}
+
+interface TaxCalculationDetail {
+  tax_type: string;
+  description: string;
+  rate_applied?: number;
+  base_value?: number;
+  calculated_value: number;
+  rule_id?: string;
 }
 
 export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxCalculationResult> {
@@ -68,7 +78,7 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
   if (uf_origin && uf_destination) {
     const { data: rule } = await supabase
       .from('tax_rules')
-      .select('rate')
+      .select('id, rate')
       .eq('organization_id', organization_id)
       .eq('uf_origin', uf_origin)
       .eq('uf_destination', uf_destination)
@@ -126,6 +136,75 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
   let calculated_icms_st_value = 0
   let base_for_icms_and_pis_cofins = total_gross || 0
   let final_total_net = total_net || 0
+  const details: TaxCalculationDetail[] = [];
+
+  if (uf_origin && uf_destination) {
+    const { data: rule } = await supabase
+      .from('tax_rules')
+      .select('id, rate')
+      .eq('organization_id', organization_id)
+      .eq('uf_origin', uf_origin)
+      .eq('uf_destination', uf_destination)
+      .eq('tax_type', 'ICMS')
+      .single();
+    if (rule) {
+      icms_rate = rule.rate * 100;
+      details.push({
+        tax_type: 'ICMS',
+        description: `Alíquota de ICMS aplicada via regra fiscal (${uf_origin} para ${uf_destination}).`,
+        rate_applied: rule.rate,
+        calculated_value: 0, // Will be updated later
+        rule_id: rule.id, // Assuming rule has an ID
+      });
+    }
+  }
+
+  // Simulação de alíquota de IPI baseada no NCM
+  if (ncm === '33049910') { // Exemplo: NCM para cremes de beleza
+    ipi_rate = 18; // Alíquota de 18% para este NCM
+    details.push({
+      tax_type: 'IPI',
+      description: `Alíquota de IPI simulada para NCM ${ncm}.`,
+      rate_applied: 18,
+      calculated_value: 0, // Will be updated later
+    });
+  }
+
+  // Aplicar alíquotas baseadas no regime tributário, se fornecido
+  if (tax_regime) {
+    let regimeDescription = '';
+    switch (tax_regime) {
+      case TaxRegime.SimplesNacional:
+        regimeDescription = 'Simples Nacional';
+        icms_rate = 0; // Geralmente isento ou pago no DAS
+        ipi_rate = 0; // Geralmente isento ou pago no DAS
+        pis_rate = 0.0038; // Exemplo
+        cofins_rate = 0.0016; // Exemplo
+        irrf_rate = 0; // Exemplo
+        csll_rate = 0; // Exemplo
+        inss_rate = 0; // Exemplo
+        mva_rate = 0; // Exemplo
+        break;
+      case TaxRegime.LucroPresumido:
+        regimeDescription = 'Lucro Presumido';
+        pis_rate = 0.0065;
+        cofins_rate = 0.03;
+        break;
+      case TaxRegime.LucroReal:
+        regimeDescription = 'Lucro Real';
+        pis_rate = 0.0165;
+        cofins_rate = 0.076;
+        break;
+      default:
+        regimeDescription = 'Regime Padrão';
+        break;
+    }
+    details.push({
+      tax_type: 'Regime Tributário',
+      description: `Alíquotas ajustadas conforme regime tributário: ${regimeDescription}.`,
+      calculated_value: 0,
+    });
+  }
 
   // Only calculate taxes for sales (manufacturer scenario)
   if (transaction_type === 'sale') {
@@ -133,30 +212,79 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     if (total_gross !== undefined && ipi_rate !== undefined) {
       calculated_ipi_value = total_gross * (ipi_rate / 100)
       base_for_icms_and_pis_cofins = (total_gross || 0) + calculated_ipi_value // Price with IPI
+      details.push({
+        tax_type: 'IPI',
+        description: `Cálculo de IPI sobre o valor bruto (${total_gross}).`,
+        rate_applied: ipi_rate,
+        base_value: total_gross,
+        calculated_value: calculated_ipi_value,
+      });
     }
 
     // 2. Calculate ICMS Próprio (using price with IPI as base)
     if (base_for_icms_and_pis_cofins !== undefined && icms_rate !== undefined) {
       calculated_icms_value = base_for_icms_and_pis_cofins * (icms_rate / 100)
+      details.push({
+        tax_type: 'ICMS',
+        description: `Cálculo de ICMS sobre a base (${base_for_icms_and_pis_cofins}) incluindo IPI.`,
+        rate_applied: icms_rate,
+        base_value: base_for_icms_and_pis_cofins,
+        calculated_value: calculated_icms_value,
+      });
     }
 
     // 3. Calculate PIS and COFINS (using initial total_gross as base for monofasico)
     if (total_gross !== undefined && pis_rate !== undefined) {
       calculated_pis_value = total_gross * (pis_rate / 100)
+      details.push({
+        tax_type: 'PIS',
+        description: `Cálculo de PIS sobre o valor bruto (${total_gross}).`,
+        rate_applied: pis_rate,
+        base_value: total_gross,
+        calculated_value: calculated_pis_value,
+      });
     }
     if (total_gross !== undefined && cofins_rate !== undefined) {
       calculated_cofins_value = total_gross * (cofins_rate / 100)
+      details.push({
+        tax_type: 'COFINS',
+        description: `Cálculo de COFINS sobre o valor bruto (${total_gross}).`,
+        rate_applied: cofins_rate,
+        base_value: total_gross,
+        calculated_value: calculated_cofins_value,
+      });
     }
 
     // 4. Calculate IRRF, CSLL, INSS (Retenções)
     if (total_gross !== undefined && irrf_rate !== undefined) {
       calculated_irrf_value = total_gross * (irrf_rate / 100)
+      details.push({
+        tax_type: 'IRRF',
+        description: `Cálculo de IRRF sobre o valor bruto (${total_gross}).`,
+        rate_applied: irrf_rate,
+        base_value: total_gross,
+        calculated_value: calculated_irrf_value,
+      });
     }
     if (total_gross !== undefined && csll_rate !== undefined) {
       calculated_csll_value = total_gross * (csll_rate / 100)
+      details.push({
+        tax_type: 'CSLL',
+        description: `Cálculo de CSLL sobre o valor bruto (${total_gross}).`,
+        rate_applied: csll_rate,
+        base_value: total_gross,
+        calculated_value: calculated_csll_value,
+      });
     }
     if (total_gross !== undefined && inss_rate !== undefined) {
       calculated_inss_value = total_gross * (inss_rate / 100)
+      details.push({
+        tax_type: 'INSS',
+        description: `Cálculo de INSS sobre o valor bruto (${total_gross}).`,
+        rate_applied: inss_rate,
+        base_value: total_gross,
+        calculated_value: calculated_inss_value,
+      });
     }
 
     // 5. Calculate ICMS-ST
@@ -168,6 +296,13 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
       const base_icms_st = base_for_icms_and_pis_cofins * (1 + mva_rate / 100)
       const icms_st_total = base_icms_st * (icms_rate / 100)
       calculated_icms_st_value = icms_st_total - calculated_icms_value
+      details.push({
+        tax_type: 'ICMS-ST',
+        description: `Cálculo de ICMS-ST sobre a base (${base_for_icms_and_pis_cofins}) com MVA (${mva_rate}%).`,
+        rate_applied: icms_rate,
+        base_value: base_for_icms_and_pis_cofins,
+        calculated_value: calculated_icms_st_value,
+      });
     }
 
     // Recalculate final_total_net for sales based on gross + calculated taxes
@@ -180,29 +315,85 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     // This assumes total_net already reflects the final cost including taxes for purchases
     if (total_gross !== undefined && ipi_rate !== undefined) {
       calculated_ipi_value = total_gross * (ipi_rate / 100)
+      details.push({
+        tax_type: 'IPI',
+        description: `Cálculo de IPI sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: ipi_rate,
+        base_value: total_gross,
+        calculated_value: calculated_ipi_value,
+      });
     }
     if (total_gross !== undefined && icms_rate !== undefined) {
       calculated_icms_value = total_gross * (icms_rate / 100)
+      details.push({
+        tax_type: 'ICMS',
+        description: `Cálculo de ICMS sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: icms_rate,
+        base_value: total_gross,
+        calculated_value: calculated_icms_value,
+      });
     }
     if (total_gross !== undefined && pis_rate !== undefined) {
       calculated_pis_value = total_gross * (pis_rate / 100)
+      details.push({
+        tax_type: 'PIS',
+        description: `Cálculo de PIS sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: pis_rate,
+        base_value: total_gross,
+        calculated_value: calculated_pis_value,
+      });
     }
     if (total_gross !== undefined && cofins_rate !== undefined) {
       calculated_cofins_value = total_gross * (cofins_rate / 100)
+      details.push({
+        tax_type: 'COFINS',
+        description: `Cálculo de COFINS sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: cofins_rate,
+        base_value: total_gross,
+        calculated_value: calculated_cofins_value,
+      });
     }
     if (total_gross !== undefined && irrf_rate !== undefined) {
       calculated_irrf_value = total_gross * (irrf_rate / 100)
+      details.push({
+        tax_type: 'IRRF',
+        description: `Cálculo de IRRF sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: irrf_rate,
+        base_value: total_gross,
+        calculated_value: calculated_irrf_value,
+      });
     }
     if (total_gross !== undefined && csll_rate !== undefined) {
       calculated_csll_value = total_gross * (csll_rate / 100)
+      details.push({
+        tax_type: 'CSLL',
+        description: `Cálculo de CSLL sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: csll_rate,
+        base_value: total_gross,
+        calculated_value: calculated_csll_value,
+      });
     }
     if (total_gross !== undefined && inss_rate !== undefined) {
       calculated_inss_value = total_gross * (inss_rate / 100)
+      details.push({
+        tax_type: 'INSS',
+        description: `Cálculo de INSS sobre o valor bruto (${total_gross}) para compra.`,
+        rate_applied: inss_rate,
+        base_value: total_gross,
+        calculated_value: calculated_inss_value,
+      });
     }
     if (total_gross !== undefined && mva_rate !== undefined && icms_rate !== undefined) {
       const base_icms_st = total_gross * (1 + mva_rate / 100)
       const icms_st_total = base_icms_st * (icms_rate / 100)
       calculated_icms_st_value = icms_st_total - calculated_icms_value
+      details.push({
+        tax_type: 'ICMS-ST',
+        description: `Cálculo de ICMS-ST sobre o valor bruto (${total_gross}) com MVA (${mva_rate}%) para compra.`,
+        rate_applied: icms_rate,
+        base_value: total_gross,
+        calculated_value: calculated_icms_st_value,
+      });
     }
   }
 
@@ -216,5 +407,6 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     calculated_inss_value,
     calculated_icms_st_value,
     final_total_net,
+    details,
   }
 }
