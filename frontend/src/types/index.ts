@@ -18,6 +18,7 @@ export interface Product {
   id: string
   name: string
   sku?: string
+  ncm?: string
   category?: string
   brand?: string
   minimum_stock?: number
@@ -282,4 +283,17 @@ export interface FiscalOperationData {
   ipiIncides: boolean;
   industrialOperation: boolean;
   taxData?: TaxData;
+}
+
+export interface TaxRule {
+  id: string;
+  uf_origin: string;
+  uf_destination: string;
+  ncm_pattern?: string;
+  tax_type: string;
+  rate: number;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  organization_id?: string;
 }

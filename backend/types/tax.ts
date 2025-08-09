@@ -23,5 +23,6 @@ export interface FiscalOperationData {
   icmsSt: boolean;
   ipiIncides: boolean;
   industrialOperation: boolean;
+  transactionDate: string; // Adicionado
   taxData?: TaxData;
 }

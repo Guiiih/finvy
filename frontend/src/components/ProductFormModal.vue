@@ -40,6 +40,7 @@ const zodSchema = z.object({
   name: z
     .string({ required_error: 'O nome é obrigatório' })
     .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+  ncm: z.string().length(8, 'O NCM deve ter 8 dígitos.').optional(),
   sku: z.string().optional(),
   category: z.string({ required_error: 'A categoria é obrigatória' }),
   brand: z.string().optional(),
@@ -64,6 +65,7 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
     if (props.isEditing && props.editingProduct) {
       const updatedProduct: Partial<Product> = {
         name: values.name,
+        ncm: values.ncm,
         sku: values.sku,
         category: values.category,
         brand: values.brand,
@@ -82,6 +84,7 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
     } else {
       const newProduct: Omit<Product, 'id' | 'organization_id' | 'user_id'> = {
         name: values.name,
+        ncm: values.ncm,
         sku: values.sku,
         category: values.category,
         brand: values.brand,
@@ -144,6 +147,17 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
               class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
             <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
+          </div>
+          <div class="flex flex-col">
+            <label for="productNcm" class="text-surface-700 font-medium mb-1">NCM</label>
+            <Field
+              name="ncm"
+              type="text"
+              id="productNcm"
+              placeholder="Ex: 33049910"
+              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <ErrorMessage name="ncm" class="text-red-500 text-sm mt-1" />
           </div>
           <div class="flex flex-col">
             <label for="productSku" class="text-surface-700 font-medium mb-1">SKU</label>

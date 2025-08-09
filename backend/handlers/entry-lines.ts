@@ -264,8 +264,20 @@ export default async function handler(
       let effective_cofins_rate = cofins_rate;
       let effective_mva_rate = 0; // MVA não está no taxData do frontend
 
+      // Obter a data do lançamento para usar nas configurações de impostos
+      const { data: journalEntryData, error: journalEntryError } = await getSupabaseClient(token)
+        .from('journal_entries')
+        .select('entry_date')
+        .eq('id', journal_entry_id)
+        .single();
+
+      if (journalEntryError || !journalEntryData) {
+        return handleErrorResponse(res, 500, 'Não foi possível obter a data do lançamento.');
+      }
+      const entry_date = journalEntryData.entry_date;
+
       if (!effective_icms_rate || !effective_pis_rate || !effective_cofins_rate) {
-        const taxSettings = await getTaxSettings(organization_id, token)
+        const taxSettings = await getTaxSettings(organization_id, token, entry_date)
         if (!taxSettings) {
           return handleErrorResponse(
             res,
@@ -281,7 +293,7 @@ export default async function handler(
       }
 
       if (transaction_type === 'sale' || transaction_type === 'purchase') {
-        const taxResults = calculateTaxes({
+        const taxResults = await calculateTaxes({
           total_gross,
           icms_rate: effective_icms_rate,
           ipi_rate: effective_ipi_rate,
@@ -290,6 +302,8 @@ export default async function handler(
           mva_rate: effective_mva_rate,
           transaction_type,
           total_net,
+          organization_id,
+          token,
         })
 
         calculated_icms_value = taxResults.calculated_icms_value

@@ -119,7 +119,8 @@ onMounted(async () => {
         <div
           class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
-          <div class="col-span-6">NOME</div>
+          <div class="col-span-5">NOME</div>
+          <div class="col-span-2">NCM</div>
           <div class="col-span-2">Estoque Atual</div>
           <div class="col-span-2">Custo Unit.</div>
           <div class="col-span-2 text-center">AÇÕES</div>
@@ -162,7 +163,8 @@ onMounted(async () => {
             <div
               class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition"
             >
-              <div class="md:col-span-6 text-surface-800">{{ product.name }}</div>
+              <div class="md:col-span-5 text-surface-800">{{ product.name }}</div>
+              <div class="md:col-span-2 text-surface-700">{{ product.ncm }}</div>
               <div class="md:col-span-2 text-surface-700">{{ product.quantity_in_stock || 0 }}</div>
               <div class="md:col-span-2 flex justify-center items-center space-x-2">
                 <button

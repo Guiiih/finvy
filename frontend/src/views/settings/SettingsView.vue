@@ -40,6 +40,9 @@
           <div v-if="activeTab === 'organizacoes'">
             <OrganizationSettings />
           </div>
+          <div v-if="activeTab === 'tax-rules'">
+            <TaxRulesView />
+          </div>
         </div>
       </div>
     </div>
@@ -52,6 +55,7 @@ import ProfileSettings from './components/ProfileSettings.vue'
 import SecuritySettings from './components/SecuritySettings.vue'
 import PreferenceSettings from './components/PreferenceSettings.vue'
 import OrganizationSettings from './components/OrganizationSettings.vue'
+import TaxRulesView from './TaxRulesView.vue'
 
 const activeTab = ref('perfil')
 const tabs = [
@@ -59,5 +63,6 @@ const tabs = [
   { id: 'seguranca', name: 'Segurança' },
   { id: 'preferencias', name: 'Preferências' },
   { id: 'organizacoes', name: 'Organizações', shortName: 'Orgs' },
+  { id: 'tax-rules', name: 'Regras de Impostos', shortName: 'Impostos' },
 ]
 </script>

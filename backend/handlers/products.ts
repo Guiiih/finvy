@@ -34,7 +34,7 @@ export default async function handler(
       // No cache for paginated results, as cache key would be too granular
       const { data, count } = await userSupabase
         .from('products')
-        .select('id, name, description, unit_cost, organization_id, accounting_period_id', {
+        .select('id, name, description, ncm, unit_cost, organization_id, accounting_period_id', {
           count: 'exact',
         })
         .eq('organization_id', organization_id)
@@ -115,7 +115,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const { name, description, sku, category } = parsedBody.data
+      const { name, description, ncm, sku, category } = parsedBody.data
 
       const { data, error: dbError } = await userSupabase
         .from('products')
@@ -123,6 +123,7 @@ export default async function handler(
           {
             name,
             description,
+            ncm,
             sku,
             category,
             organization_id,

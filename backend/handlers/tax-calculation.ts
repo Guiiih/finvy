@@ -2,7 +2,7 @@ import type { AuthenticatedRequest } from '../types/index.js'
 import type { VercelResponse } from '@vercel/node'
 import { handleErrorResponse } from '../utils/supabaseClient.js'
 import { calculateTaxes } from '../services/taxService.js'
-import { getTaxSettings } from '../services/taxSettingService.js'
+import { getTaxSettings, getTaxRegimeHistory } from '../services/taxSettingService.js'
 import { z } from 'zod'
 
 const fiscalOperationSchema = z.object({
@@ -18,6 +18,7 @@ const fiscalOperationSchema = z.object({
   icmsSt: z.boolean(),
   ipiIncides: z.boolean(),
   industrialOperation: z.boolean(),
+  transactionDate: z.string().datetime(), // Adicionado
 });
 
 export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res: VercelResponse) => {
@@ -41,7 +42,8 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       return handleErrorResponse(res, 401, 'Dados de autenticação incompletos.');
     }
 
-    const taxSettings = await getTaxSettings(organization_id, token);
+    const taxSettings = await getTaxSettings(organization_id, token, fiscalData.transactionDate);
+    const taxRegimeHistory = await getTaxRegimeHistory(organization_id, token);
 
     if (!taxSettings) {
       return handleErrorResponse(res, 404, 'Configurações de impostos não encontradas para a organização.');
@@ -49,7 +51,7 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
 
     const transaction_type = fiscalData.operationType === 'Venda' ? 'sale' : 'purchase';
 
-    const calculatedTaxes = calculateTaxes({
+    const calculatedTaxes = await calculateTaxes({
       total_gross: fiscalData.totalAmount,
       icms_rate: taxSettings.icms_rate,
       ipi_rate: taxSettings.ipi_rate,
@@ -57,9 +59,10 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       cofins_rate: taxSettings.cofins_rate,
       mva_rate: taxSettings.mva_rate,
       transaction_type: transaction_type,
-      // irrf_rate, csll_rate, inss_rate não estão em TaxSetting, mas podem ser adicionados
-      // total_net para compras pode ser o totalAmount se não houver outro campo
-      total_net: fiscalData.totalAmount, // Ajustar conforme a necessidade para compras
+      tax_regime: taxRegimeHistory?.regime, // Passa o regime tributário
+      total_net: fiscalData.totalAmount,
+      organization_id,
+      token,
     });
 
     res.status(200).json({ calculatedTaxes });

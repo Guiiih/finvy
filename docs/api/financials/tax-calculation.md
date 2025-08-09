@@ -1,87 +1,52 @@
 # Cálculo de Impostos Fiscais
 
-Este endpoint permite simular o cálculo de impostos fiscais com base em dados de uma operação.
+Este endpoint permite calcular impostos fiscais para uma operação de compra ou venda, utilizando as configurações de impostos da organização.
 
-## `POST /api/calculate-fiscal-taxes`
+## Endpoint
 
-Calcula os impostos (ICMS, IPI, PIS, COFINS, IRRF, CSLL, INSS) para uma dada operação fiscal.
+`POST /calculate-fiscal-taxes`
 
-### Request Body
+## Corpo da Requisição (JSON)
 
-```json
-{
-  "operationType": "Compra" | "Venda",
-  "productServiceType": "Produto" | "Serviço",
-  "ufOrigin": "SP",
-  "ufDestination": "MG",
-  "cfop": "5101",
-  "totalAmount": 1000.00,
-  "freight": 50.00,
-  "insurance": 10.00,
-  "discount": 20.00,
-  "icmsSt": false,
-  "ipiIncides": true,
-  "industrialOperation": false
-}
-```
+| Campo              | Tipo      | Obrigatório | Descrição                                                              | Exemplo                               |
+| :----------------- | :-------- | :---------- | :--------------------------------------------------------------------- | :------------------------------------ |
+| `operationType`    | `string`  | Sim         | Tipo de operação fiscal (`"Compra"` ou `"Venda"`).                   | `"Venda"`                             |
+| `productServiceType` | `string`  | Sim         | Tipo de item da operação (`"Produto"` ou `"Serviço"`).               | `"Produto"`                           |
+| `ufOrigin`         | `string`  | Sim         | UF de origem da operação (código do estado, ex: `"SP"`).             | `"SP"`                                |
+| `ufDestination`    | `string`  | Sim         | UF de destino da operação (código do estado, ex: `"RJ"`).            | `"RJ"`                                |
+| `cfop`             | `string`  | Sim         | Código Fiscal de Operações e Prestações (CFOP).                      | `"5102"`                              |
+| `totalAmount`      | `number`  | Sim         | Valor total da operação (bruto).                                     | `1000.00`                             |
+| `freight`          | `number`  | Não         | Valor do frete. Padrão: `0`.                                         | `50.00`                               |
+| `insurance`        | `number`  | Não         | Valor do seguro. Padrão: `0`.                                        | `10.00`                               |
+| `discount`         | `number`  | Não         | Valor do desconto. Padrão: `0`.                                      | `20.00`                               |
+| `icmsSt`           | `boolean` | Sim         | Indica se incide ICMS-ST (Substituição Tributária).                  | `true`                                |
+| `ipiIncides`       | `boolean` | Sim         | Indica se incide IPI.                                                | `true`                                |
+| `industrialOperation` | `boolean` | Sim         | Indica se é uma operação industrial.                                 | `false`                               |
 
-**Propriedades:**
+## Resposta (JSON)
 
-*   `operationType` (string, obrigatório): Tipo da operação fiscal (`"Compra"` ou `"Venda"`).
-*   `productServiceType` (string, obrigatório): Indica se a operação é de `"Produto"` ou `"Serviço"`.
-*   `ufOrigin` (string, obrigatório): UF de origem da operação (ex: `"SP"`).
-*   `ufDestination` (string, obrigatório): UF de destino da operação (ex: `"MG"`).
-*   `cfop` (string, obrigatório): Código Fiscal de Operações e Prestações (ex: `"5101"`).
-*   `totalAmount` (number, obrigatório): Valor total da operação.
-*   `freight` (number, opcional): Valor do frete. Padrão: `0`.
-*   `insurance` (number, opcional): Valor do seguro. Padrão: `0`.
-*   `discount` (number, opcional): Valor do desconto. Padrão: `0`.
-*   `icmsSt` (boolean, obrigatório): Indica se há incidência de ICMS-ST.
-*   `ipiIncides` (boolean, obrigatório): Indica se há incidência de IPI.
-*   `industrialOperation` (boolean, obrigatório): Indica se é uma operação industrial.
-
-### Response
+Retorna um objeto `calculatedTaxes` com os valores dos impostos calculados.
 
 ```json
 {
   "calculatedTaxes": {
-    "icms": {
-      "rate": 18,
-      "amount": 180.00
-    },
-    "ipi": {
-      "rate": 10,
-      "amount": 100.00
-    },
-    "pis": {
-      "rate": 0.65,
-      "amount": 6.50
-    },
-    "cofins": {
-      "rate": 3,
-      "amount": 30.00
-    },
-    "irrf": {
-      "rate": 1.5,
-      "amount": 15.00
-    },
-    "csll": {
-      "rate": 1,
-      "amount": 10.00
-    },
-    "inss": {
-      "rate": 11,
-      "amount": 110.00
-    }
+    "calculated_icms_value": 180.00,
+    "calculated_ipi_value": 100.00,
+    "calculated_pis_value": 16.50,
+    "calculated_cofins_value": 76.00,
+    "calculated_irrf_value": 0.00,
+    "calculated_csll_value": 0.00,
+    "calculated_inss_value": 0.00,
+    "calculated_icms_st_value": 0.00,
+    "final_total_net": 1280.00
   }
 }
 ```
 
-**Propriedades:**
+## Códigos de Status HTTP
 
-*   `calculatedTaxes` (object): Objeto contendo os impostos calculados. Cada imposto (ex: `icms`, `ipi`) possui as propriedades `rate` (alíquota em porcentagem) e `amount` (valor calculado).
-
-### Erros
-
-*   `400 Bad Request`: Dados de entrada inválidos.
-*   `500 Internal Server Error`: Erro interno do servidor ao processar o cálculo.
+*   `200 OK`: Impostos calculados com sucesso.
+*   `400 Bad Request`: Dados da requisição inválidos.
+*   `401 Unauthorized`: Dados de autenticação incompletos.
+*   `404 Not Found`: Configurações de impostos não encontradas para a organização.
+*   `500 Internal Server Error`: Erro interno do servidor.

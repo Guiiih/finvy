@@ -167,6 +167,7 @@ export const createProductSchema = z.object({
     .min(1, 'Nome do produto é obrigatório.')
     .max(100, 'Nome do produto muito longo.'),
   description: z.string().max(255, 'Descrição muito longa.').optional(),
+  ncm: z.string().length(8, 'NCM deve ter 8 dígitos.').regex(/^[0-9]+$/, 'NCM deve conter apenas números.').optional(),
   sku: z.string().optional(),
   category: z
     .string()
@@ -182,6 +183,7 @@ export const updateProductSchema = z
       .max(100, 'Nome do produto muito longo.')
       .optional(),
     description: z.string().max(255, 'Descrição muito longa.').optional(),
+    ncm: z.string().length(8, 'NCM deve ter 8 dígitos.').regex(/^[0-9]+$/, 'NCM deve conter apenas números.').optional(),
     sku: z.string().optional(),
     category: z
       .string()
@@ -305,3 +307,16 @@ export const exportReportSchema = z.object({
     message: 'Formato de exportação inválido.',
   }),
 })
+
+export const createTaxRuleSchema = z.object({
+  uf_origin: z.string().length(2, 'UF de origem deve ter 2 caracteres.'),
+  uf_destination: z.string().length(2, 'UF de destino deve ter 2 caracteres.'),
+  ncm_pattern: z.string().max(8, 'Padrão NCM deve ter no máximo 8 caracteres.').optional(),
+  tax_type: z.string().min(1, 'Tipo de imposto é obrigatório.'),
+  rate: z.number().nonnegative('Alíquota deve ser um valor não negativo.'),
+  description: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+});
+
+export const updateTaxRuleSchema = createTaxRuleSchema.partial();

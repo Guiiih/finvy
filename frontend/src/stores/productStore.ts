@@ -35,6 +35,7 @@ export const useProductStore = defineStore('products', () => {
           accounting_period_id: accountingPeriodStore.activeAccountingPeriod?.id,
           _page: page,
           _limit: itemsPerPage,
+          _fields: 'id,name,ncm,quantity_in_stock,cost'
         },
       })
       products.value = Array.isArray(productsData) ? productsData : []
