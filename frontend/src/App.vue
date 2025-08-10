@@ -1,4 +1,3 @@
-'''
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
@@ -81,7 +80,6 @@ const logoSrc = computed(() => {
   return themeStore.theme === 'dark' ? FinvyLogo : FinvyLogoBlack
 })
 </script>
-'''
 
 <template>
   <Toast aria-live="polite" />

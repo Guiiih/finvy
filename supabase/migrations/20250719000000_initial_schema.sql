@@ -317,3 +317,101 @@ CREATE TABLE public.inventory_lots (
     deleted_by UUID REFERENCES auth.users(id),
     is_deleted BOOLEAN DEFAULT FALSE
 );
+
+-- Cria a tabela para armazenar as sequências de referência
+CREATE TABLE reference_sequences (
+    prefix VARCHAR(50) NOT NULL,
+    last_number INTEGER NOT NULL DEFAULT 0,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    accounting_period_id UUID NOT NULL REFERENCES accounting_periods(id) ON DELETE CASCADE,
+    PRIMARY KEY (prefix, organization_id, accounting_period_id)
+);
+
+-- Adiciona o tipo ENUM para o status do lançamento contábil
+CREATE TYPE public.journal_entry_status AS ENUM (
+    'draft',
+    'posted',
+    'reviewed'
+);
+
+-- Adiciona a coluna de status à tabela de lançamentos contábeis
+ALTER TABLE public.journal_entries
+ADD COLUMN status public.journal_entry_status NOT NULL DEFAULT 'draft';
+
+ALTER TABLE journal_entries
+ADD COLUMN created_by_name TEXT,
+ADD COLUMN created_by_email TEXT,
+ADD COLUMN created_by_username TEXT;
+
+-- 1. Create the history table
+CREATE TABLE
+  public.journal_entry_history (
+    id UUID DEFAULT gen_random_uuid () PRIMARY KEY,
+    journal_entry_id UUID NOT NULL REFERENCES public.journal_entries (id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users (id),
+    action_type TEXT NOT NULL, -- e.g., 'CREATED', 'STATUS_UPDATED', 'EDITED'
+    details JSONB, -- To store old and new values
+    changed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone ('utc'::TEXT, NOW()) NOT NULL,
+    changed_by_name TEXT -- To store the user's name or 'System'
+  );
+
+-- Adiciona colunas de alíquotas de impostos à tabela entry_lines
+ALTER TABLE entry_lines
+ADD COLUMN IF NOT EXISTS icms_rate NUMERIC,
+ADD COLUMN IF NOT EXISTS irrf_rate NUMERIC,
+ADD COLUMN IF NOT EXISTS csll_rate NUMERIC,
+ADD COLUMN IF NOT EXISTS inss_rate NUMERIC;
+
+-- Add ncm column to products table
+ALTER TABLE products
+ADD COLUMN ncm VARCHAR(8);
+
+-- Add a check constraint to ensure ncm is a string of 8 digits
+ALTER TABLE products
+ADD CONSTRAINT ncm_format_check CHECK (ncm ~ '^[0-9]{8}$$');
+
+-- 1. Create tax_rules table
+CREATE TABLE IF NOT EXISTS tax_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    uf_origin VARCHAR(2) NOT NULL,
+    uf_destination VARCHAR(2) NOT NULL,
+    ncm_pattern VARCHAR(8),
+    tax_type VARCHAR(20) NOT NULL, -- e.g., 'ICMS', 'ICMS-ST', 'FCP'
+    rate NUMERIC(5, 4) NOT NULL,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+
+    CONSTRAINT uq_tax_rule UNIQUE (organization_id, uf_origin, uf_destination, ncm_pattern, tax_type)
+);
+
+-- 2. Add uf column to organizations table
+ALTER TABLE organizations
+ADD COLUMN IF NOT EXISTS uf VARCHAR(2);
+
+-- 3. Add uf_origin and uf_destination to entry_lines table
+ALTER TABLE entry_lines
+ADD COLUMN IF NOT EXISTS uf_origin VARCHAR(2),
+ADD COLUMN IF NOT EXISTS uf_destination VARCHAR(2);
+
+ALTER TABLE accounts
+ADD COLUMN fiscal_operation_type TEXT;
+
+ALTER TABLE products
+ADD COLUMN product_service_type TEXT CHECK (product_service_type IN ('Produto', 'Serviço')),
+ADD COLUMN default_cfop_purchase TEXT,
+ADD COLUMN default_cfop_sale TEXT;
+
+CREATE TABLE tax_calculation_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    journal_entry_id UUID REFERENCES journal_entries(id), -- Optional, if linked to a specific entry
+    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    fiscal_operation_data JSONB NOT NULL,
+    tax_calculation_result JSONB NOT NULL,
+    details JSONB, -- To store detailed breakdown of calculations
+    organization_id UUID REFERENCES organizations(id) NOT NULL,
+    accounting_period_id UUID REFERENCES accounting_periods(id) NOT NULL
+);

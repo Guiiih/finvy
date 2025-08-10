@@ -6,7 +6,7 @@ import logger from '../utils/logger.js'
 const notificationService = new NotificationService()
 
 export async function getNotifications(
-  req: VercelRequest,
+  _req: VercelRequest,
   res: VercelResponse,
   userId: string,
 ): Promise<void> {
@@ -23,7 +23,7 @@ export async function getNotifications(
 }
 
 export async function markNotificationAsRead(
-  req: VercelRequest,
+  _req: VercelRequest,
   res: VercelResponse,
   userId: string,
   notificationId: string,

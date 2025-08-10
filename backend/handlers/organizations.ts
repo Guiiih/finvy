@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { formatSupabaseError } from '../utils/errorUtils.js'
 import { getUserRoleInOrganization } from './user-organization-roles.js' // Import the helper
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { PostgrestResponse } from '@supabase/supabase-js' // Import PostgrestResponse
+ 
+
 
 interface AccessibleOrganization {
   id: string

@@ -7,7 +7,7 @@ const notificationService = new NotificationService()
 
 export async function getFinancialTransactions(
   type: 'payable' | 'receivable',
-  user_id: string,
+  _user_id: string,
   organization_id: string,
   active_accounting_period_id: string,
   token: string,

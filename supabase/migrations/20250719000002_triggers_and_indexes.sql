@@ -21,3 +21,29 @@ CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
 
 -- Optional: Index for faster lookup by user_id and read status
 CREATE INDEX notifications_user_id_read_idx ON public.notifications (user_id, read);
+
+-- Trigger para a tabela journal_entries
+CREATE TRIGGER set_journal_entries_updated_at
+BEFORE UPDATE ON journal_entries
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+-- 3. Create a trigger to execute the function
+CREATE TRIGGER on_journal_entry_change
+AFTER INSERT OR UPDATE ON public.journal_entries
+FOR EACH ROW
+EXECUTE FUNCTION public.log_journal_entry_change();
+
+-- Optional: Add an index for faster lookups on ncm
+CREATE INDEX IF NOT EXISTS idx_products_ncm ON products(ncm);
+
+-- Add indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_tax_rules_geo ON tax_rules (uf_origin, uf_destination);
+CREATE INDEX IF NOT EXISTS idx_tax_rules_ncm ON tax_rules (ncm_pattern);
+CREATE INDEX IF NOT EXISTS idx_tax_rules_org ON tax_rules (organization_id);
+
+-- Trigger to update 'updated_at' timestamp on tax_rules table
+CREATE TRIGGER handle_updated_at_tax_rules
+BEFORE UPDATE ON tax_rules
+FOR EACH ROW
+EXECUTE PROCEDURE moddatetime (updated_at);

@@ -54,8 +54,8 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 export async function sendMessageToChatbot(
   message: string,
   conversationHistory: ChatbotMessage[] = [],
-  user_id: string,
-  token: string,
+  _user_id: string,
+  _token: string,
   organization_id: string,
   active_accounting_period_id: string,
 ): Promise<ChatbotResponse> {

@@ -7,7 +7,7 @@ import { handleErrorResponse } from '../utils/supabaseClient.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
     const swaggerPath = path.join(__dirname, '../swagger-output.json')
     const swaggerDoc = fs.readFileSync(swaggerPath, 'utf8')

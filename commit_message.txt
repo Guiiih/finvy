@@ -1,24 +1,15 @@
-feat: Implement tax variations and NCM integration
+feat(tax): Implement product integration and detailed tax history
 
-This commit introduces significant improvements to the tax calculation system:
+This commit implements improvements #6 and #7 from the tax functionality improvements list.
 
-- **NCM Integration:**
-  - Added `ncm` column to the `products` table in the database.
-  - Updated backend schemas, handlers, and services to support NCM for products.
-  - Modified `taxService.ts` to allow NCM to influence tax calculations (e.g., IPI rates).
-  - Integrated NCM field into frontend product forms and product display.
+Improvement #6: Deeper Integration with Product/Service Registration
+- Enhanced the `Product` interface in frontend types (`frontend/src/types/index.ts`) to include `product_service_type`, `default_cfop_purchase`, and `default_cfop_sale`.
+- Updated backend schemas (`backend/utils/schemas.ts`) and product handlers (`backend/handlers/products.ts`) to support these new product fiscal fields.
+- Modified the journal entry form (`frontend/src/components/JournalEntryFormModal.vue`) to automatically populate `productServiceType` and CFOP based on the selected product's pre-configured data.
+- **Added Supabase migration `20250809214416_add_fiscal_fields_to_products.sql` to update the `products` table.**
 
-- **State/Municipal Tax Variations:**
-  - Created `tax_rules` table in the database to store tax rates based on origin/destination UF and NCM.
-  - Implemented full CRUD operations for `tax_rules` in the backend (handler and service).
-  - Developed a new "Tax Rules" section in the frontend settings for managing these rules.
-  - Updated `taxService.ts` to dynamically fetch and apply tax rates from `tax_rules` based on transaction details (UF origin/destination, NCM).
-  - Added `uf_origin` and `uf_destination` columns to `entry_lines` table.
-
-- **Database Migrations:**
-  - Created new migrations for `add_ncm_to_products`, `create_tax_rules_and_add_uf_columns`, `create_moddatetime_function`, and `create_check_user_organization_access_function`.
-  - Ensured correct migration order by adjusting timestamps and handling `IF NOT EXISTS` clauses.
-
-- **Bug Fixes & Refinements:**
-  - Addressed TypeScript compilation errors in `entry-lines.ts` and `tax-calculation.ts` related to `calculateTaxes` becoming asynchronous and requiring `organization_id` and `token`.
-  - Corrected linting errors in frontend and backend.
+Improvement #7: Detailed Tax Calculation History
+- Introduced a new `tax_calculation_history` table in the database to store detailed records of tax calculations.
+- Modified `backend/services/taxService.ts` to return comprehensive calculation details, including applied rules, rates, and bases.
+- Updated the tax calculation handler (`backend/handlers/tax-calculation.ts`) to persist these detailed tax calculation records.
+- **Added Supabase migration `20250809214439_create_tax_calculation_history.sql` to create the `tax_calculation_history` table and its RLS policies.**

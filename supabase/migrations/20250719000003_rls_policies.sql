@@ -327,3 +327,47 @@ FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own presence" ON public.user_presence
 FOR UPDATE USING (auth.uid() = user_id);
+
+-- Adiciona RLS (Row Level Security) para a tabela reference_sequences
+ALTER TABLE reference_sequences ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de segurança para reference_sequences
+CREATE POLICY "Enable read access for all users" ON reference_sequences
+  FOR SELECT USING (TRUE);
+
+CREATE POLICY "Enable insert for authenticated users based on organization_id" ON reference_sequences
+  FOR INSERT WITH CHECK (organization_id IN (SELECT organization_id FROM user_organization_roles WHERE user_id = auth.uid()));
+
+CREATE POLICY "Enable update for authenticated users based on organization_id" ON reference_sequences
+  FOR UPDATE USING (organization_id IN (SELECT organization_id FROM user_organization_roles WHERE user_id = auth.uid()));
+
+CREATE POLICY "Enable delete for authenticated users based on organization_id" ON reference_sequences
+  FOR DELETE USING (organization_id IN (SELECT organization_id FROM user_organization_roles WHERE user_id = auth.uid()));
+
+-- RLS Policies for the new table
+ALTER TABLE public.journal_entry_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow read access to users who can access the journal entry" ON public.journal_entry_history FOR
+SELECT
+  USING (
+    (
+      SELECT
+        check_user_access_to_journal_entry (journal_entry_id)
+    )
+  );
+
+-- RLS for tax_rules
+ALTER TABLE tax_rules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow full access to own organization tax rules" 
+ON tax_rules 
+FOR ALL 
+USING (check_user_organization_access(organization_id));
+
+-- Add RLS policies for the new table
+ALTER TABLE tax_calculation_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for users in their organization" ON tax_calculation_history
+FOR SELECT USING (auth.uid() IN (SELECT user_id FROM user_organization_roles WHERE organization_id = tax_calculation_history.organization_id));
+
+CREATE POLICY "Enable insert for users in their organization" ON tax_calculation_history
+FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM user_organization_roles WHERE organization_id = tax_calculation_history.organization_id));

@@ -799,3 +799,149 @@ BEGIN
     RETURN v_cogs;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Função para atualizar a coluna updated_at
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.delete_multiple_journal_entries_and_lines(
+    p_journal_entry_ids UUID[],
+    p_organization_id UUID,
+    p_accounting_period_id UUID,
+    p_user_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Delete associated entry_lines first
+    DELETE FROM public.entry_lines
+    WHERE journal_entry_id = ANY(p_journal_entry_ids)
+    AND organization_id = p_organization_id
+    AND accounting_period_id = p_accounting_period_id;
+
+    -- Delete the journal_entries
+    DELETE FROM public.journal_entries
+    WHERE id = ANY(p_journal_entry_ids)
+    AND organization_id = p_organization_id
+    AND accounting_period_id = p_accounting_period_id;
+
+    RETURN TRUE;
+END;
+$$;
+
+-- supabase/migrations/20250807215900_create_check_user_access_function.sql
+
+CREATE OR REPLACE FUNCTION public.check_user_access_to_journal_entry(entry_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_org_id UUID;
+  entry_org_id UUID;
+  entry_period_id UUID;
+  user_active_period_id UUID;
+BEGIN
+  -- Get the organization_id and accounting_period_id of the journal entry
+  SELECT organization_id, accounting_period_id
+  INTO entry_org_id, entry_period_id
+  FROM public.journal_entries
+  WHERE id = entry_id;
+
+  -- Get the user's current active organization and accounting period
+  SELECT organization_id, id
+  INTO user_org_id, user_active_period_id
+  FROM public.accounting_periods
+  WHERE is_active = TRUE AND user_id = auth.uid(); -- Assuming user_id is linked to accounting_periods
+
+  -- Check if the user's active organization and period match the entry's organization and period
+  RETURN (user_org_id = entry_org_id AND user_active_period_id = entry_period_id);
+END;
+$$;
+
+-- 2. Create a function to log history
+CREATE OR REPLACE FUNCTION public.log_journal_entry_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_profile RECORD;
+  details_jsonb JSONB;
+BEGIN
+  -- Get the user's name from the profiles table
+  IF auth.uid() IS NOT NULL THEN
+    SELECT p.username INTO user_profile FROM public.profiles p WHERE p.id = auth.uid();
+  END IF;
+
+  details_jsonb := '{}'::jsonb;
+
+  IF TG_OP = 'INSERT' THEN
+    details_jsonb := jsonb_build_object(
+      'new_data', to_jsonb(NEW)
+    );
+    INSERT INTO public.journal_entry_history (journal_entry_id, user_id, action_type, details, changed_by_name)
+    VALUES (NEW.id, auth.uid(), 'CREATED', details_jsonb, COALESCE(user_profile.username, 'System'));
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- Log status change specifically
+    IF OLD.status IS DISTINCT FROM NEW.status THEN
+      details_jsonb := jsonb_build_object(
+        'old_status', OLD.status,
+        'new_status', NEW.status
+      );
+      INSERT INTO public.journal_entry_history (journal_entry_id, user_id, action_type, details, changed_by_name)
+      VALUES (NEW.id, auth.uid(), 'STATUS_UPDATED', details_jsonb, COALESCE(user_profile.username, 'System'));
+    END IF;
+
+    -- You can add more specific field tracking here if needed
+    -- For a general edit, we can log that as well
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) AND OLD.status = NEW.status THEN
+       details_jsonb := jsonb_build_object(
+        'changes', 'Lançamento foi editado' -- A more detailed diff could be implemented here
+      );
+       INSERT INTO public.journal_entry_history (journal_entry_id, user_id, action_type, details, changed_by_name)
+       VALUES (NEW.id, auth.uid(), 'EDITED', details_jsonb, COALESCE(user_profile.username, 'System'));
+    END IF;
+
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Create the moddatetime function for updated_at triggers
+CREATE OR REPLACE FUNCTION moddatetime()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the check_user_organization_access function
+CREATE OR REPLACE FUNCTION public.check_user_organization_access(org_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_id UUID := auth.uid();
+  has_access BOOLEAN;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_organization_roles
+    WHERE user_id = check_user_organization_access.user_id
+      AND organization_id = org_id
+  )
+  INTO has_access;
+
+  RETURN has_access;
+END;
+$$;
