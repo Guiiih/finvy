@@ -51,6 +51,7 @@
     "vite": "^5.4.19",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vitest": "^3.2.4",
+    "@types/d3-dispatch": "3.0.2",
     "vue-tsc": "^3.0.1"
   }
 }
