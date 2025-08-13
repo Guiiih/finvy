@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getSupabaseClient, handleErrorResponse } from '../utils/supabaseClient.js'
+import { getSupabaseClient, handleErrorResponse } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { formatSupabaseError } from '../utils/errorUtils.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
 
 const searchUsersSchema = z.object({
   query: z.string().min(1, 'A query de busca é obrigatória.'),

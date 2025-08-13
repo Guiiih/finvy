@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
-import { supabase } from '../utils/supabaseClient.js'
+import { supabase } from '../../utils/supabaseClient.js'
 
 export const getJournalEntryHistory = async (_req: VercelRequest, res: VercelResponse, entryId: string) => {
 

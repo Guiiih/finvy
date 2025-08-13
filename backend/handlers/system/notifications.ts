@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { NotificationService } from '../services/notificationService.js'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
-import logger from '../utils/logger.js'
+import { NotificationService } from '../../services/notificationService.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
+import logger from '../../utils/logger.js'
 
 const notificationService = new NotificationService()
 

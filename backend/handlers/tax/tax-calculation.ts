@@ -1,8 +1,8 @@
-import type { AuthenticatedRequest } from '../types/index.js'
+import type { AuthenticatedRequest } from '../../types/index.js'
 import type { VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getSupabaseClient } from '../utils/supabaseClient.js'
-import { calculateTaxes } from '../services/taxService.js'
-import { getTaxSettings, getTaxRegimeHistory } from '../services/taxSettingService.js'
+import { handleErrorResponse, getSupabaseClient } from '../../utils/supabaseClient.js'
+import { calculateTaxes } from '../../services/taxService.js'
+import { getTaxSettings, getTaxRegimeHistory } from '../../services/taxSettingService.js'
 import { z } from 'zod'
 
 const fiscalOperationSchema = z.object({

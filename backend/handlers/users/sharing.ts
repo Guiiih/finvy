@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getSupabaseClient, handleErrorResponse } from '../utils/supabaseClient.js'
+import { getSupabaseClient, handleErrorResponse } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { formatSupabaseError } from '../utils/errorUtils.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
 
 // Helper function to get the requesting user's role in a specific organization
 async function getUserRoleInOrganization(

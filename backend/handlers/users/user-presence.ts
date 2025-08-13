@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { UserPresenceService } from '../services/userPresenceService.js'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
-import logger from '../utils/logger.js'
+import { UserPresenceService } from '../../services/userPresenceService.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
+import logger from '../../utils/logger.js'
 
 const userPresenceService = new UserPresenceService()
 

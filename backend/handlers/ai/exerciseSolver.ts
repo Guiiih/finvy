@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { solveExercise } from '../services/exerciseSolverService.js'
+import { solveExercise } from '../../services/exerciseSolverService.js'
 
 const exerciseSolverRequestSchema = z.object({
   exercise: z.string().min(1, 'O texto do exercício não pode ser vazio.'),

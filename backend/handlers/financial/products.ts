@@ -1,12 +1,12 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
-  getSupabaseClient,
+    getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
-} from '../utils/supabaseClient.js'
-import { createProductSchema, updateProductSchema } from '../utils/schemas.js'
-import { formatSupabaseError } from '../utils/errorUtils.js'
+} from '../../utils/supabaseClient.js'
+import { createProductSchema, updateProductSchema } from '../../utils/schemas.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
 
 export default async function handler(
   req: VercelRequest,

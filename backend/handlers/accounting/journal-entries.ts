@@ -1,12 +1,12 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
-  handleErrorResponse,
+    handleErrorResponse,
   getUserOrganizationAndPeriod,
   getUserProfileInfo,
-} from '../utils/supabaseClient.js'
-import { createJournalEntrySchema, updateJournalEntrySchema } from '../utils/schemas.js'
-import { formatSupabaseError } from '../utils/errorUtils.js'
+} from '../../utils/supabaseClient.js'
+import { createJournalEntrySchema, updateJournalEntrySchema } from '../../utils/schemas.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
 import {
   getJournalEntries,
   createJournalEntry,
@@ -14,7 +14,7 @@ import {
   deleteJournalEntry,
   bulkDeleteJournalEntries,
   bulkUpdateJournalEntryStatus,
-} from '../services/journalEntryService.js'
+} from '../../services/journalEntryService.js'
 
 export default async function handler(
   req: VercelRequest,

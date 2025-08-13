@@ -1,16 +1,16 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { createAccountSchema, updateAccountSchema, uuidSchema } from '../utils/schemas.js'
-import { formatSupabaseError } from '../utils/errorUtils.js'
+import { createAccountSchema, updateAccountSchema, uuidSchema } from '../../utils/schemas.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
 import {
-  getAccounts,
+    getAccounts,
   getAccountsByType,
   createAccount,
   updateAccount,
   deleteAccount,
-} from '../services/accountService.js'
+} from '../../services/accountService.js'
 
 export default async function handler(
   req: VercelRequest,

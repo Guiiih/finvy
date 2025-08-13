@@ -1,9 +1,9 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { sendMessageToChatbot } from '../services/chatbotService.js'
-import { ChatbotMessage } from '../types/chatbot.js'
+import { sendMessageToChatbot } from '../../services/chatbotService.js'
+import { ChatbotMessage } from '../../types/chatbot.js'
 
 const chatbotRequestSchema = z.object({
   message: z.string().min(1, 'A mensagem não pode ser vazia.'),

@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
 import formidable from 'formidable'
-import { processDocument } from '../services/documentProcessorService.js'
+import { processDocument } from '../../services/documentProcessorService.js'
 import { readFile } from 'fs/promises' // <-- Adicionado o import aqui
 
 export const config = {

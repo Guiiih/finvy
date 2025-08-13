@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js'
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { confirmProposedJournalEntries } from '../services/confirmJournalEntryService.js'
+import { confirmProposedJournalEntries } from '../../services/confirmJournalEntryService.js'
 
 const confirmEntriesRequestSchema = z.object({
   proposedEntries: z.array(

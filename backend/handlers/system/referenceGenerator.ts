@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getNextReferenceNumber } from '../services/referenceService.js'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
-import logger from '../utils/logger.js'
+import { getNextReferenceNumber } from '../../services/referenceService.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
+import logger from '../../utils/logger.js'
 
 export default async function referenceGeneratorHandler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {

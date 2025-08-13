@@ -1,7 +1,7 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
-import { yearEndClosingSchema } from '../utils/schemas.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
+import { yearEndClosingSchema } from '../../utils/schemas.js'
 
 /**
  * @swagger

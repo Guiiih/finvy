@@ -1,13 +1,13 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
-} from '../utils/supabaseClient.js'
+} from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { formatSupabaseError } from '../utils/errorUtils.js'
-import { TaxRegime } from '../types/index.js'
+import { formatSupabaseError } from '../../utils/errorUtils.js'
+import { TaxRegime } from '../../types/index.js'
 
 // Esquemas de validação para períodos contábeis
 const createAccountingPeriodSchema = z.object({

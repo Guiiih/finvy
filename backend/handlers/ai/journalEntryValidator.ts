@@ -1,8 +1,8 @@
-import logger from '../utils/logger.js'
+import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handleErrorResponse } from '../utils/supabaseClient.js'
+import { handleErrorResponse } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
-import { validateJournalEntry } from '../services/journalEntryValidatorService.js'
+import { validateJournalEntry } from '../../services/journalEntryValidatorService.js'
 
 const journalEntryValidationRequestSchema = z.object({
   journalEntryDescription: z.string().min(1, 'A descrição do lançamento não pode ser vazia.'),

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import logger from '../utils/logger.js';
-import { handleErrorResponse, getUserOrganizationAndPeriod } from '../utils/supabaseClient.js';
-import { createTaxRuleSchema, updateTaxRuleSchema } from '../utils/schemas.js';
-import { getTaxRules, createTaxRule, updateTaxRule, deleteTaxRule } from '../services/taxRuleService.js';
+import logger from '../../utils/logger.js';
+import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js';
+import { createTaxRuleSchema, updateTaxRuleSchema } from '../../utils/schemas.js';
+import { getTaxRules, createTaxRule, updateTaxRule, deleteTaxRule } from '../../services/taxRuleService.js';
 
 export default async function handler(
   req: VercelRequest,
