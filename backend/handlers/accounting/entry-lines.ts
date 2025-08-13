@@ -9,6 +9,7 @@ import { createEntryLineSchema } from '../../utils/schemas.js'
 import { calculateTaxes } from '../../services/taxService.js'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { getTaxSettings } from '../../services/taxSettingService.js'
+import { EntryLine } from '../../types/index.js'
 
 /**
  * @swagger
@@ -331,7 +332,7 @@ export default async function handler(
         )
       }
 
-      const entryLinesToInsert = []
+      const entryLinesToInsert: EntryLine[] = []
 
       if (transaction_type === 'sale') {
         // Fetch required account IDs for sales
