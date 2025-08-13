@@ -67,6 +67,12 @@ export interface EntryLine {
   icms_value?: number
   /** The ICMS (Brazilian VAT) rate applied. */
   icms_rate?: number
+  /** The IPI (Industrialized Products Tax) rate applied. */
+  ipi_rate?: number
+  /** The PIS (Social Integration Program) rate applied. */
+  pis_rate?: number
+  /** The COFINS (Contribution for the Financing of Social Security) rate applied. */
+  cofins_rate?: number
   /** The IPI (Industrialized Products Tax) value for the transaction. */
   ipi_value?: number
   /** The PIS (Social Integration Program) value for the transaction. */
