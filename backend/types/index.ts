@@ -67,6 +67,20 @@ export interface EntryLine {
   icms_value?: number
   /** The ICMS (Brazilian VAT) rate applied. */
   icms_rate?: number
+  /** The IPI (Industrialized Products Tax) value for the transaction. */
+  ipi_value?: number
+  /** The PIS (Social Integration Program) value for the transaction. */
+  pis_value?: number
+  /** The COFINS (Contribution for the Financing of Social Security) value for the transaction. */
+  cofins_value?: number
+  /** The ICMS-ST (ICMS Substitution Tax) value for the transaction. */
+  icms_st_value?: number
+  /** The IRRF (Income Tax Withholding) rate applied. */
+  irrf_rate?: number
+  /** The CSLL (Social Contribution on Net Income) rate applied. */
+  csll_rate?: number
+  /** The INSS (National Institute of Social Security) rate applied. */
+  inss_rate?: number
   /** The total net value of the transaction (after taxes/discounts). */
   total_net?: number
   /** The debit amount for this entry line. */
