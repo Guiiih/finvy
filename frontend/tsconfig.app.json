@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../backend/types/**/*.ts"],
   "exclude": ["src/**/__tests__/*", "src/**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
@@ -12,7 +12,8 @@
     "noUnusedParameters": true,
     "types": ["node", "vitest/globals", "vite/client"], // <-- Verifique se "vite/client" está aqui
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@backendTypes/*": ["../backend/types/*"]
     }
   }
 }

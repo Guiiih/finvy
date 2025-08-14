@@ -59,8 +59,6 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     total_net,
     tax_regime,
     ncm,
-    uf_origin,
-    uf_destination,
     organization_id,
     token,
   } = params
@@ -117,16 +115,9 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     }
   }
 
-  let calculated_icms_value = 0
   let calculated_ipi_value = 0
-  let calculated_pis_value = 0
-  let calculated_cofins_value = 0
-  let calculated_irrf_value = 0
-  let calculated_csll_value = 0
-  let calculated_inss_value = 0
-  let calculated_icms_st_value = 0
-  let base_for_icms_and_pis_cofins = total_gross || 0
-  let final_total_net = total_net || 0
+  let base_for_icms_and_pis_cofins_local = total_gross || 0
+  let final_total_net_local = total_net || 0
   const details: TaxCalculationDetail[] = [];
 
   const saleTypes = [OperationType.VendaMercadorias, OperationType.VendaServicos];
@@ -136,11 +127,11 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     // Calculation logic for sales
     if (total_gross !== undefined && ipi_rate !== undefined) {
       calculated_ipi_value = total_gross * (ipi_rate / 100)
-      base_for_icms_and_pis_cofins = (total_gross || 0) + calculated_ipi_value
+      base_for_icms_and_pis_cofins_local = (total_gross || 0) + calculated_ipi_value
       details.push({ tax_type: 'IPI', description: `Cálculo de IPI sobre o valor bruto.`, rate_applied: ipi_rate, base_value: total_gross, calculated_value: calculated_ipi_value });
     }
     // ... (rest of the sales calculation logic is similar)
-    final_total_net = (total_gross || 0) + calculated_ipi_value + calculated_icms_st_value;
+    final_total_net_local = (total_gross || 0) + calculated_ipi_value + 0;
 
   } else if (operation_type && purchaseTypes.includes(operation_type)) {
     // Calculation logic for purchases
@@ -148,15 +139,15 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
   }
 
   return {
-    calculated_icms_value,
+    calculated_icms_value: (base_for_icms_and_pis_cofins_local * (icms_rate / 100)),
     calculated_ipi_value,
-    calculated_pis_value,
-    calculated_cofins_value,
-    calculated_irrf_value,
-    calculated_csll_value,
-    calculated_inss_value,
-    calculated_icms_st_value,
-    final_total_net,
+    calculated_pis_value: (base_for_icms_and_pis_cofins_local * (pis_rate / 100)),
+    calculated_cofins_value: (base_for_icms_and_pis_cofins_local * (cofins_rate / 100)),
+    calculated_irrf_value: (total_gross || 0) * (irrf_rate / 100),
+    calculated_csll_value: (total_gross || 0) * (csll_rate / 100),
+    calculated_inss_value: (total_gross || 0) * (inss_rate / 100),
+    calculated_icms_st_value: (base_for_icms_and_pis_cofins_local * (mva_rate / 100)),
+    final_total_net: final_total_net_local,
     details,
   }
 }

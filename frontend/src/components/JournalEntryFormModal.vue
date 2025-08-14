@@ -4,6 +4,7 @@ import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
 import type { JournalEntry, Product, FiscalOperationData } from '@/types/index'
+import { OperationType } from '@backendTypes/tax'
 import { useAuthStore } from '@/stores/authStore'
 import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
 import { api } from '@/services/api'
@@ -68,18 +69,12 @@ const generatedSequenceNumber = ref(0)
 const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref('Básico')
 const selectedProductFromForm = ref<SelectedProductData | null>(null)
-const _inferredOperationTypeLogic = computed<'Compra' | 'Venda' | null>(() => {
+const _inferredOperationTypeLogic = computed<OperationType | null>(() => {
   // First pass: check for explicit fiscal_operation_type
   for (const line of newEntryLines.value) {
     const account = accountStore.accounts.find(acc => acc.id === line.account_id)
     if (account && account.fiscal_operation_type) {
-      const fiscalType = account.fiscal_operation_type.toLowerCase();
-      if (fiscalType.includes('venda')) {
-        return 'Venda';
-      }
-      if (fiscalType.includes('compra')) {
-        return 'Compra';
-      }
+      return account.fiscal_operation_type as OperationType;
     }
   }
 
@@ -100,8 +95,8 @@ const _inferredOperationTypeLogic = computed<'Compra' | 'Venda' | null>(() => {
     }
   }
 
-  if (isSale) return 'Venda'
-  if (isPurchase) return 'Compra'
+  if (isSale) return OperationType.VendaMercadorias // Default to VendaMercadorias for sales
+  if (isPurchase) return OperationType.CompraMateriaPrima // Default to CompraMateriaPrima for purchases
   return null
 })
 
@@ -265,9 +260,9 @@ watch(selectedProductFromForm, (newProductData) => {
 
     // Determine CFOP based on inferred operation type
     const operationType = inferredOperationTypeDetails.value.type;
-    if (operationType === 'Compra' && product.default_cfop_purchase) {
+    if (operationType === OperationType.CompraMateriaPrima && product.default_cfop_purchase) {
       fiscalOperationData.value.cfop = product.default_cfop_purchase;
-    } else if (operationType === 'Venda' && product.default_cfop_sale) {
+    } else if (operationType === OperationType.VendaMercadorias && product.default_cfop_sale) {
       fiscalOperationData.value.cfop = product.default_cfop_sale;
     } else {
       fiscalOperationData.value.cfop = null; // Clear if no default CFOP applies

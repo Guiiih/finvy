@@ -260,7 +260,7 @@ export interface TaxRegimeHistory {
   updated_at?: string
 }
 
-import { VercelRequest } from '@vercel/node'
+import type { VercelRequest } from '@vercel/node'
 
 export interface AuthenticatedRequest extends VercelRequest {
   userId?: string
@@ -285,7 +285,7 @@ export interface OnlineUser extends UserPresence {
   profiles: UserProfile[]
 }
 
-import { FiscalOperationData, TaxData, OperationType } from './tax.js'
+import type { FiscalOperationData, TaxData, OperationType } from './tax.js'
 
 export type { FiscalOperationData, TaxData, OperationType }
 

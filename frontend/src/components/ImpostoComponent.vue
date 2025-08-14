@@ -1,14 +1,23 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
 import Dropdown from 'primevue/dropdown'
 import InputSwitch from 'primevue/inputswitch'
 import Message from 'primevue/message'
-import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
-import type { FiscalOperationData, TaxData, InferredOperationTypeDetails } from '@/types'
+import type { FiscalOperationData, TaxData, InferredOperationTypeDetails } from '@/types/index'
+import { OperationType } from '@backendTypes/tax'
+
+
+const operationTypeOptions = computed(() => {
+  return Object.values(OperationType).map(value => ({
+    label: value.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+    value: value
+  }))
+})
 
 const props = defineProps<{
   fiscalOperationData: FiscalOperationData,
@@ -18,6 +27,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:fiscalOperationData'])
 
 const toast = useToast()
+const isLoading = ref(false)
 
 const localFiscalOperationData = ref<FiscalOperationData>({
   operationType: props.fiscalOperationData.operationType,
@@ -33,14 +43,6 @@ const localFiscalOperationData = ref<FiscalOperationData>({
   ipiIncides: props.fiscalOperationData.ipiIncides,
   industrialOperation: props.fiscalOperationData.industrialOperation,
 })
-
-watch(
-  localFiscalOperationData,
-  (newValue) => {
-    emit('update:fiscalOperationData', newValue)
-  },
-  { deep: true }
-)
 
 const validationErrors = ref<string[]>([])
 
@@ -64,6 +66,14 @@ const cfopOptions = [
   { label: '6403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária (interestadual)', value: '6403' },
 ]
 
+function debounce<T extends (...args: unknown[]) => unknown>(func: T, delay: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout>
+  return function(this: unknown, ...args: Parameters<T>) {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func.apply(this, args), delay)
+  }
+}
+
 const calculateTaxes = async () => {
   validationErrors.value = []
   if (!localFiscalOperationData.value.productServiceType) validationErrors.value.push('Tipo de Produto/Serviço é obrigatório.')
@@ -71,24 +81,34 @@ const calculateTaxes = async () => {
   if (!localFiscalOperationData.value.ufDestination) validationErrors.value.push('UF de destino é obrigatória.')
   if (!localFiscalOperationData.value.cfop) validationErrors.value.push('CFOP é obrigatório.')
 
-  if (validationErrors.value.length === 0) {
-    try {
-      // Simulação de chamada de API para cálculo de impostos
-      const response = await api.post<{ calculatedTaxes: TaxData }, FiscalOperationData>('/calculate-fiscal-taxes', localFiscalOperationData.value)
-      toast.add({
-        severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Impostos calculados com sucesso!',
-        life: 3000,
-      })
-      // Emitir o evento de atualização com os dados fiscais e os impostos calculados
-      emit('update:fiscalOperationData', { ...localFiscalOperationData.value, taxData: response.calculatedTaxes })
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Erro ao calcular impostos.'
-      toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
-    }
+  if (validationErrors.value.length > 0) {
+    localFiscalOperationData.value.taxData = undefined
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const response = await api.post<{ calculatedTaxes: TaxData }, FiscalOperationData>('/calculate-fiscal-taxes', localFiscalOperationData.value)
+    emit('update:fiscalOperationData', { ...localFiscalOperationData.value, taxData: response.calculatedTaxes })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erro ao calcular impostos.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+    localFiscalOperationData.value.taxData = undefined
+  } finally {
+    isLoading.value = false
   }
 }
+
+const debouncedCalculateTaxes = debounce(calculateTaxes, 750)
+
+watch(
+  localFiscalOperationData,
+  (newValue) => {
+    emit('update:fiscalOperationData', newValue)
+    debouncedCalculateTaxes()
+  },
+  { deep: true }
+)
 
 </script>
 
@@ -107,13 +127,19 @@ const calculateTaxes = async () => {
 
     <Card class="p-4">
       <template #title>
-        <h5 class="font-medium mb-4 flex items-center gap-2">
-          <i class="pi pi-file-edit"></i> Dados da Operação Fiscal
-        </h5>
+        <div class="flex justify-between items-center">
+          <h5 class="font-medium flex items-center gap-2">
+            <i class="pi pi-file-edit"></i> Dados da Operação Fiscal
+          </h5>
+          <div v-if="isLoading" class="flex items-center gap-2 text-sm text-surface-500">
+            <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="8" />
+            <span>Calculando...</span>
+          </div>
+        </div>
       </template>
       <template #content>
         <p class="text-sm text-surface-500 mb-4">
-          Configure os dados necessários para o cálculo automático dos impostos
+          Altere os dados para simular o cálculo de impostos em tempo real.
         </p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           
@@ -140,7 +166,9 @@ const calculateTaxes = async () => {
             <Dropdown
               id="operationType"
               v-model="localFiscalOperationData.operationType"
-              :options="['Compra', 'Venda']"
+                            :options="operationTypeOptions"
+              optionLabel="label"
+              optionValue="value"
               placeholder="Selecione o tipo"
               class="w-full"
               :disabled="inferredOperationTypeDetails.confidence === 'high'"
@@ -270,10 +298,6 @@ const calculateTaxes = async () => {
           </div>
         </div>
 
-        <div class="flex justify-end mt-6">
-          <Button label="Calcular Impostos" icon="pi pi-calculator" @click="calculateTaxes" />
-        </div>
-
         <div v-if="validationErrors.length > 0" class="mt-6">
           <Message severity="error" :closable="false">
             <ul class="list-disc pl-5">
@@ -281,56 +305,38 @@ const calculateTaxes = async () => {
             </ul>
           </Message>
         </div>
-      </template>
-    </Card>
 
-    <Card class="p-4" v-if="localFiscalOperationData.taxData">
-      <template #title>
-        <h5 class="font-medium mb-4 flex items-center gap-2">
-          <i class="pi pi-calculator"></i> Impostos Calculados
-        </h5>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">ICMS:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">IPI:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_ipi_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">PIS:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_pis_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">COFINS:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_cofins_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">IRRF:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_irrf_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">CSLL:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_csll_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">INSS:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_inss_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">ICMS-ST:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_st_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-surface-700">Total Líquido:</span>
-            <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.final_total_net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+        <div v-if="localFiscalOperationData.taxData && !isLoading && validationErrors.length === 0" class="mt-6 pt-6 border-t border-surface-200">
+          <h5 class="font-medium mb-4 flex items-center gap-2">
+            <i class="pi pi-calculator"></i> Impostos Calculados (Simulação)
+          </h5>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-surface-700">ICMS:</span>
+              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-surface-700">IPI:</span>
+              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_ipi_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-surface-700">PIS:</span>
+              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_pis_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-surface-700">COFINS:</span>
+              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_cofins_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-surface-700">Total Líquido:</span>
+              <span class="text-sm font-bold text-surface-900">{{ localFiscalOperationData.taxData.final_total_net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+            </div>
           </div>
         </div>
       </template>
     </Card>
+
+    
 
     <!-- Seções de impostos (vendas, federais, retenções) podem ser adicionadas aqui, se necessário -->
     <!-- Por enquanto, o foco é na entrada de dados da operação fiscal -->

@@ -1,15 +1,1 @@
-feat(tax): Implement product integration and detailed tax history
-
-This commit implements improvements #6 and #7 from the tax functionality improvements list.
-
-Improvement #6: Deeper Integration with Product/Service Registration
-- Enhanced the `Product` interface in frontend types (`frontend/src/types/index.ts`) to include `product_service_type`, `default_cfop_purchase`, and `default_cfop_sale`.
-- Updated backend schemas (`backend/utils/schemas.ts`) and product handlers (`backend/handlers/products.ts`) to support these new product fiscal fields.
-- Modified the journal entry form (`frontend/src/components/JournalEntryFormModal.vue`) to automatically populate `productServiceType` and CFOP based on the selected product's pre-configured data.
-- **Added Supabase migration `20250809214416_add_fiscal_fields_to_products.sql` to update the `products` table.**
-
-Improvement #7: Detailed Tax Calculation History
-- Introduced a new `tax_calculation_history` table in the database to store detailed records of tax calculations.
-- Modified `backend/services/taxService.ts` to return comprehensive calculation details, including applied rules, rates, and bases.
-- Updated the tax calculation handler (`backend/handlers/tax-calculation.ts`) to persist these detailed tax calculation records.
-- **Added Supabase migration `20250809214439_create_tax_calculation_history.sql` to create the `tax_calculation_history` table and its RLS policies.**
+feat: Implementação de melhorias gerais e correções.

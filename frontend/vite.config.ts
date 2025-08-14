@@ -10,7 +10,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      'primeicons': fileURLToPath(new URL('../node_modules/primeicons', import.meta.url))
+      'primeicons': fileURLToPath(new URL('../node_modules/primeicons', import.meta.url)),
+      '@backendTypes': fileURLToPath(new URL('../backend/types', import.meta.url))
     },
   },
   build: {

@@ -28,7 +28,10 @@ import exerciseSolverHandler from '../backend/handlers/ai/exerciseSolver.js'
 import journalEntryValidatorHandler from '../backend/handlers/ai/journalEntryValidator.js'
 import confirmJournalEntryHandler from '../backend/handlers/accounting/confirmJournalEntryHandler.js'
 import documentProcessorHandler from '../backend/handlers/ai/documentProcessor.js'
-import { getNotifications, markNotificationAsRead } from '../backend/handlers/system/notifications.js'
+import {
+  getNotifications,
+  markNotificationAsRead,
+} from '../backend/handlers/system/notifications.js'
 import { updateUserPresence, getOnlineUsers } from '../backend/handlers/users/user-presence.js'
 import referenceGeneratorHandler from '../backend/handlers/system/referenceGenerator.js'
 import { getJournalEntryHistory } from '../backend/handlers/system/journal-entry-history.js'

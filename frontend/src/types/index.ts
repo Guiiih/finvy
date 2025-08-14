@@ -274,7 +274,7 @@ export interface TaxData {
 }
 
 export interface FiscalOperationData {
-  operationType: 'Compra' | 'Venda' | null;
+  operationType: OperationType | null;
   productServiceType: 'Produto' | 'Serviço' | null;
   ufOrigin: string | null;
   ufDestination: string | null;
@@ -289,8 +289,10 @@ export interface FiscalOperationData {
   taxData?: TaxData;
 }
 
+import { OperationType } from '@backendTypes/tax'
+
 export interface InferredOperationTypeDetails {
-  type: 'Compra' | 'Venda' | null;
+  type: OperationType | null;
   confidence: 'high' | 'medium' | 'low' | 'ambiguous';
 }
 

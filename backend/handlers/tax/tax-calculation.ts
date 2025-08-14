@@ -73,11 +73,10 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       .from('tax_calculation_history')
       .insert({
         journal_entry_id: fiscalData.journalEntryId,
-        fiscal_operation_data: fiscalData,
-        tax_calculation_result: calculatedTaxes,
-        details: calculatedTaxes.details,
-        organization_id: organization_id,
-        accounting_period_id: req.accountingPeriodId, // Assuming middleware adds this
+        input_data: fiscalData,
+        calculated_taxes: calculatedTaxes,
+        applied_rules: calculatedTaxes.details,
+        user_id: req.userId,
       });
 
     if (dbError) {
