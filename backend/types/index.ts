@@ -30,8 +30,8 @@ export interface Account {
   accounting_period_id?: string
   /** Indicates if the account is protected and cannot be deleted. */
   is_protected?: boolean
-  /** The specific fiscal operation type for the account (e.g., 'Venda de Mercadoria'). */
-  fiscal_operation_type?: string | null
+  /** Default fiscal operation type associated with this account. */
+  default_operation_type?: OperationType | null
 }
 
 /**
@@ -211,15 +211,15 @@ export interface FinancialTransaction {
 
 export interface TaxRule {
   id: string;
-  uf_origin: string;
-  uf_destination: string;
-  ncm_pattern?: string;
-  tax_type: string;
+  organization_id: string;
+  tax_type: 'ICMS' | 'IPI' | 'PIS' | 'COFINS';
+  operation_type?: OperationType;
+  uf_origin?: string;
+  uf_destination?: string;
+  ncm_code?: string;
   rate: number;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  organization_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -285,7 +285,7 @@ export interface OnlineUser extends UserPresence {
   profiles: UserProfile[]
 }
 
-import { FiscalOperationData, TaxData } from './tax.js'
+import { FiscalOperationData, TaxData, OperationType } from './tax.js'
 
-export type { FiscalOperationData, TaxData }
+export type { FiscalOperationData, TaxData, OperationType }
 

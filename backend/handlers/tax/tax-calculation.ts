@@ -5,8 +5,10 @@ import { calculateTaxes } from '../../services/taxService.js'
 import { getTaxSettings, getTaxRegimeHistory } from '../../services/taxSettingService.js'
 import { z } from 'zod'
 
+import { OperationType } from '../../types/tax.js';
+
 const fiscalOperationSchema = z.object({
-  operationType: z.enum(['Compra', 'Venda']).nullable(),
+  operationType: z.nativeEnum(OperationType).nullable(),
   productServiceType: z.enum(['Produto', 'Serviço']).nullable(),
   ufOrigin: z.string().nullable(),
   ufDestination: z.string().nullable(),
@@ -50,8 +52,6 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       return handleErrorResponse(res, 404, 'Configurações de impostos não encontradas para a organização.');
     }
 
-    const transaction_type = fiscalData.operationType === 'Venda' ? 'sale' : 'purchase';
-
     const calculatedTaxes = await calculateTaxes({
       total_gross: fiscalData.totalAmount,
       icms_rate: taxSettings.icms_rate,
@@ -59,7 +59,7 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       pis_rate: taxSettings.pis_rate,
       cofins_rate: taxSettings.cofins_rate,
       mva_rate: taxSettings.mva_rate,
-      transaction_type: transaction_type,
+      operation_type: fiscalData.operationType,
       tax_regime: taxRegimeHistory?.regime, // Passa o regime tributário
       total_net: fiscalData.totalAmount,
       organization_id,

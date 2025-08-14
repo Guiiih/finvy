@@ -1,3 +1,11 @@
+export enum OperationType {
+  VendaMercadorias = 'venda_mercadorias',
+  VendaServicos = 'venda_servicos',
+  CompraMateriaPrima = 'compra_materia_prima',
+  CompraServicos = 'compra_servicos',
+  Outros = 'outros',
+}
+
 export interface TaxData {
   calculated_icms_value: number;
   calculated_ipi_value: number;
@@ -11,7 +19,7 @@ export interface TaxData {
 }
 
 export interface FiscalOperationData {
-  operationType: 'Compra' | 'Venda' | null;
+  operationType: OperationType | null;
   productServiceType: 'Produto' | 'Serviço' | null;
   ufOrigin: string | null;
   ufDestination: string | null;
@@ -25,4 +33,23 @@ export interface FiscalOperationData {
   industrialOperation: boolean;
   transactionDate: string; // Adicionado
   taxData?: TaxData;
+}
+
+export interface TaxRule {
+  id: string;
+  organization_id: string;
+  tax_type: 'ICMS' | 'IPI' | 'PIS' | 'COFINS';
+  operation_type?: OperationType;
+  uf_origin?: string;
+  uf_destination?: string;
+  ncm_code?: string;
+  rate: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export enum TaxRegime {
+  SimplesNacional = 'simples_nacional',
+  LucroPresumido = 'lucro_presumido',
+  LucroReal = 'lucro_real',
 }

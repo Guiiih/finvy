@@ -10,6 +10,8 @@ import { calculateTaxes } from '../../services/taxService.js'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { getTaxSettings } from '../../services/taxSettingService.js'
 import { EntryLine } from '../../types/index.js'
+import { inferOperationType } from '../../services/operationTypeInferenceService.js'
+import { OperationType } from '../../types/tax.js';
 
 /**
  * @swagger
@@ -228,7 +230,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const {
+      const { 
         journal_entry_id,
         account_id, // This will be the main account (e.g., Clients or Suppliers)
         type, // Adicionado
@@ -237,7 +239,6 @@ export default async function handler(
         quantity,
         unit_cost,
         total_gross,
-        transaction_type,
         total_net, // total_net from input
         // Novas alíquotas de impostos do frontend
         icms_rate,
@@ -247,6 +248,12 @@ export default async function handler(
         csll_rate,
         inss_rate,
       } = parsedBody.data
+
+      // Infer the operation type
+      const inferredOperationType = await inferOperationType(journal_entry_id, token);
+
+      const saleTypes = [OperationType.VendaMercadorias, OperationType.VendaServicos];
+      const purchaseTypes = [OperationType.CompraMateriaPrima, OperationType.CompraServicos];
 
       const debit = type === 'debit' ? amount : null // Derivado
       const credit = type === 'credit' ? amount : null // Derivado
@@ -293,7 +300,7 @@ export default async function handler(
         effective_mva_rate = taxSettings.mva_rate;
       }
 
-      if (transaction_type === 'sale' || transaction_type === 'purchase') {
+      if (inferredOperationType && (saleTypes.includes(inferredOperationType) || purchaseTypes.includes(inferredOperationType))) {
         const taxResults = await calculateTaxes({
           total_gross,
           icms_rate: effective_icms_rate,
@@ -301,7 +308,7 @@ export default async function handler(
           pis_rate: effective_pis_rate,
           cofins_rate: effective_cofins_rate,
           mva_rate: effective_mva_rate,
-          transaction_type,
+          operation_type: inferredOperationType,
           total_net,
           organization_id,
           token,
@@ -334,7 +341,7 @@ export default async function handler(
 
       const entryLinesToInsert: EntryLine[] = []
 
-      if (transaction_type === 'sale') {
+      if (inferredOperationType && saleTypes.includes(inferredOperationType)) {
         // Fetch required account IDs for sales
         const { data: accounts, error: accountsError } = await getSupabaseClient(token)
           .from('accounts')
@@ -635,7 +642,7 @@ export default async function handler(
             accounting_period_id: active_accounting_period_id,
           })
         }
-      } else if (transaction_type === 'purchase') {
+      } else if (inferredOperationType && purchaseTypes.includes(inferredOperationType)) {
         // Fetch required account IDs for purchases
         const { data: accounts, error: accountsError } = await getSupabaseClient(token)
           .from('accounts')
