@@ -429,7 +429,7 @@ export default async function handler(
           journal_entry_id,
           account_id: revenueAccount,
           type: 'credit', // Added
-          amount: total_gross, // Added
+          amount: total_gross ?? 0, // Added
           debit: null,
           credit: total_gross,
           organization_id,

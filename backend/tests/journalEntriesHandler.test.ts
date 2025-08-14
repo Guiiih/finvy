@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import httpMocks from 'node-mocks-http';
 import type { VercelResponse } from '@vercel/node';
-import handler from '../handlers/journal-entries';
+import handler from '../handlers/accounting/journal-entries.js';
 import * as journalEntryService from '../services/journalEntryService';
 import * as supabaseClient from '../utils/supabaseClient';
 import logger from '../utils/logger';

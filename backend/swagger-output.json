@@ -26,201 +26,6 @@
     }
   ],
   "paths": {
-    "/accounts": {
-      "post": {
-        "summary": "Cria uma nova conta.",
-        "description": "Cria uma nova conta financeira para o usuário autenticado.",
-        "tags": [
-          "Accounts"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "type"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "O nome da nova conta."
-                  },
-                  "type": {
-                    "type": "string",
-                    "description": "O tipo da nova conta (e.g., 'Asset', 'Liability')."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Conta criada com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "O ID único da conta criada."
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "O nome da conta criada."
-                    },
-                    "type": {
-                      "type": "string",
-                      "description": "O tipo da conta criada."
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "O ID do usuário ao qual a conta pertence."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Requisição inválida. Dados fornecidos são inválidos."
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
-    "/accounts/{id}": {
-      "put": {
-        "summary": "Atualiza uma conta existente.",
-        "description": "Atualiza os detalhes de uma conta financeira específica pelo seu ID.",
-        "tags": [
-          "Accounts"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": "O ID da conta a ser atualizada."
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "O novo nome da conta."
-                  },
-                  "type": {
-                    "type": "string",
-                    "description": "O novo tipo da conta."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Conta atualizada com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "O ID único da conta atualizada."
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "O nome da conta atualizada."
-                    },
-                    "type": {
-                      "type": "string",
-                      "description": "O tipo da conta atualizada."
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "O ID do usuário ao qual a conta pertence."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido."
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "404": {
-            "description": "Conta não encontrada ou você não tem permissão para atualizar esta conta."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deleta uma conta.",
-        "description": "Deleta uma conta financeira específica pelo seu ID.",
-        "tags": [
-          "Accounts"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": "O ID da conta a ser deletada."
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Conta deletada com sucesso. Nenhuma resposta de conteúdo."
-          },
-          "400": {
-            "description": "Requisição inválida. ID da conta fornecido é inválido."
-          },
-          "401": {
-            "description": "Não autorizado. Token de autenticação ausente ou inválido."
-          },
-          "404": {
-            "description": "Conta não encontrada ou você não tem permissão para deletar esta conta."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
     "/entry-lines": {
       "get": {
         "summary": "Retorna as linhas de um lançamento de diário.",
@@ -443,166 +248,6 @@
         }
       }
     },
-    "/financial-transactions": {
-      "get": {
-        "summary": "Retorna contas a pagar ou a receber.",
-        "description": "Retorna uma lista de todas as contas a pagar ou a receber para o usuário, dependendo do parâmetro 'type'.",
-        "tags": [
-          "Financial Transactions"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "type",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "payable",
-                "receivable"
-              ]
-            },
-            "required": true,
-            "description": "O tipo de transação a ser retornado."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Uma lista de transações financeiras.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "amount": {
-                        "type": "number",
-                        "format": "float"
-                      },
-                      "due_date": {
-                        "type": "string",
-                        "format": "date"
-                      },
-                      "is_paid": {
-                        "type": "boolean"
-                      },
-                      "paid_date": {
-                        "type": "string",
-                        "format": "date"
-                      },
-                      "is_received": {
-                        "type": "boolean"
-                      },
-                      "received_date": {
-                        "type": "string",
-                        "format": "date"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autorizado."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      },
-      "post": {
-        "summary": "Cria uma nova conta a pagar ou a receber.",
-        "description": "Cria uma nova transação financeira (conta a pagar ou a receber) para o usuário.",
-        "tags": [
-          "Financial Transactions"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "type",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "payable",
-                "receivable"
-              ]
-            },
-            "required": true,
-            "description": "O tipo de transação a ser criada."
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description",
-                  "amount",
-                  "due_date"
-                ],
-                "properties": {
-                  "description": {
-                    "type": "string",
-                    "description": "Descrição da transação."
-                  },
-                  "amount": {
-                    "type": "number",
-                    "description": "O valor da transação."
-                  },
-                  "due_date": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Data de vencimento."
-                  },
-                  "paid_date": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Data de pagamento (para contas a pagar)."
-                  },
-                  "is_paid": {
-                    "type": "boolean",
-                    "description": "Status de pagamento."
-                  },
-                  "received_date": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Data de recebimento (para contas a receber)."
-                  },
-                  "is_received": {
-                    "type": "boolean",
-                    "description": "Status de recebimento."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Transação criada com sucesso."
-          },
-          "400": {
-            "description": "Requisição inválida."
-          },
-          "401": {
-            "description": "Não autorizado."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
     "/journal-entries": {
       "post": {
         "summary": "Cria um novo lançamento de diário.",
@@ -795,6 +440,419 @@
           },
           "404": {
             "description": "Lançamento de diário não encontrado ou você não tem permissão para deletar este lançamento."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/year-end-closing": {
+      "post": {
+        "summary": "Executa o fechamento de exercício.",
+        "description": "Processa os lançamentos contábeis para o encerramento do ano fiscal, calcula o resultado (lucro ou prejuízo) e prepara as contas para o próximo período.",
+        "tags": [
+          "Year-End Closing"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "closingDate"
+                ],
+                "properties": {
+                  "closingDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "A data final para o fechamento do exercício (YYYY-MM-DD)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fechamento de exercício realizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data de fechamento não fornecida."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/accounts": {
+      "post": {
+        "summary": "Cria uma nova conta.",
+        "description": "Cria uma nova conta financeira para o usuário autenticado.",
+        "tags": [
+          "Accounts"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O nome da nova conta."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "O tipo da nova conta (e.g., 'Asset', 'Liability')."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Conta criada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único da conta criada."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome da conta criada."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "O tipo da conta criada."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual a conta pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "put": {
+        "summary": "Atualiza uma conta existente.",
+        "description": "Atualiza os detalhes de uma conta financeira específica pelo seu ID.",
+        "tags": [
+          "Accounts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da conta a ser atualizada."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "O novo nome da conta."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "O novo tipo da conta."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conta atualizada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID único da conta atualizada."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "O nome da conta atualizada."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "O tipo da conta atualizada."
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "O ID do usuário ao qual a conta pertence."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida. Dados fornecidos são inválidos ou nenhum campo para atualizar foi fornecido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Conta não encontrada ou você não tem permissão para atualizar esta conta."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta uma conta.",
+        "description": "Deleta uma conta financeira específica pelo seu ID.",
+        "tags": [
+          "Accounts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": "O ID da conta a ser deletada."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Conta deletada com sucesso. Nenhuma resposta de conteúdo."
+          },
+          "400": {
+            "description": "Requisição inválida. ID da conta fornecido é inválido."
+          },
+          "401": {
+            "description": "Não autorizado. Token de autenticação ausente ou inválido."
+          },
+          "404": {
+            "description": "Conta não encontrada ou você não tem permissão para deletar esta conta."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      }
+    },
+    "/financial-transactions": {
+      "get": {
+        "summary": "Retorna contas a pagar ou a receber.",
+        "description": "Retorna uma lista de todas as contas a pagar ou a receber para o usuário, dependendo do parâmetro 'type'.",
+        "tags": [
+          "Financial Transactions"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "payable",
+                "receivable"
+              ]
+            },
+            "required": true,
+            "description": "O tipo de transação a ser retornado."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista de transações financeiras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "due_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "is_paid": {
+                        "type": "boolean"
+                      },
+                      "paid_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "is_received": {
+                        "type": "boolean"
+                      },
+                      "received_date": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria uma nova conta a pagar ou a receber.",
+        "description": "Cria uma nova transação financeira (conta a pagar ou a receber) para o usuário.",
+        "tags": [
+          "Financial Transactions"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "payable",
+                "receivable"
+              ]
+            },
+            "required": true,
+            "description": "O tipo de transação a ser criada."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description",
+                  "amount",
+                  "due_date"
+                ],
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição da transação."
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "O valor da transação."
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de vencimento."
+                  },
+                  "paid_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de pagamento (para contas a pagar)."
+                  },
+                  "is_paid": {
+                    "type": "boolean",
+                    "description": "Status de pagamento."
+                  },
+                  "received_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Data de recebimento (para contas a receber)."
+                  },
+                  "is_received": {
+                    "type": "boolean",
+                    "description": "Status de recebimento."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transação criada com sucesso."
+          },
+          "400": {
+            "description": "Requisição inválida."
+          },
+          "401": {
+            "description": "Não autorizado."
           },
           "500": {
             "description": "Erro interno do servidor."
@@ -1081,64 +1139,6 @@
           },
           "401": {
             "description": "Não autorizado."
-          },
-          "500": {
-            "description": "Erro interno do servidor."
-          }
-        }
-      }
-    },
-    "/year-end-closing": {
-      "post": {
-        "summary": "Executa o fechamento de exercício.",
-        "description": "Processa os lançamentos contábeis para o encerramento do ano fiscal, calcula o resultado (lucro ou prejuízo) e prepara as contas para o próximo período.",
-        "tags": [
-          "Year-End Closing"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "closingDate"
-                ],
-                "properties": {
-                  "closingDate": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "A data final para o fechamento do exercício (YYYY-MM-DD)."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Fechamento de exercício realizado com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Data de fechamento não fornecida."
-          },
-          "401": {
-            "description": "Não autorizado."
-          },
-          "405": {
-            "description": "Método não permitido."
           },
           "500": {
             "description": "Erro interno do servidor."
