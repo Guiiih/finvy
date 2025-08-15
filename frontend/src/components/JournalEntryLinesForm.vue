@@ -4,9 +4,9 @@ import { useAccountStore } from '@/stores/accountStore'
 import type { EntryLine, Product } from '@/types/index'
 
 interface SelectedProductData {
-  product: Product;
-  quantity?: number;
-  unitCost?: number;
+  product: Product
+  quantity?: number
+  unitCost?: number
 }
 
 const accountStore = useAccountStore()
@@ -36,9 +36,9 @@ watch(
   () => props.selectedProduct,
   (newProductData) => {
     if (newProductData && newProductData.product) {
-      const product = newProductData.product;
-      const quantity = newProductData.quantity;
-      const unitCost = newProductData.unitCost;
+      const product = newProductData.product
+      const quantity = newProductData.quantity
+      const unitCost = newProductData.unitCost
 
       const lastLine = internalEntryLines.value[internalEntryLines.value.length - 1]
       if (lastLine) {

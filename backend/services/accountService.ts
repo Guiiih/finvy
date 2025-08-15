@@ -52,7 +52,7 @@ export async function getAccounts(
     throw dbError
   }
 
-  return { data: data.map(acc => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
+  return { data: data.map((acc) => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
 }
 
 export async function getAccountsByType(
@@ -83,11 +83,16 @@ export async function getAccountsByType(
     throw dbError
   }
 
-  return { data: data.map(acc => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
+  return { data: data.map((acc) => ({ ...acc, balance: 0 })) as Account[], count: count || 0 }
 }
 
 export async function createAccount(
-  accountData: { name: string; parent_account_id?: string | null; type?: Account['type']; fiscal_operation_type?: string | null },
+  accountData: {
+    name: string
+    parent_account_id?: string | null
+    type?: Account['type']
+    fiscal_operation_type?: string | null
+  },
   organization_id: string,
   active_accounting_period_id: string,
   token: string,
@@ -112,7 +117,10 @@ export async function createAccount(
       .single()
 
     if (parentError || !fetchedParent) {
-      logger.error({ parentError }, 'Accounts Service: Erro ao buscar conta pai para determinar tipo:')
+      logger.error(
+        { parentError },
+        'Accounts Service: Erro ao buscar conta pai para determinar tipo:',
+      )
       throw new Error('Conta pai não encontrada ou inacessível para determinar o tipo.')
     }
     parentAccount = fetchedParent as Account
@@ -130,7 +138,7 @@ export async function createAccount(
     if (topLevelError) {
       logger.error(
         { topLevelError },
-        'Accounts Service: Erro ao buscar contas de nível superior para determinar tipo:'
+        'Accounts Service: Erro ao buscar contas de nível superior para determinar tipo:',
       )
       throw topLevelError
     }
@@ -156,7 +164,10 @@ export async function createAccount(
         .single()
 
       if (parentError || !fetchedParent) {
-        logger.error({ parentError }, 'Accounts Service: Erro ao buscar conta pai para gerar código:')
+        logger.error(
+          { parentError },
+          'Accounts Service: Erro ao buscar conta pai para gerar código:',
+        )
         throw new Error('Conta pai não encontrada ou inacessível para gerar o código.')
       }
       parentAccount = fetchedParent as Account
@@ -171,7 +182,10 @@ export async function createAccount(
       .order('code', { ascending: false })
 
     if (childrenError) {
-      logger.error({ childrenError }, 'Accounts Service: Erro ao buscar contas filhas para gerar código:')
+      logger.error(
+        { childrenError },
+        'Accounts Service: Erro ao buscar contas filhas para gerar código:',
+      )
       throw childrenError
     }
 
@@ -195,7 +209,7 @@ export async function createAccount(
     if (topLevelError) {
       logger.error(
         { topLevelError },
-        'Accounts Service: Erro ao buscar contas de nível superior para gerar código:'
+        'Accounts Service: Erro ao buscar contas de nível superior para gerar código:',
       )
       throw topLevelError
     }
@@ -460,7 +474,10 @@ export async function getOrCreateAccount(
           )
         }
       } catch (parentProcessError) {
-        logger.error({ parentProcessError }, `[AccountService] Erro ao processar conta pai "${geminiResponse.parentAccountName}":`)
+        logger.error(
+          { parentProcessError },
+          `[AccountService] Erro ao processar conta pai "${geminiResponse.parentAccountName}":`,
+        )
         logger.warn(
           `[AccountService] Criando conta "${accountName}" sem pai devido a erro no processamento da conta pai.`,
         )
@@ -471,7 +488,10 @@ export async function getOrCreateAccount(
       )
     }
   } catch (error) {
-    logger.error({ error }, `[AccountService] Erro ao pedir sugestão de tipo ou conta pai para "${accountName}" ao Gemini:`)
+    logger.error(
+      { error },
+      `[AccountService] Erro ao pedir sugestão de tipo ou conta pai para "${accountName}" ao Gemini:`,
+    )
     logger.error({ error }, 'Erro detalhado do Gemini:')
     logger.warn(
       `[AccountService] Usando tipo padrão 'asset' e sem conta pai para a conta "${accountName}" devido a erro na sugestão do Gemini.`,

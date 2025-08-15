@@ -1,48 +1,24 @@
 <script setup lang="ts">
 import Card from 'primevue/card'
-import { ref, onMounted } from 'vue'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { computed } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reportStore = useReportStore()
 
-// TODO: Definir a estrutura de dados para o relatório de estoque
-const inventoryData = ref(null)
-
-// TODO: Implementar a busca de dados reais da API
-const fetchInventoryData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // const response = await api.get('/reports/inventory', { params: { period: 'YYYY-MM' } });
-    // inventoryData.value = response.data;
-
-    // Simulando uma chamada de API com dados mocados (ou a ausência deles)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    inventoryData.value = null // Simula que nenhum dado foi encontrado
-  } catch (err) {
-    error.value = 'Falha ao buscar os dados do relatório de estoque.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchInventoryData)
+const inventoryData = computed(() => reportStore.inventory)
 </script>
 
 <template>
   <Card>
     <template #title>Relatório de Estoque</template>
     <template #content>
-      <div v-if="loading" class="text-center p-8">
+      <div v-if="reportStore.loading" class="text-center p-8">
         <i class="pi pi-spin pi-spinner text-5xl text-surface-400"></i>
         <p class="mt-4 text-xl text-surface-500">Carregando dados do estoque...</p>
       </div>
-      <div v-else-if="error" class="text-center p-8">
+      <div v-else-if="reportStore.error" class="text-center p-8">
         <i class="pi pi-exclamation-triangle text-5xl text-red-500"></i>
-        <p class="mt-4 text-xl text-red-500">{{ error }}</p>
+        <p class="mt-4 text-xl text-red-500">{{ reportStore.error }}</p>
       </div>
       <div v-else-if="!inventoryData" class="text-center p-8">
         <i class="pi pi-inbox text-5xl text-surface-400"></i>

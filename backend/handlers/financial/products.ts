@@ -1,7 +1,7 @@
 import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
-    getSupabaseClient,
+  getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
 } from '../../utils/supabaseClient.js'
@@ -34,9 +34,12 @@ export default async function handler(
       // No cache for paginated results, as cache key would be too granular
       const { data, count } = await userSupabase
         .from('products')
-        .select('id, name, description, ncm, unit_cost, organization_id, accounting_period_id, product_service_type, default_cfop_purchase, default_cfop_sale', {
-          count: 'exact',
-        })
+        .select(
+          'id, name, description, ncm, unit_cost, organization_id, accounting_period_id, product_service_type, default_cfop_purchase, default_cfop_sale',
+          {
+            count: 'exact',
+          },
+        )
         .eq('organization_id', organization_id)
         .eq('accounting_period_id', active_accounting_period_id)
         .order('name', { ascending: true })
@@ -115,7 +118,16 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const { name, description, ncm, sku, category, product_service_type, default_cfop_purchase, default_cfop_sale } = parsedBody.data
+      const {
+        name,
+        description,
+        ncm,
+        sku,
+        category,
+        product_service_type,
+        default_cfop_purchase,
+        default_cfop_sale,
+      } = parsedBody.data
 
       const { data, error: dbError } = await userSupabase
         .from('products')

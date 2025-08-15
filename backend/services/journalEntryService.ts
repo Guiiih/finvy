@@ -212,7 +212,10 @@ export async function deleteJournalEntry(
   })
 
   if (dbError) {
-    logger.error({ dbError }, `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`)
+    logger.error(
+      { dbError },
+      `Journal Entries Service: Erro ao deletar lançamento principal ${id} via RPC:`,
+    )
     throw dbError
   }
 
@@ -259,7 +262,10 @@ export async function checkDoubleEntryBalance(
 
     return isBalanced
   } catch (error) {
-    logger.error(error, `Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`)
+    logger.error(
+      error,
+      `Unexpected error in checkDoubleEntryBalance for journal entry ${journal_entry_id}:`,
+    )
     return false
   }
 }
@@ -274,15 +280,21 @@ export async function bulkDeleteJournalEntries(
   const userSupabase = getSupabaseClient(token)
 
   try {
-    const { data, error: dbError } = await userSupabase.rpc('delete_multiple_journal_entries_and_lines', {
-      p_journal_entry_ids: ids,
-      p_organization_id: organization_id,
-      p_accounting_period_id: active_accounting_period_id,
-      p_user_id: user_id,
-    })
+    const { data, error: dbError } = await userSupabase.rpc(
+      'delete_multiple_journal_entries_and_lines',
+      {
+        p_journal_entry_ids: ids,
+        p_organization_id: organization_id,
+        p_accounting_period_id: active_accounting_period_id,
+        p_user_id: user_id,
+      },
+    )
 
     if (dbError) {
-      logger.error({ dbError }, `Journal Entries Service: Erro ao deletar múltiplos lançamentos via RPC:`)
+      logger.error(
+        { dbError },
+        `Journal Entries Service: Erro ao deletar múltiplos lançamentos via RPC:`,
+      )
       throw dbError
     }
 
@@ -311,7 +323,10 @@ export async function bulkUpdateJournalEntryStatus(
       .eq('accounting_period_id', active_accounting_period_id)
 
     if (dbError) {
-      logger.error({ dbError }, `Journal Entries Service: Erro ao atualizar status de múltiplos lançamentos:`)
+      logger.error(
+        { dbError },
+        `Journal Entries Service: Erro ao atualizar status de múltiplos lançamentos:`,
+      )
       throw dbError
     }
 

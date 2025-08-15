@@ -33,7 +33,6 @@ const searchTerm = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-
 const op = ref()
 
 const selectedStatus = ref(null)
@@ -58,8 +57,6 @@ const advancedFilters = ref({
 
 const showBulkActionsModal = ref(false)
 const selectedEntries = ref<string[]>([])
-
-
 
 watch(selectedStatus, (newStatus) => {
   fetchEntriesWithFilters(
@@ -123,8 +120,6 @@ function calculateTotal(lines: JournalEntryLine[], type: 'debit' | 'credit'): nu
   return lines.reduce((sum, line) => (line.type === type ? sum + (line.amount || 0) : sum), 0)
 }
 
-
-
 function toggleDetails(entry: JournalEntry) {
   viewingEntry.value = entry
   showViewModal.value = true
@@ -160,8 +155,6 @@ async function handleDuplicate(entry: JournalEntry) {
     toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
   }
 }
-
-
 
 async function fetchEntriesWithFilters(
   page: number,
@@ -303,12 +296,7 @@ onMounted(async () => {
           </span>
         </div>
         <div class="flex gap-2">
-          <Button
-            size="small"
-            severity="secondary"
-            outlined
-            @click="showBulkActionsModal = true"
-          >
+          <Button size="small" severity="secondary" outlined @click="showBulkActionsModal = true">
             <i class="pi pi-ellipsis-v mr-2"></i>
             Ações em Lote
           </Button>
@@ -397,9 +385,12 @@ onMounted(async () => {
           class="hidden md:grid grid-cols-12 gap-4 p-4 font-bold text-surface-400 border border-surface-200 uppercase text-sm"
         >
           <div class="col-span-2 flex items-center">
-             <Checkbox
+            <Checkbox
               :binary="true"
-              :modelValue="selectedEntries.length === journalEntryStore.journalEntries.length && journalEntryStore.journalEntries.length > 0"
+              :modelValue="
+                selectedEntries.length === journalEntryStore.journalEntries.length &&
+                journalEntryStore.journalEntries.length > 0
+              "
               @change="handleSelectAll"
             />
             <span class="ml-3">Data</span>
@@ -424,8 +415,12 @@ onMounted(async () => {
             <div class="md:col-span-2"><Skeleton height="0.75rem" width="90%" /></div>
             <div class="md:col-span-4"><Skeleton height="0.75rem" width="95%" /></div>
             <div class="md:col-span-2"><Skeleton height="0.75rem" width="60%" /></div>
-            <div class="md:col-span-1 flex justify-center items-center"><Skeleton shape="circle" size="1rem" /></div>
-            <div class="md:col-span-1 flex justify-center items-center"><Skeleton shape="circle" size="1rem" /></div>
+            <div class="md:col-span-1 flex justify-center items-center">
+              <Skeleton shape="circle" size="1rem" />
+            </div>
+            <div class="md:col-span-1 flex justify-center items-center">
+              <Skeleton shape="circle" size="1rem" />
+            </div>
           </div>
         </div>
         <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
@@ -455,7 +450,9 @@ onMounted(async () => {
                   @update:modelValue="(checked) => handleSelectEntry(entry.id, checked)"
                   @click.stop
                 />
-                <span class="ml-3 font-mono text-surface-700">{{ formatDateToYYYYMMDD(entry.entry_date) }}</span>
+                <span class="ml-3 font-mono text-surface-700">{{
+                  formatDateToYYYYMMDD(entry.entry_date)
+                }}</span>
               </div>
               <div class="md:col-span-2 text-surface-800">{{ entry.reference }}</div>
               <div class="md:col-span-4 text-surface-800">{{ entry.description }}</div>
@@ -485,8 +482,6 @@ onMounted(async () => {
                 </button>
               </div>
             </div>
-
-            
           </div>
         </div>
       </div>

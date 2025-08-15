@@ -11,16 +11,15 @@ import { useToast } from 'primevue/usetoast'
 import type { FiscalOperationData, TaxData, InferredOperationTypeDetails } from '@/types/index'
 import { OperationType } from '@backendTypes/tax'
 
-
 const operationTypeOptions = computed(() => {
-  return Object.values(OperationType).map(value => ({
+  return Object.values(OperationType).map((value) => ({
     label: value.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-    value: value
+    value: value,
   }))
 })
 
 const props = defineProps<{
-  fiscalOperationData: FiscalOperationData,
+  fiscalOperationData: FiscalOperationData
   inferredOperationTypeDetails: InferredOperationTypeDetails
 }>()
 
@@ -59,16 +58,38 @@ const cfopOptions = [
   { label: '1403 - Compra para industrialização', value: '1403' },
   { label: '5101 - Venda de produção do estabelecimento', value: '5101' },
   { label: '5102 - Venda de mercadoria adquirida ou recebida de terceiros', value: '5102' },
-  { label: '5401 - Venda de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária', value: '5401' },
-  { label: '5403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária', value: '5403' },
-  { label: '5405 - Venda de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária, na condição de contribuinte substituído', value: '5405' },
-  { label: '6102 - Venda de mercadoria adquirida ou recebida de terceiros (interestadual)', value: '6102' },
-  { label: '6403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária (interestadual)', value: '6403' },
+  {
+    label:
+      '5401 - Venda de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária',
+    value: '5401',
+  },
+  {
+    label:
+      '5403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária',
+    value: '5403',
+  },
+  {
+    label:
+      '5405 - Venda de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária, na condição de contribuinte substituído',
+    value: '5405',
+  },
+  {
+    label: '6102 - Venda de mercadoria adquirida ou recebida de terceiros (interestadual)',
+    value: '6102',
+  },
+  {
+    label:
+      '6403 - Venda de mercadoria adquirida ou recebida de terceiros, sujeita ao regime de substituição tributária (interestadual)',
+    value: '6403',
+  },
 ]
 
-function debounce<T extends (...args: unknown[]) => unknown>(func: T, delay: number): (...args: Parameters<T>) => void {
+function debounce<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  delay: number,
+): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout>
-  return function(this: unknown, ...args: Parameters<T>) {
+  return function (this: unknown, ...args: Parameters<T>) {
     clearTimeout(timeout)
     timeout = setTimeout(() => func.apply(this, args), delay)
   }
@@ -76,9 +97,12 @@ function debounce<T extends (...args: unknown[]) => unknown>(func: T, delay: num
 
 const calculateTaxes = async () => {
   validationErrors.value = []
-  if (!localFiscalOperationData.value.productServiceType) validationErrors.value.push('Tipo de Produto/Serviço é obrigatório.')
-  if (!localFiscalOperationData.value.ufOrigin) validationErrors.value.push('UF de origem é obrigatória.')
-  if (!localFiscalOperationData.value.ufDestination) validationErrors.value.push('UF de destino é obrigatória.')
+  if (!localFiscalOperationData.value.productServiceType)
+    validationErrors.value.push('Tipo de Produto/Serviço é obrigatório.')
+  if (!localFiscalOperationData.value.ufOrigin)
+    validationErrors.value.push('UF de origem é obrigatória.')
+  if (!localFiscalOperationData.value.ufDestination)
+    validationErrors.value.push('UF de destino é obrigatória.')
   if (!localFiscalOperationData.value.cfop) validationErrors.value.push('CFOP é obrigatório.')
 
   if (validationErrors.value.length > 0) {
@@ -88,8 +112,14 @@ const calculateTaxes = async () => {
 
   isLoading.value = true
   try {
-    const response = await api.post<{ calculatedTaxes: TaxData }, FiscalOperationData>('/calculate-fiscal-taxes', localFiscalOperationData.value)
-    emit('update:fiscalOperationData', { ...localFiscalOperationData.value, taxData: response.calculatedTaxes })
+    const response = await api.post<{ calculatedTaxes: TaxData }, FiscalOperationData>(
+      '/calculate-fiscal-taxes',
+      localFiscalOperationData.value,
+    )
+    emit('update:fiscalOperationData', {
+      ...localFiscalOperationData.value,
+      taxData: response.calculatedTaxes,
+    })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro ao calcular impostos.'
     toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
@@ -107,9 +137,8 @@ watch(
     emit('update:fiscalOperationData', newValue)
     debouncedCalculateTaxes()
   },
-  { deep: true }
+  { deep: true },
 )
-
 </script>
 
 <template>
@@ -142,11 +171,8 @@ watch(
           Altere os dados para simular o cálculo de impostos em tempo real.
         </p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
           <div>
-            <label
-              for="productServiceType"
-              class="block text-sm font-medium text-surface-700 mb-1"
+            <label for="productServiceType" class="block text-sm font-medium text-surface-700 mb-1"
               >Tipo de Produto/Serviço *</label
             >
             <Dropdown
@@ -158,15 +184,13 @@ watch(
             />
           </div>
           <div>
-            <label
-              for="operationType"
-              class="block text-sm font-medium text-surface-700 mb-1"
+            <label for="operationType" class="block text-sm font-medium text-surface-700 mb-1"
               >Tipo de Operação Fiscal *</label
             >
             <Dropdown
               id="operationType"
               v-model="localFiscalOperationData.operationType"
-                            :options="operationTypeOptions"
+              :options="operationTypeOptions"
               optionLabel="label"
               optionValue="value"
               placeholder="Selecione o tipo"
@@ -174,7 +198,10 @@ watch(
               :disabled="inferredOperationTypeDetails.confidence === 'high'"
             />
             <Message
-              v-if="inferredOperationTypeDetails.confidence === 'ambiguous' || inferredOperationTypeDetails.confidence === 'low'"
+              v-if="
+                inferredOperationTypeDetails.confidence === 'ambiguous' ||
+                inferredOperationTypeDetails.confidence === 'low'
+              "
               severity="warn"
               :closable="false"
               class="mt-2"
@@ -182,8 +209,8 @@ watch(
               <div class="flex items-center">
                 <i class="pi pi-exclamation-triangle mr-2"></i>
                 <span>
-                  A inferência do tipo de operação não é 100% confiável.
-                  Por favor, revise e ajuste se necessário.
+                  A inferência do tipo de operação não é 100% confiável. Por favor, revise e ajuste
+                  se necessário.
                 </span>
               </div>
             </Message>
@@ -233,7 +260,6 @@ watch(
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          
           <div>
             <label for="freight" class="block text-sm font-medium text-surface-700 mb-1"
               ><i class="pi pi-truck mr-1"></i> Frete</label
@@ -286,12 +312,13 @@ watch(
           </div>
           <div class="flex items-center gap-2">
             <InputSwitch v-model="localFiscalOperationData.ipiIncides" id="ipiIncides" />
-            <label for="ipiIncides" class="text-sm font-medium text-surface-700"
-              >Incide IPI</label
-            >
+            <label for="ipiIncides" class="text-sm font-medium text-surface-700">Incide IPI</label>
           </div>
           <div class="flex items-center gap-2">
-            <InputSwitch v-model="localFiscalOperationData.industrialOperation" id="industrialOperation" />
+            <InputSwitch
+              v-model="localFiscalOperationData.industrialOperation"
+              id="industrialOperation"
+            />
             <label for="industrialOperation" class="text-sm font-medium text-surface-700"
               >Operação Industrial</label
             >
@@ -306,37 +333,63 @@ watch(
           </Message>
         </div>
 
-        <div v-if="localFiscalOperationData.taxData && !isLoading && validationErrors.length === 0" class="mt-6 pt-6 border-t border-surface-200">
+        <div
+          v-if="localFiscalOperationData.taxData && !isLoading && validationErrors.length === 0"
+          class="mt-6 pt-6 border-t border-surface-200"
+        >
           <h5 class="font-medium mb-4 flex items-center gap-2">
             <i class="pi pi-calculator"></i> Impostos Calculados (Simulação)
           </h5>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-surface-700">ICMS:</span>
-              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_icms_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+              <span class="text-sm text-surface-900">{{
+                localFiscalOperationData.taxData.calculated_icms_value.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-surface-700">IPI:</span>
-              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_ipi_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+              <span class="text-sm text-surface-900">{{
+                localFiscalOperationData.taxData.calculated_ipi_value.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-surface-700">PIS:</span>
-              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_pis_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+              <span class="text-sm text-surface-900">{{
+                localFiscalOperationData.taxData.calculated_pis_value.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-surface-700">COFINS:</span>
-              <span class="text-sm text-surface-900">{{ localFiscalOperationData.taxData.calculated_cofins_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+              <span class="text-sm text-surface-900">{{
+                localFiscalOperationData.taxData.calculated_cofins_value.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-surface-700">Total Líquido:</span>
-              <span class="text-sm font-bold text-surface-900">{{ localFiscalOperationData.taxData.final_total_net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</span>
+              <span class="text-sm font-bold text-surface-900">{{
+                localFiscalOperationData.taxData.final_total_net.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })
+              }}</span>
             </div>
           </div>
         </div>
       </template>
     </Card>
-
-    
 
     <!-- Seções de impostos (vendas, federais, retenções) podem ser adicionadas aqui, se necessário -->
     <!-- Por enquanto, o foco é na entrada de dados da operação fiscal -->

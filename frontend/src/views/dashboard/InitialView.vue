@@ -16,9 +16,13 @@ const endDate = ref('')
 const userName = ref('Usuário')
 const organizationName = ref('Sua Organização')
 
-const totalAtivo = computed(() => reportStore.balanceSheetData.totalDoAtivo)
-const lucroLiquido = computed(() => reportStore.dreData.lucroLiquido)
-const totalPassivo = computed(() => reportStore.balanceSheetData.totalDoPassivo)
+const totalAtivo = computed(() => reportStore.balanceSheet?.summary.totalAssets || 0)
+const lucroLiquido = computed(() => reportStore.incomeStatement?.summary.netIncome || 0)
+const totalPassivo = computed(
+  () =>
+    (reportStore.balanceSheet?.summary.composition.currentLiabilities || 0) +
+    (reportStore.balanceSheet?.summary.composition.nonCurrentLiabilities || 0),
+)
 
 const chartData = ref({})
 const chartOptions = ref({})

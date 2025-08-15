@@ -209,8 +209,8 @@ function getHistoryIcon(action: string): string {
 }
 
 interface HistoryDetails {
-  old_status?: string;
-  new_status?: string;
+  old_status?: string
+  new_status?: string
 }
 
 function formatHistoryTitle(action: string, details: HistoryDetails): string {
@@ -404,7 +404,10 @@ function formatHistoryTitle(action: string, details: HistoryDetails): string {
               </div>
             </div>
           </div>
-          <div v-else class="flex flex-col items-center justify-center p-8 text-center text-surface-500">
+          <div
+            v-else
+            class="flex flex-col items-center justify-center p-8 text-center text-surface-500"
+          >
             <i class="pi pi-box text-4xl mb-3 text-surface-400"></i>
             <p>Nenhuma movimentação de produto</p>
           </div>
@@ -428,7 +431,10 @@ function formatHistoryTitle(action: string, details: HistoryDetails): string {
               <p class="font-mono text-lg text-surface-800">{{ formatCurrency(tax.amount) }}</p>
             </div>
           </div>
-          <div v-else class="flex flex-col items-center justify-center p-8 text-center text-surface-500">
+          <div
+            v-else
+            class="flex flex-col items-center justify-center p-8 text-center text-surface-500"
+          >
             <i class="pi pi-receipt text-4xl mb-3 text-surface-400"></i>
             <p>Nenhum imposto calculado</p>
           </div>
@@ -451,14 +457,20 @@ function formatHistoryTitle(action: string, details: HistoryDetails): string {
             >
               <i :class="['text-xl mr-4', getHistoryIcon(item.action_type)]"></i>
               <div>
-                <p class="font-semibold">{{ formatHistoryTitle(item.action_type, item.details) }}</p>
+                <p class="font-semibold">
+                  {{ formatHistoryTitle(item.action_type, item.details) }}
+                </p>
                 <p class="text-sm text-surface-500">
-                  {{ new Date(item.changed_at).toLocaleString('pt-BR') }} - {{ item.changed_by_name || 'Sistema' }}
+                  {{ new Date(item.changed_at).toLocaleString('pt-BR') }} -
+                  {{ item.changed_by_name || 'Sistema' }}
                 </p>
               </div>
             </div>
           </div>
-          <div v-else class="flex flex-col items-center justify-center p-8 text-center text-surface-500">
+          <div
+            v-else
+            class="flex flex-col items-center justify-center p-8 text-center text-surface-500"
+          >
             <i class="pi pi-history text-4xl mb-3 text-surface-400"></i>
             <p>Nenhum histórico de alterações encontrado.</p>
           </div>
@@ -480,12 +492,7 @@ function formatHistoryTitle(action: string, details: HistoryDetails): string {
           @click="handleDuplicate"
           class="p-button-outlined p-button-secondary"
         />
-        <Button
-          label="Excluir"
-          icon="pi pi-trash"
-          @click="handleDelete"
-          class="p-button-danger"
-        />
+        <Button label="Excluir" icon="pi pi-trash" @click="handleDelete" class="p-button-danger" />
         <Button label="Editar" icon="pi pi-pencil" @click="handleEdit" />
       </div>
     </template>

@@ -1,7 +1,7 @@
 import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
-    handleErrorResponse,
+  handleErrorResponse,
   getUserOrganizationAndPeriod,
   getUserProfileInfo,
 } from '../../utils/supabaseClient.js'
@@ -106,9 +106,11 @@ export default async function handler(
     if (req.method === 'POST') {
       const requestPath = req.url?.split('?')[0]
       if (requestPath === '/api/journal-entries/bulk-delete') {
-        logger.info('Journal Entries Handler: Processando POST para exclusão em massa de lançamentos.')
+        logger.info(
+          'Journal Entries Handler: Processando POST para exclusão em massa de lançamentos.',
+        )
         const { ids } = req.body
-        if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string')) {
+        if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {
           return handleErrorResponse(res, 400, 'IDs inválidos fornecidos para exclusão em massa.')
         }
 
@@ -131,10 +133,20 @@ export default async function handler(
         logger.info(`Journal Entries Handler: ${ids.length} lançamentos deletados com sucesso.`)
         return res.status(200).json({ message: `${ids.length} lançamentos deletados com sucesso.` })
       } else if (requestPath === '/api/journal-entries/bulk-update-status') {
-        logger.info('Journal Entries Handler: Processando POST para atualização em massa de status de lançamentos.')
+        logger.info(
+          'Journal Entries Handler: Processando POST para atualização em massa de status de lançamentos.',
+        )
         const { ids, status } = req.body
-        if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string') || typeof status !== 'string') {
-          return handleErrorResponse(res, 400, 'IDs ou status inválidos fornecidos para atualização em massa.')
+        if (
+          !Array.isArray(ids) ||
+          ids.some((id) => typeof id !== 'string') ||
+          typeof status !== 'string'
+        ) {
+          return handleErrorResponse(
+            res,
+            400,
+            'IDs ou status inválidos fornecidos para atualização em massa.',
+          )
         }
 
         const updated = await bulkUpdateJournalEntryStatus(
@@ -146,15 +158,26 @@ export default async function handler(
         )
 
         if (!updated) {
-          return handleErrorResponse(res, 500, 'Falha ao atualizar o status de um ou mais lançamentos.')
+          return handleErrorResponse(
+            res,
+            500,
+            'Falha ao atualizar o status de um ou mais lançamentos.',
+          )
         }
-        logger.info(`Journal Entries Handler: Status de ${ids.length} lançamentos atualizado para ${status}.`)
-        return res.status(200).json({ message: `Status de ${ids.length} lançamentos atualizado para ${status}.` })
+        logger.info(
+          `Journal Entries Handler: Status de ${ids.length} lançamentos atualizado para ${status}.`,
+        )
+        return res
+          .status(200)
+          .json({ message: `Status de ${ids.length} lançamentos atualizado para ${status}.` })
       } else {
         logger.info('Journal Entries Handler: Processando POST para criar lançamento.')
         const parsedBody = createJournalEntrySchema.safeParse(req.body)
         if (!parsedBody.success) {
-          logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no POST:')
+          logger.error(
+            { errors: parsedBody.error.errors },
+            'Journal Entries Handler: Erro de validação no POST:',
+          )
           return handleErrorResponse(
             res,
             400,
@@ -256,7 +279,10 @@ export default async function handler(
       logger.info(`Journal Entries Handler: Processando PUT para atualizar lançamento ${id}.`)
       const parsedBody = updateJournalEntrySchema.safeParse(req.body)
       if (!parsedBody.success) {
-        logger.error({ errors: parsedBody.error.errors }, 'Journal Entries Handler: Erro de validação no PUT:')
+        logger.error(
+          { errors: parsedBody.error.errors },
+          'Journal Entries Handler: Erro de validação no PUT:',
+        )
         return handleErrorResponse(
           res,
           400,

@@ -34,9 +34,9 @@ export interface Product {
   currentStock?: number // Adicionado para o estoque atual
   unitType?: string // Adicionado para o tipo de unidade
   costingMethod?: 'average' | 'fifo' | 'lifo' // Adicionado para o método de custeio
-  product_service_type?: 'Produto' | 'Serviço';
-  default_cfop_purchase?: string;
-  default_cfop_sale?: string;
+  product_service_type?: 'Produto' | 'Serviço'
+  default_cfop_purchase?: string
+  default_cfop_sale?: string
 }
 
 export type EntryType = 'debit' | 'credit'
@@ -247,8 +247,8 @@ export interface TaxSimulationResult {
 }
 
 export interface JournalEntryHistoryDetails {
-  old_status?: string;
-  new_status?: string;
+  old_status?: string
+  new_status?: string
 }
 
 export interface JournalEntryHistory {
@@ -256,55 +256,57 @@ export interface JournalEntryHistory {
   journal_entry_id: string
   user_id?: string
   action_type: string
-  details: JournalEntryHistoryDetails;
+  details: JournalEntryHistoryDetails
   changed_at: string
   changed_by_name?: string
 }
 
 export interface TaxData {
-  calculated_icms_value: number;
-  calculated_ipi_value: number;
-  calculated_pis_value: number;
-  calculated_cofins_value: number;
-  calculated_irrf_value: number;
-  calculated_csll_value: number;
-  calculated_inss_value: number;
-  calculated_icms_st_value: number;
-  final_total_net: number;
+  calculated_icms_value: number
+  calculated_ipi_value: number
+  calculated_pis_value: number
+  calculated_cofins_value: number
+  calculated_irrf_value: number
+  calculated_csll_value: number
+  calculated_inss_value: number
+  calculated_icms_st_value: number
+  final_total_net: number
 }
 
 export interface FiscalOperationData {
-  operationType: OperationType | null;
-  productServiceType: 'Produto' | 'Serviço' | null;
-  ufOrigin: string | null;
-  ufDestination: string | null;
-  cfop: string | null;
-  totalAmount: number;
-  freight: number;
-  insurance: number;
-  discount: number;
-  icmsSt: boolean;
-  ipiIncides: boolean;
-  industrialOperation: boolean;
-  taxData?: TaxData;
+  operationType: OperationType | null
+  productServiceType: 'Produto' | 'Serviço' | null
+  ufOrigin: string | null
+  ufDestination: string | null
+  cfop: string | null
+  totalAmount: number
+  freight: number
+  insurance: number
+  discount: number
+  icmsSt: boolean
+  ipiIncides: boolean
+  industrialOperation: boolean
+  taxData?: TaxData
 }
 
 import { OperationType } from '@backendTypes/tax'
 
 export interface InferredOperationTypeDetails {
-  type: OperationType | null;
-  confidence: 'high' | 'medium' | 'low' | 'ambiguous';
+  type: OperationType | null
+  confidence: 'high' | 'medium' | 'low' | 'ambiguous'
 }
 
 export interface TaxRule {
-  id: string;
-  uf_origin: string;
-  uf_destination: string;
-  ncm_pattern?: string;
-  tax_type: string;
-  rate: number;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  organization_id?: string;
+  id: string
+  uf_origin: string
+  uf_destination: string
+  ncm_pattern?: string
+  tax_type: string
+  rate: number
+  description?: string
+  start_date?: string
+  end_date?: string
+  organization_id?: string
 }
+
+export * from './reports'

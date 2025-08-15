@@ -186,7 +186,6 @@ onMounted(async () => {
 <template>
   <div>
     <div class="max-w-7xl mx-auto">
-
       <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="relative flex-grow">
           <input

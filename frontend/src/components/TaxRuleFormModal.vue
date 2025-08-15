@@ -1,34 +1,37 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
+import { ref, watch } from 'vue'
+import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
 
-import { useTaxRuleStore } from '@/stores/taxRuleStore';
-import type { TaxRule } from '@/types';
-import { Form, Field, ErrorMessage } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import { z } from 'zod';
-import { useToast } from 'primevue/usetoast';
+import { useTaxRuleStore } from '@/stores/taxRuleStore'
+import type { TaxRule } from '@/types'
+import { Form, Field, ErrorMessage } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
 
-const store = useTaxRuleStore();
-const toast = useToast();
+const store = useTaxRuleStore()
+const toast = useToast()
 
 const props = defineProps<{
-  visible: boolean;
-  editingRule: TaxRule | null;
-}>();
+  visible: boolean
+  editingRule: TaxRule | null
+}>()
 
-const emit = defineEmits(['update:visible', 'submitSuccess']);
+const emit = defineEmits(['update:visible', 'submitSuccess'])
 
-const displayModal = ref(props.visible);
+const displayModal = ref(props.visible)
 
-watch(() => props.visible, (value) => {
-  displayModal.value = value;
-});
+watch(
+  () => props.visible,
+  (value) => {
+    displayModal.value = value
+  },
+)
 
 watch(displayModal, (value) => {
-  emit('update:visible', value);
-});
+  emit('update:visible', value)
+})
 
 const schema = toTypedSchema(
   z.object({
@@ -37,31 +40,45 @@ const schema = toTypedSchema(
     ncm_pattern: z.string().optional(),
     tax_type: z.string(),
     rate: z.number(),
-  })
-);
+  }),
+)
 
 async function handleSubmit(values: Partial<TaxRule>, { resetForm }: { resetForm: () => void }) {
   try {
     if (props.editingRule) {
-      await store.updateTaxRule(props.editingRule.id, values);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Regra atualizada com sucesso!', life: 3000 });
+      await store.updateTaxRule(props.editingRule.id, values)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Regra atualizada com sucesso!',
+        life: 3000,
+      })
     } else {
-      await store.addTaxRule(values as Omit<TaxRule, 'id'>);
-      toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Regra criada com sucesso!', life: 3000 });
+      await store.addTaxRule(values as Omit<TaxRule, 'id'>)
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Regra criada com sucesso!',
+        life: 3000,
+      })
     }
-    resetForm();
-    emit('submitSuccess');
-    displayModal.value = false;
+    resetForm()
+    emit('submitSuccess')
+    displayModal.value = false
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Ocorreu um erro.';
-    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 });
+    const message = err instanceof Error ? err.message : 'Ocorreu um erro.'
+    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
   }
 }
-
 </script>
 
 <template>
-  <Dialog v-model:visible="displayModal" modal :header="editingRule ? 'Editar Regra' : 'Nova Regra'" :style="{ width: '50vw' }">
+  <Dialog
+    v-model:visible="displayModal"
+    modal
+    :header="editingRule ? 'Editar Regra' : 'Nova Regra'"
+    :style="{ width: '50vw' }"
+  >
     <div class="p-4">
       <Form @submit="handleSubmit" :validation-schema="schema" :initial-values="editingRule || {}">
         <div class="grid grid-cols-2 gap-4">
@@ -93,7 +110,12 @@ async function handleSubmit(values: Partial<TaxRule>, { resetForm }: { resetForm
         </div>
 
         <div class="flex justify-end gap-2 mt-4">
-          <Button type="button" label="Cancelar" severity="secondary" @click="displayModal = false"></Button>
+          <Button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            @click="displayModal = false"
+          ></Button>
           <Button type="submit" label="Salvar"></Button>
         </div>
       </Form>

@@ -1,7 +1,7 @@
 import logger from '../../utils/logger.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
-    getSupabaseClient,
+  getSupabaseClient,
   handleErrorResponse,
   getUserOrganizationAndPeriod,
 } from '../../utils/supabaseClient.js'
@@ -11,7 +11,7 @@ import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { getTaxSettings } from '../../services/taxSettingService.js'
 import { EntryLine } from '../../types/index.js'
 import { inferOperationType } from '../../services/operationTypeInferenceService.js'
-import { OperationType } from '../../types/tax.js';
+import { OperationType } from '../../types/tax.js'
 
 /**
  * @swagger
@@ -230,7 +230,7 @@ export default async function handler(
           parsedBody.error.errors.map((err) => err.message).join(', '),
         )
       }
-      const { 
+      const {
         journal_entry_id,
         account_id, // This will be the main account (e.g., Clients or Suppliers)
         type, // Adicionado
@@ -250,10 +250,10 @@ export default async function handler(
       } = parsedBody.data
 
       // Infer the operation type
-      const inferredOperationType = await inferOperationType(journal_entry_id, token);
+      const inferredOperationType = await inferOperationType(journal_entry_id, token)
 
-      const saleTypes = [OperationType.VendaMercadorias, OperationType.VendaServicos];
-      const purchaseTypes = [OperationType.CompraMateriaPrima, OperationType.CompraServicos];
+      const saleTypes = [OperationType.VendaMercadorias, OperationType.VendaServicos]
+      const purchaseTypes = [OperationType.CompraMateriaPrima, OperationType.CompraServicos]
 
       const debit = type === 'debit' ? amount : null // Derivado
       const credit = type === 'credit' ? amount : null // Derivado
@@ -266,23 +266,23 @@ export default async function handler(
       let final_total_net = total_net || total_gross || 0
 
       // Usar as alíquotas do frontend se fornecidas, caso contrário, buscar as configurações
-      let effective_icms_rate = icms_rate;
-      let effective_ipi_rate = 0; // IPI não está no taxData do frontend, mas pode vir do produto ou ser calculado
-      let effective_pis_rate = pis_rate;
-      let effective_cofins_rate = cofins_rate;
-      let effective_mva_rate = 0; // MVA não está no taxData do frontend
+      let effective_icms_rate = icms_rate
+      let effective_ipi_rate = 0 // IPI não está no taxData do frontend, mas pode vir do produto ou ser calculado
+      let effective_pis_rate = pis_rate
+      let effective_cofins_rate = cofins_rate
+      let effective_mva_rate = 0 // MVA não está no taxData do frontend
 
       // Obter a data do lançamento para usar nas configurações de impostos
       const { data: journalEntryData, error: journalEntryError } = await getSupabaseClient(token)
         .from('journal_entries')
         .select('entry_date')
         .eq('id', journal_entry_id)
-        .single();
+        .single()
 
       if (journalEntryError || !journalEntryData) {
-        return handleErrorResponse(res, 500, 'Não foi possível obter a data do lançamento.');
+        return handleErrorResponse(res, 500, 'Não foi possível obter a data do lançamento.')
       }
-      const entry_date = journalEntryData.entry_date;
+      const entry_date = journalEntryData.entry_date
 
       if (!effective_icms_rate || !effective_pis_rate || !effective_cofins_rate) {
         const taxSettings = await getTaxSettings(organization_id, token, entry_date)
@@ -293,14 +293,17 @@ export default async function handler(
             'Configurações de impostos não encontradas para a organização.',
           )
         }
-        effective_icms_rate = taxSettings.icms_rate;
-        effective_ipi_rate = taxSettings.ipi_rate;
-        effective_pis_rate = taxSettings.pis_rate;
-        effective_cofins_rate = taxSettings.cofins_rate;
-        effective_mva_rate = taxSettings.mva_rate;
+        effective_icms_rate = taxSettings.icms_rate
+        effective_ipi_rate = taxSettings.ipi_rate
+        effective_pis_rate = taxSettings.pis_rate
+        effective_cofins_rate = taxSettings.cofins_rate
+        effective_mva_rate = taxSettings.mva_rate
       }
 
-      if (inferredOperationType && (saleTypes.includes(inferredOperationType) || purchaseTypes.includes(inferredOperationType))) {
+      if (
+        inferredOperationType &&
+        (saleTypes.includes(inferredOperationType) || purchaseTypes.includes(inferredOperationType))
+      ) {
         const taxResults = await calculateTaxes({
           total_gross,
           icms_rate: effective_icms_rate,
@@ -545,7 +548,7 @@ export default async function handler(
 
         // IRRF Entry (Debit IRRF sobre Faturamento, Credit IRRF a Recolher) - Adicionado
         if (irrf_rate && irrf_rate > 0) {
-          const irrf_value = (total_gross || 0) * (irrf_rate / 100);
+          const irrf_value = (total_gross || 0) * (irrf_rate / 100)
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('IRRF sobre Faturamento'), // Assumindo que existe
@@ -555,7 +558,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: irrfPayableAccount,
@@ -565,12 +568,12 @@ export default async function handler(
             credit: irrf_value,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // CSLL Entry (Debit CSLL sobre Faturamento, Credit CSLL a Recolher) - Adicionado
         if (csll_rate && csll_rate > 0) {
-          const csll_value = (total_gross || 0) * (csll_rate / 100);
+          const csll_value = (total_gross || 0) * (csll_rate / 100)
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('CSLL sobre Faturamento'), // Assumindo que existe
@@ -580,7 +583,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: csllPayableAccount,
@@ -590,12 +593,12 @@ export default async function handler(
             credit: csll_value,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // INSS Entry (Debit INSS sobre Faturamento, Credit INSS a Recolher) - Adicionado
         if (inss_rate && inss_rate > 0) {
-          const inss_value = (total_gross || 0) * (inss_rate / 100);
+          const inss_value = (total_gross || 0) * (inss_rate / 100)
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('INSS sobre Faturamento'), // Assumindo que existe
@@ -605,7 +608,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: inssPayableAccount,
@@ -615,7 +618,7 @@ export default async function handler(
             credit: inss_value,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // CMV Entry (Debit Custo da Mercadoria Vendida, Credit Estoque de Produtos Acabados)
@@ -734,7 +737,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // IPI a Recuperar (Debit)
@@ -748,7 +751,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // PIS a Recuperar (Debit)
@@ -762,7 +765,7 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
 
         // COFINS a Recuperar (Debit)
@@ -776,9 +779,8 @@ export default async function handler(
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
-          });
+          })
         }
-
       } else {
         // Default or other types, for now, just insert the main line
         entryLinesToInsert.push({

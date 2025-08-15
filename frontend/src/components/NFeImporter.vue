@@ -203,7 +203,7 @@ const processFile = async (file: File) => {
       try {
         const response = await api.post<{ message: string; data: NFeExtractedData }, string>(
           '/nfe-import',
-          xmlContent
+          xmlContent,
         )
         extractedData.value = response.data
         toast.add({

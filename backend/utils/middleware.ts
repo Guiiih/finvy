@@ -49,7 +49,10 @@ export function withAuth(handler: ApiHandler) {
       } = await anonSupabase.auth.getUser(token)
 
       if (authError || !user) {
-        logger.error({ message: authError?.message || 'Usuário não encontrado.' }, 'Erro de autenticação:')
+        logger.error(
+          { message: authError?.message || 'Usuário não encontrado.' },
+          'Erro de autenticação:',
+        )
         const status = authError instanceof AuthApiError ? authError.status : 401
         return handleErrorResponse(
           res,
@@ -66,7 +69,10 @@ export function withAuth(handler: ApiHandler) {
         .single()
 
       if (profileError || !profileData) {
-        logger.error({ message: profileError?.message || 'Perfil não encontrado.' }, 'Erro ao buscar perfil do usuário:')
+        logger.error(
+          { message: profileError?.message || 'Perfil não encontrado.' },
+          'Erro ao buscar perfil do usuário:',
+        )
         return handleErrorResponse(res, 500, 'Perfil do usuário não encontrado ou erro ao buscar.')
       }
 

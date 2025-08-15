@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { createAccountSchema, updateAccountSchema, uuidSchema } from '../../utils/schemas.js'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
 import {
-    getAccounts,
+  getAccounts,
   getAccountsByType,
   createAccount,
   updateAccount,

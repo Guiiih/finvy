@@ -71,7 +71,10 @@ const handleBulkAction = async (action: 'delete' | 'approve') => {
         closeDialog()
       } catch (error: unknown) {
         console.error(`Erro ao realizar ação em lote (${action}):`, error)
-        const message = error instanceof Error ? error.message : `Ocorreu um erro ao ${action === 'delete' ? 'excluir' : 'aprovar'} os lançamentos.`
+        const message =
+          error instanceof Error
+            ? error.message
+            : `Ocorreu um erro ao ${action === 'delete' ? 'excluir' : 'aprovar'} os lançamentos.`
         toast.add({
           severity: 'error',
           summary: 'Erro',
@@ -147,10 +150,11 @@ watch(
             </div>
           </div>
         </div>
-
       </div>
 
-      <div class="p-message p-message-warn mt-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+      <div
+        class="p-message p-message-warn mt-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200"
+      >
         <div class="p-message-wrapper flex items-center gap-2">
           <span class="p-message-icon pi pi-exclamation-triangle text-yellow-600 text-lg"></span>
           <div class="p-message-text text-yellow-800">

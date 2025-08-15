@@ -1,64 +1,12 @@
 <script setup lang="ts">
 import Card from 'primevue/card'
 import Chart from 'primevue/chart'
-import { ref, onMounted, reactive, computed } from 'vue'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { ref, computed } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reportStore = useReportStore()
 
-// Estrutura de dados reativa para armazenar os dados do DFC
-interface SummaryData {
-  operational: number
-  investment: number
-  financing: number
-  netCashFlow: number
-}
-
-interface DetailEntry {
-  name: string
-  value: number
-}
-
-interface DetailsData {
-  operational: DetailEntry[]
-  investment: DetailEntry[]
-  financing: DetailEntry[]
-}
-
-interface EvolutionData {
-  labels: string[]
-  inflows: number[]
-  outflows: number[]
-  net: number[]
-}
-
-interface CashFlowReportData {
-  summary: SummaryData
-  details: DetailsData
-  evolution: EvolutionData
-}
-
-const cashFlowData = reactive<CashFlowReportData>({
-  summary: {
-    operational: 0,
-    investment: 0,
-    financing: 0,
-    netCashFlow: 0,
-  },
-  details: {
-    operational: [],
-    investment: [],
-    financing: [],
-  },
-  evolution: {
-    labels: [],
-    inflows: [],
-    outflows: [],
-    net: [],
-  },
-})
+const cashFlowData = computed(() => reportStore.cashFlow)
 
 // Função para formatar valores monetários
 const formatCurrency = (value: number) => {
@@ -68,41 +16,23 @@ const formatCurrency = (value: number) => {
   return value < 0 ? `-${formatted.replace('-', '')}` : formatted
 }
 
-// TODO: Implementar a busca de dados reais da API
-const fetchCashFlowData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // const response = await api.get('/reports/cash-flow', { params: { period: 'YYYY-MM' } });
-    // Object.assign(cashFlowData, response.data);
-    // TODO: Remover esta simulação e descomentar a chamada real da API
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // Object.assign(cashFlowData, response.data);
-  } catch (err) {
-    error.value = 'Falha ao buscar os dados do DFC.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
 // Propriedades computadas para totais e dados do gráfico
 const totalOperational = computed(() =>
-  cashFlowData.details.operational.reduce((sum, item) => sum + item.value, 0),
+  cashFlowData.value?.details.operational.reduce((sum, item) => sum + item.value, 0) || 0,
 )
 const totalInvestment = computed(() =>
-  cashFlowData.details.investment.reduce((sum, item) => sum + item.value, 0),
+  cashFlowData.value?.details.investment.reduce((sum, item) => sum + item.value, 0) || 0,
 )
 const totalFinancing = computed(() =>
-  cashFlowData.details.financing.reduce((sum, item) => sum + item.value, 0),
+  cashFlowData.value?.details.financing.reduce((sum, item) => sum + item.value, 0) || 0,
 )
 
 const evolutionChartData = computed(() => ({
-  labels: cashFlowData.evolution.labels,
+  labels: cashFlowData.value?.evolution.labels,
   datasets: [
     {
       label: 'Entradas',
-      data: cashFlowData.evolution.inflows,
+      data: cashFlowData.value?.evolution.inflows,
       borderColor: '#22C55E',
       backgroundColor: 'rgba(34, 197, 94, 0.2)',
       fill: true,
@@ -110,7 +40,7 @@ const evolutionChartData = computed(() => ({
     },
     {
       label: 'Saídas',
-      data: cashFlowData.evolution.outflows,
+      data: cashFlowData.value?.evolution.outflows,
       borderColor: '#EF4444',
       backgroundColor: 'rgba(239, 68, 68, 0.2)',
       fill: true,
@@ -118,7 +48,7 @@ const evolutionChartData = computed(() => ({
     },
     {
       label: 'Fluxo Líquido',
-      data: cashFlowData.evolution.net,
+      data: cashFlowData.value?.evolution.net,
       borderColor: '#3B82F6',
       fill: false,
       tension: 0.4,
@@ -132,13 +62,10 @@ const evolutionChartOptions = ref({
   plugins: { legend: { position: 'top' } },
   scales: { y: { ticks: { callback: (value: number) => `R$ ${value}K` } } },
 })
-
-// Buscar os dados quando o componente for montado
-onMounted(fetchCashFlowData)
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+  <div v-if="cashFlowData" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
     <Card class="text-center">
       <template #title>Atividades Operacionais</template>
       <template #content>
@@ -185,7 +112,7 @@ onMounted(fetchCashFlowData)
     </Card>
   </div>
 
-  <Card class="mb-6">
+  <Card v-if="cashFlowData" class="mb-6">
     <template #title>Evolução Mensal do Fluxo de Caixa</template>
     <template #content>
       <div class="h-96">
@@ -194,7 +121,7 @@ onMounted(fetchCashFlowData)
     </template>
   </Card>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div v-if="cashFlowData" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <Card>
       <template #title>Atividades Operacionais</template>
       <template #content>

@@ -5,7 +5,7 @@ import { calculateTaxes } from '../../services/taxService.js'
 import { getTaxSettings, getTaxRegimeHistory } from '../../services/taxSettingService.js'
 import { z } from 'zod'
 
-import { OperationType } from '../../types/tax.js';
+import { OperationType } from '../../types/tax.js'
 
 const fiscalOperationSchema = z.object({
   operationType: z.nativeEnum(OperationType).nullable(),
@@ -22,34 +22,41 @@ const fiscalOperationSchema = z.object({
   industrialOperation: z.boolean(),
   transactionDate: z.string().datetime(), // Adicionado
   journalEntryId: z.string().uuid().optional().nullable(), // Adicionado
-});
+})
 
-export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res: VercelResponse) => {
+export const calculateFiscalTaxesHandler = async (
+  req: AuthenticatedRequest,
+  res: VercelResponse,
+) => {
   try {
-    const parsedBody = fiscalOperationSchema.safeParse(req.body);
+    const parsedBody = fiscalOperationSchema.safeParse(req.body)
 
     if (!parsedBody.success) {
       return handleErrorResponse(
         res,
         400,
         parsedBody.error.errors.map((err) => err.message).join(', '),
-      );
+      )
     }
 
-    const fiscalData = parsedBody.data;
+    const fiscalData = parsedBody.data
 
-    const organization_id = req.organizationId; // Assumindo que o middleware adiciona
-    const token = req.token; // Assumindo que o middleware adiciona
+    const organization_id = req.organizationId // Assumindo que o middleware adiciona
+    const token = req.token // Assumindo que o middleware adiciona
 
     if (!organization_id || !token) {
-      return handleErrorResponse(res, 401, 'Dados de autenticação incompletos.');
+      return handleErrorResponse(res, 401, 'Dados de autenticação incompletos.')
     }
 
-    const taxSettings = await getTaxSettings(organization_id, token, fiscalData.transactionDate);
-    const taxRegimeHistory = await getTaxRegimeHistory(organization_id, token);
+    const taxSettings = await getTaxSettings(organization_id, token, fiscalData.transactionDate)
+    const taxRegimeHistory = await getTaxRegimeHistory(organization_id, token)
 
     if (!taxSettings) {
-      return handleErrorResponse(res, 404, 'Configurações de impostos não encontradas para a organização.');
+      return handleErrorResponse(
+        res,
+        404,
+        'Configurações de impostos não encontradas para a organização.',
+      )
     }
 
     const calculatedTaxes = await calculateTaxes({
@@ -64,29 +71,28 @@ export const calculateFiscalTaxesHandler = async (req: AuthenticatedRequest, res
       total_net: fiscalData.totalAmount,
       organization_id,
       token,
-    });
+    })
 
-    const supabase = getSupabaseClient(token);
+    const supabase = getSupabaseClient(token)
 
     // Save tax calculation history
-    const { error: dbError } = await supabase
-      .from('tax_calculation_history')
-      .insert({
-        journal_entry_id: fiscalData.journalEntryId,
-        input_data: fiscalData,
-        calculated_taxes: calculatedTaxes,
-        applied_rules: calculatedTaxes.details,
-        user_id: req.userId,
-      });
+    const { error: dbError } = await supabase.from('tax_calculation_history').insert({
+      journal_entry_id: fiscalData.journalEntryId,
+      input_data: fiscalData,
+      calculated_taxes: calculatedTaxes,
+      applied_rules: calculatedTaxes.details,
+      user_id: req.userId,
+    })
 
     if (dbError) {
-      console.error('Error saving tax calculation history:', dbError);
+      console.error('Error saving tax calculation history:', dbError)
       // Do not return error to user, as tax calculation was successful
     }
 
-    res.status(200).json({ calculatedTaxes });
+    res.status(200).json({ calculatedTaxes })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido ao calcular impostos fiscais.';
-    handleErrorResponse(res, 500, message);
+    const message =
+      error instanceof Error ? error.message : 'Erro desconhecido ao calcular impostos fiscais.'
+    handleErrorResponse(res, 500, message)
   }
-};
+}

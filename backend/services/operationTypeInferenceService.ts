@@ -19,10 +19,7 @@ async function getEntryLines(journal_entry_id: string, token: string): Promise<E
 
 async function getAccounts(account_ids: string[], token: string): Promise<Account[]> {
   const userSupabase = getSupabaseClient(token)
-  const { data, error } = await userSupabase
-    .from('accounts')
-    .select('*')
-    .in('id', account_ids)
+  const { data, error } = await userSupabase.from('accounts').select('*').in('id', account_ids)
 
   if (error) {
     logger.error({ error }, `Error fetching accounts`)

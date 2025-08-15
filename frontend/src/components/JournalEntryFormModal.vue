@@ -47,9 +47,9 @@ type EntryLine = {
 }
 
 interface SelectedProductData {
-  product: Product;
-  quantity?: number;
-  unitCost?: number;
+  product: Product
+  quantity?: number
+  unitCost?: number
 }
 
 const props = defineProps<{
@@ -61,10 +61,10 @@ const props = defineProps<{
 const emit = defineEmits(['update:visible', 'submitSuccess'])
 
 const displayModal = ref(props.visible)
-const newEntryDate = ref(new Date().toISOString().split('T')[0])  
-const newEntryDescription = ref('') 
-const newEntryReferencePrefix = ref('') 
-const generatedSequenceNumber = ref(0) 
+const newEntryDate = ref(new Date().toISOString().split('T')[0])
+const newEntryDescription = ref('')
+const newEntryReferencePrefix = ref('')
+const generatedSequenceNumber = ref(0)
 
 const newEntryLines = ref<EntryLine[]>([])
 const activeTab = ref('Básico')
@@ -72,9 +72,9 @@ const selectedProductFromForm = ref<SelectedProductData | null>(null)
 const _inferredOperationTypeLogic = computed<OperationType | null>(() => {
   // First pass: check for explicit fiscal_operation_type
   for (const line of newEntryLines.value) {
-    const account = accountStore.accounts.find(acc => acc.id === line.account_id)
+    const account = accountStore.accounts.find((acc) => acc.id === line.account_id)
     if (account && account.fiscal_operation_type) {
-      return account.fiscal_operation_type as OperationType;
+      return account.fiscal_operation_type as OperationType
     }
   }
 
@@ -83,7 +83,7 @@ const _inferredOperationTypeLogic = computed<OperationType | null>(() => {
   let isPurchase = false
 
   for (const line of newEntryLines.value) {
-    const account = accountStore.accounts.find(acc => acc.id === line.account_id)
+    const account = accountStore.accounts.find((acc) => acc.id === line.account_id)
     if (account) {
       if (line.type === 'credit' && account.type === 'revenue') {
         isSale = true
@@ -101,49 +101,49 @@ const _inferredOperationTypeLogic = computed<OperationType | null>(() => {
 })
 
 const inferredOperationTypeDetails = computed(() => {
-  const inferredType = _inferredOperationTypeLogic.value;
-  let confidence: 'high' | 'medium' | 'low' | 'ambiguous' = 'low';
+  const inferredType = _inferredOperationTypeLogic.value
+  let confidence: 'high' | 'medium' | 'low' | 'ambiguous' = 'low'
 
   // Check for explicit fiscal_operation_type for high confidence
-  let explicitFiscalTypeFound = false;
+  let explicitFiscalTypeFound = false
   for (const line of newEntryLines.value) {
-    const account = accountStore.accounts.find(acc => acc.id === line.account_id);
+    const account = accountStore.accounts.find((acc) => acc.id === line.account_id)
     if (account && account.fiscal_operation_type) {
-      explicitFiscalTypeFound = true;
-      break;
+      explicitFiscalTypeFound = true
+      break
     }
   }
 
   if (explicitFiscalTypeFound && inferredType) {
-    confidence = 'high';
+    confidence = 'high'
   } else if (inferredType) {
     // Check for ambiguity in fallback logic
-    let isSaleFallback = false;
-    let isPurchaseFallback = false;
+    let isSaleFallback = false
+    let isPurchaseFallback = false
     for (const line of newEntryLines.value) {
-      const account = accountStore.accounts.find(acc => acc.id === line.account_id);
+      const account = accountStore.accounts.find((acc) => acc.id === line.account_id)
       if (account) {
         if (line.type === 'credit' && account.type === 'revenue') {
-          isSaleFallback = true;
+          isSaleFallback = true
         }
         if (line.type === 'debit' && (account.type === 'expense' || account.type === 'asset')) {
-          isPurchaseFallback = true;
+          isPurchaseFallback = true
         }
       }
     }
 
     if (isSaleFallback && isPurchaseFallback) {
-      confidence = 'ambiguous';
+      confidence = 'ambiguous'
     } else {
-      confidence = 'medium';
+      confidence = 'medium'
     }
   }
 
   return {
     type: inferredType,
     confidence: confidence,
-  };
-});
+  }
+})
 
 const fiscalOperationData = ref<FiscalOperationData>({
   operationType: inferredOperationTypeDetails.value.type, // Use inferred value
@@ -170,7 +170,7 @@ const fiscalOperationData = ref<FiscalOperationData>({
     final_total_net: 0,
   },
 })
-const showOperationTypeOverride = ref(false);
+const showOperationTypeOverride = ref(false)
 const newEntryStatus = ref('draft')
 
 const hasStockRelatedAccount = computed(() => {
@@ -185,11 +185,11 @@ const isTaxRelatedAccount = (accountId: string) => {
   const account = accountStore.accounts.find((acc) => acc.id === accountId)
   if (!account) return false
   const taxKeywords = ['ICMS', 'IPI', 'PIS', 'COFINS', 'IRRF', 'CSLL', 'INSS', 'Imposto']
-  return taxKeywords.some(keyword => account.name.includes(keyword))
+  return taxKeywords.some((keyword) => account.name.includes(keyword))
 }
 
 const hasTaxRelatedAccount = computed(() => {
-  return newEntryLines.value.some(line => isTaxRelatedAccount(line.account_id))
+  return newEntryLines.value.some((line) => isTaxRelatedAccount(line.account_id))
 })
 
 const totalDebits = computed(() =>
@@ -241,9 +241,9 @@ watch(
 
 watch(selectedProductFromForm, (newProductData) => {
   if (newProductData && newProductData.product) {
-    const product = newProductData.product;
-    const quantity = newProductData.quantity;
-    const unitCost = newProductData.unitCost;
+    const product = newProductData.product
+    const quantity = newProductData.quantity
+    const unitCost = newProductData.unitCost
 
     // Find the currently active line or the last line to assign the product
     const lastLine = newEntryLines.value[newEntryLines.value.length - 1]
@@ -255,32 +255,38 @@ watch(selectedProductFromForm, (newProductData) => {
 
     // Populate fiscalOperationData based on product
     if (product.product_service_type) {
-      fiscalOperationData.value.productServiceType = product.product_service_type;
+      fiscalOperationData.value.productServiceType = product.product_service_type
     }
 
     // Determine CFOP based on inferred operation type
-    const operationType = inferredOperationTypeDetails.value.type;
+    const operationType = inferredOperationTypeDetails.value.type
     if (operationType === OperationType.CompraMateriaPrima && product.default_cfop_purchase) {
-      fiscalOperationData.value.cfop = product.default_cfop_purchase;
+      fiscalOperationData.value.cfop = product.default_cfop_purchase
     } else if (operationType === OperationType.VendaMercadorias && product.default_cfop_sale) {
-      fiscalOperationData.value.cfop = product.default_cfop_sale;
+      fiscalOperationData.value.cfop = product.default_cfop_sale
     } else {
-      fiscalOperationData.value.cfop = null; // Clear if no default CFOP applies
+      fiscalOperationData.value.cfop = null // Clear if no default CFOP applies
     }
   }
 })
 
 watch(totalDebits, (newTotalDebits) => {
-  fiscalOperationData.value.totalAmount = newTotalDebits;
-});
+  fiscalOperationData.value.totalAmount = newTotalDebits
+})
 
-watch(() => inferredOperationTypeDetails.value.type, (newOperationType) => {
-  fiscalOperationData.value.operationType = newOperationType;
-});
+watch(
+  () => inferredOperationTypeDetails.value.type,
+  (newOperationType) => {
+    fiscalOperationData.value.operationType = newOperationType
+  },
+)
 
-watch(() => inferredOperationTypeDetails.value.confidence, (newConfidence) => {
-  showOperationTypeOverride.value = newConfidence === 'ambiguous' || newConfidence === 'low';
-});
+watch(
+  () => inferredOperationTypeDetails.value.confidence,
+  (newConfidence) => {
+    showOperationTypeOverride.value = newConfidence === 'ambiguous' || newConfidence === 'low'
+  },
+)
 
 watch(displayModal, (value) => {
   emit('update:visible', value)
@@ -399,20 +405,24 @@ async function submitEntry() {
         irrf: 'calculated_irrf_value',
         csll: 'calculated_csll_value',
         inss: 'calculated_inss_value',
-      } as const;
+      } as const
 
-      type TaxMapKey = keyof typeof taxKeyMap;
+      type TaxMapKey = keyof typeof taxKeyMap
 
-      const taxKeys: TaxMapKey[] = ['icms', 'ipi', 'pis', 'cofins', 'irrf', 'csll', 'inss'];
+      const taxKeys: TaxMapKey[] = ['icms', 'ipi', 'pis', 'cofins', 'irrf', 'csll', 'inss']
 
-      taxKeys.forEach(taxKey => {
-        const calculatedValueKey = taxKeyMap[taxKey];
-        if (fiscalOperationData.value.taxData && fiscalOperationData.value.taxData[calculatedValueKey] !== undefined) {
+      taxKeys.forEach((taxKey) => {
+        const calculatedValueKey = taxKeyMap[taxKey]
+        if (
+          fiscalOperationData.value.taxData &&
+          fiscalOperationData.value.taxData[calculatedValueKey] !== undefined
+        ) {
           // Atribuir o valor calculado diretamente
-          const lineKey = `${taxKey}_value` as keyof EntryLine;
-          (line[lineKey] as number | undefined) = fiscalOperationData.value.taxData[calculatedValueKey];
+          const lineKey = `${taxKey}_value` as keyof EntryLine
+          ;(line[lineKey] as number | undefined) =
+            fiscalOperationData.value.taxData[calculatedValueKey]
         }
-      });
+      })
 
       if (line.account_id === stockAccountId.value && line.product_id && line.quantity) {
         if (line.type === 'debit') {
@@ -577,7 +587,10 @@ async function submitEntry() {
           <JournalEntryProductForm @product-selected="selectedProductFromForm = $event" />
         </div>
         <div v-if="activeTab === 'Impostos' && hasTaxRelatedAccount">
-          <Imposto v-model:fiscalOperationData="fiscalOperationData" :inferredOperationTypeDetails="inferredOperationTypeDetails" />
+          <Imposto
+            v-model:fiscalOperationData="fiscalOperationData"
+            :inferredOperationTypeDetails="inferredOperationTypeDetails"
+          />
         </div>
       </div>
 

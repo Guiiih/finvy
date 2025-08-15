@@ -1,123 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import Card from 'primevue/card'
 import Chart from 'primevue/chart'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { useReportStore } from '@/stores/reportStore'
 
+const reportStore = useReportStore()
 const activeTab = ref(0)
-const loading = ref(true)
-const error = ref<string | null>(null)
 
-// Estrutura de dados reativa para armazenar os dados do balanço patrimonial vindos da API
-interface SummaryData {
-  totalAssets: number
-  shareholdersEquity: number
-  indicators: {
-    currentLiquidity: number
-    indebtedness: number
-    roe: number
-  }
-  composition: {
-    currentAssets: number
-    nonCurrentAssets: number
-    currentLiabilities: number
-    nonCurrentLiabilities: number
-    equity: number
-  }
-}
-
-interface DetailedAccountEntry {
-  account: string
-  value: number
-}
-
-interface DetailedData {
-  assets: {
-    current: DetailedAccountEntry[]
-    nonCurrent: DetailedAccountEntry[]
-  }
-  liabilitiesAndEquity: {
-    current: DetailedAccountEntry[]
-    nonCurrent: DetailedAccountEntry[]
-    equity: DetailedAccountEntry[]
-  }
-}
-
-interface BalanceSheetReportData {
-  summary: SummaryData
-  detailed: DetailedData
-}
-
-const balanceSheetData = reactive<BalanceSheetReportData>({
-  summary: {
-    totalAssets: 0,
-    shareholdersEquity: 0,
-    indicators: {
-      currentLiquidity: 0,
-      indebtedness: 0,
-      roe: 0,
-    },
-    composition: {
-      currentAssets: 0,
-      nonCurrentAssets: 0,
-      currentLiabilities: 0,
-      nonCurrentLiabilities: 0,
-      equity: 0,
-    },
-  },
-  detailed: {
-    assets: {
-      current: [],
-      nonCurrent: [],
-    },
-    liabilitiesAndEquity: {
-      current: [],
-      nonCurrent: [],
-      equity: [],
-    },
-  },
-})
+const balanceSheetData = computed(() => reportStore.balanceSheet)
 
 // Função para formatar valores monetários
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
-// TODO: Implementar a busca de dados reais da API
-const fetchBalanceSheetData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // const response = await api.get('/reports/balance-sheet', { params: { period: 'YYYY-MM' } });
-    // Object.assign(balanceSheetData, response.data);
-    // TODO: Remover esta simulação e descomentar a chamada real da API
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // Object.assign(balanceSheetData, response.data);
-  } catch (err) {
-    error.value = 'Falha ao buscar os dados do balanço patrimonial.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
 // Propriedades computadas para totais e dados do gráfico
 const totalAssets = computed(
   () =>
-    (balanceSheetData.detailed.assets.current?.reduce((s, i) => s + i.value, 0) || 0) +
-    (balanceSheetData.detailed.assets.nonCurrent?.reduce((s, i) => s + i.value, 0) || 0),
+    (balanceSheetData.value?.detailed.assets.current?.reduce((s, i) => s + i.value, 0) || 0) +
+    (balanceSheetData.value?.detailed.assets.nonCurrent?.reduce((s, i) => s + i.value, 0) || 0),
 )
 
 const totalLiabilitiesAndEquity = computed(
   () =>
-    (balanceSheetData.detailed.liabilitiesAndEquity.current?.reduce((s, i) => s + i.value, 0) ||
-      0) +
-    (balanceSheetData.detailed.liabilitiesAndEquity.nonCurrent?.reduce((s, i) => s + i.value, 0) ||
-      0) +
-    (balanceSheetData.detailed.liabilitiesAndEquity.equity?.reduce((s, i) => s + i.value, 0) || 0),
+    (balanceSheetData.value?.detailed.liabilitiesAndEquity.current?.reduce(
+      (s, i) => s + i.value,
+      0,
+    ) || 0) +
+    (balanceSheetData.value?.detailed.liabilitiesAndEquity.nonCurrent?.reduce(
+      (s, i) => s + i.value,
+      0,
+    ) || 0) +
+    (balanceSheetData.value?.detailed.liabilitiesAndEquity.equity?.reduce(
+      (s, i) => s + i.value,
+      0,
+    ) || 0),
 )
 
 const chartData = computed(() => ({
@@ -131,11 +50,11 @@ const chartData = computed(() => ({
   datasets: [
     {
       data: [
-        balanceSheetData.summary.composition.currentAssets,
-        balanceSheetData.summary.composition.nonCurrentAssets,
-        balanceSheetData.summary.composition.equity,
-        balanceSheetData.summary.composition.nonCurrentLiabilities,
-        balanceSheetData.summary.composition.currentLiabilities,
+        balanceSheetData.value?.summary.composition.currentAssets,
+        balanceSheetData.value?.summary.composition.nonCurrentAssets,
+        balanceSheetData.value?.summary.composition.equity,
+        balanceSheetData.value?.summary.composition.nonCurrentLiabilities,
+        balanceSheetData.value?.summary.composition.currentLiabilities,
       ],
       backgroundColor: ['#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#F59E0B'],
     },
@@ -150,9 +69,6 @@ const chartOptions = ref({
     },
   },
 })
-
-// Buscar os dados quando o componente for montado
-onMounted(fetchBalanceSheetData)
 </script>
 
 <template>
@@ -170,7 +86,7 @@ onMounted(fetchBalanceSheetData)
         <Card>
           <template #title>Indicadores</template>
           <template #content>
-            <div class="flex flex-col gap-8">
+            <div class="flex flex-col gap-8" v-if="balanceSheetData">
               <div class="text-center">
                 <p class="text-lg text-surface-500">Total de Ativos</p>
                 <p class="text-3xl font-bold text-green-500">
@@ -203,7 +119,7 @@ onMounted(fetchBalanceSheetData)
       </div>
     </TabPanel>
     <TabPanel header="Detalhado" :value="1">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" v-if="balanceSheetData">
         <Card>
           <template #title>ATIVO</template>
           <template #content>

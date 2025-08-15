@@ -1,65 +1,16 @@
 <script setup lang="ts">
 import Card from 'primevue/card'
 import Chart from 'primevue/chart'
-import { ref, onMounted, reactive, computed } from 'vue'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { ref, computed } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reportStore = useReportStore()
 
-// Estrutura de dados reativa para armazenar os dados da DRE
-interface SummaryData {
-  totalRevenue: number
-  totalExpenses: number
-  netIncome: number
-  margin: number
-}
-
-interface DetailEntry {
-  name: string
-  value: number
-  percentage: number
-}
-
-interface IncomeStatementReportData {
-  summary: SummaryData
-  revenueDetails: DetailEntry[]
-  expenseDetails: DetailEntry[]
-}
-
-const incomeStatementData = reactive<IncomeStatementReportData>({
-  summary: {
-    totalRevenue: 0,
-    totalExpenses: 0,
-    netIncome: 0,
-    margin: 0,
-  },
-  revenueDetails: [],
-  expenseDetails: [],
-})
+const incomeStatementData = computed(() => reportStore.incomeStatement)
 
 // Função para formatar valores monetários
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
-
-// TODO: Implementar a busca de dados reais da API
-const fetchIncomeStatementData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // const response = await api.get('/reports/income-statement', { params: { period: 'YYYY-MM' } });
-    // Object.assign(incomeStatementData, response.data);
-    // TODO: Remover esta simulação e descomentar a chamada real da API
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // Object.assign(incomeStatementData, response.data);
-  } catch (err) {
-    error.value = 'Falha ao buscar os dados da DRE.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
 }
 
 // Opções do gráfico
@@ -74,31 +25,28 @@ const chartOptions = ref({
 
 // Dados computados para os gráficos
 const revenueChartData = computed(() => ({
-  labels: incomeStatementData.revenueDetails.map((d) => `${d.name} (${d.percentage}%)`),
+  labels: incomeStatementData.value?.revenueDetails.map((d) => `${d.name} (${d.percentage}%)`),
   datasets: [
     {
-      data: incomeStatementData.revenueDetails.map((d) => d.value),
+      data: incomeStatementData.value?.revenueDetails.map((d) => d.value),
       backgroundColor: ['#3B82F6', '#10B981', '#F97316'],
     },
   ],
 }))
 
 const expenseChartData = computed(() => ({
-  labels: incomeStatementData.expenseDetails.map((d) => `${d.name} (${d.percentage}%)`),
+  labels: incomeStatementData.value?.expenseDetails.map((d) => `${d.name} (${d.percentage}%)`),
   datasets: [
     {
-      data: incomeStatementData.expenseDetails.map((d) => d.value),
+      data: incomeStatementData.value?.expenseDetails.map((d) => d.value),
       backgroundColor: ['#EF4444', '#F59E0B', '#8B5CF6', '#6366F1', '#14B8A6'],
     },
   ],
 }))
-
-// Buscar os dados quando o componente for montado
-onMounted(fetchIncomeStatementData)
 </script>
 
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div v-if="incomeStatementData" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <Card class="text-center">
       <template #title>Receitas</template>
       <template #content>
@@ -156,7 +104,7 @@ onMounted(fetchIncomeStatementData)
     </Card>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div v-if="incomeStatementData" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <Card>
       <template #title>Detalhamento das Receitas</template>
       <template #content>

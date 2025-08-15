@@ -101,8 +101,17 @@ watch(
 
         <div class="space-y-2">
           <label for="unit-cost" class="text-sm font-medium">Custo Unitário</label>
-          <div class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md text-surface-700">
-            {{ selectedProductDetails?.cost ? selectedProductDetails.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A' }}
+          <div
+            class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md text-surface-700"
+          >
+            {{
+              selectedProductDetails?.cost
+                ? selectedProductDetails.cost.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  })
+                : 'N/A'
+            }}
           </div>
         </div>
       </div>
@@ -123,12 +132,15 @@ watch(
               <div>
                 <span class="text-surface-500">Estoque Atual: </span>
                 <span class="font-medium"
-                  >{{ selectedProductDetails.currentStock }} {{ selectedProductDetails.unitType }}</span
+                  >{{ selectedProductDetails.currentStock }}
+                  {{ selectedProductDetails.unitType }}</span
                 >
               </div>
               <div>
                 <span class="text-surface-500">Método de Custeio: </span>
-                <span class="font-medium">{{ selectedProductDetails.costingMethod?.toUpperCase() }}</span>
+                <span class="font-medium">{{
+                  selectedProductDetails.costingMethod?.toUpperCase()
+                }}</span>
               </div>
             </div>
           </div>

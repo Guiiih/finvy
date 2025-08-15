@@ -5,70 +5,16 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
-import { ref, onMounted, reactive, computed } from 'vue'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { ref, computed } from 'vue'
+import { useReportStore } from '@/stores/reportStore'
 
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reportStore = useReportStore()
 
-// Estrutura de dados reativa para armazenar os dados de Contas a Receber
-interface SummaryData {
-  totalToReceive: number
-  overdue: number
-  overduePercentage: number
-  clients: number
-}
-
-interface AgingData {
-  [key: string]: { value: number; percentage: number }
-}
-
-interface DetailData {
-  client: string
-  value: number
-  dueDate: string
-  status: string
-}
-
-interface AccountsReceivableReportData {
-  summary: SummaryData
-  aging: AgingData
-  details: DetailData[]
-}
-
-const accountsReceivableData = reactive<AccountsReceivableReportData>({
-  summary: {
-    totalToReceive: 0,
-    overdue: 0,
-    overduePercentage: 0,
-    clients: 0,
-  },
-  aging: {},
-  details: [],
-})
+const accountsReceivableData = computed(() => reportStore.accountsReceivable)
 
 // Função para formatar valores monetários
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
-
-// TODO: Implementar a busca de dados reais da API
-const fetchAccountsReceivableData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // const response = await api.get('/reports/accounts-receivable', { params: { period: 'YYYY-MM' } });
-    // Object.assign(accountsReceivableData, response.data);
-    // TODO: Remover esta simulação e descomentar a chamada real da API
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // Object.assign(accountsReceivableData, response.data);
-  } catch (err) {
-    error.value = 'Falha ao buscar os dados de Contas a Receber.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
 }
 
 // Opções do gráfico
@@ -83,13 +29,13 @@ const agingChartOptions = ref({
 
 // Dados computados para o gráfico
 const agingChartData = computed(() => ({
-  labels: Object.keys(accountsReceivableData.aging).map(
+  labels: Object.keys(accountsReceivableData.value?.aging || {}).map(
     (k) =>
-      `${k} dias (${accountsReceivableData.aging[k as keyof typeof accountsReceivableData.aging].percentage}%)`,
+      `${k} dias (${accountsReceivableData.value?.aging[k as keyof typeof accountsReceivableData.value.aging].percentage}%)`,
   ),
   datasets: [
     {
-      data: Object.values(accountsReceivableData.aging).map(
+      data: Object.values(accountsReceivableData.value?.aging || {}).map(
         (v: { value: number; percentage: number }) => v.value,
       ),
       backgroundColor: ['#3B82F6', '#F97316', '#F59E0B', '#EF4444'],
@@ -100,13 +46,10 @@ const agingChartData = computed(() => ({
 const getStatusSeverity = (status: string) => {
   return status === 'Em dia' ? 'success' : 'danger'
 }
-
-// Buscar os dados quando o componente for montado
-onMounted(fetchAccountsReceivableData)
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div v-if="accountsReceivableData" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <Card class="text-center">
       <template #title>Total a Receber</template>
       <template #content>
@@ -137,7 +80,7 @@ onMounted(fetchAccountsReceivableData)
     </Card>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div v-if="accountsReceivableData" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <Card>
       <template #title>Detalhamento por Cliente</template>
       <template #content>

@@ -100,7 +100,10 @@ export const createEntryLineSchema = z.object({
 
   icms_rate: z.number().nonnegative('Alíquota de ICMS deve ser um valor não negativo.').optional(),
   pis_rate: z.number().nonnegative('Alíquota de PIS deve ser um valor não negativo.').optional(),
-  cofins_rate: z.number().nonnegative('Alíquota de COFINS deve ser um valor não negativo.').optional(),
+  cofins_rate: z
+    .number()
+    .nonnegative('Alíquota de COFINS deve ser um valor não negativo.')
+    .optional(),
   irrf_rate: z.number().nonnegative('Alíquota de IRRF deve ser um valor não negativo.').optional(),
   csll_rate: z.number().nonnegative('Alíquota de CSLL deve ser um valor não negativo.').optional(),
   inss_rate: z.number().nonnegative('Alíquota de INSS deve ser um valor não negativo.').optional(),
@@ -149,12 +152,27 @@ export const updateEntryLineSchema = z
       .number()
       .nonnegative('Valor total bruto deve ser um valor não negativo.')
       .optional(),
-    icms_rate: z.number().nonnegative('Alíquota de ICMS deve ser um valor não negativo.').optional(),
+    icms_rate: z
+      .number()
+      .nonnegative('Alíquota de ICMS deve ser um valor não negativo.')
+      .optional(),
     pis_rate: z.number().nonnegative('Alíquota de PIS deve ser um valor não negativo.').optional(),
-    cofins_rate: z.number().nonnegative('Alíquota de COFINS deve ser um valor não negativo.').optional(),
-    irrf_rate: z.number().nonnegative('Alíquota de IRRF deve ser um valor não negativo.').optional(),
-    csll_rate: z.number().nonnegative('Alíquota de CSLL deve ser um valor não negativo.').optional(),
-    inss_rate: z.number().nonnegative('Alíquota de INSS deve ser um valor não negativo.').optional(),
+    cofins_rate: z
+      .number()
+      .nonnegative('Alíquota de COFINS deve ser um valor não negativo.')
+      .optional(),
+    irrf_rate: z
+      .number()
+      .nonnegative('Alíquota de IRRF deve ser um valor não negativo.')
+      .optional(),
+    csll_rate: z
+      .number()
+      .nonnegative('Alíquota de CSLL deve ser um valor não negativo.')
+      .optional(),
+    inss_rate: z
+      .number()
+      .nonnegative('Alíquota de INSS deve ser um valor não negativo.')
+      .optional(),
     icms_value: z.number().nonnegative('Valor do ICMS deve ser um valor não negativo.').optional(),
     total_net: z
       .number()
@@ -169,7 +187,11 @@ export const createProductSchema = z.object({
     .min(1, 'Nome do produto é obrigatório.')
     .max(100, 'Nome do produto muito longo.'),
   description: z.string().max(255, 'Descrição muito longa.').optional(),
-  ncm: z.string().length(8, 'NCM deve ter 8 dígitos.').regex(/^[0-9]+$/, 'NCM deve conter apenas números.').optional(),
+  ncm: z
+    .string()
+    .length(8, 'NCM deve ter 8 dígitos.')
+    .regex(/^[0-9]+$/, 'NCM deve conter apenas números.')
+    .optional(),
   sku: z.string().optional(),
   category: z
     .string()
@@ -188,7 +210,11 @@ export const updateProductSchema = z
       .max(100, 'Nome do produto muito longo.')
       .optional(),
     description: z.string().max(255, 'Descrição muito longa.').optional(),
-    ncm: z.string().length(8, 'NCM deve ter 8 dígitos.').regex(/^[0-9]+$/, 'NCM deve conter apenas números.').optional(),
+    ncm: z
+      .string()
+      .length(8, 'NCM deve ter 8 dígitos.')
+      .regex(/^[0-9]+$/, 'NCM deve conter apenas números.')
+      .optional(),
     sku: z.string().optional(),
     category: z
       .string()
@@ -325,6 +351,6 @@ export const createTaxRuleSchema = z.object({
   description: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-});
+})
 
-export const updateTaxRuleSchema = createTaxRuleSchema.partial();
+export const updateTaxRuleSchema = createTaxRuleSchema.partial()

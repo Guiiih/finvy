@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { JournalEntry, EntryLine, JournalEntryPayload, JournalEntryHistory } from '@/types/index'
+import type {
+  JournalEntry,
+  EntryLine,
+  JournalEntryPayload,
+  JournalEntryHistory,
+} from '@/types/index'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import { useAccountingPeriodStore } from './accountingPeriodStore'
@@ -71,20 +76,20 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       const periodId = activePeriod.id
 
       interface JournalEntrySearchParams {
-        organization_id: string;
-        accounting_period_id: string;
-        _page: number;
-        _limit: number;
-        status?: string | null;
-        dateFrom?: string | null;
-        dateTo?: string | null;
-        amountFrom?: number | null;
-        amountTo?: number | null;
-        createdBy?: string | null;
-        hasProduct?: boolean;
-        hasTaxes?: boolean;
-        accounts?: string;
-        [key: string]: unknown; // Adiciona a assinatura de índice
+        organization_id: string
+        accounting_period_id: string
+        _page: number
+        _limit: number
+        status?: string | null
+        dateFrom?: string | null
+        dateTo?: string | null
+        amountFrom?: number | null
+        amountTo?: number | null
+        createdBy?: string | null
+        hasProduct?: boolean
+        hasTaxes?: boolean
+        accounts?: string
+        [key: string]: unknown // Adiciona a assinatura de índice
       }
 
       const params: JournalEntrySearchParams = {
@@ -373,7 +378,9 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null
     try {
       await api.post('/journal-entries/bulk-delete', { ids })
-      journalEntries.value = journalEntries.value.filter((entry) => !ids.includes(entry.id as string))
+      journalEntries.value = journalEntries.value.filter(
+        (entry) => !ids.includes(entry.id as string),
+      )
       totalJournalEntries.value -= ids.length
     } catch (err: unknown) {
       console.error('Erro ao deletar múltiplos lançamentos:', err)
@@ -384,7 +391,10 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
   }
 
-  async function updateMultipleEntriesStatus(ids: string[], status: 'draft' | 'posted' | 'reviewed') {
+  async function updateMultipleEntriesStatus(
+    ids: string[],
+    status: 'draft' | 'posted' | 'reviewed',
+  ) {
     loading.value = true
     error.value = null
     try {
@@ -394,7 +404,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       )
     } catch (err: unknown) {
       console.error('Erro ao atualizar status de múltiplos lançamentos:', err)
-      error.value = err instanceof Error ? err.message : 'Falha ao atualizar status de múltiplos lançamentos.'
+      error.value =
+        err instanceof Error ? err.message : 'Falha ao atualizar status de múltiplos lançamentos.'
       throw err
     } finally {
       loading.value = false

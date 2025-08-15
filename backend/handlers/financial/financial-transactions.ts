@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleErrorResponse, getUserOrganizationAndPeriod } from '../../utils/supabaseClient.js'
 import { createFinancialTransactionSchema } from '../../utils/schemas.js'
 import {
-    getFinancialTransactions,
+  getFinancialTransactions,
   createFinancialTransaction,
 } from '../../services/financialTransactionService.js'
 

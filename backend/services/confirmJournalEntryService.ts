@@ -63,7 +63,10 @@ export async function confirmProposedJournalEntries(
     }
 
     // 3. Criar as Entry Lines
-    logger.debug({ linesToCreate }, `[ConfirmJournalEntryService] Linhas a serem inseridas para o lançamento ${journalEntry.id}:`)
+    logger.debug(
+      { linesToCreate },
+      `[ConfirmJournalEntryService] Linhas a serem inseridas para o lançamento ${journalEntry.id}:`,
+    )
     const createdLines = await createSimpleEntryLines(
       journalEntry.id,
       linesToCreate,

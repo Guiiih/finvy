@@ -210,16 +210,16 @@ export interface FinancialTransaction {
 }
 
 export interface TaxRule {
-  id: string;
-  organization_id: string;
-  tax_type: 'ICMS' | 'IPI' | 'PIS' | 'COFINS';
-  operation_type?: OperationType;
-  uf_origin?: string;
-  uf_destination?: string;
-  ncm_code?: string;
-  rate: number;
-  created_at?: string;
-  updated_at?: string;
+  id: string
+  organization_id: string
+  tax_type: 'ICMS' | 'IPI' | 'PIS' | 'COFINS'
+  operation_type?: OperationType
+  uf_origin?: string
+  uf_destination?: string
+  ncm_code?: string
+  rate: number
+  created_at?: string
+  updated_at?: string
 }
 
 /**
@@ -288,4 +288,3 @@ export interface OnlineUser extends UserPresence {
 import type { FiscalOperationData, TaxData, OperationType } from './tax.js'
 
 export type { FiscalOperationData, TaxData, OperationType }
-

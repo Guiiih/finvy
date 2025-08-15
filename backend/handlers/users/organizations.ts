@@ -5,9 +5,6 @@ import { z } from 'zod'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { getUserRoleInOrganization } from './user-organization-roles.js' // Import the helper
 
- 
-
-
 interface AccessibleOrganization {
   id: string
   name: string

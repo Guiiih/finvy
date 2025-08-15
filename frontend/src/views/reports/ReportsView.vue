@@ -2,8 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ReportViewer from '@/components/reports/ReportViewer.vue'
-// TODO: Importar o serviço da API para buscar os dados
-// import { api } from '@/services/api';
+import { useReportStore } from '@/stores/reportStore'
 
 // PrimeVue Components
 import Button from 'primevue/button'
@@ -21,8 +20,8 @@ import Calendar from 'primevue/calendar'
 import Toast from 'primevue/toast'
 
 const toast = useToast()
+const reportStore = useReportStore()
 
-const loading = ref(true)
 const selectedPeriod = ref('current-month')
 const showConfigModal = ref(false)
 const showScheduleModal = ref(false)
@@ -81,72 +80,97 @@ interface ReportType {
   status: string
 }
 
-interface KeyMetrics {
-  totalRevenue: number
-  totalExpenses: number
-  netIncome: number
-  totalAssets: number
-  totalLiabilities: number
-  equity: number
-  cashFlow: number
-  grossMargin: number
-}
+const reportTypes = computed<ReportType[]>(() => [
+  {
+    id: 'balance-sheet',
+    title: 'Balanço Patrimonial',
+    description: 'Demonstração da posição financeira da empresa',
+    icon: 'pi pi-chart-bar',
+    category: 'Demonstrações Financeiras',
+    lastGenerated: '01/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'income-statement',
+    title: 'Demonstração de Resultado',
+    description: 'Análise de receitas, custos e despesas do período',
+    icon: 'pi pi-arrow-up-right',
+    category: 'Demonstrações Financeiras',
+    lastGenerated: '01/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'cash-flow',
+    title: 'Fluxo de Caixa',
+    description: 'Movimentações de entrada e saída de recursos',
+    icon: 'pi pi-dollar',
+    category: 'Demonstrações Financeiras',
+    lastGenerated: '02/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'trial-balance',
+    title: 'Balancete de Verificação',
+    description: 'Saldos de todas as contas contábeis',
+    icon: 'pi pi-file',
+    category: 'Relatórios Auxiliares',
+    lastGenerated: '02/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'accounts-receivable',
+    title: 'Contas a Receber',
+    description: 'Relatório de valores a receber de clientes',
+    icon: 'pi pi-chart-pie',
+    category: 'Relatórios Gerenciais',
+    lastGenerated: '01/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'accounts-payable',
+    title: 'Contas a Pagar',
+    description: 'Relatório de valores a pagar para fornecedores',
+    icon: 'pi pi-arrow-down-left',
+    category: 'Relatórios Gerenciais',
+    lastGenerated: '01/08/2025',
+    status: 'Disponível',
+  },
+  {
+    id: 'inventory-report',
+    title: 'Relatório de Estoque',
+    description: 'Posição atual do inventário de produtos',
+    icon: 'pi pi-box',
+    category: 'Relatórios Operacionais',
+    lastGenerated: '02/08/2025',
+    status: 'Disponível',
+  },
+])
 
-interface QuickStat {
-  title: string
-  value: number
-  change: string
-  trend: 'up' | 'down'
-  icon: string
-  isPercentage?: boolean
-}
-
-interface AvailableAccount {
-  value: string
-  label: string
-}
-
-// TODO: Substituir por dados reais da API
-const reportTypes = ref<ReportType[]>([])
-
-// TODO: Substituir por dados reais da API
-const keyMetrics = reactive<KeyMetrics>({
-  totalRevenue: 0,
-  totalExpenses: 0,
-  netIncome: 0,
-  totalAssets: 0,
-  totalLiabilities: 0,
-  equity: 0,
-  cashFlow: 0,
-  grossMargin: 0,
-})
-
-// TODO: Substituir por dados reais da API
-const quickStats = computed<QuickStat[]>(() => [
+const quickStats = computed(() => [
   {
     title: 'Receita Bruta',
-    value: keyMetrics.totalRevenue,
+    value: reportStore.incomeStatement?.summary.totalRevenue || 0,
     change: '',
     trend: 'up',
     icon: 'pi pi-arrow-up-right',
   },
   {
     title: 'Despesas Totais',
-    value: keyMetrics.totalExpenses,
+    value: reportStore.incomeStatement?.summary.totalExpenses || 0,
     change: '',
     trend: 'up',
     icon: 'pi pi-arrow-down-left',
   },
   {
     title: 'Lucro Líquido',
-    value: keyMetrics.netIncome,
+    value: reportStore.incomeStatement?.summary.netIncome || 0,
     change: '',
     trend: 'up',
     icon: 'pi pi-dollar',
   },
   {
     title: 'Margem Bruta',
-    value: keyMetrics.grossMargin,
+    value: reportStore.incomeStatement?.summary.margin || 0,
     change: '',
     trend: 'up',
     icon: 'pi pi-chart-bar',
@@ -154,106 +178,9 @@ const quickStats = computed<QuickStat[]>(() => [
   },
 ])
 
-// TODO: Substituir por dados reais da API
-const availableAccounts = ref<AvailableAccount[]>([])
-
-// TODO: Implementar a busca de dados reais da API para os quickStats e availableAccounts
-const fetchDashboardData = async () => {
-  loading.value = true
-  try {
-    // const response = await api.get('/reports/dashboard-summary');
-    // Object.assign(keyMetrics, response.data.keyMetrics);
-    // availableAccounts.value = response.data.availableAccounts;
-    // reportTypes.value = response.data.reportTypes;
-
-    // const response = await api.get('/reports/dashboard-summary');
-    // Object.assign(keyMetrics, response.data.keyMetrics);
-    // availableAccounts.value = response.data.availableAccounts;
-    // reportTypes.value = response.data.reportTypes;
-
-    // TODO: Implementar a busca de dados reais da API para os quickStats e availableAccounts
-    // const response = await api.get('/reports/dashboard-summary');
-    // Object.assign(keyMetrics, response.data.keyMetrics);
-    // availableAccounts.value = response.data.availableAccounts;
-    // reportTypes.value = response.data.reportTypes;
-
-    // Dados mocados para demonstração. Substituir por chamadas de API reais.
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    Object.assign(keyMetrics, { totalRevenue: 0, totalExpenses: 0, netIncome: 0, grossMargin: 0 })
-    availableAccounts.value = []
-    reportTypes.value = [
-      {
-        id: 'balance-sheet',
-        title: 'Balanço Patrimonial',
-        description: 'Demonstração da posição financeira da empresa',
-        icon: 'pi pi-chart-bar',
-        category: 'Demonstrações Financeiras',
-        lastGenerated: '01/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'income-statement',
-        title: 'Demonstração de Resultado',
-        description: 'Análise de receitas, custos e despesas do período',
-        icon: 'pi pi-arrow-up-right',
-        category: 'Demonstrações Financeiras',
-        lastGenerated: '01/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'cash-flow',
-        title: 'Fluxo de Caixa',
-        description: 'Movimentações de entrada e saída de recursos',
-        icon: 'pi pi-dollar',
-        category: 'Demonstrações Financeiras',
-        lastGenerated: '02/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'trial-balance',
-        title: 'Balancete de Verificação',
-        description: 'Saldos de todas as contas contábeis',
-        icon: 'pi pi-file',
-        category: 'Relatórios Auxiliares',
-        lastGenerated: '02/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'accounts-receivable',
-        title: 'Contas a Receber',
-        description: 'Relatório de valores a receber de clientes',
-        icon: 'pi pi-chart-pie',
-        category: 'Relatórios Gerenciais',
-        lastGenerated: '01/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'accounts-payable',
-        title: 'Contas a Pagar',
-        description: 'Relatório de valores a pagar para fornecedores',
-        icon: 'pi pi-arrow-down-left',
-        category: 'Relatórios Gerenciais',
-        lastGenerated: '01/08/2025',
-        status: 'Disponível',
-      },
-      {
-        id: 'inventory-report',
-        title: 'Relatório de Estoque',
-        description: 'Posição atual do inventário de produtos',
-        icon: 'pi pi-box',
-        category: 'Relatórios Operacionais',
-        lastGenerated: '02/08/2025',
-        status: 'Disponível',
-      },
-    ]
-  } catch (err) {
-    console.error('Erro ao buscar dados do dashboard:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchDashboardData)
+onMounted(() => {
+  reportStore.fetchReports()
+})
 
 const generateReport = (reportId: string) => {
   const report = reportTypes.value.find((r) => r.id === reportId)
@@ -280,34 +207,7 @@ const handleExportReport = async () => {
     })
     return
   }
-  loading.value = true
-  try {
-    // TODO: Implementar a chamada real da API para exportar o relatório
-    // const response = await api.post('/reports/export', { reportId: exportReportId.value, format: reportConfig.format, ...reportConfig });
-    // const blob = new Blob([response], { type: response.headers['content-type'] });
-    // const link = document.createElement('a');
-    // link.href = URL.createObjectURL(blob);
-    // link.download = `report.${exportReportId.value}.${reportConfig.format}`;
-    // link.click();
-    // URL.revokeObjectURL(link.href);
-
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: `Relatório exportado em ${reportConfig.format.toUpperCase()} com sucesso!`,
-      life: 3000,
-    })
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: 'Falha ao exportar relatório.',
-      life: 3000,
-    })
-  } finally {
-    loading.value = false
-    showExportModal.value = false
-  }
+  // TODO: Implementar a chamada real da API para exportar o relatório
 }
 
 const handleConfigureReport = (reportId: string) => {
@@ -321,27 +221,7 @@ const handleScheduleReport = (reportId: string) => {
 }
 
 const handleSaveConfig = async () => {
-  loading.value = true
-  try {
-    // TODO: Implementar a chamada real da API para salvar configurações do relatório
-    // await api.post('/reports/config', { reportId: selectedReport.value, config: reportConfig });
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Configurações do relatório salvas!',
-      life: 3000,
-    })
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: 'Falha ao exportar relatório.',
-      life: 3000,
-    })
-  } finally {
-    loading.value = false
-    showConfigModal.value = false
-  }
+  // TODO: Implementar a chamada real da API para salvar configurações do relatório
 }
 
 const handleSaveSchedule = async () => {
@@ -354,27 +234,7 @@ const handleSaveSchedule = async () => {
     })
     return
   }
-  loading.value = true
-  try {
-    // TODO: Implementar a chamada real da API para agendar o relatório
-    // await api.post('/reports/schedule', { reportId: selectedReport.value, schedule: scheduleConfig });
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Agendamento do relatório configurado!',
-      life: 3000,
-    })
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: 'Falha ao exportar relatório.',
-      life: 3000,
-    })
-  } finally {
-    loading.value = false
-    showScheduleModal.value = false
-  }
+  // TODO: Implementar a chamada real da API para agendar o relatório
 }
 
 const handleCreateCustomReport = async () => {
@@ -387,27 +247,7 @@ const handleCreateCustomReport = async () => {
     })
     return
   }
-  loading.value = true
-  try {
-    // TODO: Implementar a chamada real da API para criar relatório personalizado
-    // await api.post('/reports/custom', { customReport });
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Relatório personalizado criado com sucesso!',
-      life: 3000,
-    })
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: 'Falha ao exportar relatório.',
-      life: 3000,
-    })
-  } finally {
-    loading.value = false
-    showCustomReportModal.value = false
-  }
+  // TODO: Implementar a chamada real da API para criar relatório personalizado
 }
 
 const addRecipient = () => {
@@ -505,9 +345,15 @@ const groupedReports = computed(() => {
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium">Liquidez Corrente</span>
-              <span class="text-sm">0</span>
+              <span class="text-sm">{{
+                reportStore.balanceSheet?.summary.indicators.currentLiquidity || 0
+              }}</span>
             </div>
-            <ProgressBar :value="69" :showValue="false" style="height: 8px" />
+            <ProgressBar
+              :value="reportStore.balanceSheet?.summary.indicators.currentLiquidity || 0"
+              :showValue="false"
+              style="height: 8px"
+            />
             <p class="text-xs text-surface-500 dark:text-surface-400">
               Capacidade de pagamento de curto prazo
             </p>
@@ -515,9 +361,13 @@ const groupedReports = computed(() => {
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium">Margem Líquida</span>
-              <span class="text-sm">0%</span>
+              <span class="text-sm">{{ reportStore.incomeStatement?.summary.margin || 0 }}%</span>
             </div>
-            <ProgressBar :value="74" :showValue="false" style="height: 8px" />
+            <ProgressBar
+              :value="reportStore.incomeStatement?.summary.margin || 0"
+              :showValue="false"
+              style="height: 8px"
+            />
             <p class="text-xs text-surface-500 dark:text-surface-400">
               Percentual de lucro sobre receitas
             </p>
@@ -525,9 +375,15 @@ const groupedReports = computed(() => {
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium">Endividamento</span>
-              <span class="text-sm">0%</span>
+              <span class="text-sm"
+                >{{ reportStore.balanceSheet?.summary.indicators.indebtedness || 0 }}%</span
+              >
             </div>
-            <ProgressBar :value="51" :showValue="false" style="height: 8px" />
+            <ProgressBar
+              :value="reportStore.balanceSheet?.summary.indicators.indebtedness || 0"
+              :showValue="false"
+              style="height: 8px"
+            />
             <p class="text-xs text-surface-500 dark:text-surface-400">
               Proporção de dívidas sobre ativos
             </p>
@@ -565,7 +421,7 @@ const groupedReports = computed(() => {
                     size="small"
                     class="flex-1"
                     @click="generateReport(report.id)"
-                    :loading="loading"
+                    :loading="reportStore.loading"
                   >
                     <i class="pi pi-eye mr-1"></i>
                     Visualizar
@@ -575,7 +431,7 @@ const groupedReports = computed(() => {
                     severity="secondary"
                     outlined
                     @click="handleConfigureReport(report.id)"
-                    :loading="loading"
+                    :loading="reportStore.loading"
                   >
                     <i class="pi pi-cog"></i>
                   </Button>
@@ -584,7 +440,7 @@ const groupedReports = computed(() => {
                     severity="secondary"
                     outlined
                     @click="handleScheduleReport(report.id)"
-                    :loading="loading"
+                    :loading="reportStore.loading"
                   >
                     <i class="pi pi-clock"></i>
                   </Button>
@@ -593,7 +449,7 @@ const groupedReports = computed(() => {
                     severity="secondary"
                     outlined
                     @click="openExportModal(report.id)"
-                    :loading="loading"
+                    :loading="reportStore.loading"
                   >
                     <i class="pi pi-download"></i>
                   </Button>
@@ -672,7 +528,11 @@ const groupedReports = computed(() => {
       </div>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="showConfigModal = false" />
-        <Button label="Salvar Configurações" @click="handleSaveConfig" :loading="loading" />
+        <Button
+          label="Salvar Configurações"
+          @click="handleSaveConfig"
+          :loading="reportStore.loading"
+        />
       </template>
     </Dialog>
 
@@ -755,7 +615,11 @@ const groupedReports = computed(() => {
       </div>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="showScheduleModal = false" />
-        <Button label="Configurar Agendamento" @click="handleSaveSchedule" :loading="loading" />
+        <Button
+          label="Configurar Agendamento"
+          @click="handleSaveSchedule"
+          :loading="reportStore.loading"
+        />
       </template>
     </Dialog>
 
@@ -798,16 +662,16 @@ const groupedReports = computed(() => {
           <label>Contas Incluídas *</label>
           <div class="border rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
             <div
-              v-for="account in availableAccounts"
-              :key="account.value"
+              v-for="account in reportStore.ledgerAccounts"
+              :key="account.account_id"
               class="flex items-center"
             >
               <Checkbox
                 v-model="customReport.accounts"
-                :inputId="account.value"
-                :value="account.value"
+                :inputId="account.account_id"
+                :value="account.account_id"
               />
-              <label :for="account.value" class="ml-2 text-sm">{{ account.label }}</label>
+              <label :for="account.account_id" class="ml-2 text-sm">{{ account.accountName }}</label>
             </div>
           </div>
         </div>
@@ -834,7 +698,11 @@ const groupedReports = computed(() => {
       </div>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="showCustomReportModal = false" />
-        <Button label="Criar Relatório" @click="handleCreateCustomReport" :loading="loading" />
+        <Button
+          label="Criar Relatório"
+          @click="handleCreateCustomReport"
+          :loading="reportStore.loading"
+        />
       </template>
     </Dialog>
     <Dialog
@@ -869,7 +737,7 @@ const groupedReports = computed(() => {
       </div>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="showExportModal = false" />
-        <Button label="Exportar" @click="handleExportReport" :loading="loading" />
+        <Button label="Exportar" @click="handleExportReport" :loading="reportStore.loading" />
       </template>
     </Dialog>
   </main>
