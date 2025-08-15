@@ -209,6 +209,19 @@ export interface FinancialTransaction {
   accounting_period_id?: string
 }
 
+export interface AccountingPeriod {
+  id: string
+  organization_id: string
+  fiscal_year: number
+  start_date: string
+  end_date: string
+  is_active?: boolean
+  created_at?: string
+  regime?: TaxRegime | null
+  annex?: string | null
+  costing_method?: 'average' | 'fifo' | 'lifo'
+}
+
 export interface TaxRule {
   id: string
   organization_id: string

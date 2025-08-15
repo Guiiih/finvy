@@ -294,7 +294,7 @@ RETURNS TABLE (
     organization_id UUID,
     organization_name TEXT,
     accounting_period_id UUID,
-    accounting_period_name TEXT
+    fiscal_year INT -- Changed from accounting_period_name TEXT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -304,7 +304,6 @@ DECLARE
     new_org_id UUID;
     new_period_id UUID;
     current_year INT;
-    default_period_name TEXT;
     default_start_date DATE;
     default_end_date DATE;
 BEGIN
@@ -319,13 +318,12 @@ BEGIN
 
     -- Cria um período contábil padrão para a nova organização
     current_year := EXTRACT(YEAR FROM NOW());
-    default_period_name := current_year::TEXT || ' Fiscal Year';
     default_start_date := (current_year::TEXT || '-01-01')::DATE;
     default_end_date := (current_year::TEXT || '-12-31')::DATE;
 
-    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date)
-    VALUES (new_org_id, default_period_name, default_start_date, default_end_date)
-    RETURNING id, name INTO new_period_id, accounting_period_name;
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, annex) -- Modified columns
+    VALUES (new_org_id, current_year, default_start_date, default_end_date, 'annex_i') -- Modified values
+    RETURNING id, fiscal_year INTO new_period_id, fiscal_year; -- Modified RETURNING
 
     -- Atualiza o perfil do usuário para definir esta nova organização e período como ativos
     UPDATE public.profiles
@@ -335,7 +333,7 @@ BEGIN
     -- Chamar a função para criar o plano de contas padrão
     PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
 
-    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, accounting_period_name;
+    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, fiscal_year; -- Modified RETURN QUERY
 END;
 $$;
 
@@ -430,8 +428,8 @@ BEGIN
     VALUES (NEW.raw_user_meta_data->>'first_name' || ' Personal', TRUE)
     RETURNING id INTO new_org_id;
 
-    INSERT INTO public.accounting_periods (organization_id, name, start_date, end_date)
-    VALUES (new_org_id, EXTRACT(YEAR FROM NOW())::TEXT || ' Fiscal Year', (EXTRACT(YEAR FROM NOW())::TEXT || '-01-01')::DATE, (EXTRACT(YEAR FROM NOW())::TEXT || '-12-31')::DATE)
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, annex) -- Modified columns
+    VALUES (new_org_id, EXTRACT(YEAR FROM NOW()), (EXTRACT(YEAR FROM NOW())::TEXT || '-01-01')::DATE, (EXTRACT(YEAR FROM NOW())::TEXT || '-12-31')::DATE, 'annex_i') -- Modified values
     RETURNING id INTO new_period_id;
 
     INSERT INTO public.profiles (id, username, email, role, avatar_url, organization_id, active_accounting_period_id, handle)

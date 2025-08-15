@@ -16,14 +16,14 @@ const formatCurrency = (value: number) => {
 }
 
 // Propriedades computadas para totais
-const totalDebits = computed(() =>
-  trialBalanceData.value?.accounts.reduce((sum, acc) => sum + (acc.debit || 0), 0) || 0,
+const totalDebits = computed(
+  () => trialBalanceData.value?.accounts.reduce((sum, acc) => sum + (acc.debit || 0), 0) || 0,
 )
-const totalCredits = computed(() =>
-  trialBalanceData.value?.accounts.reduce((sum, acc) => sum + (acc.credit || 0), 0) || 0,
+const totalCredits = computed(
+  () => trialBalanceData.value?.accounts.reduce((sum, acc) => sum + (acc.credit || 0), 0) || 0,
 )
-const totalBalance = computed(() =>
-  trialBalanceData.value?.accounts.reduce((sum, acc) => sum + acc.balance, 0) || 0,
+const totalBalance = computed(
+  () => trialBalanceData.value?.accounts.reduce((sum, acc) => sum + acc.balance, 0) || 0,
 )
 </script>
 

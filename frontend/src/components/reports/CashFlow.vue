@@ -17,14 +17,14 @@ const formatCurrency = (value: number) => {
 }
 
 // Propriedades computadas para totais e dados do gráfico
-const totalOperational = computed(() =>
-  cashFlowData.value?.details.operational.reduce((sum, item) => sum + item.value, 0) || 0,
+const totalOperational = computed(
+  () => cashFlowData.value?.details.operational.reduce((sum, item) => sum + item.value, 0) || 0,
 )
-const totalInvestment = computed(() =>
-  cashFlowData.value?.details.investment.reduce((sum, item) => sum + item.value, 0) || 0,
+const totalInvestment = computed(
+  () => cashFlowData.value?.details.investment.reduce((sum, item) => sum + item.value, 0) || 0,
 )
-const totalFinancing = computed(() =>
-  cashFlowData.value?.details.financing.reduce((sum, item) => sum + item.value, 0) || 0,
+const totalFinancing = computed(
+  () => cashFlowData.value?.details.financing.reduce((sum, item) => sum + item.value, 0) || 0,
 )
 
 const evolutionChartData = computed(() => ({

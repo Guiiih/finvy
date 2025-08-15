@@ -128,12 +128,13 @@ export interface FinancialTransaction {
 export interface AccountingPeriod {
   id: string
   organization_id: string
-  name: string
+  fiscal_year: number
   start_date: string | null
   end_date: string | null
   is_active: boolean
   created_at: string
   regime?: TaxRegime | null // Adicionado o regime tributário
+  annex?: string | null // Adicionado o anexo do simples nacional
   costing_method: 'average' | 'fifo' | 'lifo' // Adicionado o método de custeio
 }
 

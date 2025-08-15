@@ -11,10 +11,7 @@ import { TaxRegime } from '../../types/index.js'
 
 // Esquemas de validação para períodos contábeis
 const createAccountingPeriodSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Nome do período é obrigatório.')
-    .max(100, 'Nome do período muito longo.'),
+  fiscal_year: z.number().int().min(1900).max(2100, 'Ano fiscal inválido.'),
   start_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de início inválido. Use YYYY-MM-DD.'),
@@ -22,15 +19,12 @@ const createAccountingPeriodSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de fim inválido. Use YYYY-MM-DD.'),
   regime: z.nativeEnum(TaxRegime, { invalid_type_error: 'Regime tributário inválido.' }),
+  annex: z.string().optional().nullable(),
 })
 
 const updateAccountingPeriodSchema = z
   .object({
-    name: z
-      .string()
-      .min(1, 'Nome do período é obrigatório.')
-      .max(100, 'Nome do período muito longo.')
-      .optional(),
+    fiscal_year: z.number().int().min(1900).max(2100, 'Ano fiscal inválido.').optional(),
     start_date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data de início inválido. Use YYYY-MM-DD.')
@@ -42,6 +36,7 @@ const updateAccountingPeriodSchema = z
     regime: z
       .nativeEnum(TaxRegime, { invalid_type_error: 'Regime tributário inválido.' })
       .optional(),
+    annex: z.string().optional().nullable(),
   })
   .partial()
 
@@ -101,7 +96,7 @@ export default async function handler(
         `[Accounting Periods] organization_id encontrado para user_id ${user_id}: ${profile.organization_id}`,
       )
       const { organization_id } = profile
-      const { name, start_date, end_date, regime } = parsedBody.data
+      const { fiscal_year, start_date, end_date, regime, annex } = parsedBody.data
 
       // Validação de sobreposição de datas para tax_regime_history
       const { data: existingRegimes, error: fetchError } = await userSupabase
@@ -147,7 +142,7 @@ export default async function handler(
       )
       const { data: accountingPeriod, error: dbError } = await userSupabase
         .from('accounting_periods')
-        .insert([{ name, start_date, end_date, organization_id }])
+        .insert([{ fiscal_year, start_date, end_date, organization_id, annex }])
         .select()
         .single()
 
@@ -213,7 +208,7 @@ export default async function handler(
         )
         const { data, error: dbError } = await userSupabase
           .from('accounting_periods')
-          .select('id, name, start_date, end_date')
+          .select('id, fiscal_year, start_date, end_date, annex')
           .eq('organization_id', organization_id)
           .order('start_date', { ascending: false })
 
@@ -242,7 +237,11 @@ export default async function handler(
         const updateData = parsedBody.data
         const newRegime = updateData.regime
 
-        const { ...accountingPeriodUpdateData } = updateData
+        const accountingPeriodUpdateData: { [key: string]: any } = {}
+        if (updateData.fiscal_year !== undefined) accountingPeriodUpdateData.fiscal_year = updateData.fiscal_year
+        if (updateData.start_date !== undefined) accountingPeriodUpdateData.start_date = updateData.start_date
+        if (updateData.end_date !== undefined) accountingPeriodUpdateData.end_date = updateData.end_date
+        if (updateData.annex !== undefined) accountingPeriodUpdateData.annex = updateData.annex
 
         if (Object.keys(accountingPeriodUpdateData).length === 0 && !newRegime) {
           logger.warn(
@@ -254,7 +253,7 @@ export default async function handler(
         // Fetch current accounting period to get original dates if not updated
         const { data: currentPeriod, error: fetchCurrentPeriodError } = await userSupabase
           .from('accounting_periods')
-          .select('start_date, end_date')
+          .select('fiscal_year, start_date, end_date, annex')
           .eq('id', id)
           .single()
 
@@ -272,7 +271,7 @@ export default async function handler(
         if (newRegime || updateData.start_date || updateData.end_date) {
           const { data: taxRegimeToUpdate } = await userSupabase
             .from('tax_regime_history')
-            .select('id')
+            .select('id, fiscal_year, annex')
             .eq('organization_id', organization_id)
             .eq('start_date', currentPeriod.start_date)
             .eq('end_date', currentPeriod.end_date)
@@ -394,7 +393,7 @@ export default async function handler(
         // Fetch the accounting period to get its start_date and end_date
         const { data: accountingPeriodToDelete, error: fetchPeriodError } = await userSupabase
           .from('accounting_periods')
-          .select('start_date, end_date')
+          .select('fiscal_year, start_date, end_date, annex')
           .eq('id', id)
           .single()
 

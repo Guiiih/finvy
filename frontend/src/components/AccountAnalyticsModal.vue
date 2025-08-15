@@ -279,9 +279,7 @@ const getTypeColor = (type: string) => {
             <div class="font-medium text-blue-900 mb-2">Estrutura Balanceada</div>
             <div class="text-sm text-blue-700">
               Seu plano possui
-              {{
-                accountStore.accounts.filter((a) => a.code.split('.').length - 1 <= 2).length
-              }}
+              {{ accountStore.accounts.filter((a) => a.code.split('.').length - 1 <= 2).length }}
               contas nos primeiros 3 níveis, indicando uma estrutura bem organizada.
             </div>
           </div>

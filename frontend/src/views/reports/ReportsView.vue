@@ -671,7 +671,9 @@ const groupedReports = computed(() => {
                 :inputId="account.account_id"
                 :value="account.account_id"
               />
-              <label :for="account.account_id" class="ml-2 text-sm">{{ account.accountName }}</label>
+              <label :for="account.account_id" class="ml-2 text-sm">{{
+                account.accountName
+              }}</label>
             </div>
           </div>
         </div>
