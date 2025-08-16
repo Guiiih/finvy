@@ -317,6 +317,35 @@
     </div>
 
     <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
+      <h2 class="text-xl font-semibold mb-3">Períodos Mensais</h2>
+      <p v-if="!monthlyAccountingPeriods.length" class="text-gray-600">
+        Nenhum período mensal encontrado.
+      </p>
+      <div v-else class="space-y-4">
+        <div v-for="(periods, year) in groupedMonthlyPeriods" :key="year">
+          <h3 class="text-lg font-semibold mb-2">Ano Fiscal {{ year }}</h3>
+          <ul class="space-y-2">
+            <li
+              v-for="period in periods"
+              :key="period.id"
+              class="flex items-center justify-between p-2 border rounded-md bg-gray-50"
+            >
+              <div>
+                <p class="font-medium">
+                  {{ formatDate(period.start_date) }} - {{ formatDate(period.end_date) }}
+                </p>
+                <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
+              </div>
+              <div class="space-x-2">
+                <!-- Add actions for monthly periods if needed -->
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
       <h2 class="text-xl font-semibold mb-3">Histórico de Regimes Tributários</h2>
       <p v-if="!taxRegimeHistory.length" class="text-gray-600">
         Nenhum histórico de regime tributário encontrado.
@@ -556,10 +585,26 @@ const filteredAccountingPeriods = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
   return accountingPeriods.value.filter(
     (period) =>
-      period.fiscal_year?.toString().includes(lowerCaseSearchTerm) ||
-      formatDate(period.start_date).toLowerCase().includes(lowerCaseSearchTerm) ||
-      formatDate(period.end_date).toLowerCase().includes(lowerCaseSearchTerm),
+      period.is_active && // Only show active (yearly) periods in the main list
+      (period.fiscal_year?.toString().includes(lowerCaseSearchTerm) ||
+        formatDate(period.start_date).toLowerCase().includes(lowerCaseSearchTerm) ||
+        formatDate(period.end_date).toLowerCase().includes(lowerCaseSearchTerm)),
   )
+})
+
+const monthlyAccountingPeriods = computed(() => {
+  return accountingPeriods.value.filter((period) => !period.is_active)
+})
+
+const groupedMonthlyPeriods = computed(() => {
+  return monthlyAccountingPeriods.value.reduce((groups: { [key: number]: AccountingPeriod[] }, period) => {
+    const year = period.fiscal_year
+    if (!groups[year]) {
+      groups[year] = []
+    }
+    groups[year].push(period)
+    return groups
+  }, {})
 })
 
 onMounted(() => {
