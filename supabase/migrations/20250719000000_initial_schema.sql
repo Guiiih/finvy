@@ -293,11 +293,9 @@ DROP COLUMN IF EXISTS unit_cost,
 ADD COLUMN IF NOT EXISTS quantity_in_stock INT NOT NULL DEFAULT 0;
 
 -- Create ENUM type for costing methods
-CREATE TYPE costing_method_enum AS ENUM ('average', 'fifo', 'lifo');
 
--- Add costing_method column to accounting_periods table
-ALTER TABLE public.accounting_periods
-ADD COLUMN IF NOT EXISTS costing_method costing_method_enum NOT NULL DEFAULT 'average';
+
+
 
 -- Create inventory_lots table
 CREATE TABLE public.inventory_lots (

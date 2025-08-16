@@ -7,7 +7,7 @@ import {
 } from '../../utils/supabaseClient.js'
 import { z } from 'zod'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
-import { TaxRegime } from '../../types/index.js'
+import { AccountingPeriod, TaxRegime } from '../../types/index.js'
 
 // Esquemas de validação para períodos contábeis
 const createAccountingPeriodSchema = z.object({
@@ -160,7 +160,7 @@ export default async function handler(
       // Automaticamente criar períodos mensais para o ano fiscal
       logger.info(`[Accounting Periods] Criando períodos mensais para o ano fiscal ${fiscal_year}`)
       const monthlyPeriodsToInsert = []
-      let currentMonth = new Date(start_date)
+      const currentMonth = new Date(start_date)
       while (currentMonth <= new Date(end_date)) {
         const monthStartDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
         const monthEndDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
@@ -270,10 +270,13 @@ export default async function handler(
         const updateData = parsedBody.data
         const newRegime = updateData.regime
 
-        const accountingPeriodUpdateData: { [key: string]: any } = {}
-        if (updateData.fiscal_year !== undefined) accountingPeriodUpdateData.fiscal_year = updateData.fiscal_year
-        if (updateData.start_date !== undefined) accountingPeriodUpdateData.start_date = updateData.start_date
-        if (updateData.end_date !== undefined) accountingPeriodUpdateData.end_date = updateData.end_date
+        const accountingPeriodUpdateData: Partial<AccountingPeriod> = {}
+        if (updateData.fiscal_year !== undefined)
+          accountingPeriodUpdateData.fiscal_year = updateData.fiscal_year
+        if (updateData.start_date !== undefined)
+          accountingPeriodUpdateData.start_date = updateData.start_date
+        if (updateData.end_date !== undefined)
+          accountingPeriodUpdateData.end_date = updateData.end_date
         if (updateData.annex !== undefined) accountingPeriodUpdateData.annex = updateData.annex
 
         if (Object.keys(accountingPeriodUpdateData).length === 0 && !newRegime) {

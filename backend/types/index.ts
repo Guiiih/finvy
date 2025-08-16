@@ -219,7 +219,6 @@ export interface AccountingPeriod {
   created_at?: string
   regime?: TaxRegime | null
   annex?: string | null
-  costing_method?: 'average' | 'fifo' | 'lifo'
 }
 
 export interface TaxRule {

@@ -60,8 +60,7 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     total_net,
     tax_regime: param_tax_regime, // Renomeado para evitar conflito
     ncm,
-    uf_origin,
-    uf_destination,
+
     organization_id,
     accounting_period_id,
     token,

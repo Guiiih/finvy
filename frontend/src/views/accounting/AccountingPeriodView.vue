@@ -45,9 +45,7 @@
     >
       <form @submit.prevent="handleCreatePeriod" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label for="fiscalYear" class="block text-sm font-medium text-gray-700"
-            >Ano Fiscal</label
-          >
+          <label for="fiscalYear" class="block text-sm font-medium text-gray-700">Ano Fiscal</label>
           <input
             type="number"
             id="fiscalYear"
@@ -66,7 +64,10 @@
           <Calendar
             id="startDate"
             :modelValue="newPeriod.start_date ? new Date(newPeriod.start_date) : null"
-            @update:modelValue="(value: Date | null) => newPeriod.start_date = value ? value.toISOString().split('T')[0] : null"
+            @update:modelValue="
+              (value: Date | null) =>
+                (newPeriod.start_date = value ? value.toISOString().split('T')[0] : null)
+            "
             required
             dateFormat="dd/mm/yy"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -77,7 +78,10 @@
           <Calendar
             id="endDate"
             :modelValue="newPeriod.end_date ? new Date(newPeriod.end_date) : null"
-            @update:modelValue="(value: Date | null) => newPeriod.end_date = value ? value.toISOString().split('T')[0] : null"
+            @update:modelValue="
+              (value: Date | null) =>
+                (newPeriod.end_date = value ? value.toISOString().split('T')[0] : null)
+            "
             required
             dateFormat="dd/mm/yy"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -118,9 +122,15 @@
           </select>
         </div>
         <div class="md:col-span-3 flex justify-end">
-          <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 w-full" role="alert">
+          <div
+            class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 w-full"
+            role="alert"
+          >
             <p class="font-bold">Atenção</p>
-            <p>Os períodos mensais serão criados automaticamente com base nas datas informadas. O regime tributário escolhido será aplicado a todos os cálculos de impostos do ano.</p>
+            <p>
+              Os períodos mensais serão criados automaticamente com base nas datas informadas. O
+              regime tributário escolhido será aplicado a todos os cálculos de impostos do ano.
+            </p>
           </div>
         </div>
         <div class="md:col-span-3 flex justify-end space-x-2">
@@ -172,7 +182,10 @@
           <Calendar
             id="editStartDate"
             :modelValue="editingPeriod!.start_date ? new Date(editingPeriod!.start_date) : null"
-            @update:modelValue="(value: Date | null) => editingPeriod!.start_date = value ? value.toISOString().split('T')[0] : null"
+            @update:modelValue="
+              (value: Date | null) =>
+                (editingPeriod!.start_date = value ? value.toISOString().split('T')[0] : null)
+            "
             required
             dateFormat="dd/mm/yy"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -185,7 +198,10 @@
           <Calendar
             id="editEndDate"
             :modelValue="editingPeriod!.end_date ? new Date(editingPeriod!.end_date) : null"
-            @update:modelValue="(value: Date | null) => editingPeriod!.end_date = value ? value.toISOString().split('T')[0] : null"
+            @update:modelValue="
+              (value: Date | null) =>
+                (editingPeriod!.end_date = value ? value.toISOString().split('T')[0] : null)
+            "
             required
             dateFormat="dd/mm/yy"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -225,21 +241,7 @@
             <option value="annex_v">Anexo V - Serviços</option>
           </select>
         </div>
-        <div>
-          <label for="editCostingMethod" class="block text-sm font-medium text-gray-700"
-            >Método de Custeio</label
-          >
-          <select
-            id="editCostingMethod"
-            v-model="editingPeriod!.costing_method as 'average' | 'fifo' | 'lifo'"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          >
-            <option v-for="method in costingMethods" :key="method.value" :value="method.value">
-              {{ method.label }}
-            </option>
-          </select>
-        </div>
+
         <div class="md:col-span-3 flex justify-end space-x-2">
           <button
             type="button"
@@ -329,9 +331,7 @@
               {{ formatDate(period.end_date) }})
             </p>
             <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
-            <p class="text-sm text-gray-600">
-              Custeio: {{ formatCostingMethod(period.costing_method) }}
-            </p>
+
             <span
               :class="[
                 period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
@@ -561,7 +561,6 @@ const newPeriod = ref<AccountingPeriod>({
   created_at: '',
   regime: null,
   annex: null,
-  costing_method: 'average',
 })
 
 const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
@@ -570,11 +569,6 @@ const searchTerm = ref('')
 const showCreatePeriodForm = ref(false)
 const showEditPeriodForm = ref(false)
 const editingPeriod = ref<AccountingPeriod | null>(null)
-const costingMethods = [
-  { label: 'Custo Médio Ponderado', value: 'average' },
-  { label: 'PEPS (Primeiro a Entrar, Primeiro a Sair)', value: 'fifo' },
-  { label: 'UEPS (Último a Entrar, Primeiro a Sair)', value: 'lifo' },
-]
 
 // Sharing Modal State
 const showShareModal = ref(false)
@@ -644,7 +638,7 @@ const handleCreatePeriod = async () => {
       end_date: newPeriod.value.end_date,
       regime: newPeriod.value.regime as TaxRegime,
       annex: newPeriod.value.annex as string,
-      costing_method: newPeriod.value.costing_method,
+
       is_active: true,
     })
     toast.add({
@@ -663,7 +657,6 @@ const handleCreatePeriod = async () => {
       created_at: '',
       regime: null,
       annex: null,
-      costing_method: 'average',
     } // Limpa o formulário
     showCreatePeriodForm.value = false // Fecha o formulário após a criação
   } catch (err: unknown) {
@@ -678,9 +671,7 @@ const handleCreatePeriod = async () => {
 
 const startEditPeriod = (period: AccountingPeriod) => {
   editingPeriod.value = { ...period }
-  if (!editingPeriod.value.costing_method) {
-    editingPeriod.value.costing_method = 'average' // Garante um valor padrão
-  }
+
   showEditPeriodForm.value = true
   showCreatePeriodForm.value = false // Esconde o formulário de criação se estiver visível
 }
@@ -710,7 +701,6 @@ const handleUpdatePeriod = async () => {
       end_date: editingPeriod.value.end_date,
       regime: editingPeriod.value.regime || undefined,
       annex: editingPeriod.value.annex || undefined,
-      costing_method: editingPeriod.value.costing_method,
     })
     toast.add({
       severity: 'success',
@@ -787,20 +777,6 @@ const formatRegime = (regime: TaxRegime | null | undefined) => {
       return 'Lucro Real'
     default:
       return regime
-  }
-}
-
-const formatCostingMethod = (method: 'average' | 'fifo' | 'lifo' | undefined) => {
-  if (!method) return 'N/A'
-  switch (method) {
-    case 'average':
-      return 'Custo Médio Ponderado'
-    case 'fifo':
-      return 'PEPS'
-    case 'lifo':
-      return 'UEPS'
-    default:
-      return method
   }
 }
 
@@ -957,4 +933,3 @@ async function handleYearEndClosing() {
   }
 }
 </script>
-

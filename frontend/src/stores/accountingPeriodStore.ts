@@ -1,15 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/services/api'
-import type { AccountingPeriod, TaxRegime, TaxRegimeHistory } from '@/types'
+import type { AccountingPeriod, TaxRegimeHistory } from '@/types'
 
 import { useAuthStore } from './authStore'
 import { useOrganizationSelectionStore } from './organizationSelectionStore'
 
-type NewAccountingPeriodPayload = Omit<
-  AccountingPeriod,
-  'id' | 'created_at' | 'organization_id'
-> & { regime: TaxRegime; costing_method: 'average' | 'fifo' | 'lifo' }
+type NewAccountingPeriodPayload = Omit<AccountingPeriod, 'id' | 'created_at' | 'organization_id'>
 
 export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
   const accountingPeriods = ref<AccountingPeriod[]>([])

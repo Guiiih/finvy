@@ -136,12 +136,6 @@ watch(
                   {{ selectedProductDetails.unitType }}</span
                 >
               </div>
-              <div>
-                <span class="text-surface-500">Método de Custeio: </span>
-                <span class="font-medium">{{
-                  selectedProductDetails.costingMethod?.toUpperCase()
-                }}</span>
-              </div>
             </div>
           </div>
         </template>

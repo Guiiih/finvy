@@ -33,7 +33,7 @@ export interface Product {
   cost?: number // Adicionado para o custo unitário
   currentStock?: number // Adicionado para o estoque atual
   unitType?: string // Adicionado para o tipo de unidade
-  costingMethod?: 'average' | 'fifo' | 'lifo' // Adicionado para o método de custeio
+
   product_service_type?: 'Produto' | 'Serviço'
   default_cfop_purchase?: string
   default_cfop_sale?: string
@@ -135,7 +135,6 @@ export interface AccountingPeriod {
   created_at: string
   regime?: TaxRegime | null // Adicionado o regime tributário
   annex?: string | null // Adicionado o anexo do simples nacional
-  costing_method: 'average' | 'fifo' | 'lifo' // Adicionado o método de custeio
 }
 
 export interface Organization {
