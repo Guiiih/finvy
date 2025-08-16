@@ -57,36 +57,7 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        <div>
-          <label for="startDate" class="block text-sm font-medium text-gray-700"
-            >Data de Início</label
-          >
-          <Calendar
-            id="startDate"
-            :modelValue="newPeriod.start_date ? new Date(newPeriod.start_date) : null"
-            @update:modelValue="
-              (value: Date | null) =>
-                (newPeriod.start_date = value ? value.toISOString().split('T')[0] : null)
-            "
-            required
-            dateFormat="dd/mm/yy"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label for="endDate" class="block text-sm font-medium text-gray-700">Data de Fim</label>
-          <Calendar
-            id="endDate"
-            :modelValue="newPeriod.end_date ? new Date(newPeriod.end_date) : null"
-            @update:modelValue="
-              (value: Date | null) =>
-                (newPeriod.end_date = value ? value.toISOString().split('T')[0] : null)
-            "
-            required
-            dateFormat="dd/mm/yy"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
+        
         <div>
           <label for="regime" class="block text-sm font-medium text-gray-700"
             >Regime Tributário</label
@@ -175,38 +146,7 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        <div>
-          <label for="editStartDate" class="block text-sm font-medium text-gray-700"
-            >Data de Início</label
-          >
-          <Calendar
-            id="editStartDate"
-            :modelValue="editingPeriod!.start_date ? new Date(editingPeriod!.start_date) : null"
-            @update:modelValue="
-              (value: Date | null) =>
-                (editingPeriod!.start_date = value ? value.toISOString().split('T')[0] : null)
-            "
-            required
-            dateFormat="dd/mm/yy"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label for="editEndDate" class="block text-sm font-medium text-gray-700"
-            >Data de Fim</label
-          >
-          <Calendar
-            id="editEndDate"
-            :modelValue="editingPeriod!.end_date ? new Date(editingPeriod!.end_date) : null"
-            @update:modelValue="
-              (value: Date | null) =>
-                (editingPeriod!.end_date = value ? value.toISOString().split('T')[0] : null)
-            "
-            required
-            dateFormat="dd/mm/yy"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
+        
         <div>
           <label for="editRegime" class="block text-sm font-medium text-gray-700"
             >Regime Tributário</label
@@ -529,13 +469,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
 import { useSharingStore } from '@/stores/sharingStore'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
-import Calendar from 'primevue/calendar'
+
 import { api } from '@/services/api'
 import type {
   AccountingPeriod,
@@ -563,12 +503,40 @@ const newPeriod = ref<AccountingPeriod>({
   annex: null,
 })
 
+watch(
+  () => newPeriod.value.fiscal_year,
+  (newYear) => {
+    if (newYear) {
+      newPeriod.value.start_date = `${newYear}-01-01`
+      newPeriod.value.end_date = `${newYear}-12-31`
+    } else {
+      newPeriod.value.start_date = null
+      newPeriod.value.end_date = null
+    }
+  },
+  { immediate: true },
+)
+
 const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
 
 const searchTerm = ref('')
 const showCreatePeriodForm = ref(false)
 const showEditPeriodForm = ref(false)
 const editingPeriod = ref<AccountingPeriod | null>(null)
+
+watch(
+  () => editingPeriod.value?.fiscal_year,
+  (newYear) => {
+    if (editingPeriod.value && newYear) {
+      editingPeriod.value.start_date = `${newYear}-01-01`
+      editingPeriod.value.end_date = `${newYear}-12-31`
+    } else if (editingPeriod.value) {
+      editingPeriod.value.start_date = null
+      editingPeriod.value.end_date = null
+    }
+  },
+  { immediate: true },
+)
 
 // Sharing Modal State
 const showShareModal = ref(false)
@@ -617,8 +585,6 @@ async function fetchTaxRegimeHistory() {
 const handleCreatePeriod = async () => {
   if (
     !newPeriod.value.fiscal_year ||
-    !newPeriod.value.start_date ||
-    !newPeriod.value.end_date ||
     !newPeriod.value.regime ||
     !newPeriod.value.annex
   ) {
@@ -680,8 +646,6 @@ const handleUpdatePeriod = async () => {
   if (
     !editingPeriod.value ||
     !editingPeriod.value.fiscal_year ||
-    !editingPeriod.value.start_date ||
-    !editingPeriod.value.end_date ||
     !editingPeriod.value.regime ||
     !editingPeriod.value.annex
   ) {
