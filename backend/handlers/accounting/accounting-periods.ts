@@ -9,6 +9,16 @@ import { z } from 'zod'
 import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { AccountingPeriod, TaxRegime } from '../../types/index.js'
 
+interface MonthlyPeriod {
+  organization_id: string;
+  fiscal_year: number;
+  start_date: string;
+  end_date: string;
+  regime: TaxRegime;
+  annex: string | null | undefined;
+  is_active: boolean;
+}
+
 // Esquemas de validação para períodos contábeis
 const createAccountingPeriodSchema = z.object({
   fiscal_year: z.number().int().min(1900).max(2100, 'Ano fiscal inválido.'),
@@ -159,7 +169,7 @@ export default async function handler(
 
       // Automaticamente criar períodos mensais para o ano fiscal
       logger.info(`[Accounting Periods] Criando períodos mensais para o ano fiscal ${fiscal_year}`)
-      const monthlyPeriodsToInsert = []
+      const monthlyPeriodsToInsert: MonthlyPeriod[] = []
       const currentMonth = new Date(start_date)
       while (currentMonth <= new Date(end_date)) {
         const monthStartDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
