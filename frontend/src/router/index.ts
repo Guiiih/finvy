@@ -59,12 +59,7 @@ const router = createRouter({
       component: () => import('../views/accounting/AccountingPeriodView.vue'),
       meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
     },
-    {
-      path: '/year-end-closing',
-      name: 'year-end-closing',
-      component: () => import('../views/accounting/YearEndClosingView.vue'),
-      meta: { requiresAuth: true, title: 'Fechamento de Exercício' },
-    },
+    
     {
       path: '/accounts-payable',
       name: 'accounts-payable',

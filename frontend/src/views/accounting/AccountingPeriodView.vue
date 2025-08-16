@@ -1,6 +1,5 @@
 <template>
   <div class="p-4 sm:p-4 md:p-6">
-
     <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
       <div class="relative flex-grow">
         <input
@@ -29,6 +28,12 @@
         class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
       >
         Novo Período
+      </button>
+      <button
+        @click="showYearEndClosingModal = true"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+      >
+        Fechar Exercício
       </button>
     </div>
 
@@ -259,6 +264,51 @@
       <p v-if="accountingPeriodStore.error" class="text-red-500 text-sm mt-2">
         {{ accountingPeriodStore.error }}
       </p>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="showYearEndClosingModal"
+      modal
+      header="Fechamento de Exercício"
+      class="p-fluid w-full md:w-1/2 lg:w-1/3"
+    >
+      <form @submit.prevent="handleYearEndClosing" class="flex flex-col space-y-4">
+        <p class="text-surface-700">
+          O fechamento de exercício zera as contas de receita e despesa, transferindo o resultado
+          para o Patrimônio Líquido. Selecione a data de fechamento. Todos os lançamentos até esta
+          data serão considerados.
+        </p>
+
+        <div>
+          <label for="closingDate" class="block text-sm font-medium text-gray-700"
+            >Data de Fechamento</label
+          >
+          <input
+            type="date"
+            id="closingDate"
+            v-model="closingDate"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-4">
+          <button
+            type="button"
+            @click="showYearEndClosingModal = false"
+            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            :disabled="isClosingYearEnd"
+            class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 disabled:bg-surface-300"
+          >
+            {{ isClosingYearEnd ? 'Processando...' : 'Realizar Fechamento' }}
+          </button>
+        </div>
+      </form>
     </Dialog>
 
     <div class="bg-white p-4 rounded-lg shadow-sm">
@@ -534,6 +584,11 @@ const searchResults = ref<User[]>([])
 const sharingUser = ref<User | null>(null)
 const sharingPermissionLevel = ref<SharedPermissionLevel>('read')
 const sharedUsers = ref<SharedAccountingPeriod[]>([])
+
+// Year End Closing State
+const showYearEndClosingModal = ref(false)
+const closingDate = ref('')
+const isClosingYearEnd = ref(false)
 
 const filteredAccountingPeriods = computed(() => {
   const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
@@ -863,4 +918,43 @@ async function fetchSharedUsers(periodId: string) {
     sharedUsers.value = []
   }
 }
+
+async function handleYearEndClosing() {
+  if (!closingDate.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Por favor, selecione uma data de fechamento.',
+      life: 3000,
+    })
+    return
+  }
+
+  isClosingYearEnd.value = true
+  try {
+    const response = await api.post<{ message?: string }, { closingDate: string }>(
+      '/year-end-closing',
+      {
+        closingDate: closingDate.value,
+      },
+    )
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: response.message || 'Fechamento de exercício realizado com sucesso!',
+      life: 3000,
+    })
+    showYearEndClosingModal.value = false
+  } catch (err: unknown) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: err instanceof Error ? err.message : 'Erro ao realizar fechamento de exercício.',
+      life: 3000,
+    })
+  } finally {
+    isClosingYearEnd.value = false
+  }
+}
 </script>
+
