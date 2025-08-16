@@ -157,6 +157,39 @@ export default async function handler(
         `[Accounting Periods] Novo período contábil criado com sucesso: ${accountingPeriod.id}`,
       )
 
+      // Automaticamente criar períodos mensais para o ano fiscal
+      logger.info(`[Accounting Periods] Criando períodos mensais para o ano fiscal ${fiscal_year}`)
+      const monthlyPeriodsToInsert = []
+      let currentMonth = new Date(start_date)
+      while (currentMonth <= new Date(end_date)) {
+        const monthStartDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+        const monthEndDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
+
+        monthlyPeriodsToInsert.push({
+          organization_id,
+          fiscal_year,
+          start_date: monthStartDate.toISOString().split('T')[0],
+          end_date: monthEndDate.toISOString().split('T')[0],
+          regime,
+          annex,
+          is_active: false, // Períodos mensais não são ativos por padrão
+        })
+        currentMonth.setMonth(currentMonth.getMonth() + 1)
+      }
+
+      if (monthlyPeriodsToInsert.length > 0) {
+        const { error: monthlyPeriodsDbError } = await userSupabase
+          .from('accounting_periods')
+          .insert(monthlyPeriodsToInsert)
+
+        if (monthlyPeriodsDbError) {
+          logger.error(
+            `[Accounting Periods] Erro ao inserir períodos mensais: ${monthlyPeriodsDbError.message}`,
+          )
+          // Não lançar erro fatal aqui, pois o período fiscal principal já foi criado
+        }
+      }
+
       // Inserir no tax_regime_history
       logger.info(
         `[Accounting Periods] Inserindo novo regime tributário para organization_id: ${organization_id}`,

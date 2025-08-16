@@ -314,6 +314,7 @@ export default async function handler(
           operation_type: inferredOperationType,
           total_net,
           organization_id,
+          accounting_period_id: active_accounting_period_id,
           token,
         })
 

@@ -70,6 +70,7 @@ export const calculateFiscalTaxesHandler = async (
       tax_regime: taxRegimeHistory?.regime, // Passa o regime tributário
       total_net: fiscalData.totalAmount,
       organization_id,
+      accounting_period_id: req.accountingPeriodId,
       token,
     })
 

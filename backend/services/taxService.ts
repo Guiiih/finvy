@@ -19,6 +19,7 @@ interface TaxCalculationParams {
   uf_origin?: string | null
   uf_destination?: string | null
   organization_id: string
+  accounting_period_id?: string // Adicionado
   token: string
 }
 
@@ -57,9 +58,12 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     mva_rate: initial_mva_rate,
     operation_type,
     total_net,
-    tax_regime,
+    tax_regime: param_tax_regime, // Renomeado para evitar conflito
     ncm,
+    uf_origin,
+    uf_destination,
     organization_id,
+    accounting_period_id,
     token,
   } = params
 
@@ -73,6 +77,31 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
   let csll_rate = initial_csll_rate || 0
   let inss_rate = initial_inss_rate || 0
   let mva_rate = initial_mva_rate || 0
+
+  let current_tax_regime: TaxRegime | null | undefined = param_tax_regime
+  let current_annex: string | null | undefined = undefined
+
+  // Se o regime tributário não foi passado diretamente, busca do período contábil
+  if (!current_tax_regime && accounting_period_id) {
+    const { data: periodData, error: periodError } = await supabase
+      .from('accounting_periods')
+      .select('regime, annex')
+      .eq('id', accounting_period_id)
+      .single()
+
+    if (periodError) {
+      console.error(
+        `Erro ao buscar regime e anexo para o período contábil ${accounting_period_id}:`,
+        periodError,
+      )
+      // Continua com os valores padrão ou lança um erro, dependendo da criticidade
+    }
+
+    if (periodData) {
+      current_tax_regime = periodData.regime
+      current_annex = periodData.annex
+    }
+  }
 
   // Fetch tax rules based on multiple criteria
   if (operation_type) {
@@ -109,14 +138,24 @@ export async function calculateTaxes(params: TaxCalculationParams): Promise<TaxC
     ipi_rate = 18 // Alíquota de 18% para este NCM
   }
 
-  // Aplicar alíquotas baseadas no regime tributário, se fornecido
-  if (tax_regime) {
-    switch (tax_regime) {
+  // Aplicar alíquotas baseadas no regime tributário e anexo, se fornecido
+  if (current_tax_regime) {
+    switch (current_tax_regime) {
       case TaxRegime.SimplesNacional:
         icms_rate = 0
         ipi_rate = 0
-        pis_rate = 0.0038
-        cofins_rate = 0.0016
+        // Alíquotas do Simples Nacional podem variar por anexo
+        if (current_annex === 'annex_i') {
+          pis_rate = 0.0038 // Exemplo para Anexo I
+          cofins_rate = 0.0016 // Exemplo para Anexo I
+        } else if (current_annex === 'annex_ii') {
+          pis_rate = 0.0045 // Exemplo para Anexo II
+          cofins_rate = 0.002 // Exemplo para Anexo II
+        } else {
+          // Default ou erro se anexo não for especificado para Simples Nacional
+          pis_rate = 0.0038
+          cofins_rate = 0.0016
+        }
         irrf_rate = 0
         csll_rate = 0
         inss_rate = 0

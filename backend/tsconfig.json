@@ -12,6 +12,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
     "types": ["vitest"],
     "outDir": "./dist",
     "rootDir": ".",
