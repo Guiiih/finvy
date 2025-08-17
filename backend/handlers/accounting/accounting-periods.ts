@@ -10,13 +10,14 @@ import { formatSupabaseError } from '../../utils/errorUtils.js'
 import { AccountingPeriod, TaxRegime } from '../../types/index.js'
 
 interface MonthlyPeriod {
-  organization_id: string;
-  fiscal_year: number;
-  start_date: string;
-  end_date: string;
-  regime: TaxRegime;
-  annex: string | null | undefined;
-  is_active: boolean;
+  organization_id: string
+  fiscal_year: number
+  start_date: string
+  end_date: string
+  regime: TaxRegime
+  annex: string | null | undefined
+  is_active: boolean
+  period_type: 'monthly'
 }
 
 // Esquemas de validação para períodos contábeis
@@ -152,7 +153,7 @@ export default async function handler(
       )
       const { data: accountingPeriod, error: dbError } = await userSupabase
         .from('accounting_periods')
-        .insert([{ fiscal_year, start_date, end_date, organization_id, annex }])
+        .insert([{ fiscal_year, start_date, end_date, organization_id, annex, period_type: 'yearly' }])
         .select()
         .single()
 
@@ -173,7 +174,9 @@ export default async function handler(
       // Use UTC para evitar problemas de fuso horário
       const startDate = new Date(`${start_date}T00:00:00Z`)
       const endDate = new Date(`${end_date}T00:00:00Z`)
-      let currentMonth = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1))
+      const currentMonth = new Date(
+        Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1),
+      )
 
       while (currentMonth <= endDate) {
         const monthStartDate = new Date(
@@ -191,6 +194,7 @@ export default async function handler(
           regime,
           annex,
           is_active: false, // Períodos mensais não são ativos por padrão
+          period_type: 'monthly', // Adicionado
         })
         currentMonth.setUTCMonth(currentMonth.getUTCMonth() + 1)
       }
@@ -259,7 +263,7 @@ export default async function handler(
         )
         const { data, error: dbError } = await userSupabase
           .from('accounting_periods')
-          .select('id, fiscal_year, start_date, end_date, annex')
+          .select('id, fiscal_year, start_date, end_date, annex, period_type')
           .eq('organization_id', organization_id)
           .order('start_date', { ascending: false })
 

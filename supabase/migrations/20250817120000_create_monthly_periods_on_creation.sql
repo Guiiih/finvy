@@ -93,8 +93,8 @@ BEGIN
     default_start_date := (current_year::TEXT || '-01-01')::DATE;
     default_end_date := (current_year::TEXT || '-12-31')::DATE;
 
-    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active)
-    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE)
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active, period_type)
+    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE, 'yearly')
     RETURNING id, fiscal_year INTO new_period_id, fiscal_year;
 
     -- Cria o registro no histórico de regimes
@@ -162,8 +162,8 @@ BEGIN
     default_start_date := (current_year::TEXT || '-01-01')::DATE;
     default_end_date := (current_year::TEXT || '-12-31')::DATE;
 
-    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active)
-    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE)
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active, period_type)
+    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE, 'yearly')
     RETURNING id INTO new_period_id;
 
     -- Cria o registro no histórico de regimes

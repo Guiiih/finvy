@@ -29,12 +29,6 @@
       >
         Novo Período
       </button>
-      <button
-        @click="showYearEndClosingModal = true"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-      >
-        Fechar Exercício
-      </button>
     </div>
 
     <Dialog
@@ -209,48 +203,55 @@
     </Dialog>
 
     <Dialog
-      v-model:visible="showYearEndClosingModal"
+      v-model:visible="showClosePeriodModal"
       modal
-      header="Fechamento de Exercício"
+      header="Fechar Período"
       class="p-fluid w-full md:w-1/2 lg:w-1/3"
     >
-      <form @submit.prevent="handleYearEndClosing" class="flex flex-col space-y-4">
-        <p class="text-surface-700">
-          O fechamento de exercício zera as contas de receita e despesa, transferindo o resultado
-          para o Patrimônio Líquido. Selecione a data de fechamento. Todos os lançamentos até esta
-          data serão considerados.
-        </p>
+      <p v-if="periodToClose">
+        Deseja fechar o período de {{ formatMonthYear(periodToClose.start_date) }}? Esta ação não
+        poderá ser desfeita.
+      </p>
+      <div class="flex justify-end space-x-2 pt-4">
+        <button
+          @click="showClosePeriodModal = false"
+          class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+        >
+          Cancelar
+        </button>
+        <button
+          @click="handleClosePeriod"
+          class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+        >
+          Fechar Período
+        </button>
+      </div>
+    </Dialog>
 
-        <div>
-          <label for="closingDate" class="block text-sm font-medium text-gray-700"
-            >Data de Fechamento</label
-          >
-          <input
-            type="date"
-            id="closingDate"
-            v-model="closingDate"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-4">
-          <button
-            type="button"
-            @click="showYearEndClosingModal = false"
-            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            :disabled="isClosingYearEnd"
-            class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50 disabled:bg-surface-300"
-          >
-            {{ isClosingYearEnd ? 'Processando...' : 'Realizar Fechamento' }}
-          </button>
-        </div>
-      </form>
+    <Dialog
+      v-model:visible="showCloseYearModal"
+      modal
+      :header="`Fechar Ano Fiscal ${yearToClose?.year}`"
+      class="p-fluid w-full md:w-1/2 lg:w-1/3"
+    >
+      <p v-if="yearToClose">
+        Esta ação irá fechar todos os períodos abertos do ano {{ yearToClose.year }} e não poderá
+        ser desfeita. Certifique-se de que todos os lançamentos estão corretos.
+      </p>
+      <div class="flex justify-end space-x-2 pt-4">
+        <button
+          @click="showCloseYearModal = false"
+          class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+        >
+          Cancelar
+        </button>
+        <button
+          @click="handleCloseYear"
+          class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+        >
+          Fechar Ano
+        </button>
+      </div>
     </Dialog>
 
     <div class="space-y-6">
@@ -266,7 +267,7 @@
       <div
         v-else
         v-for="group in groupedPeriods"
-        :key="group.year"
+        :key="`${group.year}-${rerenderKey}`"
         class="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200"
       >
         <!-- Cabeçalho do Ano Fiscal -->
@@ -285,52 +286,45 @@
                 {{ formatRegime(group.yearPeriod.regime) }} - {{ group.yearPeriod.annex }}
               </p>
             </div>
-            <span
-              v-if="group.yearPeriod.is_active"
-              class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-            >
-              Atual
-            </span>
+            <Badge v-if="group.yearPeriod.is_active" value="Atual" severity="info"></Badge>
           </div>
           <div class="flex items-center space-x-2 mt-3 sm:mt-0">
-            <button
-              class="bg-green-500 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-green-600 transition-colors"
-            >
-              <i class="pi pi-lock-open mr-1"></i> Aberto
-            </button>
-            <button
+            <Badge
+              :value="group.yearPeriod.is_locked ? 'Fechado' : 'Aberto'"
+              :severity="group.yearPeriod.is_locked ? 'danger' : 'success'"
+            ></Badge>
+            <Button
               v-if="!group.yearPeriod.is_active"
               @click="setActive(group.yearPeriod.id)"
-              class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors"
-            >
-              Tornar Atual
-            </button>
-            <button
-              class="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-red-600 transition-colors"
-            >
-              <i class="pi pi-lock mr-1"></i> Fechar Ano
-            </button>
-            <button
+              label="Tornar Atual"
+              severity="secondary"
+              text
+            ></Button>
+            <Button
+              @click="openCloseYearModal(group)"
+              label="Fechar Ano Inteiro"
+              severity="danger"
+              text
+            ></Button>
+            <Button
               @click="startEditPeriod(group.yearPeriod)"
-              class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
-              aria-label="Editar Período"
-            >
-              <i class="pi pi-pen-to-square"></i>
-            </button>
-            <button
+              icon="pi pi-pen-to-square"
+              text
+              rounded
+            ></Button>
+            <Button
               @click="deletePeriod(group.yearPeriod.id)"
-              class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
-              aria-label="Excluir Período"
-            >
-              <i class="pi pi-trash"></i>
-            </button>
-            <button
+              icon="pi pi-trash"
+              text
+              rounded
+              severity="danger"
+            ></Button>
+            <Button
               @click="openShareModal(group.yearPeriod)"
-              class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
-              aria-label="Compartilhar Período"
-            >
-              <i class="pi pi-share-alt"></i>
-            </button>
+              icon="pi pi-share-alt"
+              text
+              rounded
+            ></Button>
           </div>
         </div>
 
@@ -410,15 +404,19 @@
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-green-600">R$ 0,00</td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-red-600">R$ 0,00</td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
-                  <span
-                    class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full"
-                    >Aberto</span
-                  >
+                  <Badge
+                    :value="period.is_locked ? 'Fechado' : 'Aberto'"
+                    :severity="period.is_locked ? 'danger' : 'success'"
+                  ></Badge>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
-                  <button class="text-gray-500 hover:text-gray-700">
-                    <i class="pi pi-lock"></i>
-                  </button>
+                  <Button
+                    v-if="!period.is_locked"
+                    @click="openClosePeriodModal(period)"
+                    icon="pi pi-lock"
+                    text
+                    rounded
+                  ></Button>
                 </td>
               </tr>
             </tbody>
@@ -531,6 +529,8 @@ import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
 import { useSharingStore } from '@/stores/sharingStore'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import Badge from 'primevue/badge'
 
 import { api } from '@/services/api'
 import type {
@@ -600,10 +600,12 @@ const sharingUser = ref<User | null>(null)
 const sharingPermissionLevel = ref<SharedPermissionLevel>('read')
 const sharedUsers = ref<SharedAccountingPeriod[]>([])
 
-// Year End Closing State
-const showYearEndClosingModal = ref(false)
-const closingDate = ref('')
-const isClosingYearEnd = ref(false)
+// State for closing modals
+const showClosePeriodModal = ref(false)
+const showCloseYearModal = ref(false)
+const periodToClose = ref<AccountingPeriod | null>(null)
+const yearToClose = ref<{ year: number } | null>(null)
+const rerenderKey = ref(0)
 
 const groupedPeriods = computed(() => {
   const groups: {
@@ -612,8 +614,8 @@ const groupedPeriods = computed(() => {
     monthlyPeriods: AccountingPeriod[]
   }[] = []
 
-  const yearlyPeriods = accountingPeriods.value.filter((p) => p.is_active)
-  const monthlyPeriods = accountingPeriods.value.filter((p) => !p.is_active)
+  const yearlyPeriods = accountingPeriods.value.filter((p) => p.period_type === 'yearly')
+  const monthlyPeriods = accountingPeriods.value.filter((p) => p.period_type === 'monthly')
 
   for (const yearPeriod of yearlyPeriods) {
     const year = yearPeriod.fiscal_year
@@ -660,7 +662,7 @@ const handleCreatePeriod = async () => {
   }
 
   try {
-    await accountingPeriodStore.addAccountingPeriod({
+    const newAccountingPeriod = await accountingPeriodStore.addAccountingPeriod({
       fiscal_year: newPeriod.value.fiscal_year,
       start_date: newPeriod.value.start_date,
       end_date: newPeriod.value.end_date,
@@ -669,6 +671,11 @@ const handleCreatePeriod = async () => {
 
       is_active: true,
     })
+
+    if (newAccountingPeriod) {
+      await accountingPeriodStore.setActivePeriod(newAccountingPeriod.id)
+    }
+
     toast.add({
       severity: 'success',
       summary: 'Sucesso',
@@ -921,41 +928,29 @@ async function fetchSharedUsers(periodId: string) {
   }
 }
 
-async function handleYearEndClosing() {
-  if (!closingDate.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Atenção',
-      detail: 'Por favor, selecione uma data de fechamento.',
-      life: 3000,
-    })
-    return
-  }
+function openClosePeriodModal(period: AccountingPeriod) {
+  periodToClose.value = period
+  showClosePeriodModal.value = true
+}
 
-  isClosingYearEnd.value = true
-  try {
-    const response = await api.post<{ message?: string }, { closingDate: string }>(
-      '/year-end-closing',
-      {
-        closingDate: closingDate.value,
-      },
-    )
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: response.message || 'Fechamento de exercício realizado com sucesso!',
-      life: 3000,
-    })
-    showYearEndClosingModal.value = false
-  } catch (err: unknown) {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: err instanceof Error ? err.message : 'Erro ao realizar fechamento de exercício.',
-      life: 3000,
-    })
-  } finally {
-    isClosingYearEnd.value = false
-  }
+function openCloseYearModal(group: { year: number }) {
+  yearToClose.value = group
+  showCloseYearModal.value = true
+}
+
+async function handleClosePeriod() {
+  if (!periodToClose.value) return
+  // Lógica para fechar o período aqui
+  console.log('Fechando período:', periodToClose.value)
+  showClosePeriodModal.value = false
+  periodToClose.value = null
+}
+
+async function handleCloseYear() {
+  if (!yearToClose.value) return
+  // Lógica para fechar o ano aqui
+  console.log('Fechando ano:', yearToClose.value.year)
+  showCloseYearModal.value = false
+  yearToClose.value = null
 }
 </script>

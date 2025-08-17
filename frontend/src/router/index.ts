@@ -59,7 +59,7 @@ const router = createRouter({
       component: () => import('../views/accounting/AccountingPeriodView.vue'),
       meta: { requiresAuth: true, title: 'Gestão de Períodos Contábeis' },
     },
-    
+
     {
       path: '/accounts-payable',
       name: 'accounts-payable',

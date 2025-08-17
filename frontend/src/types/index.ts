@@ -125,6 +125,8 @@ export interface FinancialTransaction {
   created_at: string
 }
 
+export type PeriodType = 'yearly' | 'monthly';
+
 export interface AccountingPeriod {
   id: string
   organization_id: string
@@ -135,6 +137,8 @@ export interface AccountingPeriod {
   created_at: string
   regime?: TaxRegime | null // Adicionado o regime tributário
   annex?: string | null // Adicionado o anexo do simples nacional
+  is_locked?: boolean
+  period_type?: PeriodType // Adicionado
 }
 
 export interface Organization {

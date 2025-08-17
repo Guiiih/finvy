@@ -150,7 +150,16 @@ export const useAuthStore = defineStore(
           },
         })
         if (authError) throw authError
-        console.log('Registro bem-sucedido. Verifique seu email para confirmar:', data)
+        // Atualiza o user e session no store
+        user.value = data.user;
+    session.value = data.session;
+
+    // Adicionar um pequeno atraso para permitir a propagação do perfil atualizado
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (user.value) {
+      await fetchUserProfile();
+    }
         return true
       } catch (err: unknown) {
         console.error('Erro no registro:', err)
