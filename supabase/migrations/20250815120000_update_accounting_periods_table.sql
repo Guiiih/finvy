@@ -34,8 +34,7 @@ DROP CONSTRAINT IF EXISTS accounting_periods_organization_id_start_date_end_date
 ALTER TABLE public.accounting_periods
 ADD CONSTRAINT accounting_periods_organization_id_fiscal_year_key UNIQUE (organization_id, fiscal_year);
 
-ALTER TABLE public.accounting_periods
-ADD CONSTRAINT accounting_periods_organization_id_start_date_end_date_unique UNIQUE (organization_id, start_date, end_date);
+
 
 -- 7. Atualiza a função create_organization_and_assign_owner
 --    Esta parte será feita em um passo separado para garantir a sintaxe correta da função.
