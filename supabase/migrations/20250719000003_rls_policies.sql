@@ -12,6 +12,14 @@ ALTER TABLE public.entry_lines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financial_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tax_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tax_regime_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_presence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reference_sequences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.journal_entry_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tax_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tax_calculation_history ENABLE ROW LEVEL SECURITY;
+
 
 -- Políticas de RLS
 -- Políticas para organizações
@@ -267,9 +275,6 @@ CREATE POLICY "Organizations can delete their own tax settings." ON tax_settings
    FROM user_organization_roles
   WHERE user_id = auth.uid()));
 
--- Enable Row Level Security (RLS) for tax_regime_history
-ALTER TABLE tax_regime_history ENABLE ROW LEVEL SECURITY;
-
 -- Policy for users to view their own organization's tax regime history
 CREATE POLICY "Users can view their own organization's tax regime history" ON tax_regime_history
 FOR SELECT USING (
@@ -306,7 +311,6 @@ FOR DELETE USING (
     )
 );
 
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own notifications" ON public.notifications
 FOR SELECT USING (auth.uid() = user_id);
@@ -317,7 +321,6 @@ FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own notifications" ON public.notifications
 FOR UPDATE USING (auth.uid() = user_id);
 
-ALTER TABLE public.user_presence ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view user presence" ON public.user_presence
 FOR SELECT USING (true); -- Adjust this policy if you want to restrict visibility
@@ -329,7 +332,6 @@ CREATE POLICY "Users can update their own presence" ON public.user_presence
 FOR UPDATE USING (auth.uid() = user_id);
 
 -- Adiciona RLS (Row Level Security) para a tabela reference_sequences
-ALTER TABLE reference_sequences ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de segurança para reference_sequences
 CREATE POLICY "Enable read access for all users" ON reference_sequences
@@ -345,7 +347,6 @@ CREATE POLICY "Enable delete for authenticated users based on organization_id" O
   FOR DELETE USING (organization_id IN (SELECT organization_id FROM user_organization_roles WHERE user_id = auth.uid()));
 
 -- RLS Policies for the new table
-ALTER TABLE public.journal_entry_history ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow read access to users who can access the journal entry" ON public.journal_entry_history FOR
 SELECT
@@ -357,17 +358,14 @@ SELECT
   );
 
 -- RLS for tax_rules
-ALTER TABLE tax_rules ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow full access to own organization tax rules" 
 ON tax_rules 
 FOR ALL 
 USING (check_user_organization_access(organization_id));
 
 -- Add RLS policies for the new table
-ALTER TABLE tax_calculation_history ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Enable read access for users in their organization" ON tax_calculation_history
-FOR SELECT USING (auth.uid() IN (SELECT user_id FROM user_organization_roles WHERE organization_id = tax_calculation_history.organization_id));
-
-CREATE POLICY "Enable insert for users in their organization" ON tax_calculation_history
-FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM user_organization_roles WHERE organization_id = tax_calculation_history.organization_id));
+CREATE POLICY "Allow full access to own tax history"
+ON tax_calculation_history
+FOR ALL
+USING (auth.uid() = user_id);

@@ -217,24 +217,55 @@ CREATE OR REPLACE FUNCTION public.create_default_chart_of_accounts(
 )
 RETURNS VOID AS $$
 DECLARE
+    -- Variáveis para IDs de contas de nível superior
     v_ativo_id UUID;
     v_passivo_id UUID;
     v_pl_id UUID;
     v_receitas_id UUID;
-    v_custos_despesas_id UUID;
+    v_despesas_id UUID;
+
+    -- Variáveis para IDs de contas de segundo nível (grupos)
     v_ativo_circ_id UUID;
     v_ativo_nao_circ_id UUID;
-    v_caixa_equiv_id UUID;
-    v_imobilizado_id UUID;
     v_passivo_circ_id UUID;
-    v_deducoes_id UUID;
+    v_passivo_nao_circ_id UUID;
+    v_capital_social_id UUID;
+    v_reservas_lucros_id UUID;
+    v_lucros_acumulados_id UUID;
+    v_receita_bruta_id UUID;
+    v_deducoes_receita_id UUID;
+    v_custo_vendas_id UUID;
+    v_despesas_operacionais_id UUID;
+    v_despesas_nao_operacionais_id UUID;
+
+    -- Variáveis para IDs de contas de terceiro nível (subgrupos)
+    v_caixa_equiv_id UUID;
+    v_contas_receber_id UUID;
+    v_estoques_id UUID;
+    v_impostos_recuperar_id UUID;
+    v_investimentos_id UUID;
+    v_imobilizado_id UUID;
+    v_intangivel_id UUID;
+    v_contas_pagar_id UUID;
+    v_obrigacoes_fiscais_id UUID;
+    v_obrigacoes_trabalhistas_id UUID;
+    v_emprestimos_lp_id UUID;
+    v_outras_receitas_id UUID;
+    v_despesas_vendas_id UUID;
+    v_despesas_admin_id UUID;
+    v_despesas_financeiras_id UUID;
+    v_despesas_tributarias_id UUID;
+
+    -- Variáveis para IDs de contas de quarto nível
+    v_bancos_id UUID;
+
 BEGIN
-    -- Nível 1: Contas Principais
+    -- Nível 1: Contas Principais (Ativo, Passivo, PL, Receitas, Despesas)
     INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Ativo', 'asset', '1', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_ativo_id;
     INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Passivo', 'liability', '2', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_passivo_id;
     INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Patrimônio Líquido', 'equity', '3', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_pl_id;
     INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Receitas', 'revenue', '4', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_receitas_id;
-    INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Custos e Despesas', 'expense', '5', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_custos_despesas_id;
+    INSERT INTO public.accounts (name, type, code, organization_id, accounting_period_id, is_protected) VALUES ('Despesas', 'expense', '5', p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_despesas_id;
 
     -- Nível 2: Subgrupos do Ativo
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Ativo Circulante', 'asset', '1.1', v_ativo_id, p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_ativo_circ_id;
@@ -242,42 +273,166 @@ BEGIN
 
     -- Nível 2: Subgrupos do Passivo
     INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Passivo Circulante', 'liability', '2.1', v_passivo_id, p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_passivo_circ_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Passivo Não Circulante', 'liability', '2.2', v_passivo_id, p_organization_id, p_accounting_period_id, TRUE) RETURNING id INTO v_passivo_nao_circ_id;
+
+    -- Nível 2: Subgrupos do Patrimônio Líquido
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Capital Social', 'equity', '3.1', v_pl_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_capital_social_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Reservas de Lucros', 'equity', '3.2', v_pl_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_reservas_lucros_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Lucros/Prejuízos Acumulados', 'equity', '3.3', v_pl_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_lucros_acumulados_id;
+
+    -- Nível 2: Subgrupos de Receitas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Receita Bruta de Vendas', 'revenue', '4.1', v_receitas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_receita_bruta_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Deduções da Receita Bruta', 'revenue', '4.2', v_receitas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_deducoes_receita_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Outras Receitas Operacionais', 'revenue', '4.3', v_receitas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_outras_receitas_id;
+
+    -- Nível 2: Subgrupos de Despesas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Custo das Vendas', 'expense', '5.1', v_despesas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_custo_vendas_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Operacionais', 'expense', '5.2', v_despesas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_operacionais_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Não Operacionais', 'expense', '5.3', v_despesas_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_nao_operacionais_id;
 
     -- Nível 3: Contas do Ativo Circulante
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa e Equivalentes de Caixa', 'asset', '1.1.1', v_ativo_circ_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_caixa_equiv_id;
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Clientes', 'asset', '1.1.2', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Estoques', 'asset', '1.1.3', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Impostos a Recuperar', 'asset', '1.1.4', v_ativo_circ_id, p_organization_id, p_accounting_period_id);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Caixa e Equivalentes de Caixa', 'asset', '1.1.1', v_ativo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_caixa_equiv_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Contas a Receber', 'asset', '1.1.2', v_ativo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_contas_receber_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Estoques', 'asset', '1.1.3', v_ativo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_estoques_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Impostos a Recuperar', 'asset', '1.1.4', v_ativo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_impostos_recuperar_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Antecipadas', 'asset', '1.1.5', v_ativo_circ_id, p_organization_id, p_accounting_period_id, FALSE);
 
     -- Nível 3: Contas do Ativo Não Circulante
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Imobilizado', 'asset', '1.2.1', v_ativo_nao_circ_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_imobilizado_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Investimentos', 'asset', '1.2.1', v_ativo_nao_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_investimentos_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Imobilizado', 'asset', '1.2.2', v_ativo_nao_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_imobilizado_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Intangível', 'asset', '1.2.3', v_ativo_nao_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_intangivel_id;
 
     -- Nível 3: Contas do Passivo Circulante
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Fornecedores', 'liability', '2.1.1', v_passivo_circ_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Impostos a Recolher', 'liability', '2.1.2', v_passivo_circ_id, p_organization_id, p_accounting_period_id);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Contas a Pagar', 'liability', '2.1.1', v_passivo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_contas_pagar_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Obrigações Fiscais', 'liability', '2.1.2', v_passivo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_obrigacoes_fiscais_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Obrigações Trabalhistas', 'liability', '2.1.3', v_passivo_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_obrigacoes_trabalhistas_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Empréstimos e Financiamentos de Curto Prazo', 'liability', '2.1.4', v_passivo_circ_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 3: Contas do Passivo Não Circulante
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Empréstimos e Financiamentos de Longo Prazo', 'liability', '2.2.1', v_passivo_nao_circ_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_emprestimos_lp_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Provisões', 'liability', '2.2.2', v_passivo_nao_circ_id, p_organization_id, p_accounting_period_id, FALSE);
 
     -- Nível 3: Contas do Patrimônio Líquido
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Capital Social', 'equity', '3.1', v_pl_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Capital a Integralizar', 'equity', '3.2', v_pl_id, p_organization_id, p_accounting_period_id);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Capital Social Integralizado', 'equity', '3.1.1', v_capital_social_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Capital a Integralizar', 'equity', '3.1.2', v_capital_social_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Reserva Legal', 'equity', '3.2.1', v_reservas_lucros_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Reserva de Contingência', 'equity', '3.2.2', v_reservas_lucros_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Lucros Acumulados', 'equity', '3.3.1', v_lucros_acumulados_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Prejuízos Acumulados', 'equity', '3.3.2', v_lucros_acumulados_id, p_organization_id, p_accounting_period_id, FALSE);
 
-    -- Nível 3: Contas de Receita
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Receita Bruta de Vendas', 'revenue', '4.1', v_receitas_id, p_organization_id, p_accounting_period_id);
+    -- Nível 3: Contas de Receitas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Venda de Produtos', 'revenue', '4.1.1', v_receita_bruta_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Venda de Serviços', 'revenue', '4.1.2', v_receita_bruta_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Impostos sobre Vendas', 'revenue', '4.2.1', v_deducoes_receita_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Devoluções de Vendas', 'revenue', '4.2.2', v_deducoes_receita_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Juros Ativos', 'revenue', '4.3.1', v_outras_receitas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Aluguéis Recebidos', 'revenue', '4.3.2', v_outras_receitas_id, p_organization_id, p_accounting_period_id, FALSE);
 
-    -- Nível 3: Contas de Custos e Despesas
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Custo da Mercadoria Vendida', 'expense', '5.1', v_custos_despesas_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Deduções da Receita Bruta', 'expense', '5.2', v_custos_despesas_id, p_organization_id, p_accounting_period_id) RETURNING id INTO v_deducoes_id;
+    -- Nível 3: Contas de Despesas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Custo da Mercadoria Vendida (CMV)', 'expense', '5.1.1', v_custo_vendas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Custo do Serviço Prestado (CSP)', 'expense', '5.1.2', v_custo_vendas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas com Vendas', 'expense', '5.2.1', v_despesas_operacionais_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_vendas_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Administrativas', 'expense', '5.2.2', v_despesas_operacionais_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_admin_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Financeiras', 'expense', '5.3.1', v_despesas_nao_operacionais_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_financeiras_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Tributárias', 'expense', '5.3.2', v_despesas_nao_operacionais_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_despesas_tributarias_id;
 
-    -- Nível 4: Contas de Caixa
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa Geral', 'asset', '1.1.1.1', v_caixa_equiv_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa (Banco CEF)', 'asset', '1.1.1.2', v_caixa_equiv_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa (Banco Itaú)', 'asset', '1.1.1.3', v_caixa_equiv_id, p_organization_id, p_accounting_period_id);
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Caixa (Banco Bradesco)', 'asset', '1.1.1.4', v_caixa_equiv_id, p_organization_id, p_accounting_period_id);
+    -- Nível 4: Contas de Caixa e Equivalentes
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Caixa', 'asset', '1.1.1.1', v_caixa_equiv_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Bancos Conta Movimento', 'asset', '1.1.1.2', v_caixa_equiv_id, p_organization_id, p_accounting_period_id, FALSE) RETURNING id INTO v_bancos_id;
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Aplicações Financeiras de Curto Prazo', 'asset', '1.1.1.3', v_caixa_equiv_id, p_organization_id, p_accounting_period_id, FALSE);
 
-    -- Nível 4: Contas de Imobilizado
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('Móveis e Utensílios', 'asset', '1.2.1.1', v_imobilizado_id, p_organization_id, p_accounting_period_id);
+    -- Nível 5: Bancos
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Banco do Brasil', 'asset', '1.1.1.2.1', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Caixa Econômica Federal', 'asset', '1.1.1.2.14', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Bradesco', 'asset', '1.1.1.2.237', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Itaú Unibanco', 'asset', '1.1.1.2.341', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Santander', 'asset', '1.1.1.2.33', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Nubank', 'asset', '1.1.1.2.26', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Banco Inter', 'asset', '1.1.1.2.77', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('C6 Bank', 'asset', '1.1.1.2.336', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('BTG Pactual', 'asset', '1.1.1.2.28', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Banco Safra', 'asset', '1.1.1.2.422', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Sicoob', 'asset', '1.1.1.2.756', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Sicredi', 'asset', '1.1.1.2.748', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('PagBank', 'asset', '1.1.1.2.29', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('XP Investimentos', 'asset', '1.1.1.2.12', v_bancos_id, p_organization_id, p_accounting_period_id, FALSE);
 
-    -- Nível 4: Contas de Impostos
-    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id) VALUES ('ICMS sobre Vendas', 'expense', '5.2.1', v_deducoes_id, p_organization_id, p_accounting_period_id);
+    -- Nível 4: Contas a Receber
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Clientes', 'asset', '1.1.2.1', v_contas_receber_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Duplicatas a Receber', 'asset', '1.1.2.2', v_contas_receber_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Adiantamentos a Fornecedores', 'asset', '1.1.2.3', v_contas_receber_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Estoques
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Estoque de Mercadorias', 'asset', '1.1.3.1', v_estoques_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Estoque de Produtos Acabados', 'asset', '1.1.3.2', v_estoques_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Estoque de Matérias-Primas', 'asset', '1.1.3.3', v_estoques_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Impostos a Recuperar
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('ICMS a Recuperar', 'asset', '1.1.4.1', v_impostos_recuperar_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('PIS a Recuperar', 'asset', '1.1.4.2', v_impostos_recuperar_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('COFINS a Recuperar', 'asset', '1.1.4.3', v_impostos_recuperar_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Imobilizado
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Terrenos', 'asset', '1.2.2.1', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Edifícios e Construções', 'asset', '1.2.2.2', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Máquinas e Equipamentos', 'asset', '1.2.2.3', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Veículos', 'asset', '1.2.2.4', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Móveis e Utensílios', 'asset', '1.2.2.5', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Depreciação Acumulada', 'asset', '1.2.2.6', v_imobilizado_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Intangível
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Marcas e Patentes', 'asset', '1.2.3.1', v_intangivel_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Softwares', 'asset', '1.2.3.2', v_intangivel_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Amortização Acumulada', 'asset', '1.2.3.3', v_intangivel_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Contas a Pagar
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Fornecedores', 'liability', '2.1.1.1', v_contas_pagar_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Salários a Pagar', 'liability', '2.1.1.2', v_contas_pagar_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Aluguéis a Pagar', 'liability', '2.1.1.3', v_contas_pagar_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Obrigações Fiscais
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('ICMS a Recolher', 'liability', '2.1.2.1', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('ISS a Recolher', 'liability', '2.1.2.2', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('PIS a Recolher', 'liability', '2.1.2.3', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('COFINS a Recolher', 'liability', '2.1.2.4', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('IRPJ a Recolher', 'liability', '2.1.2.5', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('CSLL a Recolher', 'liability', '2.1.2.6', v_obrigacoes_fiscais_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Obrigações Trabalhistas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Salários e Ordenados a Pagar', 'liability', '2.1.3.1', v_obrigacoes_trabalhistas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('INSS a Recolher', 'liability', '2.1.3.2', v_obrigacoes_trabalhistas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('FGTS a Recolher', 'liability', '2.1.3.3', v_obrigacoes_trabalhistas_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Despesas com Vendas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Comissões sobre Vendas', 'expense', '5.2.1.1', v_despesas_vendas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Fretes e Carretos', 'expense', '5.2.1.2', v_despesas_vendas_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Publicidade e Propaganda', 'expense', '5.2.1.3', v_despesas_vendas_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Despesas Administrativas
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Salários e Encargos', 'expense', '5.2.2.1', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Aluguéis', 'expense', '5.2.2.2', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas com Energia Elétrica', 'expense', '5.2.2.3', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas com Água e Esgoto', 'expense', '5.2.2.4', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas com Telefone e Internet', 'expense', '5.2.2.5', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Depreciação', 'expense', '5.2.2.6', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Manutenção e Reparos', 'expense', '5.2.2.7', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Material de Escritório', 'expense', '5.2.2.8', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Serviços de Terceiros', 'expense', '5.2.2.9', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas com Viagens', 'expense', '5.2.2.1', v_despesas_admin_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Despesas Financeiras
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Juros Passivos', 'expense', '5.3.1.1', v_despesas_financeiras_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Despesas Bancárias', 'expense', '5.3.1.2', v_despesas_financeiras_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Variações Monetárias Passivas', 'expense', '5.3.1.3', v_despesas_financeiras_id, p_organization_id, p_accounting_period_id, FALSE);
+
+    -- Nível 4: Despesas Tributárias
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('IRPJ', 'expense', '5.3.2.1', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('CSLL', 'expense', '5.3.2.2', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('PIS', 'expense', '5.3.2.3', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('COFINS', 'expense', '5.3.2.4', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('ISS', 'expense', '5.3.2.5', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('ICMS', 'expense', '5.3.2.6', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
+    INSERT INTO public.accounts (name, type, code, parent_account_id, organization_id, accounting_period_id, is_protected) VALUES ('Taxas e Contribuições', 'expense', '5.3.2.7', v_despesas_tributarias_id, p_organization_id, p_accounting_period_id, FALSE);
 
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -294,7 +449,7 @@ RETURNS TABLE (
     organization_id UUID,
     organization_name TEXT,
     accounting_period_id UUID,
-    fiscal_year INT -- Changed from accounting_period_name TEXT
+    fiscal_year INT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -306,34 +461,44 @@ DECLARE
     current_year INT;
     default_start_date DATE;
     default_end_date DATE;
+    -- Adicionado para o regime padrão
+    default_regime tax_regime_enum := 'simples_nacional';
+    default_annex VARCHAR := 'annex_i';
 BEGIN
-    -- Cria a organização e atribui o proprietário
+    -- Cria a organização
     INSERT INTO public.organizations (name, is_personal, cnpj, razao_social, uf, municipio)
     VALUES (p_organization_name, FALSE, p_cnpj, p_razao_social, p_uf, p_municipio)
     RETURNING id, name INTO new_org_id, organization_name;
 
-    -- Atribui o papel de 'owner' ao usuário criador para esta nova organização
+    -- Atribui o papel de 'owner'
     INSERT INTO public.user_organization_roles (user_id, organization_id, role)
     VALUES (p_user_id, new_org_id, 'owner');
 
-    -- Cria um período contábil padrão para a nova organização
+    -- Cria o período contábil anual (principal)
     current_year := EXTRACT(YEAR FROM NOW());
     default_start_date := (current_year::TEXT || '-01-01')::DATE;
     default_end_date := (current_year::TEXT || '-12-31')::DATE;
 
-    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, annex) -- Modified columns
-    VALUES (new_org_id, current_year, default_start_date, default_end_date, 'annex_i') -- Modified values
-    RETURNING id, fiscal_year INTO new_period_id, fiscal_year; -- Modified RETURNING
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active, period_type)
+    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE, 'yearly')
+    RETURNING id, fiscal_year INTO new_period_id, fiscal_year;
 
-    -- Atualiza o perfil do usuário para definir esta nova organização e período como ativos
+    -- Cria o registro no histórico de regimes
+    INSERT INTO public.tax_regime_history (organization_id, regime, start_date, end_date)
+    VALUES (new_org_id, default_regime, default_start_date, default_end_date);
+
+    -- **NOVO: Chama a função para criar os períodos mensais**
+    PERFORM public.create_monthly_accounting_periods(new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex);
+
+    -- Atualiza o perfil do usuário
     UPDATE public.profiles
     SET organization_id = new_org_id, active_accounting_period_id = new_period_id
     WHERE id = p_user_id;
 
-    -- Chamar a função para criar o plano de contas padrão
+    -- Cria o plano de contas padrão
     PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
 
-    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, fiscal_year; -- Modified RETURN QUERY
+    RETURN QUERY SELECT new_org_id, organization_name, new_period_id, fiscal_year;
 END;
 $$;
 
@@ -397,7 +562,11 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
     first_letter TEXT;
     avatar_svg TEXT;
@@ -405,45 +574,63 @@ DECLARE
     new_period_id UUID;
     generated_handle TEXT;
     base_handle_string TEXT;
+    current_year INT;
+    default_start_date DATE;
+    default_end_date DATE;
+    default_regime tax_regime_enum := 'simples_nacional';
+    default_annex VARCHAR := 'annex_i';
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
+    -- Lógica para criar avatar e handle
     IF NEW.raw_user_meta_data->>'first_name' IS NOT NULL AND LENGTH(NEW.raw_user_meta_data->>'first_name') > 0 THEN
         first_letter := UPPER(SUBSTRING(NEW.raw_user_meta_data->>'first_name', 1, 1));
         base_handle_string := NEW.raw_user_meta_data->>'first_name';
     ELSE
         first_letter := UPPER(SUBSTRING(NEW.email, 1, 1));
-        base_handle_string := ''; -- Use empty string if first_name is not provided
+        base_handle_string := '';
     END IF;
-
-    -- Gera um handle único
     generated_handle := public.generate_unique_handle(base_handle_string);
-
-    avatar_svg :=
+    avatar_svg := 
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' ||
         '<rect width="100" height="100" fill="#000000"/>' ||
         '<text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="60" font-weight="bold" fill="#FFFFFF">' || first_letter || '</text>' ||
         '</svg>';
 
+    -- Cria a organização pessoal
     INSERT INTO public.organizations (name, is_personal)
     VALUES (NEW.raw_user_meta_data->>'first_name' || ' Personal', TRUE)
     RETURNING id INTO new_org_id;
 
-    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, annex) -- Modified columns
-    VALUES (new_org_id, EXTRACT(YEAR FROM NOW()), (EXTRACT(YEAR FROM NOW())::TEXT || '-01-01')::DATE, (EXTRACT(YEAR FROM NOW())::TEXT || '-12-31')::DATE, 'annex_i') -- Modified values
+    -- Cria o período contábil anual (principal)
+    current_year := EXTRACT(YEAR FROM NOW());
+    default_start_date := (current_year::TEXT || '-01-01')::DATE;
+    default_end_date := (current_year::TEXT || '-12-31')::DATE;
+
+    INSERT INTO public.accounting_periods (organization_id, fiscal_year, start_date, end_date, regime, annex, is_active, period_type)
+    VALUES (new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex, TRUE, 'yearly')
     RETURNING id INTO new_period_id;
 
+    -- Cria o registro no histórico de regimes
+    INSERT INTO public.tax_regime_history (organization_id, regime, start_date, end_date)
+    VALUES (new_org_id, default_regime, default_start_date, default_end_date);
+
+    -- **NOVO: Chama a função para criar os períodos mensais**
+    PERFORM public.create_monthly_accounting_periods(new_org_id, current_year, default_start_date, default_end_date, default_regime, default_annex);
+
+    -- Cria o perfil do usuário
     INSERT INTO public.profiles (id, username, email, role, avatar_url, organization_id, active_accounting_period_id, handle)
     VALUES (NEW.id, NEW.raw_user_meta_data->>'first_name', NEW.email, 'user', 'data:image/svg+xml;base64,' || encode(avatar_svg::bytea, 'base64'), new_org_id, new_period_id, generated_handle);
 
+    -- Atribui o papel de 'owner'
     INSERT INTO public.user_organization_roles (user_id, organization_id, role)
     VALUES (NEW.id, new_org_id, 'owner');
 
-    -- Call function to create default chart of accounts
+    -- Cria o plano de contas padrão
     PERFORM public.create_default_chart_of_accounts(new_org_id, new_period_id);
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.delete_user_data()
 RETURNS TRIGGER AS $$
@@ -693,7 +880,7 @@ BEGIN
   SELECT organization_id, id
   INTO user_org_id, user_active_period_id
   FROM public.accounting_periods
-  WHERE is_active = TRUE AND user_id = auth.uid(); -- Assuming user_id is linked to accounting_periods
+  WHERE is_active = TRUE AND organization_id = (SELECT organization_id FROM profiles WHERE id = auth.uid()); -- Assuming user_id is linked to accounting_periods
 
   -- Check if the user's active organization and period match the entry's organization and period
   RETURN (user_org_id = entry_org_id AND user_active_period_id = entry_period_id);
@@ -778,5 +965,53 @@ BEGIN
   INTO has_access;
 
   RETURN has_access;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.create_monthly_accounting_periods(
+    p_organization_id UUID,
+    p_fiscal_year INT,
+    p_start_date DATE,
+    p_end_date DATE,
+    p_regime tax_regime_enum,
+    p_annex VARCHAR
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    month_start_date DATE;
+    month_end_date DATE;
+    current_month DATE;
+BEGIN
+    current_month := date_trunc('month', p_start_date)::DATE;
+
+    WHILE current_month <= p_end_date LOOP
+        month_start_date := current_month;
+        month_end_date := (current_month + INTERVAL '1 month' - INTERVAL '1 day')::DATE;
+
+        INSERT INTO public.accounting_periods (
+            organization_id,
+            fiscal_year,
+            start_date,
+            end_date,
+            regime,
+            annex,
+            is_active,
+            period_type
+        ) VALUES (
+            p_organization_id,
+            p_fiscal_year,
+            month_start_date,
+            month_end_date,
+            p_regime,
+            p_annex,
+            FALSE, -- Períodos mensais não são ativos
+            'monthly'
+        );
+
+        current_month := (current_month + INTERVAL '1 month')::DATE;
+    END LOOP;
 END;
 $$;

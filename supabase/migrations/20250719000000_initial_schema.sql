@@ -1,9 +1,48 @@
--- Migração: Esquema Inicial - Tabelas, Colunas e Chaves Estrangeiras
+-- Migração: Esquema Inicial Consolidado
 
--- Cria a tabela de organizações
+-- Cria o tipo ENUM para o regime fiscal, se não existir
+DO $$ BEGIN
+    CREATE TYPE tax_regime_enum AS ENUM ('simples_nacional', 'lucro_presumido', 'lucro_real');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Cria o tipo ENUM para o status do lançamento contábil, se não existir
+DO $$ BEGIN
+    CREATE TYPE public.journal_entry_status AS ENUM ('draft', 'posted', 'reviewed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Cria o tipo ENUM para o tipo de operação fiscal
+DO $$ BEGIN
+    CREATE TYPE public.operation_type_enum AS ENUM (
+        'venda_mercadorias',
+        'venda_servicos',
+        'compra_materia_prima',
+        'compra_servicos',
+        'outros'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Cria o tipo ENUM para o tipo de período
+DO $$ BEGIN
+    CREATE TYPE period_type_enum AS ENUM ('yearly', 'monthly');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+
+-- Cria a tabela de organizações com todas as colunas
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
+    cnpj VARCHAR(18),
+    razao_social VARCHAR(255),
+    uf VARCHAR(2),
+    municipio VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
@@ -19,33 +58,10 @@ CREATE TABLE organizations (
     is_system BOOLEAN DEFAULT FALSE
 );
 
--- Cria a tabela de perfis
-CREATE TABLE public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    username TEXT UNIQUE,
-    avatar_url TEXT,
-    email TEXT UNIQUE,
-    role TEXT DEFAULT 'user' NOT NULL CHECK (role IN ('user', 'admin')),
-    organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
-    active_accounting_period_id UUID,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    deleted_by UUID REFERENCES auth.users(id),
-    is_deleted BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    handle TEXT UNIQUE NOT NULL
-);
-
--- Remove a restrição de unicidade da coluna username na tabela profiles
-ALTER TABLE public.profiles
-DROP CONSTRAINT IF EXISTS profiles_username_key;
-
 -- Cria a tabela de períodos contábeis
 CREATE TABLE accounting_periods (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-    name VARCHAR(255),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -59,16 +75,38 @@ CREATE TABLE accounting_periods (
     is_locked BOOLEAN DEFAULT FALSE,
     is_readonly BOOLEAN DEFAULT FALSE,
     is_system BOOLEAN DEFAULT FALSE,
-    UNIQUE (organization_id, name),
-    UNIQUE (organization_id, start_date, end_date)
+    fiscal_year INTEGER NOT NULL,
+    annex VARCHAR(255),
+    is_active BOOLEAN DEFAULT FALSE NOT NULL,
+    regime tax_regime_enum,
+    period_type period_type_enum NOT NULL DEFAULT 'monthly'
+);
+
+-- Cria a tabela de perfis (sem a restrição UNIQUE em username)
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT, -- Restrição UNIQUE removida
+    avatar_url TEXT,
+    email TEXT UNIQUE,
+    role TEXT DEFAULT 'user' NOT NULL CHECK (role IN ('user', 'admin')),
+    organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+    active_accounting_period_id UUID, -- Chave estrangeira adicionada abaixo
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    deleted_by UUID REFERENCES auth.users(id),
+    is_deleted BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    handle TEXT UNIQUE NOT NULL
 );
 
 -- Adiciona chave estrangeira aos perfis para o período contábil ativo
+-- (Mantido como ALTER porque a tabela 'accounting_periods' precisa existir primeiro)
 ALTER TABLE public.profiles
 ADD CONSTRAINT fk_profiles_active_accounting_period
 FOREIGN KEY (active_accounting_period_id) REFERENCES public.accounting_periods(id) ON DELETE SET NULL;
 
--- Cria a tabela de contas
+-- Cria a tabela de contas com todas as colunas
 CREATE TABLE accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -77,6 +115,7 @@ CREATE TABLE accounts (
     parent_account_id UUID REFERENCES accounts(id),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
     accounting_period_id UUID REFERENCES accounting_periods(id) ON DELETE CASCADE,
+    fiscal_operation_type TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
@@ -89,16 +128,23 @@ CREATE TABLE accounts (
     is_archived BOOLEAN DEFAULT FALSE,
     is_locked BOOLEAN DEFAULT FALSE,
     is_readonly BOOLEAN DEFAULT FALSE,
-    is_system BOOLEAN DEFAULT FALSE
+    is_system BOOLEAN DEFAULT FALSE,
+    default_operation_type public.operation_type_enum
 );
+COMMENT ON COLUMN public.accounts.default_operation_type IS 'Default fiscal operation type associated with this account.';
 
--- Cria a tabela de produtos
+-- Cria a tabela de produtos com todas as colunas e restrições
 CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     organization_id UUID REFERENCES organizations(id),
     accounting_period_id UUID REFERENCES accounting_periods(id),
+    quantity_in_stock INT NOT NULL DEFAULT 0,
+    ncm VARCHAR(8),
+    product_service_type TEXT CHECK (product_service_type IN ('Produto', 'Serviço')),
+    default_cfop_purchase TEXT,
+    default_cfop_sale TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
@@ -108,10 +154,11 @@ CREATE TABLE products (
     is_deleted BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     is_archived BOOLEAN DEFAULT FALSE,
-    UNIQUE (name, organization_id, accounting_period_id)
+    UNIQUE (name, organization_id, accounting_period_id),
+    CONSTRAINT ncm_format_check CHECK (ncm ~ '^[0-9]{8}$')
 );
 
--- Cria a tabela de lançamentos contábeis
+-- Cria a tabela de lançamentos contábeis com todas as colunas
 CREATE TABLE journal_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     entry_date DATE NOT NULL,
@@ -119,6 +166,10 @@ CREATE TABLE journal_entries (
     reference VARCHAR(255) NOT NULL DEFAULT 'N/A',
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
     accounting_period_id UUID REFERENCES accounting_periods(id) ON DELETE CASCADE,
+    status public.journal_entry_status NOT NULL DEFAULT 'draft',
+    created_by_name TEXT,
+    created_by_email TEXT,
+    created_by_username TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
@@ -131,7 +182,7 @@ CREATE TABLE journal_entries (
     is_locked BOOLEAN DEFAULT FALSE
 );
 
--- Cria a tabela de linhas de lançamento
+-- Cria a tabela de linhas de lançamento com todas as colunas
 CREATE TABLE entry_lines (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE CASCADE,
@@ -146,6 +197,10 @@ CREATE TABLE entry_lines (
     pis_rate NUMERIC,
     cofins_rate NUMERIC,
     mva_rate NUMERIC,
+    icms_rate NUMERIC,
+    irrf_rate NUMERIC,
+    csll_rate NUMERIC,
+    inss_rate NUMERIC,
     icms_st_value NUMERIC,
     ipi_value NUMERIC,
     pis_value NUMERIC,
@@ -154,6 +209,8 @@ CREATE TABLE entry_lines (
     total_gross NUMERIC,
     total_net NUMERIC,
     transaction_type VARCHAR(50),
+    uf_origin VARCHAR(2),
+    uf_destination VARCHAR(2),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
     accounting_period_id UUID REFERENCES accounting_periods(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -240,21 +297,7 @@ CREATE TABLE tax_settings (
     CONSTRAINT tax_settings_organization_id_key UNIQUE (organization_id)
 );
 
--- Create the tax_regime_enum
-DO $$ BEGIN
-    CREATE TYPE tax_regime_enum AS ENUM ('simples_nacional', 'lucro_presumido', 'lucro_real');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
--- Add new columns to the organizations table
-ALTER TABLE organizations
-ADD COLUMN cnpj VARCHAR(18),
-ADD COLUMN razao_social VARCHAR(255),
-ADD COLUMN uf VARCHAR(2),
-ADD COLUMN municipio VARCHAR(100);
-
--- Create the tax_regime_history table
+-- Cria a tabela de histórico de regime fiscal
 CREATE TABLE IF NOT EXISTS tax_regime_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -262,13 +305,11 @@ CREATE TABLE IF NOT EXISTS tax_regime_history (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_tax_regime_period UNIQUE (organization_id, start_date, end_date)
 );
 
--- Add unique constraint to prevent overlapping periods for the same organization
-ALTER TABLE tax_regime_history
-ADD CONSTRAINT unique_tax_regime_period UNIQUE (organization_id, start_date, end_date);
-
+-- Cria a tabela de notificações
 CREATE TABLE public.notifications (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -279,6 +320,7 @@ CREATE TABLE public.notifications (
     created_at timestamp with time zone DEFAULT now()
 );
 
+-- Cria a tabela de presença do usuário
 CREATE TABLE public.user_presence (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -287,17 +329,7 @@ CREATE TABLE public.user_presence (
     PRIMARY KEY (user_id)
 );
 
--- 2. Alter the products table
-ALTER TABLE public.products
-DROP COLUMN IF EXISTS unit_cost,
-ADD COLUMN IF NOT EXISTS quantity_in_stock INT NOT NULL DEFAULT 0;
-
--- Create ENUM type for costing methods
-
-
-
-
--- Create inventory_lots table
+-- Cria a tabela de lotes de inventário
 CREATE TABLE public.inventory_lots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -325,25 +357,8 @@ CREATE TABLE reference_sequences (
     PRIMARY KEY (prefix, organization_id, accounting_period_id)
 );
 
--- Adiciona o tipo ENUM para o status do lançamento contábil
-CREATE TYPE public.journal_entry_status AS ENUM (
-    'draft',
-    'posted',
-    'reviewed'
-);
-
--- Adiciona a coluna de status à tabela de lançamentos contábeis
-ALTER TABLE public.journal_entries
-ADD COLUMN status public.journal_entry_status NOT NULL DEFAULT 'draft';
-
-ALTER TABLE journal_entries
-ADD COLUMN created_by_name TEXT,
-ADD COLUMN created_by_email TEXT,
-ADD COLUMN created_by_username TEXT;
-
--- 1. Create the history table
-CREATE TABLE
-  public.journal_entry_history (
+-- Cria a tabela de histórico de lançamentos contábeis
+CREATE TABLE public.journal_entry_history (
     id UUID DEFAULT gen_random_uuid () PRIMARY KEY,
     journal_entry_id UUID NOT NULL REFERENCES public.journal_entries (id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users (id),
@@ -351,24 +366,9 @@ CREATE TABLE
     details JSONB, -- To store old and new values
     changed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone ('utc'::TEXT, NOW()) NOT NULL,
     changed_by_name TEXT -- To store the user's name or 'System'
-  );
+);
 
--- Adiciona colunas de alíquotas de impostos à tabela entry_lines
-ALTER TABLE entry_lines
-ADD COLUMN IF NOT EXISTS icms_rate NUMERIC,
-ADD COLUMN IF NOT EXISTS irrf_rate NUMERIC,
-ADD COLUMN IF NOT EXISTS csll_rate NUMERIC,
-ADD COLUMN IF NOT EXISTS inss_rate NUMERIC;
-
--- Add ncm column to products table
-ALTER TABLE products
-ADD COLUMN ncm VARCHAR(8);
-
--- Add a check constraint to ensure ncm is a string of 8 digits
-ALTER TABLE products
-ADD CONSTRAINT ncm_format_check CHECK (ncm ~ '^[0-9]{8}$$');
-
--- 1. Create tax_rules table
+-- Cria a tabela de regras fiscais
 CREATE TABLE IF NOT EXISTS tax_rules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     uf_origin VARCHAR(2) NOT NULL,
@@ -382,34 +382,31 @@ CREATE TABLE IF NOT EXISTS tax_rules (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
+    operation_type public.operation_type_enum,
     CONSTRAINT uq_tax_rule UNIQUE (organization_id, uf_origin, uf_destination, ncm_pattern, tax_type)
 );
+COMMENT ON COLUMN public.tax_rules.operation_type IS 'Specific fiscal operation type this tax rule applies to.';
 
--- 2. Add uf column to organizations table
-ALTER TABLE organizations
-ADD COLUMN IF NOT EXISTS uf VARCHAR(2);
-
--- 3. Add uf_origin and uf_destination to entry_lines table
-ALTER TABLE entry_lines
-ADD COLUMN IF NOT EXISTS uf_origin VARCHAR(2),
-ADD COLUMN IF NOT EXISTS uf_destination VARCHAR(2);
-
-ALTER TABLE accounts
-ADD COLUMN fiscal_operation_type TEXT;
-
-ALTER TABLE products
-ADD COLUMN product_service_type TEXT CHECK (product_service_type IN ('Produto', 'Serviço')),
-ADD COLUMN default_cfop_purchase TEXT,
-ADD COLUMN default_cfop_sale TEXT;
-
+-- Cria a tabela de histórico de cálculo de impostos
 CREATE TABLE tax_calculation_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    journal_entry_id UUID REFERENCES journal_entries(id), -- Optional, if linked to a specific entry
-    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    fiscal_operation_data JSONB NOT NULL,
-    tax_calculation_result JSONB NOT NULL,
-    details JSONB, -- To store detailed breakdown of calculations
-    organization_id UUID REFERENCES organizations(id) NOT NULL,
-    accounting_period_id UUID REFERENCES accounting_periods(id) NOT NULL
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE CASCADE,
+    calculation_timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    input_data JSONB NOT NULL,
+    calculated_taxes JSONB NOT NULL,
+    applied_rules JSONB,
+    user_id UUID REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+COMMENT ON TABLE tax_calculation_history IS 'Stores a detailed history of tax calculations for auditing and reference.';
+COMMENT ON COLUMN tax_calculation_history.input_data IS 'The fiscal operation data used as input for the calculation.';
+COMMENT ON COLUMN tax_calculation_history.calculated_taxes IS 'The resulting calculated tax data.';
+COMMENT ON COLUMN tax_calculation_history.applied_rules IS 'Which specific tax rules were applied during the calculation.';
+
+UPDATE public.accounting_periods
+SET period_type = 'yearly'
+WHERE is_active IS TRUE AND EXTRACT(MONTH FROM start_date) = 1 AND EXTRACT(DAY FROM start_date) = 1 AND EXTRACT(MONTH FROM end_date) = 12 AND EXTRACT(DAY FROM end_date) = 31;
+
+UPDATE public.accounting_periods
+SET period_type = 'monthly'
+WHERE is_active IS FALSE;

@@ -47,3 +47,6 @@ CREATE TRIGGER handle_updated_at_tax_rules
 BEFORE UPDATE ON tax_rules
 FOR EACH ROW
 EXECUTE PROCEDURE moddatetime (updated_at);
+
+-- Add the new partial unique index
+CREATE UNIQUE INDEX accounting_periods_organization_id_fiscal_year_key ON public.accounting_periods (organization_id, fiscal_year) WHERE is_active IS TRUE;

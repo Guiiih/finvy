@@ -1,5 +1,6 @@
 <template>
-  <div class="p-4 sm:p-4 md:p-6">
+  <div>
+    <div class="max-w-7xl mx-auto">
     <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
       <div class="relative flex-grow">
         <input
@@ -271,82 +272,90 @@
         class="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200"
       >
         <!-- Cabeçalho do Ano Fiscal -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <div class="flex items-center space-x-3">
-            <span class="text-blue-500 text-2xl">
-              <i class="pi pi-calendar"></i>
-            </span>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-4">
             <div>
-              <h2 class="text-xl font-bold text-gray-800">Ano Fiscal {{ group.year }}</h2>
+              <h2 class="text-sm flex items-center gap-2 text-gray-800">
+                <div v-if="group.yearPeriod.is_active" class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                Ano Fiscal {{ group.year }}
+              </h2>
               <p class="text-sm text-gray-500">
                 {{ formatDate(group.yearPeriod.start_date) }} até
                 {{ formatDate(group.yearPeriod.end_date) }}
               </p>
-              <p class="text-sm text-gray-500">
+              <p class="text-xs text-gray-500">
                 {{ formatRegime(group.yearPeriod.regime) }} - {{ group.yearPeriod.annex }}
               </p>
             </div>
-            <Badge v-if="group.yearPeriod.is_active" value="Atual" severity="info"></Badge>
+            <Badge v-if="group.yearPeriod.is_active" value="Atual" severity="info" :style="{ backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#1d4ed8' }"></Badge>
           </div>
-          <div class="flex items-center space-x-2 mt-3 sm:mt-0">
-            <Badge
-              :value="group.yearPeriod.is_locked ? 'Fechado' : 'Aberto'"
-              :severity="group.yearPeriod.is_locked ? 'danger' : 'success'"
-            ></Badge>
-            <Button
-              v-if="!group.yearPeriod.is_active"
-              @click="setActive(group.yearPeriod.id)"
-              label="Tornar Atual"
-              severity="secondary"
-              text
-            ></Button>
-            <Button
-              @click="openCloseYearModal(group)"
-              label="Fechar Ano Inteiro"
-              severity="danger"
-              text
-            ></Button>
-            <Button
-              @click="startEditPeriod(group.yearPeriod)"
-              icon="pi pi-pen-to-square"
-              text
-              rounded
-            ></Button>
-            <Button
-              @click="deletePeriod(group.yearPeriod.id)"
-              icon="pi pi-trash"
-              text
-              rounded
-              severity="danger"
-            ></Button>
-            <Button
-              @click="openShareModal(group.yearPeriod)"
-              icon="pi pi-share-alt"
-              text
-              rounded
-            ></Button>
+          <div class="flex flex-col items-end space-y-2 mt-3 sm:mt-0">
+            <div class="flex items-center space-x-2">
+                <Button
+                  @click="startEditPeriod(group.yearPeriod)"
+                  icon="pi pi-pen-to-square"
+                  text
+                  rounded
+                ></Button>
+                <Button
+                  @click="deletePeriod(group.yearPeriod.id)"
+                  icon="pi pi-trash"
+                  text
+                  rounded
+                  severity="danger"
+                ></Button>
+                <Button
+                  @click="openShareModal(group.yearPeriod)"
+                  icon="pi pi-share-alt"
+                  text
+                  rounded
+                ></Button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <Badge
+                  :value="group.yearPeriod.is_locked ? 'Fechado' : 'Aberto'"
+                  :severity="group.yearPeriod.is_locked ? 'danger' : 'success'"
+                  :style="{
+                    backgroundColor: !group.yearPeriod.is_locked ? 'rgba(16, 185, 129, 0.2)' : '',
+                    color: !group.yearPeriod.is_locked ? '#065f46' : ''
+                  }"
+                ></Badge>
+                <Button
+                  v-if="!group.yearPeriod.is_active"
+                  @click="setActive(group.yearPeriod.id)"
+                  label="Tornar Atual"
+                  severity="secondary"
+                  text
+                ></Button>
+                <Button
+                  @click="openCloseYearModal(group)"
+                  label="Fechar Ano Inteiro"
+                  severity="danger"
+                  text
+                ></Button>
+            </div>
           </div>
         </div>
 
         <!-- Resumo Financeiro -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-          <div class="bg-gray-50 p-3 rounded-lg">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+          <div class="text-center">
             <p class="text-sm text-gray-600">Períodos</p>
-            <p class="text-lg font-semibold text-gray-800">
+            <p class="text-lg text-gray-800">
               {{ group.monthlyPeriods.length }} meses
             </p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
+          <div class="text-center">
             <p class="text-sm text-gray-600">Transações</p>
-            <p class="text-lg font-semibold text-gray-800">0</p>
+            <p class="text-lg text-gray-800">0</p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
+          <div class="text-center">
             <p class="text-sm text-gray-600">Débitos</p>
-            <p class="text-lg font-semibold text-green-600">R$ 0,00</p>
+            <p class="text-lg text-green-600">R$ 0,00</p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
+          <div class="text-center">
             <p class="text-sm text-gray-600">Créditos</p>
-            <p class="text-lg font-semibold text-red-600">R$ 0,00</p>
+            <p class="text-lg text-red-600">R$ 0,00</p>
           </div>
         </div>
 
@@ -356,37 +365,37 @@
             <thead class="bg-gray-50">
               <tr>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Período
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Datas
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Transações
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Débitos
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Créditos
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Status
                 </th>
                 <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Ações
                 </th>
@@ -394,22 +403,22 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="period in group.monthlyPeriods" :key="period.id" class="hover:bg-gray-50">
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs font-medium text-gray-800">
                   {{ formatMonthYear(period.start_date) }}
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-gray-600">
                   {{ formatDate(period.start_date) }} até {{ formatDate(period.end_date) }}
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">0</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-green-600">R$ 0,00</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-red-600">R$ 0,00</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-gray-600">0</td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-green-600">R$ 0,00</td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-red-600">R$ 0,00</td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs">
                   <Badge
                     :value="period.is_locked ? 'Fechado' : 'Aberto'"
                     :severity="period.is_locked ? 'danger' : 'success'"
                   ></Badge>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs">
                   <Button
                     v-if="!period.is_locked"
                     @click="openClosePeriodModal(period)"
@@ -519,6 +528,7 @@
         </div>
       </div>
     </Dialog>
+    </div>
   </div>
 </template>
 
@@ -795,7 +805,7 @@ const deletePeriod = async (id: string) => {
 
 const formatDate = (dateString: string | null | undefined) => {
   if (!dateString) return 'N/A'
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' }
   return new Date(dateString).toLocaleDateString('pt-BR', options)
 }
 
