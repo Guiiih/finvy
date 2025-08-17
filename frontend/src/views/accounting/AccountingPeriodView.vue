@@ -57,7 +57,7 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        
+
         <div>
           <label for="regime" class="block text-sm font-medium text-gray-700"
             >Regime Tributário</label
@@ -146,7 +146,7 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        
+
         <div>
           <label for="editRegime" class="block text-sm font-medium text-gray-700"
             >Regime Tributário</label
@@ -253,150 +253,177 @@
       </form>
     </Dialog>
 
-    <div class="bg-white p-4 rounded-lg shadow-sm">
-      <h2 class="text-xl font-semibold mb-3">Períodos Existentes</h2>
-      <p v-if="accountingPeriodStore.loading" class="text-gray-600">Carregando períodos...</p>
-      <p v-else-if="accountingPeriodStore.error" class="text-red-500">
+    <div class="space-y-6">
+      <div v-if="accountingPeriodStore.loading" class="text-center text-gray-500">
+        Carregando períodos...
+      </div>
+      <div v-else-if="accountingPeriodStore.error" class="text-center text-red-500">
         Erro ao carregar períodos: {{ accountingPeriodStore.error }}
-      </p>
-      <ul v-else-if="filteredAccountingPeriods.length > 0" class="space-y-3">
-        <li
-          v-for="period in filteredAccountingPeriods"
-          :key="period.id"
-          class="flex items-center justify-between p-3 border rounded-md bg-gray-50"
-        >
-          <div>
-            <p class="font-medium">
-              Ano Fiscal {{ period.fiscal_year }} ({{ formatDate(period.start_date) }} -
-              {{ formatDate(period.end_date) }})
-            </p>
-            <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
-
+      </div>
+      <div v-else-if="groupedPeriods.length === 0" class="text-center text-gray-500">
+        Nenhum período contábil encontrado. Crie um novo acima.
+      </div>
+      <div
+        v-else
+        v-for="group in groupedPeriods"
+        :key="group.year"
+        class="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200"
+      >
+        <!-- Cabeçalho do Ano Fiscal -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+          <div class="flex items-center space-x-3">
+            <span class="text-blue-500 text-2xl">
+              <i class="pi pi-calendar"></i>
+            </span>
+            <div>
+              <h2 class="text-xl font-bold text-gray-800">Ano Fiscal {{ group.year }}</h2>
+              <p class="text-sm text-gray-500">
+                {{ formatDate(group.yearPeriod.start_date) }} até
+                {{ formatDate(group.yearPeriod.end_date) }}
+              </p>
+              <p class="text-sm text-gray-500">
+                {{ formatRegime(group.yearPeriod.regime) }} - {{ group.yearPeriod.annex }}
+              </p>
+            </div>
             <span
-              :class="[
-                period.is_active ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800',
-                'px-2 py-0.5 rounded-full text-xs font-semibold',
-              ]"
+              v-if="group.yearPeriod.is_active"
+              class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
             >
-              {{ period.is_active ? 'Ativo' : 'Inativo' }}
+              Atual
             </span>
           </div>
-          <div class="space-x-2 flex flex-col sm:flex-row items-center">
+          <div class="flex items-center space-x-2 mt-3 sm:mt-0">
             <button
-              v-if="!period.is_active"
-              @click="setActive(period.id)"
-              class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+              class="bg-green-500 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-green-600 transition-colors"
             >
-              Definir como Ativo
+              <i class="pi pi-lock-open mr-1"></i> Aberto
             </button>
             <button
-              @click="startEditPeriod(period)"
+              v-if="!group.yearPeriod.is_active"
+              @click="setActive(group.yearPeriod.id)"
+              class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors"
+            >
+              Tornar Atual
+            </button>
+            <button
+              class="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-red-600 transition-colors"
+            >
+              <i class="pi pi-lock mr-1"></i> Fechar Ano
+            </button>
+            <button
+              @click="startEditPeriod(group.yearPeriod)"
               class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
               aria-label="Editar Período"
             >
               <i class="pi pi-pen-to-square"></i>
             </button>
             <button
-              @click="deletePeriod(period.id)"
+              @click="deletePeriod(group.yearPeriod.id)"
               class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
               aria-label="Excluir Período"
             >
               <i class="pi pi-trash"></i>
             </button>
             <button
-              @click="openShareModal(period)"
+              @click="openShareModal(group.yearPeriod)"
               class="p-2 rounded-md hover:bg-surface-100 text-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-opacity-50"
               aria-label="Compartilhar Período"
             >
               <i class="pi pi-share-alt"></i>
             </button>
           </div>
-        </li>
-      </ul>
-      <p v-else class="text-gray-600">Nenhum período contábil encontrado. Crie um novo acima.</p>
-    </div>
-
-    <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
-      <h2 class="text-xl font-semibold mb-3">Períodos Mensais</h2>
-      <p v-if="!monthlyAccountingPeriods.length" class="text-gray-600">
-        Nenhum período mensal encontrado.
-      </p>
-      <div v-else class="space-y-4">
-        <div v-for="(periods, year) in groupedMonthlyPeriods" :key="year">
-          <h3 class="text-lg font-semibold mb-2">Ano Fiscal {{ year }}</h3>
-          <ul class="space-y-2">
-            <li
-              v-for="period in periods"
-              :key="period.id"
-              class="flex items-center justify-between p-2 border rounded-md bg-gray-50"
-            >
-              <div>
-                <p class="font-medium">
-                  {{ formatDate(period.start_date) }} - {{ formatDate(period.end_date) }}
-                </p>
-                <p class="text-sm text-gray-600">Regime: {{ formatRegime(period.regime) }}</p>
-              </div>
-              <div class="space-x-2">
-                <!-- Add actions for monthly periods if needed -->
-              </div>
-            </li>
-          </ul>
         </div>
-      </div>
-    </div>
 
-    <div class="bg-white p-4 rounded-lg shadow-sm mt-6">
-      <h2 class="text-xl font-semibold mb-3">Histórico de Regimes Tributários</h2>
-      <p v-if="!taxRegimeHistory.length" class="text-gray-600">
-        Nenhum histórico de regime tributário encontrado.
-      </p>
-      <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Regime
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Data de Início
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Data de Fim
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Criado Em
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="regimeEntry in taxRegimeHistory" :key="regimeEntry.id">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ formatRegime(regimeEntry.regime) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(regimeEntry.start_date) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(regimeEntry.end_date) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(regimeEntry.created_at) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Resumo Financeiro -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-sm text-gray-600">Períodos</p>
+            <p class="text-lg font-semibold text-gray-800">
+              {{ group.monthlyPeriods.length }} meses
+            </p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-sm text-gray-600">Transações</p>
+            <p class="text-lg font-semibold text-gray-800">0</p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-sm text-gray-600">Débitos</p>
+            <p class="text-lg font-semibold text-green-600">R$ 0,00</p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-sm text-gray-600">Créditos</p>
+            <p class="text-lg font-semibold text-red-600">R$ 0,00</p>
+          </div>
+        </div>
+
+        <!-- Tabela de Períodos Mensais -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Período
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Datas
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Transações
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Débitos
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Créditos
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="period in group.monthlyPeriods" :key="period.id" class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
+                  {{ formatMonthYear(period.start_date) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                  {{ formatDate(period.start_date) }} até {{ formatDate(period.end_date) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">0</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-green-600">R$ 0,00</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-red-600">R$ 0,00</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full"
+                    >Aberto</span
+                  >
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <button class="text-gray-500 hover:text-gray-700">
+                    <i class="pi pi-lock"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -512,7 +539,6 @@ import type {
   SharedPermissionLevel,
   SharedAccountingPeriod,
   TaxRegime,
-  TaxRegimeHistory,
 } from '@/types'
 
 const accountingPeriodStore = useAccountingPeriodStore()
@@ -545,8 +571,6 @@ watch(
   },
   { immediate: true },
 )
-
-const taxRegimeHistory = ref<TaxRegimeHistory[]>([])
 
 const searchTerm = ref('')
 const showCreatePeriodForm = ref(false)
@@ -581,58 +605,51 @@ const showYearEndClosingModal = ref(false)
 const closingDate = ref('')
 const isClosingYearEnd = ref(false)
 
-const filteredAccountingPeriods = computed(() => {
-  const lowerCaseSearchTerm = searchTerm.value.toLowerCase()
-  return accountingPeriods.value.filter(
-    (period) =>
-      period.is_active && // Only show active (yearly) periods in the main list
-      (period.fiscal_year?.toString().includes(lowerCaseSearchTerm) ||
-        formatDate(period.start_date).toLowerCase().includes(lowerCaseSearchTerm) ||
-        formatDate(period.end_date).toLowerCase().includes(lowerCaseSearchTerm)),
-  )
-})
+const groupedPeriods = computed(() => {
+  const groups: {
+    year: number
+    yearPeriod: AccountingPeriod
+    monthlyPeriods: AccountingPeriod[]
+  }[] = []
 
-const monthlyAccountingPeriods = computed(() => {
-  return accountingPeriods.value.filter((period) => !period.is_active)
-})
+  const yearlyPeriods = accountingPeriods.value.filter((p) => p.is_active)
+  const monthlyPeriods = accountingPeriods.value.filter((p) => !p.is_active)
 
-const groupedMonthlyPeriods = computed(() => {
-  return monthlyAccountingPeriods.value.reduce((groups: { [key: number]: AccountingPeriod[] }, period) => {
-    const year = period.fiscal_year
-    if (!groups[year]) {
-      groups[year] = []
+  for (const yearPeriod of yearlyPeriods) {
+    const year = yearPeriod.fiscal_year
+    if (year) {
+      const correspondingMonthly = monthlyPeriods
+        .filter((p) => p.fiscal_year === year)
+        .sort((a, b) => {
+          if (a.start_date && b.start_date) {
+            return new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+          }
+          return 0
+        })
+
+      groups.push({
+        year,
+        yearPeriod,
+        monthlyPeriods: correspondingMonthly,
+      })
     }
-    groups[year].push(period)
-    return groups
-  }, {})
+  }
+
+  return groups.sort((a, b) => b.year - a.year)
 })
+
+const formatMonthYear = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString + 'T00:00:00')
+  return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+}
 
 onMounted(() => {
   accountingPeriodStore.fetchAccountingPeriods()
-  fetchTaxRegimeHistory()
 })
 
-async function fetchTaxRegimeHistory() {
-  try {
-    const data = await api.get<TaxRegimeHistory[]>('/tax-regime-history')
-    taxRegimeHistory.value = data
-  } catch (err) {
-    console.error('Erro ao buscar histórico de regime tributário:', err)
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: 'Falha ao carregar histórico de regime tributário.',
-      life: 3000,
-    })
-  }
-}
-
 const handleCreatePeriod = async () => {
-  if (
-    !newPeriod.value.fiscal_year ||
-    !newPeriod.value.regime ||
-    !newPeriod.value.annex
-  ) {
+  if (!newPeriod.value.fiscal_year || !newPeriod.value.regime || !newPeriod.value.annex) {
     toast.add({
       severity: 'warn',
       summary: 'Atenção',
