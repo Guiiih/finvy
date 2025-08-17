@@ -170,10 +170,18 @@ export default async function handler(
       // Automaticamente criar períodos mensais para o ano fiscal
       logger.info(`[Accounting Periods] Criando períodos mensais para o ano fiscal ${fiscal_year}`)
       const monthlyPeriodsToInsert: MonthlyPeriod[] = []
-      const currentMonth = new Date(start_date)
-      while (currentMonth <= new Date(end_date)) {
-        const monthStartDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-        const monthEndDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
+      // Use UTC para evitar problemas de fuso horário
+      const startDate = new Date(`${start_date}T00:00:00Z`)
+      const endDate = new Date(`${end_date}T00:00:00Z`)
+      let currentMonth = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1))
+
+      while (currentMonth <= endDate) {
+        const monthStartDate = new Date(
+          Date.UTC(currentMonth.getUTCFullYear(), currentMonth.getUTCMonth(), 1),
+        )
+        const monthEndDate = new Date(
+          Date.UTC(currentMonth.getUTCFullYear(), currentMonth.getUTCMonth() + 1, 0),
+        )
 
         monthlyPeriodsToInsert.push({
           organization_id,
@@ -184,7 +192,7 @@ export default async function handler(
           annex,
           is_active: false, // Períodos mensais não são ativos por padrão
         })
-        currentMonth.setMonth(currentMonth.getMonth() + 1)
+        currentMonth.setUTCMonth(currentMonth.getUTCMonth() + 1)
       }
 
       if (monthlyPeriodsToInsert.length > 0) {
