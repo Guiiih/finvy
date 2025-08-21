@@ -246,12 +246,12 @@
         >
           Cancelar
         </button>
-        <button
+        <Button
           @click="handleCloseYear"
           class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
         >
           Fechar Ano
-        </button>
+        </Button>
       </div>
     </Dialog>
 
@@ -280,14 +280,17 @@
                 Ano Fiscal {{ group.year }}
               </h2>
               <p class="text-sm text-gray-500">
-                {{ formatDate(group.yearPeriod.start_date) }} até
-                {{ formatDate(group.yearPeriod.end_date) }}
+                {{ formatDateWithYear(group.yearPeriod.start_date) }} até
+                {{ formatDateWithYear(group.yearPeriod.end_date) }}
               </p>
               <p class="text-xs text-gray-500">
                 {{ formatRegime(group.yearPeriod.regime) }} - {{ group.yearPeriod.annex }}
               </p>
             </div>
-            <Badge v-if="group.yearPeriod.is_active" value="Atual" severity="info" :style="{ backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#1d4ed8' }"></Badge>
+            <span v-if="group.yearPeriod.is_active" class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs">
+              <i class="pi pi-check-circle text-blue-800"></i>
+              <span>Atual</span>
+            </span>
           </div>
           <div class="flex flex-col items-end space-y-2 mt-3 sm:mt-0">
             <div class="flex items-center space-x-2">
@@ -312,14 +315,19 @@
                 ></Button>
             </div>
             <div class="flex items-center space-x-2">
-                <Badge
-                  :value="group.yearPeriod.is_locked ? 'Fechado' : 'Aberto'"
-                  :severity="group.yearPeriod.is_locked ? 'danger' : 'success'"
-                  :style="{
-                    backgroundColor: !group.yearPeriod.is_locked ? 'rgba(16, 185, 129, 0.2)' : '',
-                    color: !group.yearPeriod.is_locked ? '#065f46' : ''
-                  }"
-                ></Badge>
+                <span
+                  v-if="!group.yearPeriod.is_locked"
+                  class="bg-emerald-100 text-emerald-700 px-4 py-0.5 rounded-full flex items-center gap-0 text-xs"
+                >
+                  <i class="pi pi-unlock text-emerald-700"></i>
+                  <span>Aberto</span>
+                </span>
+                <span
+                  v-else
+                  class="bg-red-500 text-white px-3 py-1 rounded-full"
+                >
+                  Fechado
+                </span>
                 <Button
                   v-if="!group.yearPeriod.is_active"
                   @click="setActive(group.yearPeriod.id)"
@@ -329,9 +337,11 @@
                 ></Button>
                 <Button
                   @click="openCloseYearModal(group)"
-                  label="Fechar Ano Inteiro"
+                  icon="pi pi-lock" 
+                  label="Fechar Ano"
                   severity="danger"
-                  text
+                  variant="outlined"
+                  size="small"
                 ></Button>
             </div>
           </div>
@@ -410,13 +420,27 @@
                   {{ formatDate(period.start_date) }} até {{ formatDate(period.end_date) }}
                 </td>
                 <td class="px-2 py-1.5 whitespace-nowrap text-xs text-gray-600">0</td>
-                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-green-600">R$ 0,00</td>
-                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-red-600">R$ 0,00</td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-green-600">
+                  <i class="material-icons text-green-600">trending_up</i> R$ 0,00
+                </td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-red-600">
+                  <i class="material-icons text-red-600">trending_down</i> R$ 0,00
+                </td>
                 <td class="px-2 py-1.5 whitespace-nowrap text-xs">
-                  <Badge
-                    :value="period.is_locked ? 'Fechado' : 'Aberto'"
-                    :severity="period.is_locked ? 'danger' : 'success'"
-                  ></Badge>
+                  <span
+                    v-if="!period.is_locked"
+                    class="bg-emerald-100 text-emerald-700 px-4 py-0.5 rounded-full flex items-center gap-0 text-xs"
+                  >
+                    <i class="pi pi-unlock text-emerald-700"></i>
+                    <span>Aberto</span>
+                  </span>
+                  <span
+                    v-else
+                    class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs"
+                  >
+                    <i class="pi pi-lock text-red-700"></i>
+                    <span>Fechado</span>
+                  </span>
                 </td>
                 <td class="px-2 py-1.5 whitespace-nowrap text-xs">
                   <Button
@@ -540,7 +564,6 @@ import { useSharingStore } from '@/stores/sharingStore'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
-import Badge from 'primevue/badge'
 
 import { api } from '@/services/api'
 import type {
@@ -805,7 +828,13 @@ const deletePeriod = async (id: string) => {
 
 const formatDate = (dateString: string | null | undefined) => {
   if (!dateString) return 'N/A'
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' }
+  const options: Intl.DateTimeFormatOptions = { month: '2-digit', day: '2-digit' }
+  return new Date(dateString).toLocaleDateString('pt-BR', options)
+}
+
+const formatDateWithYear = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A'
+  const options: Intl.DateTimeFormatOptions = { year: '2-digit', month: '2-digit', day: '2-digit' }
   return new Date(dateString).toLocaleDateString('pt-BR', options)
 }
 
