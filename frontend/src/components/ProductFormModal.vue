@@ -44,16 +44,11 @@ const zodSchema = z.object({
   sku: z.string().optional(),
   category: z.string({ required_error: 'A categoria é obrigatória' }),
   brand: z.string().optional(),
-  minimum_stock: z.coerce.number({ invalid_type_error: 'Deve ser um número' }).optional(),
+  min_stock: z.coerce.number({ invalid_type_error: 'Deve ser um número' }).optional(),
   description: z.string().optional(),
-  unit: z.string().optional(),
-  featured: z.boolean().optional(),
-  icms_rate: z.coerce
-    .number({
-      required_error: 'A alíquota é obrigatória',
-      invalid_type_error: 'A alíquota deve ser um número',
-    })
-    .min(0, 'A alíquota não pode ser negativa.'),
+  unit_type: z.string().optional(),
+  
+  
 })
 
 const productSchema = toTypedSchema(zodSchema)
@@ -69,10 +64,10 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
         sku: values.sku,
         category: values.category,
         brand: values.brand,
-        minimum_stock: values.minimum_stock,
+        min_stock: values.min_stock,
         description: values.description,
-        unit: values.unit,
-        icms_rate: values.icms_rate,
+        unit_type: values.unit_type,
+        
       }
       await productStore.updateProduct(props.editingProduct.id, updatedProduct)
       toast.add({
@@ -88,10 +83,10 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
         sku: values.sku,
         category: values.category,
         brand: values.brand,
-        minimum_stock: values.minimum_stock,
+        min_stock: values.min_stock,
         description: values.description,
-        unit: values.unit,
-        icms_rate: values.icms_rate,
+        unit_type: values.unit_type,
+        quantity_in_stock: 0,
       }
       await productStore.addProduct(newProduct)
       toast.add({
@@ -126,9 +121,9 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
         :validation-schema="productSchema"
         :initial-values="
           props.editingProduct || {
-            icms_rate: 0,
-            minimum_stock: 0,
-            unit: 'Unidade',
+            
+            min_stock: 0,
+            unit_type: 'Unidade',
           }
         "
         v-slot="{ isSubmitting }"
@@ -206,26 +201,14 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
               >Estoque Mínimo</label
             >
             <Field
-              name="minimum_stock"
+              name="min_stock"
               type="number"
               id="minimumStock"
               class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <ErrorMessage name="minimum_stock" class="text-red-500 text-sm mt-1" />
+            <ErrorMessage name="min_stock" class="text-red-500 text-sm mt-1" />
           </div>
-          <div class="flex flex-col">
-            <label for="icmsRate" class="text-surface-700 font-medium mb-1"
-              >Alíquota de ICMS (%)</label
-            >
-            <Field
-              name="icms_rate"
-              type="number"
-              id="icmsRate"
-              step="0.01"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-            <ErrorMessage name="icms_rate" class="text-red-500 text-sm mt-1" />
-          </div>
+          
         </div>
 
         <div class="flex flex-col">
@@ -247,7 +230,7 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
           <div class="flex flex-col">
             <label for="productUnit" class="text-surface-700 font-medium mb-1">Unidade</label>
             <Field
-              name="unit"
+              name="unit_type"
               as="select"
               id="productUnit"
               class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
@@ -257,7 +240,7 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
               <option value="Peça">Peça</option>
               <option value="Serviço">Serviço</option>
             </Field>
-            <ErrorMessage name="unit" class="text-red-500 text-sm mt-1" />
+            <ErrorMessage name="unit_type" class="text-red-500 text-sm mt-1" />
           </div>
         </div>
 

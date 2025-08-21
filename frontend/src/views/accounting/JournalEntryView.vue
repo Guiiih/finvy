@@ -229,7 +229,7 @@ onMounted(async () => {
     advancedFilters.value,
   )
   await accountStore.fetchAccounts()
-  productStore.fetchProducts(currentPage.value, itemsPerPage.value)
+  productStore.fetchProducts({ page: currentPage.value, itemsPerPage: itemsPerPage.value })
 })
 </script>
 

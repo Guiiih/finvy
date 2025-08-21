@@ -15,28 +15,58 @@ export interface Account {
   fiscal_operation_type?: string | null
 }
 
+export type CostingMethod = 'fifo' | 'lifo' | 'average'
+export type StockMovementType = 'purchase' | 'sale' | 'adjustment' | 'initial_stock'
+
 export interface Product {
   id: string
   name: string
-  sku?: string
-  ncm?: string
-  category?: string
-  brand?: string
-  minimum_stock?: number
   description?: string
-  unit?: string
-  icms_rate?: number
-  user_id?: string
   organization_id?: string
   accounting_period_id?: string
-  quantity_in_stock?: number // Adicionado para refletir a nova coluna
-  cost?: number // Adicionado para o custo unitário
-  currentStock?: number // Adicionado para o estoque atual
-  unitType?: string // Adicionado para o tipo de unidade
-
+  quantity_in_stock: number
+  ncm?: string
   product_service_type?: 'Produto' | 'Serviço'
   default_cfop_purchase?: string
   default_cfop_sale?: string
+  created_at?: string
+  updated_at?: string
+  is_active?: boolean
+
+  // New fields from upgrade
+  sku?: string
+  brand?: string
+  category?: string
+  unit_type?: string
+  unit_price?: number
+  min_stock?: number
+  max_stock?: number
+  costing_method?: CostingMethod
+  avg_cost?: number
+  last_cost?: number
+  last_movement_date?: string
+  supplier?: string
+  weight?: number
+  dimensions?: string
+  location?: string
+
+  // Calculated fields (from backend or frontend)
+  profitMargin?: number
+  totalSold?: number
+  totalRevenue?: number
+}
+
+export interface StockMovement {
+  id: string
+  product_id: string
+  organization_id: string
+  movement_type: StockMovementType
+  quantity: number
+  unit_cost?: number
+  reason?: string
+  reference_id?: string
+  movement_date: string
+  created_by?: string
 }
 
 export type EntryType = 'debit' | 'credit'
@@ -81,24 +111,15 @@ export interface JournalEntryPayload extends Omit<JournalEntry, 'id' | 'lines' |
   reference: string
 }
 
-export interface StockMovement {
-  id: string
-  journalEntryId?: string
-  date: string
-  type: 'purchase' | 'sale' | 'in' | 'out'
-  productId: string
-  quantity: number
-  unit_cost: number
-  totalValue: number
+export interface ProductBalance {
+  product_id: string;
+  productName: string;
+  quantity: number;
+  unit_cost: number;
+  totalValue: number;
 }
 
-export interface ProductBalance {
-  product_id: string
-  productName: string
-  quantity: number
-  unit_cost: number
-  totalValue: number
-}
+
 
 export interface LedgerAccount {
   account_id: string
@@ -125,7 +146,7 @@ export interface FinancialTransaction {
   created_at: string
 }
 
-export type PeriodType = 'yearly' | 'monthly';
+export type PeriodType = 'yearly' | 'monthly'
 
 export interface AccountingPeriod {
   id: string

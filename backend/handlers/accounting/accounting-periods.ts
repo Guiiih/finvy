@@ -153,7 +153,9 @@ export default async function handler(
       )
       const { data: accountingPeriod, error: dbError } = await userSupabase
         .from('accounting_periods')
-        .insert([{ fiscal_year, start_date, end_date, organization_id, annex, period_type: 'yearly' }])
+        .insert([
+          { fiscal_year, start_date, end_date, organization_id, annex, period_type: 'yearly' },
+        ])
         .select()
         .single()
 

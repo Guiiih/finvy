@@ -43,7 +43,7 @@ watch(
       loadingProducts.value = true
       try {
         await accountStore.fetchAccounts()
-        await productStore.fetchProducts(1, 1000)
+        await productStore.fetchProducts({ page: 1, itemsPerPage: 1000 })
       } catch {
         toast.add({
           severity: 'error',

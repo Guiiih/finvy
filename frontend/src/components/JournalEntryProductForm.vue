@@ -23,7 +23,7 @@ const productData = ref<ProductData>({
 const emit = defineEmits(['product-selected'])
 
 onMounted(() => {
-  productStore.fetchProducts(1, 1000) // Fetch all products
+  productStore.fetchProducts({ page: 1, itemsPerPage: 1000 }) // Fetch all products
 })
 
 const selectedProductDetails = computed(() => {
@@ -105,8 +105,8 @@ watch(
             class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md text-surface-700"
           >
             {{
-              selectedProductDetails?.cost
-                ? selectedProductDetails.cost.toLocaleString('pt-BR', {
+              selectedProductDetails?.avg_cost
+                ? selectedProductDetails.avg_cost.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL',
                   })
@@ -132,8 +132,8 @@ watch(
               <div>
                 <span class="text-surface-500">Estoque Atual: </span>
                 <span class="font-medium"
-                  >{{ selectedProductDetails.currentStock }}
-                  {{ selectedProductDetails.unitType }}</span
+                  >{{ selectedProductDetails.quantity_in_stock }}
+                  {{ selectedProductDetails.unit_type }}</span
                 >
               </div>
             </div>

@@ -294,7 +294,7 @@ watch(displayModal, (value) => {
 
 onMounted(() => {
   accountStore.fetchAccounts()
-  productStore.fetchProducts(1, 1000) // Fetch all products
+  productStore.fetchProducts({ page: 1, itemsPerPage: 1000 }) // Fetch all products
 })
 
 watch(newEntryReferencePrefix, async (newPrefix) => {
