@@ -11,7 +11,7 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
 import Chart from 'primevue/chart'
@@ -39,6 +39,7 @@ const itemsPerPage = ref(10)
 const showAddEditModal = ref(false)
 const showDetailModal = ref(false)
 const showAnalyticsModal = ref(false)
+const activeAnalyticsTab = ref('visaoGeral')
 const showImportModal = ref(false)
 const showExportModal = ref(false)
 const showBulkEditModal = ref(false)
@@ -291,13 +292,8 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
 </script>
 
 <template>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold mb-2">Cadastro de Produtos</h1>
-      <p class="text-surface-500">
-        Gerencie o catálogo de produtos com informações completas e controle de estoque.
-      </p>
-    </div>
+  <main class="max-w-7xl mx-auto">
+
 
     <!-- Bulk Actions Bar -->
     <div v-if="selectedProducts.length > 0" class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg mb-6">
@@ -327,13 +323,13 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
             class="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />
         </div>
-        <Dropdown
+        <Select
           v-model="selectedCategory"
           :options="categories"
           placeholder="Categoria"
           class="w-full sm:w-48"
         />
-        <Dropdown
+        <Select
           v-model="selectedStatus"
           :options="[
             { label: 'Todos', value: 'all' },
@@ -522,126 +518,6 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
     </div> <!-- Added closing div for overflow-hidden -->
     <!-- Paginator can be added here if totalRecords is provided by the store -->
 
-        <!-- Loading Skeleton / No products found / Error -->
-        <div v-if="productStore.loading" class="p-4 space-y-4">
-          <!-- Skeletons for loading state -->
-          <div
-            v-for="i in 10"
-            :key="i"
-            class="grid grid-cols-1 md:grid-cols-12 gap-4 p-2 items-center"
-          >
-            <div class="md:col-span-2 flex items-center">
-              <Skeleton shape="square" size="1.25rem" class="mr-3" />
-              <Skeleton height="0.75rem" width="70%" />
-            </div>
-            <div class="md:col-span-2"><Skeleton height="0.75rem" width="90%" /></div>
-            <div class="md:col-span-2"><Skeleton height="0.75rem" width="95%" /></div>
-            <div class="md:col-span-2"><Skeleton height="0.75rem" width="60%" /></div>
-            <div class="md:col-span-1 flex justify-center items-center">
-              <Skeleton shape="circle" size="1rem" />
-            </div>
-            <div class="md:col-span-1 flex justify-center items-center">
-              <Skeleton shape="circle" size="1rem" />
-            </div>
-            <div class="md:col-span-2 flex justify-center items-center">
-              <Skeleton shape="circle" size="1rem" />
-            </div>
-          </div>
-        </div>
-        <p v-else-if="productStore.error" class="text-red-400 text-center p-8">
-          {{ productStore.error }}
-        </p>
-        <p
-          v-else-if="productStore.products.length === 0"
-          class="text-surface-400 text-center p-8"
-        >
-          Nenhum produto encontrado.
-        </p>
-
-        <!-- Product Rows -->
-        <div v-else>
-          <div
-            v-for="product in productStore.products"
-            :key="product.id"
-            class="border-b border-surface-200 last:border-b-0"
-          >
-            <div
-              class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center hover:bg-surface-50 transition cursor-pointer"
-              @click="openDetailModal(product)"
-            >
-              <div class="col-span-2 flex items-center">
-                <Checkbox
-                  :binary="true"
-                  :modelValue="selectedProducts.includes(product.id)"
-                  @update:modelValue="(checked) => handleSelectEntry(product.id, checked)"
-                  @click.stop
-                />
-                <span class="ml-3 font-medium">{{ product.name }}</span>
-              </div>
-              <div class="col-span-2">
-                <Tag :value="product.category"></Tag>
-              </div>
-              <div class="col-span-2">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium">{{ product.quantity_in_stock }} {{ product.unit_type }}</span>
-                    <Tag
-                      :value="getStockStatus(product).label"
-                      :severity="getStockStatus(product).severity"
-                    ></Tag>
-                  </div>
-                  <ProgressBar
-                    :value="getStockProgress(product)"
-                    :showValue="false"
-                    style="height: 6px"
-                  ></ProgressBar>
-                  <div class="text-xs text-surface-500">
-                    Min: {{ product.min_stock }} | Max: {{ product.max_stock }}
-                  </div>
-                </div>
-              </div>
-              <div class="col-span-2">
-                <div class="space-y-1">
-                  <div class="text-sm">Custo: {{ formatCurrency(product.avg_cost) }}</div>
-                  <div class="text-sm">Venda: {{ formatCurrency(product.unit_price) }}</div>
-                </div>
-              </div>
-              <div class="col-span-1">
-                <span
-                  v-if="product.unit_price && product.avg_cost"
-                  :class="product.unit_price - product.avg_cost > 0 ? 'text-green-600' : 'text-red-600'"
-                >
-                  {{ (((product.unit_price - product.avg_cost) / product.unit_price) * 100).toFixed(1) }}%
-                </span>
-              </div>
-              <div class="col-span-1 text-center">
-                <Tag
-                  :value="product.is_active ? 'Ativo' : 'Inativo'"
-                  :severity="product.is_active ? 'success' : 'secondary'"
-                ></Tag>
-              </div>
-              <div class="col-span-2 flex justify-center items-center">
-                <Button icon="pi pi-eye" text rounded @click.stop="openDetailModal(product)" />
-                <Button
-                  icon="pi pi-pencil"
-                  text
-                  rounded
-                  severity="warning"
-                  @click.stop="openEditModal(product)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  severity="danger"
-                  @click.stop="handleDelete(product)"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Paginator can be added here if totalRecords is provided by the store -->
-
         
       </div> <!-- End of products-table-container -->
 
@@ -658,50 +534,60 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
     <!-- Add/Edit Product Modal -->
     <Dialog
       v-model:visible="showAddEditModal"
-      :header="isEditing ? 'Editar Produto' : 'Novo Produto'"
       :modal="true"
       class="w-full max-w-3xl"
     >
-      <div class="space-y-6 p-4">
+      <template #header>
+        <div class="flex flex-col gap-1">
+          <h2 class="text-lg font-bold">{{ isEditing ? 'Editar Produto' : 'Novo Produto' }}</h2>
+          <p v-if="!isEditing" class="text-sm text-surface-500">Cadastre um novo produto com todas as informações básicas.</p>
+          <p v-else class="text-sm text-surface-500">Modifique as informações do produto.</p>
+        </div>
+      </template>
+      <div class="space-y-6">
         <div class="space-y-4">
           <h4 class="font-medium">Informações Básicas</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-              <label>Nome do Produto *</label>
-              <InputText v-model="productForm.name" placeholder="Ex: Notebook Dell Inspiron 15" />
+              <label class="text-sm">Nome do Produto *</label>
+              <InputText v-model="productForm.name" placeholder="Ex: Notebook Dell Inspiron 15" size="small" />
             </div>
             <div class="flex flex-col gap-2">
-              <label>SKU (opcional)</label>
+              <label class="text-sm">SKU (opcional)</label>
               <InputText
                 v-model="productForm.sku"
                 placeholder="Será gerado automaticamente se vazio"
+                size="small"
               />
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="flex flex-col gap-2">
-              <label>Categoria *</label>
-              <Dropdown
+              <label class="text-sm">Categoria *</label>
+              <Select
+                size="small"
                 v-model="productForm.category"
                 :options="categories"
-                placeholder="Selecione"
+                placeholder="Selecione uma categoria"
               />
             </div>
             <div class="flex flex-col gap-2">
-              <label>Marca *</label>
-              <InputText v-model="productForm.brand" placeholder="Ex: Dell, HP" />
+              <label class="text-sm">Marca *</label>
+              <InputText v-model="productForm.brand" placeholder="Ex: Dell, HP, Logitech" size="small" />
             </div>
             <div class="flex flex-col gap-2">
-              <label>Unidade</label>
-              <Dropdown v-model="productForm.unit_type" :options="unitTypes" placeholder="Selecione" />
+              <label class="text-sm">Unidade</label>
+              <Select v-model="productForm.unit_type" :options="unitTypes" placeholder="Unidade" size="small" />
             </div>
           </div>
           <div class="flex flex-col gap-2">
-            <label>Descrição</label>
+            <label class="text-sm">Descrição</label>
             <Textarea
               v-model="productForm.description"
               rows="3"
               placeholder="Descrição detalhada..."
+              class="resize-none"
+              size="small"
             />
           </div>
         </div>
@@ -710,12 +596,12 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
           <h4 class="font-medium">Preços e Custos</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-              <label>Custo Unitário</label>
-              <InputNumber v-model="productForm.avg_cost" inputId="avg_cost" mode="currency" currency="BRL" locale="pt-BR" />
+              <label class="text-sm">Custo Unitário</label>
+              <InputNumber v-model="productForm.avg_cost" inputId="avg_cost" mode="currency" currency="BRL" locale="pt-BR"  size="small"/>
             </div>
             <div class="flex flex-col gap-2">
-              <label>Preço de Venda</label>
-              <InputNumber v-model="productForm.unit_price" inputId="unit_price" mode="currency" currency="BRL" locale="pt-BR" />
+              <label class="text-sm">Preço de Venda</label>
+              <InputNumber v-model="productForm.unit_price" inputId="unit_price" mode="currency" currency="BRL" locale="pt-BR" size="small" />
             </div>
           </div>
           <div v-if="productForm.unit_price && productForm.unit_price > 0" class="p-3 bg-surface-50 rounded-lg">
@@ -730,16 +616,16 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
           <h4 class="font-medium">Controle de Estoque</h4>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="flex flex-col gap-2">
-              <label>Estoque Mínimo</label>
-              <InputNumber v-model="productForm.min_stock" inputId="min_stock" />
+              <label class="text-sm">Estoque Mínimo</label>
+              <InputNumber v-model="productForm.min_stock" inputId="min_stock" size="small"/>
             </div>
             <div class="flex flex-col gap-2">
-              <label>Estoque Máximo</label>
-              <InputNumber v-model="productForm.max_stock" inputId="max_stock" />
+              <label class="text-sm">Estoque Máximo</label>
+              <InputNumber v-model="productForm.max_stock" inputId="max_stock" size="small"/>
             </div>
             <div class="flex flex-col gap-2">
-                <label>Método de Custeio</label>
-                <Dropdown v-model="productForm.costing_method" :options="costingMethods" optionLabel="label" optionValue="value" placeholder="Selecione" />
+                <label class="text-sm">Método de Custeio</label>
+                <Select v-model="productForm.costing_method" :options="costingMethods" optionLabel="label" optionValue="value" placeholder="Selecione" size="small" />
             </div>
           </div>
         </div>
@@ -748,26 +634,30 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
             <h4 class="font-medium">Informações Adicionais</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col gap-2">
-                    <label>Fornecedor</label>
-                    <InputText v-model="productForm.supplier" placeholder="Nome do fornecedor" />
+                    <label class="text-sm">Fornecedor</label>
+                    <InputText v-model="productForm.supplier" placeholder="Nome do fornecedor principal" size="small" />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label>Peso (kg)</label>
-                    <InputNumber v-model="productForm.weight" inputId="weight" />
+                    <label class="text-sm">Peso (kg)</label>
+                    <InputNumber v-model="productForm.weight" inputId="weight" size="small" />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label>Dimensões</label>
-                    <InputText v-model="productForm.dimensions" placeholder="Ex: 30x20x15 cm" />
+                    <label class="text-sm">Dimensões</label>
+                    <InputText v-model="productForm.dimensions" placeholder="Ex: 30x20x15 cm" size="small" />
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col gap-2">
-                    <label>Localização no Estoque</label>
-                    <InputText v-model="productForm.location" placeholder="Ex: A1-B2-C3" />
+                    <label class="text-sm">Localização no Estoque</label>
+                    <InputText v-model="productForm.location" placeholder="Ex: A1-B2-C3" size="small" />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label>Status</label>
-                    <Dropdown v-model="productForm.is_active" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="Selecione o status" />
+                    <label class="text-sm">NCM</label>
+                    <InputText v-model="productForm.ncm" placeholder="Ex: 8471.30.19" size="small" />
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm">Status</label>
+                    <Select v-model="productForm.is_active" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="Ativo" size="small" />
                 </div>
             </div>
         </div>
@@ -880,19 +770,162 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
     <!-- Analytics Modal -->
     <Dialog
       v-model:visible="showAnalyticsModal"
-      header="Análise de Produtos"
       :modal="true"
       class="w-full max-w-6xl"
     >
+      <template #header>
+        <div class="flex flex-col">
+            <div class="flex items-center gap-3">
+                <i class="pi pi-chart-bar text-xl"></i>
+                <span class="text-xl font-bold">Análise de Produtos</span>
+            </div>
+            <span class="text-sm text-surface-500 mt-1">Visualizações e métricas detalhadas do catálogo de produtos</span>
+        </div>
+      </template>
+
       <div class="p-4">
-        <Chart
-          type="pie"
-          :data="pieChartData"
-          :options="chartOptions"
-          class="w-full md:w-1/2 mx-auto"
-        ></Chart>
-        <!-- Outros gráficos podem ser adicionados aqui -->
+        <div class="bg-surface-100 rounded-lg p-1 flex gap-1">
+            <Button
+                label="Visão Geral"
+                @click="activeAnalyticsTab = 'visaoGeral'"
+                :class="[
+                    'w-full !text-sm !py-2',
+                    activeAnalyticsTab === 'visaoGeral'
+                        ? '!bg-white !text-surface-900 shadow-sm'
+                        : 'bg-transparent !text-surface-600 hover:!bg-surface-200/50'
+                ]"
+                link
+            />
+            <Button
+                label="Categorias"
+                @click="activeAnalyticsTab = 'categorias'"
+                :class="[
+                    'w-full !text-sm !py-2',
+                    activeAnalyticsTab === 'categorias'
+                        ? '!bg-white !text-surface-900 shadow-sm'
+                        : 'bg-transparent !text-surface-600 hover:!bg-surface-200/50'
+                ]"
+                link
+            />
+            <Button
+                label="Estoque"
+                @click="activeAnalyticsTab = 'estoque'"
+                :class="[
+                    'w-full !text-sm !py-2',
+                    activeAnalyticsTab === 'estoque'
+                        ? '!bg-white !text-surface-900 shadow-sm'
+                        : 'bg-transparent !text-surface-600 hover:!bg-surface-200/50'
+                ]"
+                link
+            />
+            <Button
+                label="Performance"
+                @click="activeAnalyticsTab = 'performance'"
+                :class="[
+                    'w-full !text-sm !py-2',
+                    activeAnalyticsTab === 'performance'
+                        ? '!bg-white !text-surface-900 shadow-sm'
+                        : 'bg-transparent !text-surface-600 hover:!bg-surface-200/50'
+                ]"
+                link
+            />
+        </div>
+
+        <div class="mt-6">
+            <div v-if="activeAnalyticsTab === 'visaoGeral'">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="p-4 border rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-surface-500">
+                            <i class="pi pi-box"></i>
+                            <span>Total de Produtos</span>
+                        </div>
+                        <div class="text-2xl font-bold">{{ totalProducts }}</div>
+                    </div>
+                    <div class="p-4 border rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-surface-500">
+                            <i class="pi pi-dollar"></i>
+                            <span>Valor Total</span>
+                        </div>
+                        <div class="text-2xl font-bold">{{ formatCurrency(totalInventoryValue) }}</div>
+                    </div>
+                    <div class="p-4 border rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-red-500">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <span>Alertas</span>
+                        </div>
+                        <div class="text-2xl font-bold text-red-500">{{ lowStockProducts }}</div>
+                    </div>
+                    <div class="p-4 border rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-surface-500">
+                            <i class="pi pi-arrow-up-right"></i>
+                            <span>Receita</span>
+                        </div>
+                        <div class="text-2xl font-bold">R$ 0,00</div> <!-- Placeholder -->
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <h3 class="font-medium mb-4">Distribuição de Valor por Categoria</h3>
+                    <Chart
+                        type="pie"
+                        :data="pieChartData"
+                        :options="chartOptions"
+                        class="w-full md:w-1/2 mx-auto"
+                    ></Chart>
+                </div>
+            </div>
+            <div v-if="activeAnalyticsTab === 'categorias'">
+                <h3 class="font-medium mb-4">Análise por Categorias</h3>
+                <Chart
+                    type="bar"
+                    :data="pieChartData" 
+                    :options="chartOptions"
+                    class="h-96"
+                ></Chart>
+            </div>
+            <div v-if="activeAnalyticsTab === 'estoque'">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 border rounded-lg bg-red-50 text-red-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-times-circle"></i>
+                            <span>Sem Estoque</span>
+                        </div>
+                        <div class="text-2xl font-bold">{{ outOfStockProducts }}</div>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-yellow-50 text-yellow-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-clock"></i>
+                            <span>Estoque Baixo</span>
+                        </div>
+                        <div class="text-2xl font-bold">{{ lowStockProducts }}</div>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-green-50 text-green-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-check-circle"></i>
+                            <span>Estoque Normal</span>
+                        </div>
+                        <div class="text-2xl font-bold">{{ totalProducts - lowStockProducts - outOfStockProducts }}</div>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <h3 class="font-medium mb-4">Produtos Críticos</h3>
+                    <div class="p-4 border rounded-lg text-center text-surface-500">
+                        Tabela de produtos críticos aqui.
+                    </div>
+                </div>
+            </div>
+            <div v-if="activeAnalyticsTab === 'performance'">
+                <h3 class="font-medium mb-4">Top 10 Produtos por Receita</h3>
+                <div class="p-4 border rounded-lg text-center text-surface-500 h-96 flex items-center justify-center">
+                    Gráfico de Top 10 aqui.
+                </div>
+            </div>
+        </div>
       </div>
+
+      <template #footer>
+        <Button label="Fechar" severity="secondary" text @click="showAnalyticsModal = false" />
+        <Button label="Exportar Relatório" icon="pi pi-download" />
+      </template>
     </Dialog>
 
     <ConfirmDialog></ConfirmDialog>
@@ -914,7 +947,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
                 <Checkbox inputId="bulkCategory" v-model="bulkEditCategory" :binary="true" />
                 <label for="bulkCategory">Categoria</label>
               </div>
-              <Dropdown v-model="bulkEditCategoryValue" :options="categories" placeholder="Selecionar categoria" :disabled="!bulkEditCategory" />
+              <Select v-model="bulkEditCategoryValue" :options="categories" placeholder="Selecionar categoria" :disabled="!bulkEditCategory" />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -922,7 +955,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
                 <Checkbox inputId="bulkStatus" v-model="bulkEditStatus" :binary="true" />
                 <label for="bulkStatus">Status</label>
               </div>
-              <Dropdown v-model="bulkEditStatusValue" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="Selecionar status" :disabled="!bulkEditStatus" />
+              <Select v-model="bulkEditStatusValue" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="Selecionar status" :disabled="!bulkEditStatus" />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -930,7 +963,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
                 <Checkbox inputId="bulkCostingMethod" v-model="bulkEditCostingMethod" :binary="true" />
                 <label for="bulkCostingMethod">Método de Custeio</label>
               </div>
-              <Dropdown v-model="bulkEditCostingMethodValue" :options="costingMethods" optionLabel="label" optionValue="value" placeholder="Selecionar método" :disabled="!bulkEditCostingMethod" />
+              <Select v-model="bulkEditCostingMethodValue" :options="costingMethods" optionLabel="label" optionValue="value" placeholder="Selecionar método" :disabled="!bulkEditCostingMethod" />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -952,7 +985,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
                 <Checkbox inputId="bulkPriceAdjust" v-model="bulkEditPriceAdjust" :binary="true" />
                 <label for="bulkPriceAdjust">Ajustar Preços</label>
               </div>
-              <Dropdown v-model="bulkEditPriceAdjustType" :options="[{label: 'Percentual', value: 'percentage'}, {label: 'Valor fixo', value: 'fixed'}, {label: 'Por margem', value: 'margin'}]" optionLabel="label" optionValue="value" placeholder="Tipo de ajuste" :disabled="!bulkEditPriceAdjust" />
+              <Select v-model="bulkEditPriceAdjustType" :options="[{label: 'Percentual', value: 'percentage'}, {label: 'Valor fixo', value: 'fixed'}, {label: 'Por margem', value: 'margin'}]" optionLabel="label" optionValue="value" placeholder="Tipo de ajuste" :disabled="!bulkEditPriceAdjust" />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -1061,78 +1094,78 @@ const chartOptions = { responsive: true, maintainAspectRatio: false }
       class="w-full max-w-lg"
     >
       <template #header>
-        <div class="flex items-center gap-2">
-          <i class="pi pi-download text-xl"></i>
-          <span class="text-xl font-bold">Exportar Produtos</span>
+        <div class="flex flex-col">
+            <div class="flex items-center gap-3">
+                <i class="pi pi-download text-xl"></i>
+                <span class="text-xl font-bold">Exportar Produtos</span>
+            </div>
+            <span class="text-sm text-surface-500 mt-1">Configure as opções de exportação do catálogo</span>
         </div>
       </template>
       <div class="space-y-6 p-4">
         <div class="space-y-2">
-          <label>Formato de Exportação</label>
-          <Dropdown :options="[{label: 'Excel (.xlsx)', value: 'excel'}, {label: 'CSV', value: 'csv'}, {label: 'PDF (Relatório)', value: 'pdf'}]" optionLabel="label" optionValue="value" v-model="exportFormat" placeholder="Selecione" />
+            <label class="block text-sm font-medium text-surface-700 mb-1">Formato de Exportação</label>
+            <Select :options="[{label: 'Excel (.xlsx)', value: 'excel'}, {label: 'CSV', value: 'csv'}, {label: 'PDF (Relatório)', value: 'pdf'}]" optionLabel="label" optionValue="value" v-model="exportFormat" placeholder="Selecione" class="w-full" />
         </div>
 
         <div class="space-y-2">
-          <label>Produtos a Exportar</label>
-          <Dropdown :options="[
+            <label class="block text-sm font-medium text-surface-700 mb-1">Produtos a Exportar</label>
+            <Select :options="[
             {label: `Produtos selecionados (${selectedProducts.length})`, value: 'selected', disabled: selectedProducts.length === 0},
             {label: `Produtos filtrados (${productStore.products.length})`, value: 'filtered'},
             {label: `Todos os produtos (${totalProducts})`, value: 'all'},
             {label: `Apenas produtos ativos (${activeProducts})`, value: 'active'},
             {label: `Produtos com estoque baixo (${lowStockProducts})`, value: 'lowstock'}
-          ]" optionLabel="label" optionValue="value" v-model="exportScope" placeholder="Selecione" />
+            ]" optionLabel="label" optionValue="value" v-model="exportScope" placeholder="Selecione" class="w-full" />
         </div>
 
-        <div class="space-y-4">
-          <label>Incluir nas Colunas</label>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includeBasicInfo" :binary="true" :modelValue="true" />
-              <label for="includeBasicInfo">Informações básicas</label>
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-surface-700 mb-2">Incluir nas Colunas</label>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includeBasicInfo" :binary="true" :modelValue="true" />
+                    <label for="includeBasicInfo" class="text-sm">Informações básicas</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includePricing" :binary="true" :modelValue="true" />
+                    <label for="includePricing" class="text-sm">Preços e custos</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includeStock" :binary="true" :modelValue="true" />
+                    <label for="includeStock" class="text-sm">Dados de estoque</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includeSales" :binary="true" :modelValue="true" />
+                    <label for="includeSales" class="text-sm">Histórico de vendas</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includeMovements" :binary="true" :modelValue="false" />
+                    <label for="includeMovements" class="text-sm">Movimentações</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Checkbox inputId="includeMetrics" :binary="true" :modelValue="false" />
+                    <label for="includeMetrics" class="text-sm">Métricas calculadas</label>
+                </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includePricing" :binary="true" :modelValue="true" />
-              <label for="includePricing">Preços e custos</label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includeStock" :binary="true" :modelValue="true" />
-              <label for="includeStock">Dados de estoque</label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includeSales" :binary="true" :modelValue="true" />
-              <label for="includeSales">Histórico de vendas</label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includeMovements" :binary="true" :modelValue="false" />
-              <label for="includeMovements">Movimentações</label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox inputId="includeMetrics" :binary="true" :modelValue="false" />
-              <label for="includeMetrics">Métricas calculadas</label>
-            </div>
-          </div>
         </div>
 
         <div class="bg-green-50 p-4 rounded-lg">
-          <div class="flex items-center gap-2 mb-2">
-            <i class="pi pi-chart-bar text-green-600"></i>
-            <span class="font-medium text-green-900">Resumo da Exportação</span>
-          </div>
-          <div class="text-sm text-green-800 space-y-1">
-            <p>• {{ productStore.products.length }} produtos serão exportados</p>
-            <p>• Valor total do estoque: {{ formatCurrency(totalInventoryValue) }}</p>
-            <p>• {{ activeProducts }} produtos ativos</p>
-            <p>• {{ categories.filter(cat => productStore.products.some(p => p.category === cat)).length }} categorias diferentes</p>
-          </div>
+            <div class="flex items-center gap-2 mb-2">
+                <i class="pi pi-chart-line text-green-600"></i>
+                <span class="font-medium text-green-900">Resumo da Exportação</span>
+            </div>
+            <div class="text-sm text-green-800 space-y-1">
+                <p>• {{ productStore.products.length }} produtos serão exportados</p>
+                <p>• Valor total do estoque: {{ formatCurrency(totalInventoryValue) }}</p>
+                <p>• {{ activeProducts }} produtos ativos</p>
+                <p>• {{ categories.filter(cat => productStore.products.some(p => p.category === cat)).length }} categorias diferentes</p>
+            </div>
         </div>
       </div>
 
       <template #footer>
-        <Button label="Cancelar" severity="secondary" @click="showExportModal = false" />
-        <Button label="Exportar" @click="() => { showExportModal = false; toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Exportação iniciada! Você receberá o arquivo em breve.', life: 3000 }); }">
-          <i class="pi pi-download mr-2"></i>
-          Exportar
-        </Button>
+        <Button label="Cancelar" severity="secondary" text @click="showExportModal = false" />
+        <Button label="Exportar" icon="pi pi-download" @click="() => { showExportModal = false; toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Exportação iniciada! Você receberá o arquivo em breve.', life: 3000 }); }" />
       </template>
     </Dialog>
   </main>
