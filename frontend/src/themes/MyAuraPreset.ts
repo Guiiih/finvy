@@ -30,7 +30,7 @@ const MyAuraPreset = definePreset(Aura, {
           700: '{gray.700}',
           800: '{gray.800}',
           900: '{gray.900}',
-          950: '{gray.950}',
+          950: '#ffffff',
         },
       },
       dark: {
@@ -46,7 +46,7 @@ const MyAuraPreset = definePreset(Aura, {
           700: '{zinc.200}',
           800: '{zinc.100}',
           900: '{zinc.50}',
-          950: '{zinc.0}',
+          950: '#000000',
         },
       },
     },
