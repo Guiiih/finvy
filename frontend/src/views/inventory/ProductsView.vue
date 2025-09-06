@@ -16,6 +16,7 @@ import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
 import Chart from 'primevue/chart'
 import ConfirmDialog from 'primevue/confirmdialog'
+import Skeleton from 'primevue/skeleton'
 import Checkbox from 'primevue/checkbox'
 import { useAccountingPeriodStore } from '@/stores/accountingPeriodStore'
 

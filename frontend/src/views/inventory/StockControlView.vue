@@ -7,6 +7,7 @@ import type { Product as StoreProduct, StockMovement as StoreStockMovement, Cost
 import Select from 'primevue/select';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
+import Skeleton from 'primevue/skeleton'
 
 // STORES
 const productStore = useProductStore();
@@ -277,8 +278,95 @@ const getProductSku = (productId: string) => products.value.find(p => p.id === p
 
 <template>
   <main class="max-w-7xl mx-auto">
-    <div v-if="loadingData" class="text-center">
-      <p>Carregando dados de estoque...</p>
+    <div v-if="loadingData">
+      <!-- SKELETON LOADER -->
+      <div class="space-y-8 p-4">
+        <!-- Costing Methods Skeleton -->
+        <div class="border border-surface-200 rounded-lg bg-primary-0">
+          <div class="p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <Skeleton width="20rem" height="1.5rem" class="mb-2"></Skeleton>
+                <Skeleton width="15rem" height="1rem"></Skeleton>
+              </div>
+              <div class="flex gap-2">
+                <Skeleton shape="circle" size="2.5rem"></Skeleton>
+                <Skeleton shape="circle" size="2.5rem"></Skeleton>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div v-for="i in 3" :key="i" class="border border-surface-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-4">
+                  <Skeleton width="8rem" height="1.5rem"></Skeleton>
+                  <Skeleton width="6rem" height="1.5rem" borderRadius="16px"></Skeleton>
+                </div>
+                <Skeleton width="10rem" height="2rem" class="mb-2"></Skeleton>
+                <Skeleton width="12rem" height="1rem" class="mb-4"></Skeleton>
+                <div class="border-t border-surface-100 pt-2">
+                  <Skeleton width="100%" height="3rem"></Skeleton>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 p-4 bg-surface-50 rounded-lg">
+              <div class="flex items-center justify-between">
+                <div>
+                  <Skeleton width="12rem" height="1.25rem" class="mb-1"></Skeleton>
+                  <Skeleton width="18rem" height="1rem"></Skeleton>
+                </div>
+                <Skeleton width="8rem" height="1.5rem"></Skeleton>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs Skeleton -->
+        <div class="space-y-6">
+          <Skeleton width="100%" height="3rem" borderRadius="9999px"></Skeleton>
+
+          <!-- Movements Tab Skeleton -->
+          <div class="space-y-6">
+            <!-- Filters Skeleton -->
+            <div class="flex flex-col sm:flex-row gap-4">
+              <Skeleton width="100%" height="2.5rem" borderRadius="6px"></Skeleton>
+              <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
+              <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
+              <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
+              <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
+              <Skeleton shape="circle" size="2.5rem"></Skeleton>
+            </div>
+
+            <!-- Table Skeleton -->
+            <div class="border border-surface-200 rounded-lg bg-primary-0">
+              <div class="overflow-x-auto">
+                <table class="min-w-full">
+                  <thead class="bg-surface-50">
+                    <tr>
+                      <th v-for="i in 9" :key="i" class="px-6 py-3">
+                        <Skeleton width="6rem" height="1rem"></Skeleton>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="i in 10" :key="i" class="hover:bg-surface-50">
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton shape="circle" size="2rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="6rem" height="1.5rem" borderRadius="16px"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton width="100%" height="1.5rem"></Skeleton></td>
+                      <td class="px-6 py-4"><Skeleton shape="circle" size="2rem"></Skeleton></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else>
       
