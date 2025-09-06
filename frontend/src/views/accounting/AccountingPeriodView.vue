@@ -35,85 +35,87 @@
       <Dialog
         v-model:visible="showCreatePeriodForm"
         modal
-        header="Criar Novo Ano Fiscal"
+        :style="{ width: '450px' }"
         class="p-fluid"
+        :draggable="false"
       >
-        <form @submit.prevent="handleCreatePeriod" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="fiscalYear" class="block text-sm font-medium text-gray-700"
-              >Ano Fiscal</label
-            >
-            <input
-              type="number"
+        <template #header>
+          <div class="flex flex-col gap-1">
+            <h3 class="text-xl font-bold text-gray-900">Criar Novo Ano Fiscal</h3>
+            <p class="text-sm text-gray-500">
+              Configure um novo ano fiscal com seus períodos contábeis.
+            </p>
+          </div>
+        </template>
+
+        <form @submit.prevent="handleCreatePeriod" class="flex flex-col gap-6 pt-4">
+          <div class="flex flex-col gap-2">
+            <label for="fiscalYear" class="text-sm font-medium text-gray-800">Ano Fiscal</label>
+            <InputNumber
               id="fiscalYear"
               v-model="newPeriod.fiscal_year"
+              mode="decimal"
+              :useGrouping="false"
               required
-              min="1900"
-              max="2100"
-              step="1"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              size="small"
             />
           </div>
 
-          <div>
-            <label for="regime" class="block text-sm font-medium text-gray-700"
-              >Regime Tributário</label
-            >
-            <select
+          <div class="flex flex-col gap-2">
+            <label for="regime" class="text-sm font-medium text-gray-800">Regime Tributário</label>
+            <Dropdown
               id="regime"
               v-model="newPeriod.regime"
+              :options="regimeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione um regime"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option :value="null" disabled>Selecione um regime</option>
-              <option value="simples_nacional">Simples Nacional</option>
-              <option value="lucro_presumido">Lucro Presumido</option>
-              <option value="lucro_real">Lucro Real</option>
-            </select>
+              size="small"
+            />
           </div>
-          <div>
-            <label for="annex" class="block text-sm font-medium text-gray-700"
+
+          <div v-if="newPeriod.regime === 'simples_nacional'" class="flex flex-col gap-2">
+            <label for="annex" class="text-sm font-medium text-gray-800"
               >Anexo do Simples Nacional</label
             >
-            <select
+            <Dropdown
               id="annex"
               v-model="newPeriod.annex"
+              :options="annexOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione um anexo"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option :value="null" disabled>Selecione um anexo</option>
-              <option value="annex_i">Anexo I - Comércio</option>
-              <option value="annex_ii">Anexo II - Indústria</option>
-              <option value="annex_iii">Anexo III - Serviços</option>
-              <option value="annex_iv">Anexo IV - Serviços</option>
-              <option value="annex_v">Anexo V - Serviços</option>
-            </select>
+              size="small"
+            />
           </div>
-          <div class="md:col-span-3 flex justify-end">
-            <div
-              class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 w-full"
-              role="alert"
-            >
-              <p class="font-bold">Atenção</p>
+
+          <div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 text-sm" role="alert">
+            <div class="flex items-center">
+              <i class="pi pi-info-circle mr-2"></i>
               <p>
-                Os períodos mensais serão criados automaticamente com base nas datas informadas. O
-                regime tributário escolhido será aplicado a todos os cálculos de impostos do ano.
+                Os períodos mensais serão criados automaticamente. O regime tributário escolhido
+                será aplicado a todos os cálculos de impostos do ano.
               </p>
             </div>
           </div>
-          <div class="md:col-span-3 flex justify-end space-x-2">
-            <button
-              type="button"
+
+          <div class="flex justify-end space-x-2">
+            <Button
+              label="Cancelar"
+              text
               @click="showCreatePeriodForm = false"
-              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
-            >
-              {{ accountingPeriodStore.loading ? 'Criando...' : 'Criar Ano Fiscal' }}
-            </button>
+              class="text-gray-800"
+              size="small"
+            />
+            <Button
+              :loading="accountingPeriodStore.loading"
+              type="submit"
+              :label="accountingPeriodStore.loading ? 'Criando...' : 'Criar Ano Fiscal'"
+              class="!bg-gray-900 !text-white"
+              size="small"
+            />
           </div>
         </form>
         <p v-if="accountingPeriodStore.error" class="text-red-500 text-sm mt-2">
@@ -124,80 +126,83 @@
       <Dialog
         v-model:visible="showEditPeriodForm"
         modal
-        :header="'Editar Ano Fiscal: ' + editingPeriod?.fiscal_year"
+        :style="{ width: '450px' }"
         class="p-fluid"
+        :draggable="false"
       >
-        <form @submit.prevent="handleUpdatePeriod" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="editFiscalYear" class="block text-sm font-medium text-gray-700"
-              >Ano Fiscal</label
-            >
-            <input
-              type="number"
+        <template #header>
+          <div class="flex flex-col gap-1">
+            <h3 class="text-xl font-bold text-gray-900">
+              Editar Ano Fiscal: {{ editingPeriod?.fiscal_year }}
+            </h3>
+            <p class="text-sm text-gray-500">Ajuste as configurações do seu ano fiscal.</p>
+          </div>
+        </template>
+
+        <form
+          v-if="editingPeriod"
+          @submit.prevent="handleUpdatePeriod"
+          class="flex flex-col gap-6 pt-4"
+        >
+          <div class="flex flex-col gap-2">
+            <label for="editFiscalYear" class="text-sm font-medium text-gray-800">Ano Fiscal</label>
+            <InputNumber
               id="editFiscalYear"
-              v-model="editingPeriod!.fiscal_year"
+              v-model="editingPeriod.fiscal_year"
+              mode="decimal"
+              :useGrouping="false"
               required
-              min="1900"
-              max="2100"
-              step="1"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              size="small"
             />
           </div>
 
-          <div>
-            <label for="editRegime" class="block text-sm font-medium text-gray-700"
+          <div class="flex flex-col gap-2">
+            <label for="editRegime" class="text-sm font-medium text-gray-800"
               >Regime Tributário</label
             >
-            <select
+            <Dropdown
               id="editRegime"
-              v-model="editingPeriod!.regime"
+              v-model="editingPeriod.regime"
+              :options="regimeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione um regime"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option :value="null" disabled>Selecione um regime</option>
-              <option value="simples_nacional">Simples Nacional</option>
-              <option value="lucro_presumido">Lucro Presumido</option>
-              <option value="lucro_real">Lucro Real</option>
-            </select>
-          </div>
-          <div>
-            <label for="editAnnex" class="block text-sm font-medium text-gray-700"
-              >Anexo do Simples Nacional</label
-            >
-            <select
-              id="editAnnex"
-              v-model="editingPeriod!.annex"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option :value="null" disabled>Selecione um anexo</option>
-              <option value="annex_i">Anexo I - Comércio</option>
-              <option value="annex_ii">Anexo II - Indústria</option>
-              <option value="annex_iii">Anexo III - Serviços</option>
-              <option value="annex_iv">Anexo IV - Serviços</option>
-              <option value="annex_v">Anexo V - Serviços</option>
-            </select>
+              size="small"
+            />
           </div>
 
-          <div class="md:col-span-3 flex justify-end space-x-2">
-            <button
-              type="button"
-              @click="
-                () => {
-                  showEditPeriodForm = false
-                  editingPeriod = null
-                }
-              "
-              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+          <div v-if="editingPeriod.regime === 'simples_nacional'" class="flex flex-col gap-2">
+            <label for="editAnnex" class="text-sm font-medium text-gray-800"
+              >Anexo do Simples Nacional</label
             >
-              Cancelar
-            </button>
-            <button
+            <Dropdown
+              id="editAnnex"
+              v-model="editingPeriod.annex"
+              :options="annexOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione um anexo"
+              required
+              size="small"
+            />
+          </div>
+
+          <div class="flex justify-end space-x-2">
+            <Button
+              label="Cancelar"
+              text
+              @click="showEditPeriodForm = false"
+              class="text-gray-800"
+              size="small"
+            />
+            <Button
+              :loading="accountingPeriodStore.loading"
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-            >
-              {{ accountingPeriodStore.loading ? 'Atualizando...' : 'Atualizar Período' }}
-            </button>
+              :label="accountingPeriodStore.loading ? 'Atualizando...' : 'Atualizar Período'"
+              class="!bg-gray-900 !text-white"
+              size="small"
+            />
           </div>
         </form>
         <p v-if="accountingPeriodStore.error" class="text-red-500 text-sm mt-2">
@@ -595,6 +600,8 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Chips from 'primevue/chips'
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
 
 import { api } from '@/services/api'
 import type {
@@ -622,6 +629,20 @@ const newPeriod = ref<AccountingPeriod>({
   annex: null,
 })
 
+const regimeOptions = ref([
+  { label: 'Simples Nacional', value: 'simples_nacional' },
+  { label: 'Lucro Presumido', value: 'lucro_presumido' },
+  { label: 'Lucro Real', value: 'lucro_real' },
+])
+
+const annexOptions = ref([
+  { label: 'Anexo I - Comércio', value: 'annex_i' },
+  { label: 'Anexo II - Indústria', value: 'annex_ii' },
+  { label: 'Anexo III - Serviços', value: 'annex_iii' },
+  { label: 'Anexo IV - Serviços', value: 'annex_iv' },
+  { label: 'Anexo V - Serviços', value: 'annex_v' },
+])
+
 watch(
   () => newPeriod.value.fiscal_year,
   (newYear) => {
@@ -634,6 +655,15 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => newPeriod.value.regime,
+  (newRegime) => {
+    if (newRegime !== 'simples_nacional') {
+      newPeriod.value.annex = null
+    }
+  },
 )
 
 const searchTerm = ref('')
@@ -653,6 +683,15 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => editingPeriod.value?.regime,
+  (newRegime) => {
+    if (editingPeriod.value && newRegime !== 'simples_nacional') {
+      editingPeriod.value.annex = null
+    }
+  },
 )
 
 // Sharing Modal State
@@ -726,20 +765,39 @@ const copyToClipboard = (text: string) => {
 
 const sendInvites = () => {
   if (!emailsToInvite.value || emailsToInvite.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Insira um ou mais emails para convidar.', life: 3000 })
+    toast.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Insira um ou mais emails para convidar.',
+      life: 3000,
+    })
     return
   }
   // TODO: A implementação do backend para enviar convites é necessária.
-  toast.add({ severity: 'info', summary: 'Não implementado', detail: 'O envio de convites ainda não foi implementado.', life: 3000 })
-  console.log('Convidando emails:', emailsToInvite.value, 'com permissão:', sharingPermissionLevel.value)
+  toast.add({
+    severity: 'info',
+    summary: 'Não implementado',
+    detail: 'O envio de convites ainda não foi implementado.',
+    life: 3000,
+  })
+  console.log(
+    'Convidando emails:',
+    emailsToInvite.value,
+    'com permissão:',
+    sharingPermissionLevel.value,
+  )
 }
 
 const updatePermission = (shared: SharedAccountingPeriod) => {
   // TODO: A implementação do backend para atualizar as permissões é necessária.
-  toast.add({ severity: 'info', summary: 'Não implementado', detail: 'A atualização de permissões ainda não foi implementada.', life: 3000 })
+  toast.add({
+    severity: 'info',
+    summary: 'Não implementado',
+    detail: 'A atualização de permissões ainda não foi implementada.',
+    life: 3000,
+  })
   console.log('Atualizando permissão para:', shared.id, 'para:', shared.permission_level)
 }
-
 
 // State for closing modals
 const showClosePeriodModal = ref(false)
@@ -976,8 +1034,6 @@ function closeShareModal() {
   sharingPermissionLevel.value = 'read'
   sharedUsers.value = []
 }
-
-
 
 async function unsharePeriod(sharingId: string) {
   if (confirm('Tem certeza que deseja remover este compartilhamento?')) {

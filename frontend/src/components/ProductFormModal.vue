@@ -47,8 +47,6 @@ const zodSchema = z.object({
   min_stock: z.coerce.number({ invalid_type_error: 'Deve ser um número' }).optional(),
   description: z.string().optional(),
   unit_type: z.string().optional(),
-  
-  
 })
 
 const productSchema = toTypedSchema(zodSchema)
@@ -67,7 +65,6 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
         min_stock: values.min_stock,
         description: values.description,
         unit_type: values.unit_type,
-        
       }
       await productStore.updateProduct(props.editingProduct.id, updatedProduct)
       toast.add({
@@ -121,7 +118,6 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
         :validation-schema="productSchema"
         :initial-values="
           props.editingProduct || {
-            
             min_stock: 0,
             unit_type: 'Unidade',
           }
@@ -208,7 +204,6 @@ async function handleSubmit(values: ProductFormValues, { resetForm }: { resetFor
             />
             <ErrorMessage name="min_stock" class="text-red-500 text-sm mt-1" />
           </div>
-          
         </div>
 
         <div class="flex flex-col">

@@ -112,14 +112,12 @@ export interface JournalEntryPayload extends Omit<JournalEntry, 'id' | 'lines' |
 }
 
 export interface ProductBalance {
-  product_id: string;
-  productName: string;
-  quantity: number;
-  unit_cost: number;
-  totalValue: number;
+  product_id: string
+  productName: string
+  quantity: number
+  unit_cost: number
+  totalValue: number
 }
-
-
 
 export interface LedgerAccount {
   account_id: string
