@@ -466,94 +466,118 @@
       <Dialog
         v-model:visible="showShareModal"
         modal
-        :header="'Compartilhar Ano Fiscal: ' + sharingPeriod?.fiscal_year"
-        class="p-fluid"
+        header="Compartilhar Período Fiscal"
+        :style="{ width: '600px' }"
+        :breakpoints="{ '960px': '75vw', '641px': '100vw' }"
         @hide="closeShareModal"
       >
-        <div class="mt-2">
-          <div class="mb-4">
-            <label for="shareUserSearch" class="block text-sm font-medium text-gray-700"
-              >Buscar Usuário (Email ou Nome):</label
-            >
-            <input
-              type="text"
-              id="shareUserSearch"
-              v-model="userSearchQuery"
-              @input="searchUsers"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              placeholder="Digite email ou nome"
-            />
-            <ul
-              v-if="searchResults.length > 0"
-              class="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white"
-            >
-              <li
-                v-for="user in searchResults"
-                :key="user.id"
-                @click="selectUserForSharing(user)"
-                class="p-2 cursor-pointer hover:bg-gray-100"
-              >
-                {{ user.username || user.email }}
-              </li>
-            </ul>
-            <p v-if="sharingUser" class="mt-2 text-sm text-gray-600">
-              Usuário selecionado:
-              <span class="font-semibold">{{ sharingUser.username || sharingUser.email }}</span>
+        <div class="space-y-6">
+          <!-- Seção de Convite -->
+          <div>
+            <p class="text-sm text-gray-600 mb-2">
+              Convide pessoas por e-mail para colaborar neste período fiscal.
             </p>
+            <div class="flex flex-col sm:flex-row items-stretch gap-2">
+              <Chips
+                v-model="emailsToInvite"
+                separator=","
+                placeholder="Um ou mais emails"
+                class="flex-grow"
+              />
+              <div class="flex items-stretch gap-2">
+                <Select
+                  v-model="sharingPermissionLevel"
+                  :options="permissionLevels"
+                  optionLabel="label"
+                  optionValue="value"
+                  class="w-full sm:w-36"
+                />
+                <Button
+                  @click="sendInvites"
+                  icon="pi pi-send"
+                  label="Convidar"
+                  class="bg-blue-600 text-white"
+                />
+              </div>
+            </div>
           </div>
 
-          <div class="mb-4">
-            <label for="permissionLevel" class="block text-sm font-medium text-gray-700"
-              >Nível de Permissão:</label
-            >
-            <select
-              id="permissionLevel"
-              v-model="sharingPermissionLevel"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option value="read">Leitura</option>
-              <option value="write">Escrita</option>
-            </select>
-          </div>
+          <!-- Divisor -->
+          <div class="border-t border-gray-200"></div>
 
-          <div class="flex justify-end space-x-2">
-            <button
-              @click="sharePeriod"
-              :disabled="!sharingUser || !sharingPermissionLevel || sharingStore.loading"
-              class="px-4 py-2 bg-emerald-400 text-white rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50"
-            >
-              {{ sharingStore.loading ? 'Compartilhando...' : 'Compartilhar' }}
-            </button>
-            <button
-              @click="closeShareModal"
-              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-            >
-              Cancelar
-            </button>
-          </div>
-
-          <div class="mt-6">
-            <h4 class="text-md font-semibold mb-2">Compartilhado com:</h4>
-            <p v-if="sharedUsers.length === 0" class="text-sm text-gray-600">Nenhum usuário.</p>
-            <ul v-else class="space-y-2">
-              <li
+          <!-- Lista de Membros -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-900">Pessoas com Acesso</h3>
+            <div v-if="sharedUsers.length > 0" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
+              <div
                 v-for="shared in sharedUsers"
                 :key="shared.id"
-                class="flex justify-between items-center p-2 border rounded-md bg-gray-50"
+                class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
               >
-                <span
-                  >{{ shared.profiles?.username || shared.profiles?.email }} ({{
-                    shared.permission_level
-                  }})</span
-                >
-                <button
-                  @click="unsharePeriod(shared.id)"
-                  class="px-2 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600"
-                >
-                  Remover
-                </button>
-              </li>
-            </ul>
+                <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                  <img
+                    :src="`https://ui-avatars.com/api/?name=${shared.profiles?.username || shared.profiles?.email}&background=random&color=fff`"
+                    alt="avatar"
+                    class="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ shared.profiles?.username }}</p>
+                    <p class="text-sm text-gray-500">{{ shared.profiles?.email }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                  <Select
+                    v-model="shared.permission_level"
+                    :options="permissionLevels"
+                    optionLabel="label"
+                    optionValue="value"
+                    @change="updatePermission(shared)"
+                    class="w-32"
+                  />
+                  <Button
+                    @click="unsharePeriod(shared.id)"
+                    icon="pi pi-trash"
+                    text
+                    rounded
+                    severity="danger"
+                    aria-label="Remover Acesso"
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-else class="mt-4 text-center text-gray-500 py-4">
+              <p>Ninguém foi convidado para este período ainda.</p>
+            </div>
+          </div>
+
+          <!-- Divisor -->
+          <div class="border-t border-gray-200"></div>
+
+          <!-- Compartilhamento de Link -->
+          <div>
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-medium text-gray-900">Compartilhamento por Link</h3>
+              <!-- Opcional: Adicionar um toggle para ativar/desativar o link público -->
+              <!-- <InputSwitch v-model="publicLinkEnabled" /> -->
+            </div>
+            <p class="text-sm text-gray-600 mt-1">
+              Qualquer pessoa com o link poderá visualizar (somente leitura).
+            </p>
+            <div class="mt-3 flex items-stretch">
+              <input
+                type="text"
+                :value="shareableLink"
+                readonly
+                class="flex-grow p-2 border border-gray-300 rounded-l-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Button
+                @click="copyToClipboard(shareableLink)"
+                icon="pi pi-copy"
+                label="Copiar"
+                severity="secondary"
+                class="rounded-l-none"
+              />
+            </div>
           </div>
         </div>
       </Dialog>
@@ -569,6 +593,8 @@ import { useSharingStore } from '@/stores/sharingStore'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
+import Chips from 'primevue/chips'
 
 import { api } from '@/services/api'
 import type {
@@ -637,6 +663,83 @@ const searchResults = ref<User[]>([])
 const sharingUser = ref<User | null>(null)
 const sharingPermissionLevel = ref<SharedPermissionLevel>('read')
 const sharedUsers = ref<SharedAccountingPeriod[]>([])
+const emailsToInvite = ref<string[]>([])
+
+const permissionLevels = ref([
+  { label: 'Viewer', value: 'read' },
+  { label: 'Editor', value: 'write' },
+  { label: 'Admin', value: 'admin' },
+])
+
+const shareableLink = computed(() => {
+  if (sharingPeriod.value) {
+    return `https://app.finvy.com/shared/periods/${sharingPeriod.value.id}`
+  }
+  return ''
+})
+
+const copyToClipboard = (text: string) => {
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      toast.add({
+        severity: 'success',
+        summary: 'Copiado!',
+        detail: 'Link copiado para a área de transferência.',
+        life: 3000,
+      })
+    } catch {
+      toast.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Não foi possível copiar o link.',
+        life: 3000,
+      })
+    }
+    document.body.removeChild(textArea)
+    return
+  }
+  navigator.clipboard.writeText(text).then(
+    () => {
+      toast.add({
+        severity: 'success',
+        summary: 'Copiado!',
+        detail: 'Link copiado para a área de transferência.',
+        life: 3000,
+      })
+    },
+    () => {
+      toast.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Não foi possível copiar o link.',
+        life: 3000,
+      })
+    },
+  )
+}
+
+const sendInvites = () => {
+  if (!emailsToInvite.value || emailsToInvite.value.length === 0) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Insira um ou mais emails para convidar.', life: 3000 })
+    return
+  }
+  // TODO: A implementação do backend para enviar convites é necessária.
+  toast.add({ severity: 'info', summary: 'Não implementado', detail: 'O envio de convites ainda não foi implementado.', life: 3000 })
+  console.log('Convidando emails:', emailsToInvite.value, 'com permissão:', sharingPermissionLevel.value)
+}
+
+const updatePermission = (shared: SharedAccountingPeriod) => {
+  // TODO: A implementação do backend para atualizar as permissões é necessária.
+  toast.add({ severity: 'info', summary: 'Não implementado', detail: 'A atualização de permissões ainda não foi implementada.', life: 3000 })
+  console.log('Atualizando permissão para:', shared.id, 'para:', shared.permission_level)
+}
+
 
 // State for closing modals
 const showClosePeriodModal = ref(false)
@@ -874,65 +977,7 @@ function closeShareModal() {
   sharedUsers.value = []
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-async function searchUsers() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(async () => {
-    if (userSearchQuery.value.trim().length > 2) {
-      try {
-        const data = await api.get<User[]>(`/users?query=${userSearchQuery.value.trim()}`)
-        searchResults.value = data
-      } catch (err) {
-        console.error('Erro ao buscar usuários:', err)
-        searchResults.value = []
-      }
-    } else {
-      searchResults.value = []
-    }
-  }, 300)
-}
 
-function selectUserForSharing(user: User) {
-  sharingUser.value = user
-  searchResults.value = [] // Clear search results after selection
-  userSearchQuery.value = user.username || user.email || '' // Display selected user
-}
-
-async function sharePeriod() {
-  if (!sharingPeriod.value || !sharingUser.value || !sharingPermissionLevel.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Atenção',
-      detail: 'Selecione um usuário e um nível de permissão.',
-      life: 3000,
-    })
-    return
-  }
-
-  try {
-    await sharingStore.shareAccountingPeriod(
-      sharingPeriod.value.id,
-      sharingUser.value.id,
-      sharingPermissionLevel.value,
-    )
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Período compartilhado com sucesso!',
-      life: 3000,
-    })
-    await fetchSharedUsers(sharingPeriod.value.id) // Refresh shared users list
-    sharingUser.value = null // Clear selected user
-    userSearchQuery.value = '' // Clear search query
-  } catch (err: unknown) {
-    toast.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: err instanceof Error ? err.message : 'Falha ao compartilhar período.',
-      life: 3000,
-    })
-  }
-}
 
 async function unsharePeriod(sharingId: string) {
   if (confirm('Tem certeza que deseja remover este compartilhamento?')) {
