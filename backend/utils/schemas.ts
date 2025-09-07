@@ -83,10 +83,11 @@ export const createEntryLineSchema = z.object({
     message: "Tipo de lançamento inválido. Deve ser 'debit' ou 'credit'.",
   }),
   amount: z.number().positive('Valor do lançamento deve ser um número positivo.'),
-  product_id: z
+    product_id: z
     .string()
     .uuid({ message: 'Product ID inválido. Deve ser um UUID válido.' })
-    .optional(),
+    .optional()
+    .nullable(), // Permite que product_id seja null
   quantity: z
     .number()
     .int()
