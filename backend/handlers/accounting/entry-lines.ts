@@ -263,91 +263,102 @@ export default async function handler(
       let calculated_pis_value = 0
       let calculated_cofins_value = 0
       let calculated_icms_st_value = 0
-      let final_total_net = total_net || total_gross || 0
+      let final_total_net = total_net || amount || 0 // Use amount if total_gross is not provided
 
-      // Usar as alíquotas do frontend se fornecidas, caso contrário, buscar as configurações
-      let effective_icms_rate = icms_rate
-      let effective_ipi_rate = 0 // IPI não está no taxData do frontend, mas pode vir do produto ou ser calculado
-      let effective_pis_rate = pis_rate
-      let effective_cofins_rate = cofins_rate
-      let effective_mva_rate = 0 // MVA não está no taxData do frontend
+      // Declare effective rates at a higher scope and initialize to 0
+      let effective_icms_rate = 0
+      let effective_ipi_rate = 0
+      let effective_pis_rate = 0
+      let effective_cofins_rate = 0
+      let effective_mva_rate = 0
 
-      // Obter a data do lançamento para usar nas configurações de impostos
-      const { data: journalEntryData, error: journalEntryError } = await getSupabaseClient(token)
-        .from('journal_entries')
-        .select('entry_date')
-        .eq('id', journal_entry_id)
-        .single()
+      const shouldCalculateTaxes = total_gross !== undefined && total_gross !== null;
 
-      if (journalEntryError || !journalEntryData) {
-        return handleErrorResponse(res, 500, 'Não foi possível obter a data do lançamento.')
-      }
-      const entry_date = journalEntryData.entry_date
+      if (shouldCalculateTaxes) {
+        // Usar as alíquotas do frontend se fornecidas, caso contrário, buscar as configurações
+        effective_icms_rate = icms_rate ?? 0 // Assign, don't redeclare
+        effective_ipi_rate = 0 // IPI não está no taxData do frontend, mas pode vir do produto ou ser calculado
+        effective_pis_rate = pis_rate ?? 0
+        effective_cofins_rate = cofins_rate ?? 0
+        effective_mva_rate = 0 // MVA não está no taxData do frontend
 
-      // Check if any of the tax rates are undefined or null, indicating they were not provided in the request body.
-      // If they are all explicitly 0, we don't need to fetch tax settings.
-      const shouldFetchTaxSettings =
-        icms_rate === undefined ||
-        icms_rate === null ||
-        pis_rate === undefined ||
-        pis_rate === null ||
-        cofins_rate === undefined ||
-        cofins_rate === null ||
-        irrf_rate === undefined ||
-        irrf_rate === null ||
-        csll_rate === undefined ||
-        csll_rate === null ||
-        inss_rate === undefined ||
-        inss_rate === null;
+        // Obter a data do lançamento para usar nas configurações de impostos
+        const { data: journalEntryData, error: journalEntryError } = await getSupabaseClient(token)
+          .from('journal_entries')
+          .select('entry_date')
+          .eq('id', journal_entry_id)
+          .single()
 
-      if (shouldFetchTaxSettings) {
-        const taxSettings = await getTaxSettings(organization_id, token, entry_date)
-        if (!taxSettings) {
-          return handleErrorResponse(
-            res,
-            500,
-            'Configurações de impostos não encontradas para a organização.',
-          )
+        if (journalEntryError || !journalEntryData) {
+          return handleErrorResponse(res, 500, 'Não foi possível obter a data do lançamento.')
         }
-        // Only update effective rates if they were not provided in the request body
-        effective_icms_rate = icms_rate ?? taxSettings.icms_rate;
-        effective_ipi_rate = taxSettings.ipi_rate; // IPI is always from settings if not provided
-        effective_pis_rate = pis_rate ?? taxSettings.pis_rate;
-        effective_cofins_rate = cofins_rate ?? taxSettings.cofins_rate;
-        effective_mva_rate = taxSettings.mva_rate; // MVA is always from settings if not provided
-      } else {
-        // If all rates were explicitly provided (even if 0), use them directly
-        effective_icms_rate = icms_rate ?? 0;
-        effective_ipi_rate = 0; // Assume 0 if not fetched from settings
-        effective_pis_rate = pis_rate ?? 0;
-        effective_cofins_rate = cofins_rate ?? 0;
-        effective_mva_rate = 0; // Assume 0 if not fetched from settings
-      }
+        const entry_date = journalEntryData.entry_date
 
-      if (
-        inferredOperationType &&
-        (saleTypes.includes(inferredOperationType) || purchaseTypes.includes(inferredOperationType))
-      ) {
-        const taxResults = await calculateTaxes({
-          total_gross,
-          icms_rate: effective_icms_rate,
-          ipi_rate: effective_ipi_rate,
-          pis_rate: effective_pis_rate,
-          cofins_rate: effective_cofins_rate,
-          mva_rate: effective_mva_rate,
-          operation_type: inferredOperationType,
-          total_net,
-          organization_id,
-          accounting_period_id: active_accounting_period_id,
-          token,
-        })
+        // Check if any of the tax rates are undefined or null, indicating they were not provided in the request body.
+        // If they are all explicitly 0, we don't need to fetch tax settings.
+        const shouldFetchTaxSettings =
+          icms_rate === undefined ||
+          icms_rate === null ||
+          pis_rate === undefined ||
+          pis_rate === null ||
+          cofins_rate === undefined ||
+          cofins_rate === null ||
+          irrf_rate === undefined ||
+          irrf_rate === null ||
+          csll_rate === undefined ||
+          csll_rate === null ||
+          inss_rate === undefined ||
+          inss_rate === null;
 
-        calculated_icms_value = taxResults.calculated_icms_value
-        calculated_ipi_value = taxResults.calculated_ipi_value
-        calculated_pis_value = taxResults.calculated_pis_value
-        calculated_cofins_value = taxResults.calculated_cofins_value
-        calculated_icms_st_value = taxResults.calculated_icms_st_value
-        final_total_net = taxResults.final_total_net
+        if (shouldFetchTaxSettings) {
+          const taxSettings = await getTaxSettings(organization_id, token, entry_date)
+          if (!taxSettings) {
+            return handleErrorResponse(
+              res,
+              500,
+              'Configurações de impostos não encontradas para a organização.',
+            )
+          }
+          // Only update effective rates if they were not provided in the request body
+          effective_icms_rate = icms_rate ?? taxSettings.icms_rate;
+          effective_ipi_rate = taxSettings.ipi_rate; // IPI is always from settings if not provided
+          effective_pis_rate = pis_rate ?? taxSettings.pis_rate;
+          effective_cofins_rate = cofins_rate ?? taxSettings.cofins_rate;
+          effective_mva_rate = taxSettings.mva_rate; // MVA is always from settings if not provided
+        } else {
+          // If all rates were explicitly provided (even if 0), use them directly
+          effective_icms_rate = icms_rate ?? 0;
+          effective_ipi_rate = 0; // Assume 0 if not fetched from settings
+          effective_pis_rate = pis_rate ?? 0;
+          effective_cofins_rate = cofins_rate ?? 0;
+          effective_mva_rate = 0; // Assume 0 if not fetched from settings
+        }
+
+        if (
+          inferredOperationType &&
+          (saleTypes.includes(inferredOperationType) || purchaseTypes.includes(inferredOperationType))
+        ) {
+          const taxResults = await calculateTaxes({
+            total_gross,
+            icms_rate: effective_icms_rate,
+            ipi_rate: effective_ipi_rate,
+            pis_rate: effective_pis_rate,
+            cofins_rate: effective_cofins_rate,
+            mva_rate: effective_mva_rate,
+            operation_type: inferredOperationType,
+            total_net,
+            organization_id,
+            accounting_period_id: active_accounting_period_id,
+            token,
+          })
+
+          calculated_icms_value = taxResults.calculated_icms_value
+          calculated_ipi_value = taxResults.calculated_ipi_value
+          calculated_pis_value = taxResults.calculated_pis_value
+          calculated_cofins_value = taxResults.calculated_cofins_value
+          calculated_icms_st_value = taxResults.calculated_icms_st_value
+          final_total_net = taxResults.final_total_net
+        }
       }
 
       const { data: journalEntry } = await getSupabaseClient(token)
