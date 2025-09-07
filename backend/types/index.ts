@@ -51,10 +51,8 @@ export interface EntryLine {
   journal_entry_id?: string
   /** The ID of the account affected by this entry line. */
   account_id: string
-  /** The type of the entry (debit or credit). */
-  type: EntryType
-  /** The monetary amount of the entry line. */
-  amount: number
+  
+  
   /** The ID of the product associated with this entry line (if applicable). */
   product_id?: string | null
   /** The quantity of the product (if applicable). */

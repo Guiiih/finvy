@@ -284,7 +284,23 @@ export default async function handler(
       }
       const entry_date = journalEntryData.entry_date
 
-      if (!effective_icms_rate || !effective_pis_rate || !effective_cofins_rate) {
+      // Check if any of the tax rates are undefined or null, indicating they were not provided in the request body.
+      // If they are all explicitly 0, we don't need to fetch tax settings.
+      const shouldFetchTaxSettings =
+        icms_rate === undefined ||
+        icms_rate === null ||
+        pis_rate === undefined ||
+        pis_rate === null ||
+        cofins_rate === undefined ||
+        cofins_rate === null ||
+        irrf_rate === undefined ||
+        irrf_rate === null ||
+        csll_rate === undefined ||
+        csll_rate === null ||
+        inss_rate === undefined ||
+        inss_rate === null;
+
+      if (shouldFetchTaxSettings) {
         const taxSettings = await getTaxSettings(organization_id, token, entry_date)
         if (!taxSettings) {
           return handleErrorResponse(
@@ -293,11 +309,19 @@ export default async function handler(
             'Configurações de impostos não encontradas para a organização.',
           )
         }
-        effective_icms_rate = taxSettings.icms_rate
-        effective_ipi_rate = taxSettings.ipi_rate
-        effective_pis_rate = taxSettings.pis_rate
-        effective_cofins_rate = taxSettings.cofins_rate
-        effective_mva_rate = taxSettings.mva_rate
+        // Only update effective rates if they were not provided in the request body
+        effective_icms_rate = icms_rate ?? taxSettings.icms_rate;
+        effective_ipi_rate = taxSettings.ipi_rate; // IPI is always from settings if not provided
+        effective_pis_rate = pis_rate ?? taxSettings.pis_rate;
+        effective_cofins_rate = cofins_rate ?? taxSettings.cofins_rate;
+        effective_mva_rate = taxSettings.mva_rate; // MVA is always from settings if not provided
+      } else {
+        // If all rates were explicitly provided (even if 0), use them directly
+        effective_icms_rate = icms_rate ?? 0;
+        effective_ipi_rate = 0; // Assume 0 if not fetched from settings
+        effective_pis_rate = pis_rate ?? 0;
+        effective_cofins_rate = cofins_rate ?? 0;
+        effective_mva_rate = 0; // Assume 0 if not fetched from settings
       }
 
       if (
@@ -411,8 +435,6 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id,
-          type: 'debit', // Added
-          amount: final_total_net, // Added
           debit: final_total_net,
           credit: null,
           product_id,
@@ -439,8 +461,7 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id: revenueAccount,
-          type: 'credit', // Added
-          amount: total_gross ?? 0, // Added
+          
           debit: null,
           credit: total_gross,
           organization_id,
@@ -452,8 +473,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: ipiPayableAccount,
-            type: 'credit', // Added
-            amount: calculated_ipi_value, // Added
+            
             debit: null,
             credit: calculated_ipi_value,
             organization_id,
@@ -466,9 +486,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: revenueAccount, // Debit Revenue
-            type: 'debit', // Added
-            amount: calculated_icms_value, // Added
-            debit: calculated_icms_value,
+              debit: calculated_icms_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -476,8 +494,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: icmsPayableAccount, // Credit ICMS a Recolher
-            type: 'credit', // Added
-            amount: calculated_icms_value, // Added
+            
             debit: null,
             credit: calculated_icms_value,
             organization_id,
@@ -490,8 +507,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: icmsStPayableAccount,
-            type: 'credit', // Added
-            amount: calculated_icms_st_value, // Added
+            
             debit: null,
             credit: calculated_icms_st_value,
             organization_id,
@@ -504,9 +520,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: pisExpenseAccount,
-            type: 'debit', // Added
-            amount: calculated_pis_value, // Added
-            debit: calculated_pis_value,
+              debit: calculated_pis_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -514,8 +528,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: pisPayableAccount,
-            type: 'credit', // Added
-            amount: calculated_pis_value, // Added
+            
             debit: null,
             credit: calculated_pis_value,
             organization_id,
@@ -528,9 +541,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: cofinsExpenseAccount,
-            type: 'debit', // Added
-            amount: calculated_cofins_value, // Added
-            debit: calculated_cofins_value,
+              debit: calculated_cofins_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -538,8 +549,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: cofinsPayableAccount,
-            type: 'credit', // Added
-            amount: calculated_cofins_value, // Added
+            
             debit: null,
             credit: calculated_cofins_value,
             organization_id,
@@ -553,9 +563,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('IRRF sobre Faturamento'), // Assumindo que existe
-            type: 'debit', // Added
-            amount: irrf_value, // Added
-            debit: irrf_value,
+              debit: irrf_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -563,8 +571,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: irrfPayableAccount,
-            type: 'credit', // Added
-            amount: irrf_value, // Added
+            
             debit: null,
             credit: irrf_value,
             organization_id,
@@ -578,9 +585,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('CSLL sobre Faturamento'), // Assumindo que existe
-            type: 'debit', // Added
-            amount: csll_value, // Added
-            debit: csll_value,
+              debit: csll_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -588,8 +593,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: csllPayableAccount,
-            type: 'credit', // Added
-            amount: csll_value, // Added
+            
             debit: null,
             credit: csll_value,
             organization_id,
@@ -603,9 +607,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: accountMap.get('INSS sobre Faturamento'), // Assumindo que existe
-            type: 'debit', // Added
-            amount: inss_value, // Added
-            debit: inss_value,
+              debit: inss_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -613,8 +615,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: inssPayableAccount,
-            type: 'credit', // Added
-            amount: inss_value, // Added
+            
             debit: null,
             credit: inss_value,
             organization_id,
@@ -628,9 +629,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: cmvAccount,
-            type: 'debit', // Added
-            amount: cmv_value, // Added
-            debit: cmv_value,
+              debit: cmv_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -638,8 +637,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: finishedGoodsStockAccount,
-            type: 'credit', // Added
-            amount: cmv_value, // Added
+            
             debit: null,
             credit: cmv_value,
             organization_id,
@@ -693,8 +691,6 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id: merchandiseStockAccount,
-          type: 'debit', // Added
-          amount: final_total_net, // Added
           debit: final_total_net, // Total value of the invoice (already includes IPI and ICMS-ST if applicable)
           credit: null,
           product_id,
@@ -719,8 +715,7 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id: suppliersAccount,
-          type: 'credit', // Added
-          amount: final_total_net, // Added
+          
           debit: null,
           credit: final_total_net,
           organization_id,
@@ -732,9 +727,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: icmsRecoverableAccount,
-            type: 'debit', // Added
-            amount: calculated_icms_value, // Added
-            debit: calculated_icms_value,
+              debit: calculated_icms_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -746,9 +739,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: ipiRecoverableAccount,
-            type: 'debit', // Added
-            amount: calculated_ipi_value, // Added
-            debit: calculated_ipi_value,
+              debit: calculated_ipi_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -760,9 +751,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: pisRecoverableAccount,
-            type: 'debit', // Added
-            amount: calculated_pis_value, // Added
-            debit: calculated_pis_value,
+              debit: calculated_pis_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -774,9 +763,7 @@ export default async function handler(
           entryLinesToInsert.push({
             journal_entry_id,
             account_id: cofinsRecoverableAccount,
-            type: 'debit', // Added
-            amount: calculated_cofins_value, // Added
-            debit: calculated_cofins_value,
+              debit: calculated_cofins_value,
             credit: null,
             organization_id,
             accounting_period_id: active_accounting_period_id,
@@ -787,8 +774,7 @@ export default async function handler(
         entryLinesToInsert.push({
           journal_entry_id,
           account_id,
-          type: type, // Already exists, but explicitly setting
-          amount: amount, // Already exists, but explicitly setting
+          
           debit: debit,
           credit: credit,
           product_id,
