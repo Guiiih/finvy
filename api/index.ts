@@ -20,7 +20,6 @@ import userOrganizationRolesHandler from '../backend/handlers/users/user-organiz
 import sharingHandler from '../backend/handlers/users/sharing.js'
 import usersHandler from '../backend/handlers/users/users.js'
 import organizationsHandler from '../backend/handlers/users/organizations.js'
-import swaggerDocsHandler from '../backend/handlers/system/swagger-docs.js'
 import nfeImportHandler from '../backend/handlers/tax/nfe-import.js'
 import taxRegimeHistoryHandler from '../backend/handlers/tax/tax-regime-history.js'
 import chatbotHandler from '../backend/handlers/ai/chatbot.js'
@@ -153,31 +152,4 @@ async function protectedRoutesHandler(
 }
 
 // Main entry point for the serverless function
-export default async function (req: VercelRequest, res: VercelResponse) {
-  const fullUrl = String(req.url || '')
-  if (!fullUrl) {
-    logger.error('[API Router] req.url é indefinido ou vazio.')
-    return handleErrorResponse(res, 400, 'URL da requisição ausente.')
-  }
-
-  const urlPath = fullUrl.split('?')[0]
-  if (!urlPath) {
-    logger.error('[API Router] urlPath é indefinido ou vazio após split.')
-    return handleErrorResponse(res, 400, 'Caminho da URL inválido.')
-  }
-
-  logger.info(`[API Router] Roteando o pedido para: ${req.method} ${urlPath}`)
-
-  // Rota para a documentação da API (não protegida por autenticação)
-  if (urlPath === '/api/docs') {
-    return await swaggerDocsHandler(req, res)
-  }
-
-  // Para todas as outras rotas /api, aplicar o middleware de autenticação
-  if (urlPath.startsWith('/api/')) {
-    return await withAuth(protectedRoutesHandler)(req, res)
-  }
-
-  // Fallback para quaisquer outras requisições que possam passar
-  return handleErrorResponse(res, 404, 'Endpoint não encontrado.')
-}
+export default withAuth(protectedRoutesHandler)
