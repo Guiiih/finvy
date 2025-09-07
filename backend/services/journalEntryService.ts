@@ -154,6 +154,7 @@ export async function createJournalEntry(
         ...newEntry,
         organization_id,
         accounting_period_id: active_accounting_period_id,
+        status: 'pending', // Default status for new entries
       },
     ])
     .select()
