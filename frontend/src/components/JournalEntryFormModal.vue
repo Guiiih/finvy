@@ -547,6 +547,7 @@ async function submitEntry() {
                 ? 'bg-white text-primary shadow'
                 : 'bg-transparent text-surface-600 hover:bg-surface-200',
             ]"
+            v-if="hasStockRelatedAccount"
           >
             Produtos
           </button>

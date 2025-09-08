@@ -55,7 +55,7 @@ import ProfileSettings from './components/ProfileSettings.vue'
 import SecuritySettings from './components/SecuritySettings.vue'
 import PreferenceSettings from './components/PreferenceSettings.vue'
 import OrganizationSettings from './components/OrganizationSettings.vue'
-import TaxRulesView from './TaxRulesView.vue'
+import TaxRulesView from './components/TaxRulesView.vue'
 
 const activeTab = ref('perfil')
 const tabs = [
