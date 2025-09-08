@@ -2,8 +2,6 @@
   <div class="text-foreground">
     <div class="max-w-4xl mx-auto">
       <div class="mb-8">
-        <h1 class="text-2xl sm:text-3xl mb-3">Configurações da Conta</h1>
-        <p class="text-muted-foreground">Gerencie suas preferências e configurações da conta</p>
       </div>
 
       <!-- Tabs Navigation -->

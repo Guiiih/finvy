@@ -186,26 +186,31 @@ onMounted(async () => {
 <template>
   <div>
     <div class="max-w-7xl mx-auto">
-      <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-        <div class="relative flex-grow">
+      <div class="mb-6 flex flex-wrap items-center gap-4">
+        <div class="relative flex-1">
           <input
             type="text"
             v-model="searchTerm"
             placeholder="Busque uma conta"
-            class="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+            class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950"
           />
           <i
-            class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"
+            class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 transform text-surface-400"
+            style="font-size: 15px"
           ></i>
         </div>
-
-        <Button icon="pi pi-filter" class="p-button-secondary p-button-outlined" @click="toggle" />
+        <Button
+          icon="pi pi-filter"
+          class="p-button-secondary p-button-outlined"
+          @click="toggle"
+          size="small"
+        />
         <OverlayPanel ref="op" style="min-width: 250px">
           <div class="flex flex-col space-y-2 p-4">
             <div
               v-for="type in Object.keys(accountTypeTranslations)"
               :key="type"
-              class="flex items-center justify-between p-2 hover:bg-surface-100 cursor-pointer"
+              class="flex cursor-pointer items-center justify-between p-2 hover:bg-surface-100"
               @click="applyFilter(type as AccountType)"
             >
               <span>{{ accountTypeTranslations[type as AccountType] }}</span>
@@ -216,20 +221,27 @@ onMounted(async () => {
             </div>
           </div>
         </OverlayPanel>
-
         <Button
-          label="Análise"
-          icon="pi pi-chart-bar"
+          icon="pi pi-info-circle"
           class="p-button-secondary p-button-outlined"
           @click="showAnalyticsModal = true"
+          size="small"
         />
-
-        <button
-          @click="openNewAccountModal"
-          class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Nova Conta
-        </button>
+        <div class="md:hidden">
+          <Button
+            icon="pi pi-plus"
+            @click="openNewAccountModal"
+            size="small"
+            title="Nova Conta"
+          />
+        </div>
+        <div class="hidden md:inline-block">
+          <Button
+            label="Nova Conta"
+            @click="openNewAccountModal"
+            size="small"
+          />
+        </div>
       </div>
 
       <AccountFormModal

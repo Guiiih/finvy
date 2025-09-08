@@ -38,7 +38,7 @@ onUnmounted(() => {
     <div class="flex items-center px-4 py-3 border-b border-surface-200">
       <img
         :src="authStore.avatarUrl ?? undefined"
-        alt="Avatar do usuário"
+        alt="Avatar"
         class="h-10 w-10 rounded-full mr-3"
       />
       <div>
@@ -50,7 +50,7 @@ onUnmounted(() => {
     </div>
     <button
       class="block w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-      @click="router.push('/settings')"
+      @click="router.push('/settings'); closeMenu();"
       role="menuitem"
       tabindex="-1"
     >

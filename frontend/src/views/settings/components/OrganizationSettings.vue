@@ -2,10 +2,10 @@
   <div>
     <!-- Create Organization Section -->
     <div class="mb-8 p-6 rounded-lg bg-surface-50">
-      <h2 class="text-xl font-semibold text-surface-700 mb-4">Criar Nova Organização</h2>
+      <h2 class="text-lg font-semibold text-surface-700 mb-4">Criar Nova Organização</h2>
       <form @submit.prevent="handleCreateOrganization" class="space-y-4 max-w-md">
         <div>
-          <label for="newOrganizationName" class="block text-sm font-normal text-surface-700"
+          <label for="newOrganizationName" class="block text-xs font-normal text-surface-700"
             >Nome da Organização:</label
           >
           <InputText
@@ -14,6 +14,7 @@
             placeholder="Ex: Minha Empresa LTDA"
             required
             class="mt-1 block w-full"
+            size="small"
           />
         </div>
         <Button
@@ -21,13 +22,14 @@
           class="p-button-emerald"
           :loading="organizationSelectionStore.loading"
           label="Criar Organização"
+          size="small"
         />
       </form>
     </div>
 
     <!-- Organization Management Section -->
     <div class="p-6 rounded-lg bg-surface-50">
-      <h2 class="text-xl font-semibold text-surface-700 mb-4">Gerenciamento de Organização</h2>
+      <h2 class="text-lg font-semibold text-surface-700 mb-4">Gerenciamento de Organização</h2>
 
       <div
         v-if="!organizationSelectionStore.activeOrganization"
@@ -41,9 +43,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <!-- Left Side: Details -->
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold">Organização Ativa</h3>
+            <h3 class="text-base font-semibold">Organização Ativa</h3>
             <div>
-              <label for="selectOrganization" class="block text-sm font-normal text-surface-700"
+              <label for="selectOrganization" class="block text-xs font-normal text-surface-700"
                 >Mudar Organização Ativa</label
               >
               <Select
@@ -55,28 +57,29 @@
                 @change="handleOrganizationChange"
                 class="w-full mt-1"
                 placeholder="Selecione uma Organização"
+                size="small"
               />
             </div>
             <div>
-              <label for="orgCnpj" class="block text-sm font-normal text-surface-700">CNPJ:</label>
-              <InputText id="orgCnpj" v-model="orgCnpj" class="w-full mt-1" />
+              <label for="orgCnpj" class="block text-xs font-normal text-surface-700">CNPJ:</label>
+              <InputText id="orgCnpj" v-model="orgCnpj" class="w-full mt-1" size="small" />
             </div>
             <div>
-              <label for="orgRazaoSocial" class="block text-sm font-normal text-surface-700"
+              <label for="orgRazaoSocial" class="block text-xs font-normal text-surface-700"
                 >Razão Social:</label
               >
-              <InputText id="orgRazaoSocial" v-model="orgRazaoSocial" class="w-full mt-1" />
+              <InputText id="orgRazaoSocial" v-model="orgRazaoSocial" class="w-full mt-1" size="small" />
             </div>
             <div class="flex space-x-4">
               <div class="w-1/2">
-                <label for="orgUf" class="block text-sm font-normal text-surface-700">UF:</label>
-                <InputText id="orgUf" v-model="orgUf" class="w-full mt-1" />
+                <label for="orgUf" class="block text-xs font-normal text-surface-700">UF:</label>
+                <InputText id="orgUf" v-model="orgUf" class="w-full mt-1" size="small" />
               </div>
               <div class="w-1/2">
-                <label for="orgMunicipio" class="block text-sm font-normal text-surface-700"
+                <label for="orgMunicipio" class="block text-xs font-normal text-surface-700"
                   >Município:</label
                 >
-                <InputText id="orgMunicipio" v-model="orgMunicipio" class="w-full mt-1" />
+                <InputText id="orgMunicipio" v-model="orgMunicipio" class="w-full mt-1" size="small" />
               </div>
             </div>
             <Button
@@ -84,12 +87,13 @@
               :loading="organizationSelectionStore.loading"
               class="p-button-outlined mt-4"
               label="Salvar Detalhes"
+              size="small"
             />
           </div>
 
           <!-- Right Side: Quick Actions -->
           <div class="bg-surface-50 p-6 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4">Ações</h3>
+            <h3 class="text-base font-semibold mb-4">Ações</h3>
             <div
               v-if="
                 organizationSelectionStore.activeOrganization &&
@@ -102,30 +106,31 @@
                 label="Excluir Organização"
                 severity="danger"
                 class="w-full p-button-outlined"
+                size="small"
               />
             </div>
-            <div v-else class="text-sm text-surface-500">
+            <div v-else class="text-xs text-surface-500">
               <p>Organizações pessoais não podem ser excluídas.</p>
             </div>
           </div>
         </div>
 
         <!-- Member Management -->
-        <h3 class="text-xl font-semibold mb-4 mt-8 pt-4 border-t border-surface-200">
+        <h3 class="text-lg font-semibold mb-4 mt-8 pt-4 border-t border-surface-200">
           Membros da Organização
         </h3>
         <div
           v-if="organizationSelectionStore.activeOrganization.is_personal"
           class="bg-blue-50 text-blue-700 p-4 rounded-lg"
         >
-          <p>Organizações pessoais não permitem gerenciamento de membros.</p>
+          <p class="text-xs">Organizações pessoais não permitem gerenciamento de membros.</p>
         </div>
         <div v-else>
           <!-- Search and Add Member -->
           <div class="mb-6 flex items-center justify-between">
             <span class="p-input-icon-left w-full max-w-sm">
               <i class="pi pi-search" />
-              <InputText v-model="memberSearchTerm" placeholder="Buscar membro..." class="w-full" />
+              <InputText v-model="memberSearchTerm" placeholder="Buscar membro..." class="w-full" size="small" />
             </span>
             <Button
               v-if="organizationStore.isCurrentUserOwnerOrAdmin"
@@ -137,17 +142,18 @@
               "
               :label="showAddMemberForm ? 'Fechar' : 'Convidar Membro'"
               icon="pi pi-plus"
+              size="small"
             />
           </div>
 
           <!-- Add/Edit Member Form -->
           <div v-if="showAddMemberForm" class="bg-surface-50 p-6 rounded-lg shadow-md mb-6">
-            <h4 class="text-lg font-semibold mb-4">
+            <h4 class="text-base font-semibold mb-4">
               {{ editingMember ? 'Editar Membro' : 'Adicionar Novo Membro' }}
             </h4>
             <form @submit.prevent="handleSubmitMember" class="space-y-4">
               <div>
-                <label for="memberSearch" class="block text-sm font-normal text-surface-700"
+                <label for="memberSearch" class="block text-xs font-normal text-surface-700"
                   >Buscar Usuário (Email):</label
                 >
                 <InputText
@@ -156,6 +162,7 @@
                   placeholder="Email do Usuário"
                   @input="debounceSearchUsers"
                   class="mt-1 block w-full"
+                  size="small"
                 />
                 <div
                   v-if="showSearchResults && searchResults.length > 0"
@@ -174,13 +181,13 @@
                 </div>
               </div>
               <div v-if="selectedUserForMembership">
-                <label>Usuário Selecionado:</label>
+                <label class="text-xs">Usuário Selecionado:</label>
                 <p class="p-3 rounded-md bg-surface-100">
                   {{ selectedUserForMembership.username || selectedUserForMembership.email }}
                 </p>
               </div>
               <div>
-                <label for="memberRole" class="block text-sm font-normal text-surface-700"
+                <label for="memberRole" class="block text-xs font-normal text-surface-700"
                   >Papel:</label
                 >
                 <Select
@@ -189,20 +196,22 @@
                   :options="['owner', 'admin', 'member', 'guest']"
                   required
                   class="mt-1 block w-full"
+                  size="small"
                 />
               </div>
               <Button
                 type="submit"
                 :loading="organizationStore.loading"
                 :label="editingMember ? 'Atualizar Membro' : 'Adicionar Membro'"
+                size="small"
               />
             </form>
           </div>
 
           <!-- Member List -->
           <div class="bg-surface-50 rounded-lg">
-            <p v-if="organizationStore.loading">Carregando membros...</p>
-            <p v-else-if="organizationStore.error">{{ organizationStore.error }}</p>
+            <p v-if="organizationStore.loading" class="text-xs">Carregando membros...</p>
+            <p v-else-if="organizationStore.error" class="text-xs">{{ organizationStore.error }}</p>
             <ul v-else-if="filteredMembers.length > 0" class="space-y-3">
               <li
                 v-for="member in filteredMembers"
@@ -232,16 +241,18 @@
                     icon="pi pi-pencil"
                     @click="startEdit(member)"
                     class="p-button-rounded p-button-text"
+                    size="small"
                   />
                   <Button
                     icon="pi pi-trash"
                     @click="removeMember(member.id)"
                     class="p-button-rounded p-button-text p-button-danger"
+                    size="small"
                   />
                 </div>
               </li>
             </ul>
-            <p v-else>Nenhum membro encontrado.</p>
+            <p v-else class="text-xs">Nenhum membro encontrado.</p>
           </div>
         </div>
       </div>
@@ -264,6 +275,7 @@
           icon="pi pi-times"
           @click="showDeleteOrganizationModal = false"
           class="p-button-text"
+          size="small"
         />
         <Button
           label="Excluir"
@@ -271,6 +283,7 @@
           @click="handleDeleteOrganization"
           :loading="organizationSelectionStore.loading"
           class="p-button-danger"
+          size="small"
         />
       </template>
     </Dialog>

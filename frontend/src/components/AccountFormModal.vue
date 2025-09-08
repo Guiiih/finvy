@@ -3,10 +3,11 @@ import { ref, watch, computed } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { Account, AccountType } from '@/types'
 
-import ProgressSpinner from 'primevue/progressspinner'
+import AutoComplete from 'primevue/autocomplete'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
-import AutoComplete from 'primevue/autocomplete'
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -51,6 +52,14 @@ const searchFiscalOperation = (event: { query: string }) => {
     }
   }, 250)
 }
+
+const accountTypes = [
+  { label: 'Ativo', value: 'asset' },
+  { label: 'Passivo', value: 'liability' },
+  { label: 'Patrimônio Líquido', value: 'equity' },
+  { label: 'Receita', value: 'revenue' },
+  { label: 'Despesa', value: 'expense' },
+]
 
 const flattenedParentAccounts = computed(() => {
   return flattenHierarchy(parentAccounts.value)
@@ -179,100 +188,105 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
   <Dialog
     v-model:visible="displayModal"
     modal
-    :header="props.isEditing ? 'Editar Conta' : 'Adicionar Conta'"
-    :style="{ width: '50vw' }"
+    :style="{ width: '500px' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    @hide="() => emit('update:visible', false)"
   >
-    <div class="p-6 rounded-lg shadow-inner mb-6">
-      <Form
-        @submit="handleSubmit as any"
-        :validation-schema="accountSchema"
-        :initial-values="props.editingAccount || {}"
-        v-slot="{ isSubmitting, setFieldValue }"
-        class="space-y-4"
-      >
-        <div class="flex gap-4">
-          <div class="flex flex-col w-1/3">
-            <label for="accountType" class="text-surface-700 font-medium mb-1"
-              >Tipo de Conta:</label
-            >
-            <Field
-              name="account_type"
-              as="select"
-              id="accountType"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400 w-full"
-              v-model="selectedAccountType"
-            >
-              <option value="" disabled>Selecione...</option>
-              <option value="asset">Ativo</option>
-              <option value="liability">Passivo</option>
-              <option value="equity">Patrimônio Líquido</option>
-              <option value="revenue">Receita</option>
-              <option value="expense">Despesa</option>
-            </Field>
-            <ErrorMessage name="account_type" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col w-1/2">
-            <label for="parentAccount" class="text-surface-700 font-medium mb-1">Conta Pai:</label>
-            <Field name="parent_account_id" v-slot="{ value }">
-              <Select
-                :options="flattenedParentAccounts"
-                :modelValue="value"
-                @update:modelValue="(val) => setFieldValue('parent_account_id', val)"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Selecione a conta pai"
-                :filter="true"
-                class="w-full"
-              />
-            </Field>
-            <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col w-1/4">
-            <label for="fiscalOperationType" class="text-surface-700 font-medium mb-1"
-              >Tipo de Operação Fiscal</label
-            >
-            <Field name="fiscal_operation_type" v-slot="{ value, handleChange }">
-              <AutoComplete
-                :modelValue="value"
-                @update:modelValue="handleChange"
-                :suggestions="fiscalOperationItems"
-                @complete="searchFiscalOperation"
-                placeholder="Ex: Venda de Mercadorias"
-                class="w-full"
-              />
-            </Field>
-            <ErrorMessage name="fiscal_operation_type" class="text-red-500 text-sm mt-1" />
-          </div>
-        </div>
-        <div class="flex flex-col">
-          <label for="accountName" class="text-surface-700 font-medium mb-1">Nome da Conta:</label>
-          <Field
-            name="name"
-            type="text"
-            id="accountName"
-            class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          />
-          <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
-        </div>
-        <div class="flex space-x-4">
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
-          >
-            <ProgressSpinner
-              v-if="isSubmitting"
-              class="w-5 h-5 mr-2"
-              strokeWidth="8"
-              fill="var(--surface-ground)"
-              animationDuration=".5s"
-              aria-label="Custom ProgressSpinner"
+    <template #header>
+      <div class="flex flex-col">
+        <h3 class="text-lg font-semibold">
+          {{ props.isEditing ? 'Editar Conta' : 'Nova Conta' }}
+        </h3>
+        <p class="text-surface-600 dark:text-surface-400 text-sm">
+          Adicione uma nova conta ao plano de contas
+        </p>
+      </div>
+    </template>
+    <Form
+      @submit="handleSubmit as any"
+      :validation-schema="accountSchema"
+      :initial-values="props.editingAccount || {}"
+      v-slot="{ isSubmitting, setFieldValue }"
+    >
+      <!-- Tipo Field -->
+      <div class="flex flex-col">
+        <label for="accountType" class="text-surface-700 text-sm  mb-2">Tipo *</label>
+          <Field name="account_type" v-slot="{ value }">
+            <Select
+              :options="accountTypes"
+              optionLabel="label"
+              optionValue="value"
+              :modelValue="value"
+              @update:modelValue="(val) => { setFieldValue('account_type', val); selectedAccountType = val; }"
+              placeholder="Selecione..."
+              size="small"
             />
-            <span v-else>{{ props.isEditing ? 'Atualizar Conta' : 'Adicionar Conta' }}</span>
-          </button>
-        </div>
-      </Form>
-    </div>
+          </Field>
+        <ErrorMessage name="account_type" class="text-red-500 text-sm mt-1" />
+      </div>
+
+      <!-- Conta Pai Field -->
+      <div class="flex flex-col mt-4">
+        <label for="parentAccount" class="text-surface-700 text-sm  mb-2">Conta Pai *</label>
+          <Field name="parent_account_id" v-slot="{ value }">
+            <Select
+              :options="flattenedParentAccounts"
+              :modelValue="value"
+              @update:modelValue="(val) => setFieldValue('parent_account_id', val)"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecione uma conta pai"
+              :filter="true"
+              size="small"
+            />
+          </Field>
+        <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
+      </div>
+
+      <!-- Tipo de Operação Fiscal Field -->
+      <div class="flex flex-col mt-4">
+        <label for="fiscalOperationType" class="text-surface-700 text-sm mb-2">
+            Tipo de Operação Fiscal
+          </label>
+          <Field name="fiscal_operation_type" v-slot="{ value, handleChange }">
+            <AutoComplete
+              :modelValue="value"
+              @update:modelValue="handleChange"
+              :suggestions="fiscalOperationItems"
+              @complete="searchFiscalOperation"
+              placeholder="Ex: Venda de Mercadorias"
+              size="small"
+              inputClass="p-inputtext-sm w-full"
+            />
+          </Field>
+        <ErrorMessage name="fiscal_operation_type" class="text-red-500 text-sm mt-1" />
+      </div>
+
+      <!-- Nome Field -->
+      <div class="flex flex-col mt-4">
+        <label for="accountName" class="text-surface-700 text-sm  mb-2">Nome *</label>
+          <Field name="name" v-slot="{ field }">
+            <InputText v-bind="field" id="accountName" placeholder="Nome da conta" class="p-inputtext-sm" />
+          </Field>
+        <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
+      </div>
+
+      <div class="flex justify-end gap-2 mt-8">
+        <Button
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="displayModal = false"
+          type="button"
+          size="small"
+        />
+        <Button
+          :label="props.isEditing ? 'Salvar Alterações' : 'Criar Conta'"
+          type="submit"
+          :loading="isSubmitting"
+          size="small"
+        />
+      </div>
+    </Form>
   </Dialog>
 </template>

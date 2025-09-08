@@ -2,7 +2,7 @@
   <div>
     <!-- Avatar -->
     <div class="mb-8">
-      <h2 class="text-lg font-medium text-surface-800 mb-4">Foto de perfil</h2>
+      <h2 class="text-base font-medium text-surface-800 mb-4">Foto de perfil</h2>
       <div class="flex items-center gap-6">
         <img
           :src="tempAvatarPreview ?? authStore.avatarUrl ?? undefined"
@@ -18,7 +18,7 @@
         />
         <button
           @click="triggerFileInput"
-          class="bg-zinc-900 text-white px-4 py-2 text-sm rounded-md hover:bg-surface-800 transition"
+          class="bg-zinc-900 text-white px-2 py-1 text-xs rounded-md hover:bg-surface-800 transition"
         >
           Mudar
         </button>
@@ -27,44 +27,44 @@
 
     <!-- Editar Perfil -->
     <div class="space-y-6">
-      <h2 class="text-lg font-medium text-surface-800">Editar Perfil</h2>
+      <h2 class="text-base font-medium text-surface-800">Editar Perfil</h2>
 
       <div>
-        <label for="fullName" class="block text-sm text-surface-600 mb-1">Nome</label>
+        <label for="fullName" class="block text-xs text-surface-600 mb-1">Nome</label>
         <input
           id="fullName"
           v-model="fullName"
           type="text"
-          class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 placeholder:text-surface-400"
+          class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 placeholder:text-surface-400 text-sm"
           placeholder="Digite seu nome"
         />
       </div>
 
       <div>
-        <label for="handle" class="block text-sm text-surface-600 mb-1">Nome de usuário</label>
+        <label for="handle" class="block text-xs text-surface-600 mb-1">Nome de usuário</label>
         <input
           id="handle"
           v-model="displayHandle"
           type="text"
-          class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 placeholder:text-surface-400"
+          class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 placeholder:text-surface-400 text-sm"
           placeholder="@usuario"
         />
       </div>
 
       <div>
-        <label for="email" class="block text-sm text-surface-600 mb-1">E-mail</label>
+        <label for="email" class="block text-xs text-surface-600 mb-1">E-mail</label>
         <input
           id="email"
           :value="authStore.user?.email"
           disabled
-          class="w-full bg-surface-100 text-surface-500 cursor-not-allowed border-0 border-b border-zinc-200"
+          class="w-full bg-surface-100 text-surface-500 cursor-not-allowed border-0 border-b border-zinc-200 text-sm"
         />
       </div>
 
       <button
         @click="handleUpdateProfile"
         :disabled="loadingProfile"
-        class="bg-zinc-900 text-white text-sm px-6 py-2 rounded-md hover:bg-surface-800 transition"
+        class="bg-zinc-900 text-white text-xs px-6 py-2 rounded-md hover:bg-surface-800 transition"
       >
         Salvar Alterações
       </button>
@@ -78,7 +78,7 @@
       class="p-dialog-cropper"
     >
       <div class="p-4">
-        <h2 class="text-xl font-bold mb-4">Cortar e girar</h2>
+        <h2 class="text-lg font-bold mb-4">Cortar e girar</h2>
         <div
           class="cropper-container flex justify-center items-center bg-surface-900 rounded-md overflow-hidden relative"
           style="height: 300px"
@@ -94,19 +94,19 @@
           />
           <!-- New buttons for zoom and rotate -->
           <div class="cropper-buttons">
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomOut">
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomOut" size="small">
               <i class="pi pi-search-minus"></i>
             </Button>
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomIn">
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomIn" size="small">
               <i class="pi pi-search-plus"></i>
             </Button>
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="rotate">
+            <Button class="p-button-rounded p-button-text p-button-plain" @click="rotate" size="small">
               <i class="pi pi-refresh"></i>
             </Button>
           </div>
         </div>
         <div class="flex flex-col items-center mt-6 p-4 bg-surface-100 rounded-lg">
-          <h3 class="text-xl font-semibold mb-3">Nova foto do perfil</h3>
+          <h3 class="text-lg font-semibold mb-3">Nova foto do perfil</h3>
           <div class="relative mb-4">
             <img
               :src="croppedImagePreviewUrl ?? undefined"
@@ -122,10 +122,10 @@
           </div>
         </div>
         <div class="flex justify-between w-full mt-4">
-          <Button @click="cancelCropping" class="p-button-text p-button-secondary">
+          <Button @click="cancelCropping" class="p-button-text p-button-secondary" size="small">
             <i class="pi pi-times"></i> Cancelar
           </Button>
-          <Button @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-emerald">
+          <Button @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-emerald" size="small">
             <i class="pi pi-check"></i> Salvar como foto do perfil
           </Button>
         </div>

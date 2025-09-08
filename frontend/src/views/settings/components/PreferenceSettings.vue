@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-10">
     <div>
-      <h2 class="text-lg font-medium text-surface-800">Personalização</h2>
+      <h2 class="text-base font-medium text-surface-800">Personalização</h2>
       <div class="mt-4 grid grid-cols-1 gap-y-6 md:grid-cols-2 md:gap-x-4">
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-2">Idioma</label>
+          <label class="block text-xs font-medium text-surface-700 mb-2">Idioma</label>
           <Select
             id="language"
             v-model="languageStore.language"
@@ -13,10 +13,11 @@
             optionValue="code"
             class="w-full"
             @change="changeLanguage"
+            size="small"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-2">Tema</label>
+          <label class="block text-xs font-medium text-surface-700 mb-2">Tema</label>
           <Select
             id="theme"
             v-model="themeStore.theme"
@@ -25,6 +26,7 @@
             optionValue="value"
             class="w-full"
             @change="changeTheme"
+            size="small"
           />
         </div>
       </div>
@@ -33,36 +35,36 @@
     <div class="border-t border-zinc-200"></div>
 
     <div>
-      <h2 class="text-lg font-medium text-surface-800">Notificações</h2>
+      <h2 class="text-base font-medium text-surface-800">Notificações</h2>
       <div class="space-y-6 mt-4">
         <div
           class="flex items-center justify-between p-4 rounded-lg bg-surface-50 border border-surface-200"
         >
           <div>
-            <h3 class="font-semibold text-surface-800">Notificações por email</h3>
-            <p class="text-sm text-surface-600">Receber atualizações importantes por email.</p>
+            <h3 class="text-sm font-semibold text-surface-800">Notificações por email</h3>
+            <p class="text-xs text-surface-600">Receber atualizações importantes por email.</p>
           </div>
-          <InputSwitch v-model="notificationSettings.email" @change="saveSettings" />
+          <InputSwitch v-model="notificationSettings.email" @change="saveSettings" size="small" />
         </div>
 
         <div
           class="flex items-center justify-between p-4 rounded-lg bg-surface-50 border border-surface-200"
         >
           <div>
-            <h3 class="font-semibold text-surface-800">Notificações push</h3>
-            <p class="text-sm text-surface-600">Receber notificações no navegador.</p>
+            <h3 class="text-sm font-semibold text-surface-800">Notificações push</h3>
+            <p class="text-xs text-surface-600">Receber notificações no navegador.</p>
           </div>
-          <InputSwitch v-model="notificationSettings.push" @change="saveSettings" />
+          <InputSwitch v-model="notificationSettings.push" @change="saveSettings" size="small" />
         </div>
 
         <div
           class="flex items-center justify-between p-4 rounded-lg bg-surface-50 border border-surface-200"
         >
           <div>
-            <h3 class="font-semibold text-surface-800">Atualizações de segurança</h3>
-            <p class="text-sm text-surface-600">Alertas sobre atividades suspeitas.</p>
+            <h3 class="text-sm font-semibold text-surface-800">Atualizações de segurança</h3>
+            <p class="text-xs text-surface-600">Alertas sobre atividades suspeitas.</p>
           </div>
-          <InputSwitch v-model="notificationSettings.security" @change="saveSettings" />
+          <InputSwitch v-model="notificationSettings.security" @change="saveSettings" size="small" />
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-10">
     <div>
-      <h2 class="text-lg font-medium text-surface-800">Alterar Senha</h2>
+      <h2 class="text-base font-medium text-surface-800">Alterar Senha</h2>
       <div class="mt-4 space-y-4">
         <div>
-          <label for="currentPassword" class="block text-sm text-surface-600 mb-1"
+          <label for="currentPassword" class="block text-xs text-surface-600 mb-1"
             >Senha atual</label
           >
           <Password
@@ -13,20 +13,22 @@
             class="w-full"
             :feedback="false"
             toggleMask
+            size="small"
           />
         </div>
         <div>
-          <label for="newPassword" class="block text-sm text-surface-600 mb-1">Nova senha</label>
+          <label for="newPassword" class="block text-xs text-surface-600 mb-1">Nova senha</label>
           <Password
             id="newPassword"
             v-model="newPassword"
             class="w-full"
             :feedback="false"
             toggleMask
+            size="small"
           />
         </div>
         <div>
-          <label for="confirmNewPassword" class="block text-sm text-surface-600 mb-1"
+          <label for="confirmNewPassword" class="block text-xs text-surface-600 mb-1"
             >Confirmar nova senha</label
           >
           <Password
@@ -35,12 +37,13 @@
             class="w-full"
             :feedback="false"
             toggleMask
+            size="small"
           />
         </div>
         <button
           @click="handleUpdatePassword"
           :loading="loadingPassword"
-          class="bg-zinc-900 text-white text-sm px-6 py-2 rounded-md hover:bg-surface-800 transition"
+          class="bg-zinc-900 text-white text-xs px-6 py-2 rounded-md hover:bg-surface-800 transition"
         >
           Alterar Senha
         </button>
@@ -51,15 +54,15 @@
 
     <div>
       <div class="flex justify-between items-center">
-        <h2 class="text-lg font-medium text-surface-800">Tokens de Acesso Pessoal</h2>
-        <Button label="Novo Token" icon="pi pi-plus" severity="secondary" outlined />
+        <h2 class="text-base font-medium text-surface-800">Tokens de Acesso Pessoal</h2>
+        <Button label="Novo Token" icon="pi pi-plus" severity="secondary" outlined size="small" />
       </div>
-      <p class="text-sm text-surface-600 mt-2 max-w-2xl">
+      <p class="text-xs text-surface-600 mt-2 max-w-2xl">
         Gerencie tokens para acesso programático à sua conta
       </p>
       <div class="mt-8 text-center text-surface-500 text-sm">
-        <p>Nenhum token de acesso criado ainda</p>
-        <p>Crie seu primeiro token para acessar a API</p>
+        <p class="text-xs">Nenhum token de acesso criado ainda</p>
+        <p class="text-xs">Crie seu primeiro token para acessar a API</p>
       </div>
     </div>
 
@@ -67,21 +70,21 @@
 
     <div>
       <div class="flex justify-between items-center">
-        <h2 class="text-lg font-medium text-surface-800">Conexões</h2>
-        <Button label="Nova Conexão" severity="secondary" outlined />
+        <h2 class="text-base font-medium text-surface-800">Conexões</h2>
+        <Button label="Nova Conexão" severity="secondary" outlined size="small" />
       </div>
-      <p class="text-sm text-surface-600 mt-2 max-w-2xl">
+      <p class="text-xs text-surface-600 mt-2 max-w-2xl">
         Aplicações e serviços conectados à sua conta
       </p>
       <div class="mt-8 text-center text-surface-500 text-sm">
-        <p>Nenhuma conexão configurada ainda</p>
-        <p>Conecte aplicações e serviços à sua conta</p>
+        <p class="text-xs">Nenhuma conexão configurada ainda</p>
+        <p class="text-xs">Conecte aplicações e serviços à sua conta</p>
       </div>
     </div>
 
     <div class="border-t border-zinc-200"></div>
 
-    <div class="text-sm text-surface-500 flex items-center space-x-2">
+    <div class="text-xs text-surface-500 flex items-center space-x-2">
       <i class="pi pi-clock"></i>
       <span>Último login: Hoje às 14:30 - São Paulo, Brasil</span>
     </div>
@@ -89,15 +92,15 @@
     <div class="border-t border-zinc-200"></div>
 
     <div>
-      <h2 class="text-lg font-medium text-surface-800">Excluir Conta</h2>
-      <p class="mt-2 text-sm text-surface-600 max-w-2xl">
+      <h2 class="text-base font-medium text-surface-800">Excluir Conta</h2>
+      <p class="mt-2 text-xs text-surface-600 max-w-2xl">
         Excluir permanentemente sua conta e todos os dados associados. Esta ação não pode ser
         desfeita.
       </p>
 
       <button
         @click="confirmDeleteAccount"
-        class="mt-6 bg-red-600 text-white text-sm px-6 py-2 rounded-md hover:bg-red-700 transition"
+        class="mt-6 bg-red-600 text-white text-xs px-6 py-2 rounded-md hover:bg-red-700 transition"
       >
         Excluir Conta
       </button>
@@ -111,20 +114,21 @@
     >
       <div class="flex items-start p-2">
         <div>
-          <p class="mt-2 text-sm text-surface-600">
+          <p class="mt-2 text-xs text-surface-600">
             Esta ação é permanente e não pode ser desfeita. Todos os seus dados, organizações e
             configurações serão removidos permanentemente.
           </p>
         </div>
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" @click="showDeleteModal = false" text />
+        <Button label="Cancelar" icon="pi pi-times" @click="showDeleteModal = false" text size="small" />
         <Button
           label="Excluir"
           icon="pi pi-check"
           @click="handleDeleteAccount"
           :loading="loadingDelete"
           severity="danger"
+          size="small"
         />
       </template>
     </Dialog>

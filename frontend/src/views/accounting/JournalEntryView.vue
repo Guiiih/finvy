@@ -238,16 +238,17 @@ onMounted(async () => {
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center"></div>
 
-      <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-        <div class="relative flex-grow">
+      <div class="mb-6 flex flex-wrap items-center gap-4">
+        <div class="relative flex-1">
           <input
             type="text"
             v-model="searchTerm"
-            placeholder="Busque um lançamento"
-            class="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+            placeholder="Busque uma conta"
+            class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950"
           />
           <i
-            class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-surface-400"
+            class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 transform text-surface-400"
+            style="font-size: 15px"
           ></i>
         </div>
 
@@ -258,22 +259,32 @@ onMounted(async () => {
           aria-haspopup="true"
           aria-controls="overlay_panel"
           class="p-button-outlined p-button-secondary"
+          size="small"
         />
 
         <Button
           type="button"
-          icon="pi pi-sliders-h"
-          label="Filtros Avançados"
+          icon="pi pi-cog"
           @click="showAdvancedFiltersModal = true"
           class="p-button-outlined p-button-secondary"
+          size="small"
         />
 
-        <button
-          @click="openNewEntryModal"
-          class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-        >
-          Novo Lançamento
-        </button>
+        <div class="md:hidden">
+          <Button
+            icon="pi pi-plus"
+            @click="openNewEntryModal"
+            size="small"
+            title="Novo Lançamento"
+          />
+        </div>
+        <div class="hidden md:inline-block">
+          <Button
+            label="Novo Lançamento"
+            @click="openNewEntryModal"
+            size="small"
+          />
+        </div>
 
         <OverlayPanel ref="op" appendTo="body" :showCloseIcon="true" id="overlay_panel">
           <Listbox

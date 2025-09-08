@@ -12,7 +12,6 @@ import UserMenu from '@/components/UserMenu.vue'
 import ChatbotWindow from '@/components/ChatbotWindow.vue'
 import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
-
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
 
@@ -163,11 +162,7 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img
-              :src="authStore.avatarUrl ?? undefined"
-              alt="Avatar do usuário"
-              class="w-9 rounded-full"
-            />
+            <img :src="authStore.avatarUrl ?? undefined" alt="Avatar" class="w-9 rounded-full" />
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
@@ -216,11 +211,7 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img
-              :src="authStore.avatarUrl ?? undefined"
-              alt="Avatar do usuário"
-              class="w-9 rounded-full"
-            />
+            <img :src="authStore.avatarUrl ?? undefined" alt="Avatar" class="w-9 rounded-full" />
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
         </div>
