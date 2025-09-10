@@ -68,7 +68,12 @@
               <label for="orgRazaoSocial" class="block text-xs font-normal text-surface-700"
                 >Razão Social:</label
               >
-              <InputText id="orgRazaoSocial" v-model="orgRazaoSocial" class="w-full mt-1" size="small" />
+              <InputText
+                id="orgRazaoSocial"
+                v-model="orgRazaoSocial"
+                class="w-full mt-1"
+                size="small"
+              />
             </div>
             <div class="flex space-x-4">
               <div class="w-1/2">
@@ -79,13 +84,18 @@
                 <label for="orgMunicipio" class="block text-xs font-normal text-surface-700"
                   >Município:</label
                 >
-                <InputText id="orgMunicipio" v-model="orgMunicipio" class="w-full mt-1" size="small" />
+                <InputText
+                  id="orgMunicipio"
+                  v-model="orgMunicipio"
+                  class="w-full mt-1"
+                  size="small"
+                />
               </div>
             </div>
             <Button
               @click="handleUpdateOrganizationDetails"
               :loading="organizationSelectionStore.loading"
-              class="p-button-outlined mt-4"
+              class="mt-4"
               label="Salvar Detalhes"
               size="small"
             />
@@ -105,7 +115,7 @@
                 @click="confirmDeleteOrganization(organizationSelectionStore.activeOrganization.id)"
                 label="Excluir Organização"
                 severity="danger"
-                class="w-full p-button-outlined"
+                class="w-full"
                 size="small"
               />
             </div>
@@ -130,7 +140,12 @@
           <div class="mb-6 flex items-center justify-between">
             <span class="p-input-icon-left w-full max-w-sm">
               <i class="pi pi-search" />
-              <InputText v-model="memberSearchTerm" placeholder="Buscar membro..." class="w-full" size="small" />
+              <InputText
+                v-model="memberSearchTerm"
+                placeholder="Buscar membro..."
+                class="w-full"
+                size="small"
+              />
             </span>
             <Button
               v-if="organizationStore.isCurrentUserOwnerOrAdmin"

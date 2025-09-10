@@ -64,7 +64,11 @@
             <h3 class="text-sm font-semibold text-surface-800">Atualizações de segurança</h3>
             <p class="text-xs text-surface-600">Alertas sobre atividades suspeitas.</p>
           </div>
-          <InputSwitch v-model="notificationSettings.security" @change="saveSettings" size="small" />
+          <InputSwitch
+            v-model="notificationSettings.security"
+            @change="saveSettings"
+            size="small"
+          />
         </div>
       </div>
     </div>

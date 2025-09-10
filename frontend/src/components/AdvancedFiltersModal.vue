@@ -134,12 +134,7 @@ function clearFilters() {
         class="p-button-text"
         @click="clearFilters"
       />
-      <Button
-        label="Cancelar"
-        icon="pi pi-times"
-        class="p-button-outlined"
-        @click="$emit('update:visible', false)"
-      />
+      <Button label="Cancelar" icon="pi pi-times" @click="$emit('update:visible', false)" />
       <Button label="Aplicar Filtros" icon="pi pi-check" @click="applyFilters" />
     </template>
   </Dialog>

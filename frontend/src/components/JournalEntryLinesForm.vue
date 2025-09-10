@@ -2,6 +2,9 @@
 import { computed, watch } from 'vue'
 import { useAccountStore } from '@/stores/accountStore'
 import type { EntryLine, Product } from '@/types/index'
+import Button from 'primevue/button'
+import Select from 'primevue/select'
+import InputNumber from 'primevue/inputnumber'
 
 interface SelectedProductData {
   product: Product
@@ -79,49 +82,80 @@ function formatCurrency(value: number) {
 
 <template>
   <div class="space-y-4">
-    <h3 class="text-xl font-semibold text-surface-700 border-b border-surface-300 pb-2">
-      Linhas do Lançamento
-    </h3>
+    <div class="flex justify-between items-center border-b border-surface-300 pb-2">
+      <h3 class="text-xl font-semibold text-surface-700">Partidas Contábeis</h3>
+      <Button
+        label="Adicionar Linha"
+        icon="pi pi-plus"
+        severity="secondary"
+        outlined
+        @click="addLine"
+        class="p-button-sm"
+      />
+    </div>
     <div
       v-for="(line, index) in internalEntryLines"
       :key="index"
       class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
     >
-      <select
+      <Select
         v-model="line.account_id"
         required
-        :class="line.account_id === stockAccountId ? 'md:col-span-4' : 'md:col-span-5'"
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-      >
-        <option value="" disabled>Selecione a Conta</option>
-        <optgroup v-for="type in accountStore.accountTypes" :label="type" :key="type">
-          <option
-            v-for="account in visibleAccounts.filter((acc) => acc.type === type)"
-            :value="account.id"
-            :key="account.id"
-          >
-            {{ account.name }}
-          </option>
-        </optgroup>
-      </select>
-      <select
+        :class="
+          internalEntryLines.length > 2
+            ? line.account_id === stockAccountId
+              ? 'md:col-span-4'
+              : 'md:col-span-5'
+            : line.account_id === stockAccountId
+              ? 'md:col-span-5'
+              : 'md:col-span-6'
+        "
+        :options="visibleAccounts"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Selecione a Conta"
+        class="w-full"
+        size="small"
+      />
+      <Select
         v-model="line.type"
         required
-        :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-2'"
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-      >
-        <option value="debit">Débito</option>
-        <option value="credit">Crédito</option>
-      </select>
-      <input
-        type="number"
-        v-model.number="line.amount"
+        :class="
+          internalEntryLines.length > 2
+            ? line.account_id === stockAccountId
+              ? 'md:col-span-2'
+              : 'md:col-span-2'
+            : line.account_id === stockAccountId
+              ? 'md:col-span-2'
+              : 'md:col-span-2'
+        "
+        :options="[
+          { label: 'Débito', value: 'debit' },
+          { label: 'Crédito', value: 'credit' },
+        ]"
+        optionLabel="label"
+        optionValue="value"
+        class="w-full"
+        size="small"
+      />
+      <InputNumber
+        v-model="line.amount"
         placeholder="Valor"
-        step="0.01"
-        min="0"
+        mode="decimal"
+        :min="0"
+        :maxFractionDigits="2"
         required
-        :class="line.account_id === stockAccountId ? 'md:col-span-2' : 'md:col-span-4'"
-        class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        :class="
+          internalEntryLines.length > 2
+            ? line.account_id === stockAccountId
+              ? 'md:col-span-2'
+              : 'md:col-span-4'
+            : line.account_id === stockAccountId
+              ? 'md:col-span-5'
+              : 'md:col-span-4'
+        "
+        class="w-full"
+        size="small"
       />
       <div class="md:col-span-1 flex items-center space-x-2">
         <button
@@ -129,16 +163,9 @@ function formatCurrency(value: number) {
           @click="removeLine(index)"
           class="flex justify-center items-center p-2 rounded-full hover:bg-red-100 text-red-600 transition"
           title="Remover Linha"
+          v-if="internalEntryLines.length > 2"
         >
           <i class="pi pi-trash w-5 h-5"></i>
-        </button>
-        <button
-          type="button"
-          @click="addLine"
-          class="flex justify-center items-center p-2 rounded-full hover:bg-green-100 text-green-600 transition"
-          title="Adicionar Linha"
-        >
-          <i class="pi pi-plus w-5 h-5"></i>
         </button>
       </div>
     </div>
@@ -146,23 +173,24 @@ function formatCurrency(value: number) {
     <div
       class="p-4 rounded-lg flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0"
     >
-      <p class="text-lg">
+      <p class="text-base">
         Total Débitos:
         <span class="font-bold text-green-400">{{ formatCurrency(totalDebits) }}</span>
       </p>
-      <p class="text-lg">
+      <p class="text-base">
         Total Créditos:
         <span class="font-bold text-red-400">{{ formatCurrency(totalCredits) }}</span>
       </p>
-      <p
-        class="text-lg"
-        :class="{
-          'text-green-400': totalDebits === totalCredits,
-          'text-yellow-400': totalDebits !== totalCredits,
-        }"
-      >
+      <p class="text-base">
         Diferença:
-        <span class="font-bold">{{ formatCurrency(totalDebits - totalCredits) }}</span>
+        <span
+          class="font-bold"
+          :class="{
+            'text-green-400': totalDebits === totalCredits,
+            'text-yellow-400': totalDebits !== totalCredits,
+          }"
+          >{{ formatCurrency(totalDebits - totalCredits) }}</span
+        >
       </p>
     </div>
   </div>

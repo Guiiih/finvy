@@ -1,269 +1,254 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useProductStore } from '@/stores/productStore'
-import type { Product } from '@/types'
+import { ref, watch, computed } from 'vue'
+import type { Product, CostingMethod } from '@/types'
 
-import ProgressSpinner from 'primevue/progressspinner'
+// Import PrimeVue components
+import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Textarea from 'primevue/textarea'
+import Select from 'primevue/select'
 
-import { Form, Field, ErrorMessage } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
-import { z } from 'zod'
-
-import { useToast } from 'primevue/usetoast'
-
-const productStore = useProductStore()
-const toast = useToast()
-
+// --- PROPS & EMITS ---
 const props = defineProps<{
-  visible: boolean
   isEditing: boolean
-  editingProduct: Product | null
+  initialData: Product | null
+  loading: boolean
+  categories: string[]
+  unitTypes: string[]
+  costingMethods: { value: CostingMethod; label: string }[]
+  statusOptions: { label: string; value: boolean }[]
 }>()
 
-const emit = defineEmits(['update:visible', 'submitSuccess'])
+const emit = defineEmits(['submit', 'click:import'])
+const visible = defineModel<boolean>('visible')
 
-const displayModal = ref(props.visible)
+// --- STATE ---
+const productForm = ref<Product>({} as Product)
 
-watch(
-  () => props.visible,
-  (value) => {
-    displayModal.value = value
-  },
-)
-
-watch(displayModal, (value) => {
-  emit('update:visible', value)
-})
-
-const zodSchema = z.object({
-  name: z
-    .string({ required_error: 'O nome é obrigatório' })
-    .min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  ncm: z.string().length(8, 'O NCM deve ter 8 dígitos.').optional(),
-  sku: z.string().optional(),
-  category: z.string({ required_error: 'A categoria é obrigatória' }),
-  brand: z.string().optional(),
-  min_stock: z.coerce.number({ invalid_type_error: 'Deve ser um número' }).optional(),
-  description: z.string().optional(),
-  unit_type: z.string().optional(),
-})
-
-const productSchema = toTypedSchema(zodSchema)
-
-type ProductFormValues = z.infer<typeof zodSchema>
-
-async function handleSubmit(values: ProductFormValues, { resetForm }: { resetForm: () => void }) {
-  try {
-    if (props.isEditing && props.editingProduct) {
-      const updatedProduct: Partial<Product> = {
-        name: values.name,
-        ncm: values.ncm,
-        sku: values.sku,
-        category: values.category,
-        brand: values.brand,
-        min_stock: values.min_stock,
-        description: values.description,
-        unit_type: values.unit_type,
-      }
-      await productStore.updateProduct(props.editingProduct.id, updatedProduct)
-      toast.add({
-        severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Produto atualizado com sucesso!',
-        life: 3000,
-      })
-    } else {
-      const newProduct: Omit<Product, 'id' | 'organization_id' | 'user_id'> = {
-        name: values.name,
-        ncm: values.ncm,
-        sku: values.sku,
-        category: values.category,
-        brand: values.brand,
-        min_stock: values.min_stock,
-        description: values.description,
-        unit_type: values.unit_type,
-        quantity_in_stock: 0,
-      }
-      await productStore.addProduct(newProduct)
-      toast.add({
-        severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Produto adicionado com sucesso!',
-        life: 3000,
-      })
-    }
-    resetForm()
-    emit('submitSuccess')
-    displayModal.value = false // Close modal on success
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
-    toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+// --- WATCHERS ---
+watch(visible, (newValue) => {
+  if (newValue && props.initialData) {
+    productForm.value = { ...props.initialData }
   }
+})
+
+// --- COMPUTED ---
+const profitMargin = computed(() => {
+  if (productForm.value.unit_price && productForm.value.unit_price > 0) {
+    const cost = productForm.value.avg_cost || 0
+    return ((productForm.value.unit_price - cost) / productForm.value.unit_price) * 100
+  }
+  return 0
+})
+
+// --- METHODS ---
+const handleFormSubmit = () => {
+  emit('submit', productForm.value)
+}
+
+const closeModal = () => {
+  visible.value = false
 }
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="displayModal"
-    modal
-    :header="props.isEditing ? 'Editar Produto' : 'Novo Produto'"
-    :style="{ width: '50vw' }"
-    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-  >
-    <div class="p-4">
-      <p class="text-surface-600 mb-4">Adicione um novo produto ao catálogo</p>
-      <Form
-        @submit="handleSubmit as any"
-        :validation-schema="productSchema"
-        :initial-values="
-          props.editingProduct || {
-            min_stock: 0,
-            unit_type: 'Unidade',
-          }
-        "
-        v-slot="{ isSubmitting }"
-        class="space-y-4"
-      >
+  <Dialog v-model:visible="visible" :modal="true" class="w-full max-w-3xl" @hide="closeModal">
+    <template #header>
+      <div class="flex flex-col gap-1">
+        <h2 class="text-lg font-bold">{{ isEditing ? 'Editar Produto' : 'Novo Produto' }}</h2>
+        <p v-if="!isEditing" class="text-sm text-surface-500">
+          Cadastre um novo produto com todas as informações básicas.
+        </p>
+        <p v-else class="text-sm text-surface-500">Modifique as informações do produto.</p>
+      </div>
+    </template>
+    <div class="space-y-6">
+      <div class="space-y-4">
+        <h4 class="font-medium">Informações Básicas</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col">
-            <label for="productName" class="text-surface-700 font-medium mb-1"
-              >Nome do Produto *</label
-            >
-            <Field
-              name="name"
-              type="text"
-              id="productName"
-              placeholder="Ex: Smartphone Samsung Galaxy"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Nome do Produto *</label>
+            <InputText
+              v-model="productForm.name"
+              placeholder="Ex: Notebook Dell Inspiron 15"
+              size="small"
             />
-            <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
           </div>
-          <div class="flex flex-col">
-            <label for="productNcm" class="text-surface-700 font-medium mb-1">NCM</label>
-            <Field
-              name="ncm"
-              type="text"
-              id="productNcm"
-              placeholder="Ex: 33049910"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">SKU (opcional)</label>
+            <InputText
+              v-model="productForm.sku"
+              placeholder="Será gerado automaticamente se vazio"
+              size="small"
             />
-            <ErrorMessage name="ncm" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col">
-            <label for="productSku" class="text-surface-700 font-medium mb-1">SKU</label>
-            <Field
-              name="sku"
-              type="text"
-              id="productSku"
-              placeholder="Ex: SM-GAL-S24"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-            <ErrorMessage name="sku" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col">
-            <label for="productCategory" class="text-surface-700 font-medium mb-1"
-              >Categoria *</label
-            >
-            <Field
-              name="category"
-              as="select"
-              id="productCategory"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              <option value="" disabled>Selecione a Categoria</option>
-              <option value="Informática">Informática</option>
-              <option value="Impressoras">Impressoras</option>
-              <option value="Periféricos">Periféricos</option>
-              <option value="Mobiliário">Mobiliário</option>
-              <option value="Serviços">Serviços</option>
-              <option value="Geral">Geral</option>
-            </Field>
-            <ErrorMessage name="category" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col">
-            <label for="productBrand" class="text-surface-700 font-medium mb-1">Marca</label>
-            <Field
-              name="brand"
-              type="text"
-              id="productBrand"
-              placeholder="Ex: Samsung"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-            <ErrorMessage name="brand" class="text-red-500 text-sm mt-1" />
-          </div>
-          <div class="flex flex-col">
-            <label for="minimumStock" class="text-surface-700 font-medium mb-1"
-              >Estoque Mínimo</label
-            >
-            <Field
-              name="min_stock"
-              type="number"
-              id="minimumStock"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-            <ErrorMessage name="min_stock" class="text-red-500 text-sm mt-1" />
           </div>
         </div>
-
-        <div class="flex flex-col">
-          <label for="productDescription" class="text-surface-700 font-medium mb-1"
-            >Descrição</label
-          >
-          <Field
-            name="description"
-            as="textarea"
-            id="productDescription"
-            placeholder="Descrição detalhada do produto"
-            class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Categoria *</label>
+            <Select
+              size="small"
+              v-model="productForm.category"
+              :options="props.categories"
+              placeholder="Selecione uma categoria"
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Marca *</label>
+            <InputText
+              v-model="productForm.brand"
+              placeholder="Ex: Dell, HP, Logitech"
+              size="small"
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Unidade</label>
+            <Select
+              v-model="productForm.unit_type"
+              :options="props.unitTypes"
+              placeholder="Unidade"
+              size="small"
+            />
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm">Descrição</label>
+          <Textarea
+            v-model="productForm.description"
             rows="3"
+            placeholder="Descrição detalhada..."
+            class="resize-none"
+            size="small"
           />
-          <ErrorMessage name="description" class="text-red-500 text-sm mt-1" />
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <div class="flex flex-col">
-            <label for="productUnit" class="text-surface-700 font-medium mb-1">Unidade</label>
-            <Field
-              name="unit_type"
-              as="select"
-              id="productUnit"
-              class="p-3 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              <option value="Unidade">Unidade</option>
-              <option value="Caixa">Caixa</option>
-              <option value="Peça">Peça</option>
-              <option value="Serviço">Serviço</option>
-            </Field>
-            <ErrorMessage name="unit_type" class="text-red-500 text-sm mt-1" />
+      <div class="space-y-4">
+        <h4 class="font-medium">Preços e Custos</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Custo Unitário</label>
+            <InputNumber
+              v-model="productForm.avg_cost"
+              inputId="avg_cost"
+              mode="currency"
+              currency="BRL"
+              locale="pt-BR"
+              size="small"
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Preço de Venda</label>
+            <InputNumber
+              v-model="productForm.unit_price"
+              inputId="unit_price"
+              mode="currency"
+              currency="BRL"
+              locale="pt-BR"
+              size="small"
+            />
           </div>
         </div>
-
-        <div class="flex justify-end space-x-4 mt-6">
-          <button
-            type="button"
-            @click="displayModal = false"
-            class="px-4 py-2 rounded-lg border border-surface-300 text-surface-700 hover:bg-surface-50 transition duration-300"
+        <div
+          v-if="productForm.unit_price && productForm.unit_price > 0"
+          class="p-3 bg-surface-50 rounded-lg"
+        >
+          <span class="font-medium">Margem de Lucro: </span>
+          <span :class="profitMargin > 0 ? 'text-green-600' : 'text-red-600'"
+            >{{ profitMargin.toFixed(2) }}%</span
           >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
-          >
-            <ProgressSpinner
-              v-if="isSubmitting"
-              class="w-5 h-5 mr-2"
-              strokeWidth="8"
-              fill="var(--surface-ground)"
-              animationDuration=".5s"
-              aria-label="Custom ProgressSpinner"
-            />
-            <span v-else>{{ props.isEditing ? 'Atualizar Produto' : 'Adicionar Produto' }}</span>
-          </button>
         </div>
-      </Form>
+      </div>
+
+      <div class="space-y-4">
+        <h4 class="font-medium">Controle de Estoque</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Estoque Mínimo</label>
+            <InputNumber v-model="productForm.min_stock" inputId="min_stock" size="small" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Estoque Máximo</label>
+            <InputNumber v-model="productForm.max_stock" inputId="max_stock" size="small" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Método de Custeio</label>
+            <Select
+              v-model="productForm.costing_method"
+              :options="props.costingMethods"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione"
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h4 class="font-medium">Informações Adicionais</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Fornecedor</label>
+            <InputText
+              v-model="productForm.supplier"
+              placeholder="Nome do fornecedor principal"
+              size="small"
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Peso (kg)</label>
+            <InputNumber v-model="productForm.weight" inputId="weight" size="small" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Dimensões</label>
+            <InputText
+              v-model="productForm.dimensions"
+              placeholder="Ex: 30x20x15 cm"
+              size="small"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Localização no Estoque</label>
+            <InputText v-model="productForm.location" placeholder="Ex: A1-B2-C3" size="small" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">NCM</label>
+            <InputText v-model="productForm.ncm" placeholder="Ex: 8471.30.19" size="small" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm">Status</label>
+            <Select
+              v-model="productForm.is_active"
+              :options="props.statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Ativo"
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <Button label="Cancelar" severity="secondary" @click="closeModal" size="small" />
+      <Button
+        label="Importar"
+        icon="pi pi-upload"
+        @click="emit('click:import')"
+        severity="secondary"
+        size="small"
+      />
+      <Button
+        :label="isEditing ? 'Salvar Alterações' : 'Criar Produto'"
+        @click="handleFormSubmit"
+        :loading="props.loading"
+        size="small"
+      />
     </div>
   </Dialog>
 </template>

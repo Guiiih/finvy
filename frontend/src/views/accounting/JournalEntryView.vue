@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useAccountStore } from '@/stores/accountStore'
 import { useProductStore } from '@/stores/productStore'
 import type { JournalEntry, EntryLine as JournalEntryLine } from '@/types/index'
 import { useToast } from 'primevue/usetoast'
 import Skeleton from 'primevue/skeleton'
-import Listbox from 'primevue/listbox'
 import Button from 'primevue/button'
 import OverlayPanel from 'primevue/overlaypanel'
 import Checkbox from 'primevue/checkbox'
@@ -35,7 +34,7 @@ const itemsPerPage = ref(10)
 
 const op = ref()
 
-const selectedStatus = ref(null)
+const selectedStatus = ref<string | null>(null)
 const statusOptions = ref([
   { label: 'Todos', value: null },
   { label: 'Rascunho', value: 'draft' },
@@ -58,15 +57,11 @@ const advancedFilters = ref({
 const showBulkActionsModal = ref(false)
 const selectedEntries = ref<string[]>([])
 
-watch(selectedStatus, (newStatus) => {
-  fetchEntriesWithFilters(
-    currentPage.value,
-    itemsPerPage.value,
-    newStatus || null,
-    advancedFilters.value,
-  )
+function applyStatusFilter(status: string | null) {
+  selectedStatus.value = status
+  fetchEntriesWithFilters(currentPage.value, itemsPerPage.value, status, advancedFilters.value)
   op.value.hide()
-})
+}
 
 function toggleFilter(event: Event) {
   op.value.toggle(event)
@@ -243,7 +238,7 @@ onMounted(async () => {
           <input
             type="text"
             v-model="searchTerm"
-            placeholder="Busque uma conta"
+            placeholder="Busque uma lançamento"
             class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950"
           />
           <i
@@ -258,7 +253,7 @@ onMounted(async () => {
           @click="toggleFilter"
           aria-haspopup="true"
           aria-controls="overlay_panel"
-          class="p-button-outlined p-button-secondary"
+          class="p-button-secondary"
           size="small"
         />
 
@@ -266,7 +261,7 @@ onMounted(async () => {
           type="button"
           icon="pi pi-cog"
           @click="showAdvancedFiltersModal = true"
-          class="p-button-outlined p-button-secondary"
+          class="p-button-secondary"
           size="small"
         />
 
@@ -279,21 +274,27 @@ onMounted(async () => {
           />
         </div>
         <div class="hidden md:inline-block">
-          <Button
-            label="Novo Lançamento"
-            @click="openNewEntryModal"
-            size="small"
-          />
+          <Button label="Novo Lançamento" @click="openNewEntryModal" size="small" />
         </div>
 
-        <OverlayPanel ref="op" appendTo="body" :showCloseIcon="true" id="overlay_panel">
-          <Listbox
-            v-model="selectedStatus"
-            :options="statusOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="w-full"
-          />
+        <OverlayPanel
+          ref="op"
+          appendTo="body"
+          :showCloseIcon="true"
+          id="overlay_panel"
+          style="min-width: 250px"
+        >
+          <div class="flex flex-col space-y-2 p-4">
+            <div
+              v-for="status in statusOptions"
+              :key="status.value || 'all'"
+              class="flex cursor-pointer items-center justify-between p-2 hover:bg-surface-100"
+              @click="applyStatusFilter(status.value)"
+            >
+              <span>{{ status.label }}</span>
+              <i v-if="selectedStatus === status.value" class="pi pi-check text-surface-500"></i>
+            </div>
+          </div>
         </OverlayPanel>
       </div>
 
@@ -307,7 +308,7 @@ onMounted(async () => {
           </span>
         </div>
         <div class="flex gap-2">
-          <Button size="small" severity="secondary" outlined @click="showBulkActionsModal = true">
+          <Button size="small" severity="secondary" @click="showBulkActionsModal = true">
             <i class="pi pi-ellipsis-v mr-2"></i>
             Ações em Lote
           </Button>

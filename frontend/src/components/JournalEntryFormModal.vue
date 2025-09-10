@@ -9,8 +9,8 @@ import { useAuthStore } from '@/stores/authStore'
 import { recordProductPurchase, calculateCogsForSale } from '@/services/productApiService'
 import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
-import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
 import Imposto from '@/components/ImpostoComponent.vue'
 import JournalEntryBasicForm from '@/components/JournalEntryBasicForm.vue'
 import JournalEntryLinesForm from '@/components/JournalEntryLinesForm.vue'
@@ -506,69 +506,67 @@ async function submitEntry() {
   <Dialog
     v-model:visible="displayModal"
     modal
-    :header="props.isEditing ? 'Editar Lançamento' : 'Adicionar Lançamento'"
-    :style="{ width: '75vw' }"
-    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :style="{ width: '50vw' }"
+    :breakpoints="{ '1199px': '50vw', '575px': '70vw' }"
   >
+    <template #header>
+      <div class="flex flex-col">
+        <h3 class="text-lg font-semibold text-surface-900">
+          {{ props.isEditing ? 'Editar Lançamento Contábil' : 'Novo Lançamento Contábil' }}
+        </h3>
+        <p class="text-sm text-surface-500">
+          A aba produto aparece automaticamente para contas de estoque
+        </p>
+      </div>
+    </template>
     <form @submit.prevent="submitEntry" class="space-y-4">
-      <!-- Custom Tabs -->
-      <div class="mb-6">
-        <div class="flex space-x-2 p-1 bg-surface-100 rounded-lg">
-          <button
-            type="button"
-            @click="activeTab = 'Básico'"
-            :class="[
-              'flex-1 py-2 px-4 text-center rounded-md transition-colors duration-200',
-              activeTab === 'Básico'
-                ? 'bg-white text-primary shadow'
-                : 'bg-transparent text-surface-600 hover:bg-surface-200',
-            ]"
-          >
-            Básico
-          </button>
-          <button
-            type="button"
-            @click="activeTab = 'Partidas'"
-            :class="[
-              'flex-1 py-2 px-4 text-center rounded-md transition-colors duration-200',
-              activeTab === 'Partidas'
-                ? 'bg-white text-primary shadow'
-                : 'bg-transparent text-surface-600 hover:bg-surface-200',
-            ]"
-          >
-            Partidas
-          </button>
-          <button
-            type="button"
-            @click="activeTab = 'Produtos'"
-            :class="[
-              'flex-1 py-2 px-4 text-center rounded-md transition-colors duration-200',
-              activeTab === 'Produtos'
-                ? 'bg-white text-primary shadow'
-                : 'bg-transparent text-surface-600 hover:bg-surface-200',
-            ]"
-            v-if="hasStockRelatedAccount"
-          >
-            Produtos
-          </button>
-          <button
-            type="button"
-            @click="activeTab = 'Impostos'"
-            :class="[
-              'flex-1 py-2 px-4 text-center rounded-md transition-colors duration-200',
-              activeTab === 'Impostos'
-                ? 'bg-white text-primary shadow'
-                : 'bg-transparent text-surface-600 hover:bg-surface-200',
-            ]"
-            v-if="hasTaxRelatedAccount"
-          >
-            Impostos
-          </button>
-        </div>
+      <div class="bg-surface-200 rounded-full p-1 flex">
+        <button
+          type="button"
+          @click="activeTab = 'Básico'"
+          :class="[
+            'flex-1 text-center py-2 px-4 rounded-full text-sm font-medium',
+            activeTab === 'Básico' ? 'bg-surface-950' : 'text-surface-500 hover:text-surface-700',
+          ]"
+        >
+          Básico
+        </button>
+        <button
+          type="button"
+          @click="activeTab = 'Partidas'"
+          :class="[
+            'flex-1 text-center py-2 px-4 rounded-full text-sm font-medium',
+            activeTab === 'Partidas' ? 'bg-surface-950' : 'text-surface-500 hover:text-surface-700',
+          ]"
+        >
+          Partidas
+        </button>
+        <button
+          type="button"
+          @click="activeTab = 'Produtos'"
+          :class="[
+            'flex-1 text-center py-2 px-4 rounded-full text-sm font-medium',
+            activeTab === 'Produtos' ? 'bg-surface-950' : 'text-surface-500 hover:text-surface-700',
+          ]"
+          v-if="hasStockRelatedAccount"
+        >
+          Produtos
+        </button>
+        <button
+          type="button"
+          @click="activeTab = 'Impostos'"
+          :class="[
+            'flex-1 text-center py-2 px-4 rounded-full text-sm font-medium',
+            activeTab === 'Impostos' ? 'bg-surface-950' : 'text-surface-500 hover:text-surface-700',
+          ]"
+          v-if="hasTaxRelatedAccount"
+        >
+          Impostos
+        </button>
       </div>
 
       <!-- Tab Content -->
-      <div class="p-4 border border-surface-200 rounded-lg min-h-[250px]">
+      <div class="p-4 rounded-lg min-h-[250px]">
         <div v-if="activeTab === 'Básico'">
           <JournalEntryBasicForm
             v-model:entryDate="newEntryDate"
@@ -595,24 +593,21 @@ async function submitEntry() {
         </div>
       </div>
 
-      <div class="flex space-x-4">
-        <button
+      <div class="flex justify-end space-x-4">
+        <Button
+          label="Cancelar"
+          @click="emit('update:visible', false)"
+          class="bg-white hover:bg-surface-100 border border-surface-300 text-surface-700 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+          variant="outlined"
+          size="small"
+        />
+        <Button
           type="submit"
           :disabled="journalEntryStore.loading || totalDebits !== totalCredits"
-          class="bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
-        >
-          <span class="flex items-center justify-center">
-            <ProgressSpinner
-              v-if="journalEntryStore.loading"
-              class="w-5 h-5 mr-2"
-              strokeWidth="8"
-              fill="var(--surface-ground)"
-              animationDuration=".5s"
-              aria-label="Custom ProgressSpinner"
-            />
-            {{ props.isEditing ? 'Atualizar Lançamento' : 'Adicionar Lançamento' }}
-          </span>
-        </button>
+          class="bg-zinc-950 hover:bg-zinc-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out flex items-center justify-center"
+          :label="props.isEditing ? 'Atualizar Lançamento' : 'Criar lançamento'"
+          size="small"
+        />
       </div>
     </form>
   </Dialog>

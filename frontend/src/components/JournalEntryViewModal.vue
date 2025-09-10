@@ -490,7 +490,7 @@ function formatHistoryTitle(action: string, details: HistoryDetails): string {
           label="Duplicar"
           icon="pi pi-copy"
           @click="handleDuplicate"
-          class="p-button-outlined p-button-secondary"
+          class="p-button-secondary"
         />
         <Button label="Excluir" icon="pi pi-trash" @click="handleDelete" class="p-button-danger" />
         <Button label="Editar" icon="pi pi-pencil" @click="handleEdit" />

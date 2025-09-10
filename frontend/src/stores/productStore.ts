@@ -48,13 +48,18 @@ export const useProductStore = defineStore('products', () => {
     page?: number
     itemsPerPage?: number
     searchTerm?: string
-    category?: string
+    category?: string | string[]
     status?: string
   }) {
     loading.value = true
     error.value = null
     try {
       const { organization_id, accounting_period_id } = getOrgAndPeriodIds()
+
+      const categoryParam = Array.isArray(filters.category)
+        ? filters.category.join(',')
+        : filters.category
+
       const response = await api.get<{ data: Product[]; total: number }>('/products', {
         params: {
           organization_id,
@@ -62,7 +67,7 @@ export const useProductStore = defineStore('products', () => {
           page: filters.page || 1,
           limit: filters.itemsPerPage || 10,
           search: filters.searchTerm,
-          category: filters.category,
+          category: categoryParam,
           status: filters.status,
         },
       })

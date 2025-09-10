@@ -210,76 +210,79 @@ async function handleSubmit(values: AccountFormValues, { resetForm }: { resetFor
     >
       <!-- Tipo Field -->
       <div class="flex flex-col">
-        <label for="accountType" class="text-surface-700 text-sm  mb-2">Tipo *</label>
-          <Field name="account_type" v-slot="{ value }">
-            <Select
-              :options="accountTypes"
-              optionLabel="label"
-              optionValue="value"
-              :modelValue="value"
-              @update:modelValue="(val) => { setFieldValue('account_type', val); selectedAccountType = val; }"
-              placeholder="Selecione..."
-              size="small"
-            />
-          </Field>
+        <label for="accountType" class="text-surface-700 text-sm mb-2">Tipo *</label>
+        <Field name="account_type" v-slot="{ value }">
+          <Select
+            :options="accountTypes"
+            optionLabel="label"
+            optionValue="value"
+            :modelValue="value"
+            @update:modelValue="
+              (val) => {
+                setFieldValue('account_type', val)
+                selectedAccountType = val
+              }
+            "
+            placeholder="Selecione..."
+            size="small"
+          />
+        </Field>
         <ErrorMessage name="account_type" class="text-red-500 text-sm mt-1" />
       </div>
 
       <!-- Conta Pai Field -->
       <div class="flex flex-col mt-4">
-        <label for="parentAccount" class="text-surface-700 text-sm  mb-2">Conta Pai *</label>
-          <Field name="parent_account_id" v-slot="{ value }">
-            <Select
-              :options="flattenedParentAccounts"
-              :modelValue="value"
-              @update:modelValue="(val) => setFieldValue('parent_account_id', val)"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Selecione uma conta pai"
-              :filter="true"
-              size="small"
-            />
-          </Field>
+        <label for="parentAccount" class="text-surface-700 text-sm mb-2">Conta Pai *</label>
+        <Field name="parent_account_id" v-slot="{ value }">
+          <Select
+            :options="flattenedParentAccounts"
+            :modelValue="value"
+            @update:modelValue="(val) => setFieldValue('parent_account_id', val)"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecione uma conta pai"
+            :filter="true"
+            size="small"
+          />
+        </Field>
         <ErrorMessage name="parent_account_id" class="text-red-500 text-sm mt-1" />
       </div>
 
       <!-- Tipo de Operação Fiscal Field -->
       <div class="flex flex-col mt-4">
         <label for="fiscalOperationType" class="text-surface-700 text-sm mb-2">
-            Tipo de Operação Fiscal
-          </label>
-          <Field name="fiscal_operation_type" v-slot="{ value, handleChange }">
-            <AutoComplete
-              :modelValue="value"
-              @update:modelValue="handleChange"
-              :suggestions="fiscalOperationItems"
-              @complete="searchFiscalOperation"
-              placeholder="Ex: Venda de Mercadorias"
-              size="small"
-              inputClass="p-inputtext-sm w-full"
-            />
-          </Field>
+          Tipo de Operação Fiscal
+        </label>
+        <Field name="fiscal_operation_type" v-slot="{ value, handleChange }">
+          <AutoComplete
+            :modelValue="value"
+            @update:modelValue="handleChange"
+            :suggestions="fiscalOperationItems"
+            @complete="searchFiscalOperation"
+            placeholder="Ex: Venda de Mercadorias"
+            size="small"
+            inputClass="p-inputtext-sm w-full"
+          />
+        </Field>
         <ErrorMessage name="fiscal_operation_type" class="text-red-500 text-sm mt-1" />
       </div>
 
       <!-- Nome Field -->
       <div class="flex flex-col mt-4">
-        <label for="accountName" class="text-surface-700 text-sm  mb-2">Nome *</label>
-          <Field name="name" v-slot="{ field }">
-            <InputText v-bind="field" id="accountName" placeholder="Nome da conta" class="p-inputtext-sm" />
-          </Field>
+        <label for="accountName" class="text-sm mb-2">Nome *</label>
+        <Field name="name" v-slot="{ field }">
+          <InputText
+            v-bind="field"
+            id="accountName"
+            placeholder="Nome da conta"
+            class="p-inputtext-sm"
+          />
+        </Field>
         <ErrorMessage name="name" class="text-red-500 text-sm mt-1" />
       </div>
 
       <div class="flex justify-end gap-2 mt-8">
-        <Button
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="displayModal = false"
-          type="button"
-          size="small"
-        />
+        <Button label="Cancelar" @click="displayModal = false" size="small" variant="outlined" />
         <Button
           :label="props.isEditing ? 'Salvar Alterações' : 'Criar Conta'"
           type="submit"

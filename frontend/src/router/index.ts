@@ -108,8 +108,8 @@ const router = createRouter({
       component: () => import('../views/auth/PasswordResetSuccessView.vue'),
       meta: { hideNavbar: true, title: 'Redefinição de Senha' },
     },
-    
-  {
+
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/settings/SettingsView.vue'),

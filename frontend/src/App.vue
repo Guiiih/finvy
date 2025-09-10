@@ -14,6 +14,8 @@ import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
+import BottomNavBar from '@/components/BottomNavBar.vue'
+import MobileMoreMenu from '@/components/MobileMoreMenu.vue'
 
 const route = useRoute()
 
@@ -25,8 +27,14 @@ const globalChatbotStore = useGlobalChatbotStore()
 const userPresenceStore = useUserPresenceStore()
 
 const showUserMenu = ref(false)
-const isMobileMenuOpen = ref(false)
+
 const isChatbotMaximized = ref(false)
+const isMoreMenuOpen = ref(false)
+
+const toggleChatbotMaximize = () => {
+  isChatbotMaximized.value = !isChatbotMaximized.value
+}
+
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
@@ -36,17 +44,11 @@ const closeUserMenu = () => {
   showUserMenu.value = false
 }
 
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
 
-const closeMobileMenu = () => {
-  isMobileMenuOpen.value = false
-}
 
-const toggleChatbotMaximize = () => {
-  isChatbotMaximized.value = !isChatbotMaximized.value
-}
+
+
+
 
 onMounted(() => {
   setToast(toast)
@@ -172,14 +174,10 @@ const logoSrc = computed(() => {
     <!-- Mobile Header (visible on small screens) -->
     <header
       v-if="authStore.isLoggedIn && !shouldHideNavbar"
-      class="flex items-center justify-between p-4 bg-surface-100 shadow-md sticky top-0 z-50 lg:hidden"
+      class="flex items-center justify-between p-4 bg-surface-100 sticky top-0 z-50 lg:hidden"
     >
-      <button
-        @click="toggleMobileMenu"
-        class="text-surface-600 focus:outline-none mobile-menu-toggle"
-      >
-        <i class="pi pi-bars text-2xl"></i>
-      </button>
+      <img :src="logoSrc" alt="Finvy Logo" class="h-10 w-10" />
+
       <div class="flex items-center space-x-2">
         <div class="flex items-center space-x-2">
           <UserAvatarWithPresence
@@ -200,108 +198,18 @@ const logoSrc = computed(() => {
           <span>{{ accountingPeriodStore.activeAccountingPeriod.fiscal_year }}</span>
         </router-link>
 
-        <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
-          <i class="pi pi-bell text-xl text-surface-600"></i>
+        <button @click="authStore.signOut()" class="p-2 rounded-full hover:bg-surface-200 text-surface-600 focus:outline-none" aria-label="Sair">
+            <i class="pi pi-sign-out text-xl"></i>
         </button>
 
-        <div class="relative">
-          <button
-            type="button"
-            class="rounded-full cursor-pointer"
-            @click.stop="toggleUserMenu"
-            aria-label="Menu do usuário"
-          >
-            <img :src="authStore.avatarUrl ?? undefined" alt="Avatar" class="w-9 rounded-full" />
-          </button>
-          <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
-        </div>
+        <!-- Removed Notification, Mobile Menu, and Profile buttons from here -->
       </div>
     </header>
 
-    <!-- Mobile Menu Overlay -->
-    <div
-      v-if="isMobileMenuOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40"
-      @click="closeMobileMenu"
-    ></div>
-
-    <!-- Mobile Side Menu -->
-    <div
-      :class="{ 'translate-x-0': isMobileMenuOpen, '-translate-x-full': !isMobileMenuOpen }"
-      class="fixed top-0 left-0 w-64 h-full bg-surface-900 text-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out lg:hidden mobile-side-menu"
-    >
-      <div class="p-4 border-b border-surface-700 flex items-center justify-between">
-        <img :src="FinvyLogo" alt="Finvy Logo" class="h-10 w-10" />
-        <button
-          @click="closeMobileMenu"
-          class="text-surface-400 hover:text-white focus:outline-none"
-        >
-          <i class="pi pi-times text-xl"></i>
-        </button>
-      </div>
-
-      <nav class="flex flex-col p-4 space-y-2">
-        <RouterLink
-          to="/dashboard"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-home mr-3"></i>
-          Home
-        </RouterLink>
-        <RouterLink
-          to="/accounts"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-book mr-3"></i>
-          Plano de Contas
-        </RouterLink>
-        <RouterLink
-          to="/journal-entries"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-pencil mr-3"></i>
-          Lançamentos Contábeis
-        </RouterLink>
-        <RouterLink
-          to="/products"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-box mr-3"></i>
-          Produtos
-        </RouterLink>
-        <RouterLink
-          to="/stock-control"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-chart-bar mr-3"></i>
-          Controle de Estoque
-        </RouterLink>
-        <RouterLink
-          to="/ledger"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-list mr-3"></i>
-          Razão
-        </RouterLink>
-        <RouterLink
-          to="/reports"
-          class="flex items-center px-3 py-2 rounded-md text-surface-300 hover:bg-surface-700 transition-colors duration-200"
-          @click="closeMobileMenu"
-        >
-          <i class="pi pi-file-excel mr-3"></i>
-          Relatórios
-        </RouterLink>
-      </nav>
-    </div>
+    <MobileMoreMenu v-model:visible="isMoreMenuOpen" />
 
     <div class="relative flex">
-      <main class="flex-grow p-6">
+      <main class="flex-grow p-6 pb-24 lg:pb-6">
         <RouterView />
       </main>
 
@@ -321,7 +229,10 @@ const logoSrc = computed(() => {
             <span class="text-sm font-semibold">Assistente</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900">
+            <button @click="globalChatbotStore.toggleChatbotModal()" class="text-surface-600 hover:text-surface-900 lg:hidden">
+              <i class="material-icons" style="font-size: 15px !important">close</i>
+            </button>
+            <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900 hidden lg:block">
               <i class="material-icons" style="font-size: 15px !important">{{
                 isChatbotMaximized ? 'close_fullscreen' : 'open_in_full'
               }}</i>
@@ -336,7 +247,7 @@ const logoSrc = computed(() => {
     <!-- Floating Chatbot Button -->
 
     <button
-      class="fixed bottom-4 right-4 bg-surface-900 text-surface-50 p-3 rounded-[30vh] shadow-lg"
+      class="fixed bottom-4 right-4 bg-surface-900 text-surface-50 p-3 rounded-[30vh] shadow-lg hidden lg:block"
       aria-label="Abrir Chatbot"
       @click="globalChatbotStore.toggleChatbotModal()"
     >
@@ -344,8 +255,11 @@ const logoSrc = computed(() => {
         globalChatbotStore.isChatbotModalVisible ? 'south_east' : 'chat_bubble'
       }}</span>
     </button>
-  </div>
 
+      
+
+    <BottomNavBar @toggleMobileMenu="isMoreMenuOpen = !isMoreMenuOpen" @toggleUserMenu="showUserMenu = !showUserMenu" />
+  </div>
   <div v-else>
     <RouterView />
   </div>

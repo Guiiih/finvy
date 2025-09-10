@@ -9,7 +9,9 @@
     <template #header>
       <div class="flex flex-col items-start">
         <h2 class="text-lg font-semibold text-surface-700">Configurações da Conta</h2>
-        <p class="text-xs text-muted-foreground">Gerencie suas preferências e configurações da conta</p>
+        <p class="text-xs text-muted-foreground">
+          Gerencie suas preferências e configurações da conta
+        </p>
       </div>
     </template>
     <div class="text-foreground">
@@ -82,7 +84,7 @@ watch(
   () => props.visible,
   (newVal) => {
     isVisible.value = newVal
-  }
+  },
 )
 
 const handleVisibilityChange = (value: boolean) => {

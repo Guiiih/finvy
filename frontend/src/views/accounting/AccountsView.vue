@@ -199,12 +199,7 @@ onMounted(async () => {
             style="font-size: 15px"
           ></i>
         </div>
-        <Button
-          icon="pi pi-filter"
-          class="p-button-secondary p-button-outlined"
-          @click="toggle"
-          size="small"
-        />
+        <Button icon="pi pi-filter" class="p-button-secondary" @click="toggle" size="small" />
         <OverlayPanel ref="op" style="min-width: 250px">
           <div class="flex flex-col space-y-2 p-4">
             <div
@@ -223,24 +218,15 @@ onMounted(async () => {
         </OverlayPanel>
         <Button
           icon="pi pi-info-circle"
-          class="p-button-secondary p-button-outlined"
+          class="p-button-secondary"
           @click="showAnalyticsModal = true"
           size="small"
         />
         <div class="md:hidden">
-          <Button
-            icon="pi pi-plus"
-            @click="openNewAccountModal"
-            size="small"
-            title="Nova Conta"
-          />
+          <Button icon="pi pi-plus" @click="openNewAccountModal" size="small" title="Nova Conta" />
         </div>
         <div class="hidden md:inline-block">
-          <Button
-            label="Nova Conta"
-            @click="openNewAccountModal"
-            size="small"
-          />
+          <Button label="Nova Conta" @click="openNewAccountModal" size="small" />
         </div>
       </div>
 

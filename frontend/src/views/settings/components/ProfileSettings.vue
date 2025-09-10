@@ -94,13 +94,25 @@
           />
           <!-- New buttons for zoom and rotate -->
           <div class="cropper-buttons">
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomOut" size="small">
+            <Button
+              class="p-button-rounded p-button-text p-button-plain"
+              @click="zoomOut"
+              size="small"
+            >
               <i class="pi pi-search-minus"></i>
             </Button>
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="zoomIn" size="small">
+            <Button
+              class="p-button-rounded p-button-text p-button-plain"
+              @click="zoomIn"
+              size="small"
+            >
               <i class="pi pi-search-plus"></i>
             </Button>
-            <Button class="p-button-rounded p-button-text p-button-plain" @click="rotate" size="small">
+            <Button
+              class="p-button-rounded p-button-text p-button-plain"
+              @click="rotate"
+              size="small"
+            >
               <i class="pi pi-refresh"></i>
             </Button>
           </div>
@@ -125,7 +137,12 @@
           <Button @click="cancelCropping" class="p-button-text p-button-secondary" size="small">
             <i class="pi pi-times"></i> Cancelar
           </Button>
-          <Button @click="saveCroppedImage" :loading="loadingAvatarUpload" class="p-button-emerald" size="small">
+          <Button
+            @click="saveCroppedImage"
+            :loading="loadingAvatarUpload"
+            class="p-button-emerald"
+            size="small"
+          >
             <i class="pi pi-check"></i> Salvar como foto do perfil
           </Button>
         </div>

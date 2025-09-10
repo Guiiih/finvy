@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import DatePicker from 'primevue/datepicker'
 
 const props = defineProps<{
   entryDate: string
@@ -17,7 +20,7 @@ const emit = defineEmits([
   'update:status',
 ])
 
-const internalEntryDate = ref(props.entryDate)
+const internalEntryDate = ref<Date | null>(new Date(props.entryDate))
 const internalEntryDescription = ref(props.entryDescription)
 const internalReferencePrefix = ref(props.referencePrefix)
 const internalStatus = ref(props.status)
@@ -31,7 +34,7 @@ const statusOptions = ref([
 watch(
   () => props.entryDate,
   (newValue) => {
-    internalEntryDate.value = newValue
+    internalEntryDate.value = newValue ? new Date(newValue) : null
   },
 )
 
@@ -57,7 +60,7 @@ watch(
 )
 
 watch(internalEntryDate, (newValue) => {
-  emit('update:entryDate', newValue)
+  emit('update:entryDate', newValue ? newValue.toISOString().split('T')[0] : '')
 })
 
 watch(internalEntryDescription, (newValue) => {
@@ -78,43 +81,48 @@ watch(internalStatus, (newValue) => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="space-y-2">
         <label for="entry-date" class="text-sm font-medium">Data *</label>
-        <input
-          type="date"
+        <DatePicker
           id="entry-date"
           v-model="internalEntryDate"
           required
-          class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          class="w-full"
+          dateFormat="dd/mm/yy"
+          size="small"
+          showIcon
+          iconDisplay="input"
         />
       </div>
 
       <div class="space-y-2">
         <label for="entry-reference-prefix" class="text-sm font-medium">Referência *</label>
-        <input
+        <InputText
           type="text"
           id="entry-reference-prefix"
           v-model="internalReferencePrefix"
           placeholder="Ex: NF001, DOC002"
           required
-          class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          class="w-full"
+          size="small"
         />
       </div>
     </div>
 
-    <div class="space-y-2">
+    <div class="flex flex-col gap-2">
       <label for="entry-description" class="text-sm font-medium">Descrição *</label>
-      <textarea
+      <Textarea
         id="entry-description"
         v-model="internalEntryDescription"
         placeholder="Descreva a natureza da transação..."
         required
         rows="3"
-        class="p-2 w-full bg-surface-50 border border-surface-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-      ></textarea>
+        class="resize-none"
+        size="small"
+      ></Textarea>
     </div>
 
     <div class="space-y-2">
       <label for="entry-status" class="text-sm font-medium">Status</label>
-      <Dropdown
+      <Select
         id="entry-status"
         v-model="internalStatus"
         :options="statusOptions"
@@ -122,6 +130,7 @@ watch(internalStatus, (newValue) => {
         optionValue="value"
         placeholder="Selecione o Status"
         class="w-full"
+        size="small"
         required
       />
     </div>

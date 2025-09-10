@@ -429,7 +429,6 @@ const groupedReports = computed(() => {
                   <Button
                     size="small"
                     severity="secondary"
-                    outlined
                     @click="handleConfigureReport(report.id)"
                     :loading="reportStore.loading"
                   >
@@ -438,7 +437,6 @@ const groupedReports = computed(() => {
                   <Button
                     size="small"
                     severity="secondary"
-                    outlined
                     @click="handleScheduleReport(report.id)"
                     :loading="reportStore.loading"
                   >
@@ -447,7 +445,6 @@ const groupedReports = computed(() => {
                   <Button
                     size="small"
                     severity="secondary"
-                    outlined
                     @click="openExportModal(report.id)"
                     :loading="reportStore.loading"
                   >
@@ -604,7 +601,6 @@ const groupedReports = computed(() => {
           <Button
             label="Adicionar Destinatário"
             severity="secondary"
-            outlined
             class="w-full"
             @click="addRecipient"
           >

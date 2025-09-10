@@ -102,7 +102,9 @@ const deleteRule = (id: string) => {
     <Card>
       <template #title><h2 class="text-base">Regras de Impostos</h2></template>
       <template #subtitle
-        ><p class="text-xs">Configuração de alíquotas e regras tributárias por tipo de operação</p></template
+        ><p class="text-xs">
+          Configuração de alíquotas e regras tributárias por tipo de operação
+        </p></template
       >
       <template #content>
         <DataTable
@@ -133,7 +135,13 @@ const deleteRule = (id: string) => {
           <Column header="Ações">
             <template #body="{ data }">
               <div class="flex gap-1">
-                <Button icon="pi pi-pencil" text rounded @click="openEditRuleModal(data)" size="small" />
+                <Button
+                  icon="pi pi-pencil"
+                  text
+                  rounded
+                  @click="openEditRuleModal(data)"
+                  size="small"
+                />
                 <Button
                   icon="pi pi-trash"
                   text
@@ -187,7 +195,11 @@ const deleteRule = (id: string) => {
       </div>
       <template #footer>
         <Button label="Cancelar" text @click="showRuleModal = false" size="small" />
-        <Button :label="isEditMode ? 'Salvar Alterações' : 'Criar Regra'" @click="handleSubmit" size="small" />
+        <Button
+          :label="isEditMode ? 'Salvar Alterações' : 'Criar Regra'"
+          @click="handleSubmit"
+          size="small"
+        />
       </template>
     </Dialog>
   </main>

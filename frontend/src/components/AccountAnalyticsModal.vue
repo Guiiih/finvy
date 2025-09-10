@@ -57,17 +57,17 @@ const accountTypes = [
 const getTypeColor = (type: string) => {
   switch (type) {
     case 'asset':
-      return 'bg-blue-500'
+      return 'bg-blue-200'
     case 'liability':
-      return 'bg-red-500'
+      return 'bg-red-200'
     case 'equity':
-      return 'bg-purple-500'
+      return 'bg-purple-200'
     case 'revenue':
-      return 'bg-green-500'
+      return 'bg-green-200'
     case 'expense':
-      return 'bg-orange-500'
+      return 'bg-orange-200'
     default:
-      return 'bg-gray-500'
+      return 'bg-gray-200'
   }
 }
 </script>
@@ -77,53 +77,56 @@ const getTypeColor = (type: string) => {
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     modal
-    :style="{ width: '80vw' }"
-    header="Análise Avançada do Plano de Contas"
+    :style="{ width: '50vw' }"
     :closable="true"
   >
+    <template #header>
+      <div>
+        <h2 class="text-base font-bold">Análise Avançada do Plano de Contas</h2>
+        <p class="text-sm text-surface-500">
+          Dashboard completo com métricas, gráficos e insights da estrutura contábil.
+        </p>
+      </div>
+    </template>
     <div class="p-fluid space-y-8">
-      <p class="text-surface-600">
-        Dashboard completo com métricas, gráficos e insights da estrutura contábil.
-      </p>
-
       <!-- Key Metrics -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-surface-0 shadow-md rounded-lg p-4 flex items-center gap-3">
+        <div class="bg-surface-0 rounded-lg p-4 flex items-center gap-3 border border-surface-200">
           <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <i class="pi pi-sitemap text-blue-600 text-xl"></i>
+            <span class="material-symbols-outlined text-blue-600 text-xl">layers</span>
           </div>
           <div>
-            <div class="text-2xl font-bold">{{ totalAccounts }}</div>
+            <div class="text-base font-bold">{{ totalAccounts }}</div>
             <div class="text-sm text-surface-500">Total de Contas</div>
           </div>
         </div>
 
-        <div class="bg-surface-0 shadow-md rounded-lg p-4 flex items-center gap-3">
+        <div class="bg-surface-0 rounded-lg p-4 flex items-center gap-3 border border-surface-200">
           <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-            <i class="pi pi-check-circle text-green-600 text-xl"></i>
+            <span class="material-symbols-outlined text-green-600 text-xl">vital_signs</span>
           </div>
           <div>
-            <div class="text-2xl font-bold">{{ activeAccountsCount }}</div>
+            <div class="text-base font-bold">{{ activeAccountsCount }}</div>
             <div class="text-sm text-surface-500">Contas Ativas</div>
           </div>
         </div>
 
-        <div class="bg-surface-0 shadow-md rounded-lg p-4 flex items-center gap-3">
+        <div class="bg-surface-0 rounded-lg p-4 flex items-center gap-3 border border-surface-200">
           <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-            <i class="pi pi-balance text-purple-600 text-xl"></i>
+            <span class="material-symbols-outlined text-purple-600 text-xl">target</span>
           </div>
           <div>
-            <div class="text-2xl font-bold">{{ accountsWithBalance }}</div>
+            <div class="text-base font-bold">{{ accountsWithBalance }}</div>
             <div class="text-sm text-surface-500">Com Saldo</div>
           </div>
         </div>
 
-        <div class="bg-surface-0 shadow-md rounded-lg p-4 flex items-center gap-3">
+        <div class="bg-surface-0 rounded-lg p-4 flex items-center gap-3 border border-surface-200">
           <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
             <i class="pi pi-chart-pie text-orange-600 text-xl"></i>
           </div>
           <div>
-            <div class="text-2xl font-bold">{{ maxLevel + 1 }}</div>
+            <div class="text-base font-bold">{{ maxLevel + 1 }}</div>
             <div class="text-sm text-surface-500">Níveis</div>
           </div>
         </div>
@@ -132,11 +135,11 @@ const getTypeColor = (type: string) => {
       <!-- Charts Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Account Distribution Pie Chart -->
-        <div class="bg-surface-0 shadow-md rounded-lg p-4">
-          <h3 class="text-lg font-bold text-surface-800 mb-2">Distribuição por Tipo</h3>
-          <p class="text-surface-500 mb-4">Percentual de contas por categoria contábil</p>
+        <div class="bg-surface-0 rounded-lg p-4 border border-surface-200">
+          <h3 class="text-base font-bold text-surface-800">Distribuição por Tipo</h3>
+          <p class="text-sm text-surface-500 mb-4">Percentual de contas por categoria contábil</p>
           <div class="h-80 flex items-center justify-center bg-surface-100 rounded-md">
-            <p class="text-surface-400">
+            <p class="text-sm text-surface-400">
               <!-- TODO: Implementar Gráfico de Pizza aqui. Sugestões: PrimeVue Chart (com Chart.js), ApexCharts, ECharts. -->
               Gráfico de Pizza (requer biblioteca de gráficos)
             </p>
@@ -144,11 +147,11 @@ const getTypeColor = (type: string) => {
         </div>
 
         <!-- Balance Analysis -->
-        <div class="bg-surface-0 shadow-md rounded-lg p-4">
-          <h3 class="text-lg font-bold text-surface-800 mb-2">Análise de Saldos</h3>
-          <p class="text-surface-500 mb-4">Valor total por tipo de conta</p>
+        <div class="bg-surface-0 rounded-lg p-4 border border-surface-200">
+          <h3 class="text-base font-bold text-surface-800">Análise de Saldos</h3>
+          <p class="text-sm text-surface-500 mb-4">Valor total por tipo de conta</p>
           <div class="h-80 flex items-center justify-center bg-surface-100 rounded-md">
-            <p class="text-surface-400">
+            <p class="text-sm text-surface-400">
               <!-- TODO: Implementar Gráfico de Barras aqui. Sugestões: PrimeVue Chart (com Chart.js), ApexCharts, ECharts. -->
               Gráfico de Barras (requer biblioteca de gráficos)
             </p>
@@ -159,9 +162,11 @@ const getTypeColor = (type: string) => {
       <!-- Detailed Analysis -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Account Structure -->
-        <div class="bg-surface-0 shadow-md rounded-lg p-4">
-          <h3 class="text-lg font-bold text-surface-800 mb-2">Estrutura Hierárquica</h3>
-          <p class="text-surface-500 mb-4">Distribuição de contas por nível organizacional</p>
+        <div class="bg-surface-0 rounded-lg p-4 border border-surface-200">
+          <h3 class="text-base font-bold text-surface-800">Estrutura Hierárquica</h3>
+          <p class="text-sm text-surface-500 mb-4">
+            Distribuição de contas por nível organizacional
+          </p>
           <div class="space-y-4">
             <div v-for="level in maxLevel + 1" :key="level - 1" class="space-y-2">
               <div class="flex justify-between items-center">
@@ -172,10 +177,10 @@ const getTypeColor = (type: string) => {
                       getTypeColor(accountTypes[level - 1]?.value || 'default'),
                     ]"
                   ></div>
-                  <span class="font-medium">Nível {{ level - 1 }}</span>
+                  <span class="font-medium text-sm">Nível {{ level - 1 }}</span>
                 </div>
                 <div class="text-right">
-                  <div class="font-medium">
+                  <div class="font-medium text-sm">
                     {{
                       accountStore.accounts.filter(
                         (a) => a.code.split('.').length - 1 === level - 1,
@@ -212,9 +217,11 @@ const getTypeColor = (type: string) => {
         </div>
 
         <!-- Type Analysis -->
-        <div class="bg-surface-0 shadow-md rounded-lg p-4">
-          <h3 class="text-lg font-bold text-surface-800 mb-2">Análise Detalhada por Tipo</h3>
-          <p class="text-surface-500 mb-4">Métricas específicas de cada categoria contábil</p>
+        <div class="bg-surface-0 rounded-lg p-4 border border-surface-200">
+          <h3 class="text-base font-bold text-surface-800">Análise Detalhada por Tipo</h3>
+          <p class="text-sm text-surface-500 mb-4">
+            Métricas específicas de cada categoria contábil
+          </p>
           <div class="space-y-4">
             <div
               v-for="type in accountTypes"
@@ -230,7 +237,7 @@ const getTypeColor = (type: string) => {
                 >
                   {{ type.label }}
                 </span>
-                <span class="font-bold">
+                <span class="font-bold text-xs">
                   {{
                     accountSummary[
                       type.value as keyof typeof accountSummary
@@ -238,31 +245,31 @@ const getTypeColor = (type: string) => {
                   }}
                 </span>
               </div>
-              <div class="grid grid-cols-3 gap-4 text-sm">
+              <div class="grid grid-cols-3 gap-4 text-xs">
                 <div class="text-center">
-                  <div class="font-medium">
+                  <div class="font-medium text-xs">
                     {{ accountSummary[type.value as keyof typeof accountSummary].count }}
                   </div>
-                  <div class="text-surface-500">Total</div>
+                  <div class="text-surface-500 text-xs">Total</div>
                 </div>
                 <div class="text-center">
-                  <div class="font-medium">
+                  <div class="font-medium text-xs">
                     {{
                       accountStore.accounts.filter((a) => a.type === type.value && a.is_active)
                         .length
                     }}
                   </div>
-                  <div class="text-surface-500">Ativas</div>
+                  <div class="text-surface-500 text-xs">Ativas</div>
                 </div>
                 <div class="text-center">
-                  <div class="font-medium">
+                  <div class="font-medium text-xs">
                     {{
                       accountStore.accounts.filter(
                         (a) => a.type === type.value && (a.balance || 0) !== 0,
                       ).length
                     }}
                   </div>
-                  <div class="text-surface-500">C/ Saldo</div>
+                  <div class="text-surface-500 text-xs">C/ Saldo</div>
                 </div>
               </div>
             </div>
@@ -270,46 +277,9 @@ const getTypeColor = (type: string) => {
         </div>
       </div>
 
-      <!-- Additional Insights -->
-      <div class="bg-surface-0 shadow-md rounded-lg p-4">
-        <h3 class="text-lg font-bold text-surface-800 mb-2">Insights do Sistema</h3>
-        <p class="text-surface-500 mb-4">Análises automáticas e recomendações</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div class="font-medium text-blue-900 mb-2">Estrutura Balanceada</div>
-            <div class="text-sm text-blue-700">
-              Seu plano possui
-              {{ accountStore.accounts.filter((a) => a.code.split('.').length - 1 <= 2).length }}
-              contas nos primeiros 3 níveis, indicando uma estrutura bem organizada.
-            </div>
-          </div>
-
-          <div class="p-4 bg-green-50 rounded-lg border border-green-200">
-            <div class="font-medium text-green-900 mb-2">Contas Ativas</div>
-            <div class="text-sm text-green-700">
-              {{ ((activeAccountsCount / totalAccounts) * 100).toFixed(1) }}% das contas estão
-              ativas, demonstrando um plano otimizado.
-            </div>
-          </div>
-
-          <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div class="font-medium text-purple-900 mb-2">Movimentação</div>
-            <div class="text-sm text-purple-700">
-              {{ accountsWithBalance }} contas possuem movimentação, representando
-              {{ ((accountsWithBalance / totalAccounts) * 100).toFixed(1) }}% do total.
-            </div>
-          </div>
-        </div>
+      <div class="flex justify-end">
+        <Button label="Fechar Análise" @click="closeDialog" outlined size="small" />
       </div>
     </div>
-
-    <template #footer>
-      <Button
-        label="Fechar Análise"
-        icon="pi pi-times"
-        @click="closeDialog"
-        class="p-button-text"
-      />
-    </template>
   </Dialog>
 </template>

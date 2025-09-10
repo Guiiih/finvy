@@ -55,7 +55,7 @@
     <div>
       <div class="flex justify-between items-center">
         <h2 class="text-base font-medium text-surface-800">Tokens de Acesso Pessoal</h2>
-        <Button label="Novo Token" icon="pi pi-plus" severity="secondary" outlined size="small" />
+        <Button label="Novo Token" icon="pi pi-plus" severity="secondary" size="small" />
       </div>
       <p class="text-xs text-surface-600 mt-2 max-w-2xl">
         Gerencie tokens para acesso programático à sua conta
@@ -71,7 +71,7 @@
     <div>
       <div class="flex justify-between items-center">
         <h2 class="text-base font-medium text-surface-800">Conexões</h2>
-        <Button label="Nova Conexão" severity="secondary" outlined size="small" />
+        <Button label="Nova Conexão" severity="secondary" size="small" />
       </div>
       <p class="text-xs text-surface-600 mt-2 max-w-2xl">
         Aplicações e serviços conectados à sua conta
@@ -121,7 +121,13 @@
         </div>
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" @click="showDeleteModal = false" text size="small" />
+        <Button
+          label="Cancelar"
+          icon="pi pi-times"
+          @click="showDeleteModal = false"
+          text
+          size="small"
+        />
         <Button
           label="Excluir"
           icon="pi pi-check"

@@ -19,6 +19,16 @@ const closeMenu = () => {
   emit('close')
 }
 
+const handleHelpClick = () => {
+  router.push('#')
+  closeMenu()
+}
+
+const handleSettingsClick = () => {
+  router.push('/settings')
+  closeMenu()
+}
+
 onMounted(() => {
   userPresenceStore.startPresenceTracking()
   userPresenceStore.fetchOnlineUsers()
@@ -50,7 +60,7 @@ onUnmounted(() => {
     </div>
     <button
       class="block w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-      @click="router.push('/settings'); closeMenu();"
+      @click="handleSettingsClick()"
       role="menuitem"
       tabindex="-1"
     >
@@ -64,7 +74,7 @@ onUnmounted(() => {
     </button>
     <button
       class="block w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-      @click="(router.push('#'), closeMenu())"
+      @click="handleHelpClick()"
       role="menuitem"
       tabindex="-1"
     >

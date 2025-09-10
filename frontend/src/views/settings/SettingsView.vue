@@ -1,8 +1,7 @@
 <template>
   <div class="text-foreground">
     <div class="max-w-4xl mx-auto">
-      <div class="mb-8">
-      </div>
+      <div class="mb-8"></div>
 
       <!-- Tabs Navigation -->
       <div class="w-full">

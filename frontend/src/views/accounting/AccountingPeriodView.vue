@@ -348,7 +348,6 @@
                   icon="pi pi-lock"
                   label="Fechar Ano"
                   severity="danger"
-                  variant="outlined"
                   size="small"
                 ></Button>
               </div>

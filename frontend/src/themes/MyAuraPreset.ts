@@ -16,6 +16,7 @@ const MyAuraPreset = definePreset(Aura, {
       800: '{surface.800}',
       900: '{surface.900}',
       950: '{surface.950}',
+      1000: '#ffffff',
     },
     colorScheme: {
       light: {
@@ -111,6 +112,41 @@ const MyAuraPreset = definePreset(Aura, {
           root: {
             background: '{zinc.900}',
             borderColor: '{zinc.800}',
+          },
+        },
+      },
+    },
+    button: {
+      colorScheme: {
+        light: {
+          root: {
+            primary: {
+              color: '{primary.1000}',
+              background: '#000000',
+              hoverBackground: '#1a1a1a',
+              hoverColor: '{surface.100}',
+            },
+          },
+          outlined: {
+            primary: {},
+          },
+        },
+        dark: {
+          root: {
+            primary: {
+              color: '{surface.950}',
+              background: '#ffffff',
+              hoverBackground: '{gray.100}',
+              hoverColor: '{surface.50}',
+              activeBackground: '#ffffff',
+              activeColor: '{surface.50}',
+            },
+          },
+          outlined: {
+            primary: {
+              color: '#ffffff',
+              hoverBackground: '{surface.100}',
+            },
           },
         },
       },
