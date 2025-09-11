@@ -641,7 +641,10 @@ const getProductSku = (productId: string) =>
               <div
                 v-for="opt in productOptions"
                 :key="opt.value"
-                @click="selectedProduct = opt.value; opProduct.hide()"
+                @click="
+                  selectedProduct = opt.value;
+                  opProduct.hide();
+                "
                 class="p-2 hover:bg-surface-100 cursor-pointer"
               >
                 {{ opt.label }}
@@ -651,7 +654,7 @@ const getProductSku = (productId: string) =>
               <div
                 v-for="opt in movementTypes"
                 :key="opt.value"
-                @click=" selectedType = opt.value, opType.hide()"
+                @click="selectedType = opt.value; opType.hide()"
                 class="p-2 hover:bg-surface-100 cursor-pointer"
               >
                 {{ opt.label }}
@@ -661,7 +664,10 @@ const getProductSku = (productId: string) =>
               <div
                 v-for="opt in methodOptions"
                 :key="opt.value"
-                @click="selectedMethod = opt.value; opMethod.hide()"
+                @click="
+                  selectedMethod = opt.value;
+                  opMethod.hide();
+                "
                 class="p-2 hover:bg-surface-100 cursor-pointer"
               >
                 {{ opt.label }}
@@ -671,7 +677,10 @@ const getProductSku = (productId: string) =>
               <div
                 v-for="opt in periods"
                 :key="opt.value"
-                @click="selectedPeriod = opt.value; opPeriod.hide()"
+                @click="
+                  selectedPeriod = opt.value;
+                  opPeriod.hide();
+                "
                 class="p-2 hover:bg-surface-100 cursor-pointer"
               >
                 {{ opt.label }}
