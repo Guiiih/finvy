@@ -11,6 +11,7 @@ import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Skeleton from 'primevue/skeleton'
+import OverlayPanel from 'primevue/overlaypanel'
 
 // STORES
 const productStore = useProductStore()
@@ -67,9 +68,29 @@ const activeTab = ref('movements')
 const showDetailModal = ref(false)
 const showSummaryModal = ref(false)
 const showMethodModal = ref(false)
-const showAnalysisModal = ref(false)
 const selectedMovement = ref<StoreStockMovement | null>(null)
 const editingProductId = ref<string | null>(null)
+
+const opProduct = ref()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toggleProductFilter = (event: any) => {
+  opProduct.value.toggle(event)
+}
+const opType = ref()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toggleTypeFilter = (event: any) => {
+  opType.value.toggle(event)
+}
+const opMethod = ref()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toggleMethodFilter = (event: any) => {
+  opMethod.value.toggle(event)
+}
+const opPeriod = ref()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const togglePeriodFilter = (event: any) => {
+  opPeriod.value.toggle(event)
+}
 
 // STATIC DATA
 const costingMethods = [
@@ -272,9 +293,6 @@ const openMovementDetail = (movement: StoreStockMovement) => {
   showDetailModal.value = true
 }
 
-const openAnalysis = () => {
-  showAnalysisModal.value = true
-}
 const openMethodManagement = () => {
   showMethodModal.value = true
 }
@@ -337,7 +355,6 @@ const getProductSku = (productId: string) =>
               </div>
               <div class="flex gap-2">
                 <Skeleton shape="circle" size="2.5rem"></Skeleton>
-                <Skeleton shape="circle" size="2.5rem"></Skeleton>
               </div>
             </div>
           </div>
@@ -356,7 +373,7 @@ const getProductSku = (productId: string) =>
               </div>
             </div>
             <div class="mt-4 p-4 bg-surface-50 rounded-lg">
-              <div class="flex items-center justify-between">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <Skeleton width="12rem" height="1.25rem" class="mb-1"></Skeleton>
                   <Skeleton width="18rem" height="1rem"></Skeleton>
@@ -380,7 +397,6 @@ const getProductSku = (productId: string) =>
               <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
               <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
               <Skeleton width="12rem" height="2.5rem" borderRadius="6px"></Skeleton>
-              <Skeleton shape="circle" size="2.5rem"></Skeleton>
             </div>
 
             <!-- Table Skeleton -->
@@ -432,8 +448,8 @@ const getProductSku = (productId: string) =>
             <div class="flex gap-2">
               <Button
                 @click="openSummary"
-                icon="pi pi-chart-bar"
-                class="px-4 py-2 text-sm font-medium border border-surface-200 rounded-md flex items-center gap-2 hover:bg-surface-50"
+                icon="pi pi-info-circle"
+                class="p-button-secondary"
                 size="small"
               />
               <Button
@@ -492,7 +508,7 @@ const getProductSku = (productId: string) =>
           </div>
 
           <div class="mt-4 p-4 bg-surface-50 rounded-lg">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <div class="font-medium">Valor Total do Inventário</div>
                 <div class="text-sm text-surface-500">
@@ -511,7 +527,7 @@ const getProductSku = (productId: string) =>
 
       <!-- Tabs -->
       <div class="space-y-6">
-        <div class="bg-surface-200 rounded-full p-1 flex">
+        <div class="bg-surface-200 rounded-lg p-1 flex flex-wrap justify-center">
           <button
             @click="activeTab = 'movements'"
             :class="[
@@ -548,7 +564,7 @@ const getProductSku = (productId: string) =>
         <!-- Movements Tab -->
         <div v-if="activeTab === 'movements'" class="space-y-6">
           <!-- Filters -->
-          <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex flex-row items-center gap-4">
             <div class="flex-1 relative">
               <i
                 class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400"
@@ -556,55 +572,118 @@ const getProductSku = (productId: string) =>
               <input
                 v-model="searchTerm"
                 placeholder="Buscar por produto, SKU ou descrição..."
-                class="w-full pl-10 pr-4 py-1 border border-surface-200 rounded-md"
+                class="w-full pl-10 pr-4 py-1 border border-surface-200 rounded-md placeholder:text-sm"
               />
             </div>
 
-            <Select
-              v-model="selectedProduct"
-              :options="productOptions"
-              optionLabel="label"
-              optionValue="value"
-              size="small"
-            />
+            <!-- Mobile Icon Buttons -->
+            <div class="flex sm:hidden gap-2">
+              <Button
+                icon="pi pi-box"
+                class="p-button-secondary"
+                @click="toggleProductFilter"
+                size="small"
+              />
+              <Button
+                icon="pi pi-tags"
+                class="p-button-secondary"
+                @click="toggleTypeFilter"
+                size="small"
+              />
+              <Button
+                icon="pi pi-calculator"
+                class="p-button-secondary"
+                @click="toggleMethodFilter"
+                size="small"
+              />
+              <Button
+                icon="pi pi-calendar"
+                class="p-button-secondary"
+                @click="togglePeriodFilter"
+                size="small"
+              />
+            </div>
 
-            <Select
-              v-model="selectedType"
-              :options="movementTypes"
-              optionLabel="label"
-              optionValue="value"
-              size="small"
-            />
+            <!-- Desktop Selects -->
+            <div class="hidden sm:flex gap-4">
+              <Select
+                v-model="selectedProduct"
+                :options="productOptions"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+              />
+              <Select
+                v-model="selectedType"
+                :options="movementTypes"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+              />
+              <Select
+                v-model="selectedMethod"
+                :options="methodOptions"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+              />
+              <Select
+                v-model="selectedPeriod"
+                :options="periods"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+              />
+            </div>
 
-            <Select
-              v-model="selectedMethod"
-              :options="methodOptions"
-              optionLabel="label"
-              optionValue="value"
-              size="small"
-            />
-
-            <Select
-              v-model="selectedPeriod"
-              :options="periods"
-              optionLabel="label"
-              optionValue="value"
-              size="small"
-            />
-
-            <Button
-              @click="openAnalysis"
-              icon="pi pi-chart-bar"
-              class="px-4 py-2 text-sm font-medium border border-surface-200 rounded-md flex items-center gap-2 hover:bg-surface-50"
-              size="small"
-            />
+            <!-- OverlayPanels -->
+            <OverlayPanel ref="opProduct">
+              <div
+                v-for="opt in productOptions"
+                :key="opt.value"
+                @click="selectedProduct = opt.value; opProduct.hide()"
+                class="p-2 hover:bg-surface-100 cursor-pointer"
+              >
+                {{ opt.label }}
+              </div>
+            </OverlayPanel>
+            <OverlayPanel ref="opType">
+              <div
+                v-for="opt in movementTypes"
+                :key="opt.value"
+                @click=" selectedType = opt.value, opType.hide()"
+                class="p-2 hover:bg-surface-100 cursor-pointer"
+              >
+                {{ opt.label }}
+              </div>
+            </OverlayPanel>
+            <OverlayPanel ref="opMethod">
+              <div
+                v-for="opt in methodOptions"
+                :key="opt.value"
+                @click="selectedMethod = opt.value; opMethod.hide()"
+                class="p-2 hover:bg-surface-100 cursor-pointer"
+              >
+                {{ opt.label }}
+              </div>
+            </OverlayPanel>
+            <OverlayPanel ref="opPeriod">
+              <div
+                v-for="opt in periods"
+                :key="opt.value"
+                @click="selectedPeriod = opt.value; opPeriod.hide()"
+                class="p-2 hover:bg-surface-100 cursor-pointer"
+              >
+                {{ opt.label }}
+              </div>
+            </OverlayPanel>
           </div>
 
           <!-- Movements Table -->
           <div class="border border-surface-200 rounded-lg bg-primary-0">
             <div class="overflow-x-auto">
               <table class="min-w-full">
-                <thead class="bg-surface-50">
+                <thead class="hidden md:table-header-group bg-surface-50">
                   <tr>
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider"
@@ -723,12 +802,7 @@ const getProductSku = (productId: string) =>
                       {{ movement.created_by }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <button
-                        @click="openMovementDetail(movement)"
-                        class="p-1 text-surface-500 hover:text-surface-800"
-                      >
-                        <i class="pi pi-eye"></i>
-                      </button>
+                      <Button icon="pi pi-eye" text @click="openMovementDetail(movement)" />
                     </td>
                   </tr>
                 </tbody>
@@ -742,7 +816,7 @@ const getProductSku = (productId: string) =>
           <div class="border border-surface-200 rounded-lg bg-primary-0">
             <div class="overflow-x-auto">
               <table class="min-w-full">
-                <thead class="bg-surface-50">
+                <thead class="hidden md:table-header-group bg-surface-50">
                   <tr>
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider"
@@ -836,14 +910,13 @@ const getProductSku = (productId: string) =>
                       }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <button
+                      <Button
                         v-if="editingProductId !== product.id"
-                        @click="editingProductId = product.id"
+                        icon="pi pi-pencil"
+                        text
                         :disabled="loading"
-                        class="p-1 text-surface-500 hover:text-surface-800 disabled:opacity-50"
-                      >
-                        <i class="pi pi-pencil"></i>
-                      </button>
+                        @click="editingProductId = product.id"
+                      />
                       <Select
                         v-else
                         v-model="product.costing_method"
@@ -992,19 +1065,123 @@ const getProductSku = (productId: string) =>
       <Dialog
         v-model:visible="showSummaryModal"
         modal
-        header="Resumo dos Métodos de Custeio"
+        header="Análise de Estoque e Custeio"
         :style="{ width: '50vw' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       >
         <template #header>
           <div class="flex flex-col">
-            <h3 class="text-sm font-bold text-surface-900">Resumo dos Métodos de Custeio</h3>
+            <h3 class="text-sm font-bold text-surface-900">Análise de Estoque e Custeio</h3>
             <p class="text-sm text-surface-500">
-              Análise consolidada dos métodos utilizados por produto
+              Análise consolidada de movimentações e métodos de custeio
             </p>
           </div>
         </template>
         <div class="p-6 space-y-6 flex-grow bg-surface-50">
+          <h4 class="text-lg font-semibold">Análise de Movimentações</h4>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
+              <h4 class="text-sm text-surface-500">Total de Entradas</h4>
+              <p class="text-sm font-bold text-green-600">{{ entryMovements }}</p>
+              <p class="text-sm text-surface-500">
+                {{
+                  stockMovements
+                    .filter((m: StoreStockMovement) => m.movement_type === 'purchase')
+                    .reduce((sum: number, m: StoreStockMovement) => sum + m.quantity, 0)
+                }}
+                unidades
+              </p>
+            </div>
+            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
+              <h4 class="text-sm text-surface-500">Total de Saídas</h4>
+              <p class="text-sm font-bold text-red-600">{{ exitMovements }}</p>
+              <p class="text-sm text-surface-500">
+                {{
+                  stockMovements
+                    .filter((m: StoreStockMovement) => m.movement_type === 'sale')
+                    .reduce((sum: number, m: StoreStockMovement) => sum + m.quantity, 0)
+                }}
+                unidades
+              </p>
+            </div>
+            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
+              <h4 class="text-sm text-surface-500">Métodos Utilizados</h4>
+              <p class="text-sm font-bold">{{ costingMethods.length }}</p>
+              <p class="text-sm text-surface-500">Diferentes métodos</p>
+            </div>
+            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
+              <h4 class="text-sm text-surface-500">Valor Total</h4>
+              <p class="text-sm font-bold">{{ formatCurrency(getTotalInventoryValue) }}</p>
+              <p class="text-sm text-surface-500">Métodos individuais</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-primary-0 p-6 rounded-lg border">
+              <h4 class="text-sm font-semibold mb-4">Distribuição por Método</h4>
+              <div class="space-y-4">
+                <div v-for="method in costingMethods" :key="method.value">
+                  <div class="flex justify-between items-center mb-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-medium">{{ method.label }}</span>
+                    </div>
+                    <span class="text-sm text-surface-600"
+                      >{{ getCostingMethodSummary[method.value].count }} produtos</span
+                    >
+                  </div>
+                  <div class="w-full bg-surface-200 rounded-full h-2">
+                    <div
+                      class="h-2 rounded-full"
+                      :class="
+                        method.value === 'fifo'
+                          ? 'bg-blue-500'
+                          : method.value === 'lifo'
+                            ? 'bg-green-500'
+                            : 'bg-purple-500'
+                      "
+                      :style="{
+                        width:
+                          products.length > 0
+                            ? (getCostingMethodSummary[method.value].count / products.length) *
+                                100 +
+                              '%'
+                            : '0%',
+                      }"
+                    ></div>
+                  </div>
+                  <div class="text-sm text-surface-500 text-right mt-1">
+                    {{ formatCurrency(getCostingMethodSummary[method.value].value) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-primary-0 p-6 rounded-lg border">
+              <h4 class="text-sm font-semibold mb-4">Produtos Mais Movimentados</h4>
+              <div class="space-y-4">
+                <div
+                  v-for="(product, index) in mostMovedProducts"
+                  :key="product.id"
+                  class="flex items-center justify-between"
+                >
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="flex items-center justify-center w-6 h-6 rounded-full bg-surface-200 text-surface-700 text-xs font-bold"
+                    >
+                      {{ index + 1 }}
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium">{{ product.name }}</div>
+                      <div class="text-sm text-surface-500">{{ product.sku }}</div>
+                    </div>
+                  </div>
+                  <div class="text-sm font-bold">{{ product.movementCount }} mov.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr class="my-6 border-surface-200" />
+          <h4 class="text-lg font-semibold">Análise de Métodos de Custeio</h4>
           <!-- Summary Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div
@@ -1155,7 +1332,7 @@ const getProductSku = (productId: string) =>
           <Button
             @click="showSummaryModal = false"
             label="Fechar"
-            class="px-4 py-2 text-sm font-medium border rounded-md bg-surface-800 text-white hover:bg-surface-700"
+            severity="contrast"
             size="small"
           />
         </template>
@@ -1246,12 +1423,12 @@ const getProductSku = (productId: string) =>
           </div>
         </div>
         <template #footer>
-          <button
+          <Button
+            label="Fechar"
             @click="showDetailModal = false"
-            class="px-4 py-2 text-sm font-medium border rounded-md bg-surface-800 text-white hover:bg-surface-700"
-          >
-            Fechar
-          </button>
+            severity="contrast"
+            size="small"
+          />
         </template>
       </Dialog>
 
@@ -1321,7 +1498,15 @@ const getProductSku = (productId: string) =>
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
+                    <Button
+                      v-if="editingProductId !== product.id"
+                      icon="pi pi-pencil"
+                      text
+                      :disabled="loading"
+                      @click="editingProductId = product.id"
+                    />
                     <Select
+                      v-else
                       v-model="product.costing_method"
                       :options="costingMethods"
                       optionLabel="label"
@@ -1337,141 +1522,12 @@ const getProductSku = (productId: string) =>
           </div>
         </div>
         <template #footer>
-          <button
+          <Button
+            label="Fechar"
             @click="showMethodModal = false"
-            class="px-4 py-2 text-sm font-medium border rounded-md bg-surface-800 text-white hover:bg-surface-700"
-          >
-            Fechar
-          </button>
-        </template>
-      </Dialog>
-
-      <!-- Analysis Modal -->
-      <Dialog
-        v-model:visible="showAnalysisModal"
-        modal
-        header="Análise de Movimentações por Método"
-        :style="{ width: '50vw' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      >
-        <template #header>
-          <div class="flex flex-col">
-            <h3 class="text-sm font-bold text-surface-900">Análise de Movimentações por Método</h3>
-            <p class="text-sm text-surface-500">
-              Estatísticas considerando métodos individualizados por produto
-            </p>
-          </div>
-        </template>
-        <div class="p-6 space-y-6 flex-grow bg-surface-50">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
-              <h4 class="text-sm text-surface-500">Total de Entradas</h4>
-              <p class="text-sm font-bold text-green-600">{{ entryMovements }}</p>
-              <p class="text-sm text-surface-500">
-                {{
-                  stockMovements
-                    .filter((m: StoreStockMovement) => m.movement_type === 'purchase')
-                    .reduce((sum: number, m: StoreStockMovement) => sum + m.quantity, 0)
-                }}
-                unidades
-              </p>
-            </div>
-            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
-              <h4 class="text-sm text-surface-500">Total de Saídas</h4>
-              <p class="text-sm font-bold text-red-600">{{ exitMovements }}</p>
-              <p class="text-sm text-surface-500">
-                {{
-                  stockMovements
-                    .filter((m: StoreStockMovement) => m.movement_type === 'sale')
-                    .reduce((sum: number, m: StoreStockMovement) => sum + m.quantity, 0)
-                }}
-                unidades
-              </p>
-            </div>
-            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
-              <h4 class="text-sm text-surface-500">Métodos Utilizados</h4>
-              <p class="text-sm font-bold">{{ costingMethods.length }}</p>
-              <p class="text-sm text-surface-500">Diferentes métodos</p>
-            </div>
-            <div class="bg-primary-0 p-4 rounded-lg border border-surface-200">
-              <h4 class="text-sm text-surface-500">Valor Total</h4>
-              <p class="text-sm font-bold">{{ formatCurrency(getTotalInventoryValue) }}</p>
-              <p class="text-sm text-surface-500">Métodos individuais</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-primary-0 p-6 rounded-lg border">
-              <h4 class="text-sm font-semibold mb-4">Distribuição por Método</h4>
-              <div class="space-y-4">
-                <div v-for="method in costingMethods" :key="method.value">
-                  <div class="flex justify-between items-center mb-1">
-                    <div class="flex items-center gap-2">
-                      <span class="text-sm font-medium">{{ method.label }}</span>
-                    </div>
-                    <span class="text-sm text-surface-600"
-                      >{{ getCostingMethodSummary[method.value].count }} produtos</span
-                    >
-                  </div>
-                  <div class="w-full bg-surface-200 rounded-full h-2">
-                    <div
-                      class="h-2 rounded-full"
-                      :class="
-                        method.value === 'fifo'
-                          ? 'bg-blue-500'
-                          : method.value === 'lifo'
-                            ? 'bg-green-500'
-                            : 'bg-purple-500'
-                      "
-                      :style="{
-                        width:
-                          products.length > 0
-                            ? (getCostingMethodSummary[method.value].count / products.length) *
-                                100 +
-                              '%'
-                            : '0%',
-                      }"
-                    ></div>
-                  </div>
-                  <div class="text-sm text-surface-500 text-right mt-1">
-                    {{ formatCurrency(getCostingMethodSummary[method.value].value) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-primary-0 p-6 rounded-lg border">
-              <h4 class="text-sm font-semibold mb-4">Produtos Mais Movimentados</h4>
-              <div class="space-y-4">
-                <div
-                  v-for="(product, index) in mostMovedProducts"
-                  :key="product.id"
-                  class="flex items-center justify-between"
-                >
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="flex items-center justify-center w-6 h-6 rounded-full bg-surface-200 text-surface-700 text-xs font-bold"
-                    >
-                      {{ index + 1 }}
-                    </div>
-                    <div>
-                      <div class="text-sm font-medium">{{ product.name }}</div>
-                      <div class="text-sm text-surface-500">{{ product.sku }}</div>
-                    </div>
-                  </div>
-                  <div class="text-sm font-bold">{{ product.movementCount }} mov.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <template #footer>
-          <button
-            @click="showAnalysisModal = false"
-            class="px-4 py-2 text-sm font-medium border rounded-md bg-surface-800 text-white hover:bg-surface-700"
-          >
-            Fechar
-          </button>
+            severity="contrast"
+            size="small"
+          />
         </template>
       </Dialog>
     </div>

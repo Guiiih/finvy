@@ -31,7 +31,7 @@
           <div v-if="activeTab === 'seguranca'">
             <SecuritySettings />
           </div>
-          <div v-if="activeTab === 'preferencias'">
+          <div v-if="activeTab === 'exibição'">
             <PreferenceSettings />
           </div>
           <div v-if="activeTab === 'organizacoes'">
@@ -58,7 +58,7 @@ const activeTab = ref('perfil')
 const tabs = [
   { id: 'perfil', name: 'Perfil' },
   { id: 'seguranca', name: 'Segurança' },
-  { id: 'preferencias', name: 'Preferências' },
+  { id: 'exibição', name: 'Exibição' },
   { id: 'organizacoes', name: 'Organizações', shortName: 'Orgs' },
   { id: 'tax-rules', name: 'Regras de Impostos', shortName: 'Impostos' },
 ]

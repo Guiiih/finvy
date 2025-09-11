@@ -9,6 +9,7 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { setToast } from '@/services/notificationService'
 import UserMenu from '@/components/UserMenu.vue'
+import MobileUserMenu from '@/components/MobileUserMenu.vue'
 import ChatbotWindow from '@/components/ChatbotWindow.vue'
 import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
@@ -35,7 +36,6 @@ const toggleChatbotMaximize = () => {
   isChatbotMaximized.value = !isChatbotMaximized.value
 }
 
-
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
@@ -44,16 +44,9 @@ const closeUserMenu = () => {
   showUserMenu.value = false
 }
 
-
-
-
-
-
-
 onMounted(() => {
   setToast(toast)
   authStore.initAuthListener()
-  window.addEventListener('click', closeUserMenu)
 
   watch(
     () => authStore.profileLoaded,
@@ -69,7 +62,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeUserMenu)
   userPresenceStore.stopPresenceTracking()
 })
 
@@ -166,7 +158,8 @@ const logoSrc = computed(() => {
           >
             <img :src="authStore.avatarUrl ?? undefined" alt="Avatar" class="w-9 rounded-full" />
           </button>
-          <UserMenu v-if="showUserMenu" @close="closeUserMenu" />
+          <UserMenu v-if="showUserMenu" @close="closeUserMenu" class="hidden lg:block" />
+          <MobileUserMenu v-model:visible="showUserMenu" class="lg:hidden" />
         </div>
       </div>
     </header>
@@ -198,18 +191,33 @@ const logoSrc = computed(() => {
           <span>{{ accountingPeriodStore.activeAccountingPeriod.fiscal_year }}</span>
         </router-link>
 
-        <button @click="authStore.signOut()" class="p-2 rounded-full hover:bg-surface-200 text-surface-600 focus:outline-none" aria-label="Sair">
-            <i class="pi pi-sign-out text-xl"></i>
+        <button class="p-2 rounded-full hover:bg-surface-200 relative" aria-label="Notificações">
+          <i class="pi pi-bell text-xl text-surface-600"></i>
         </button>
 
-        <!-- Removed Notification, Mobile Menu, and Profile buttons from here -->
+        <div class="relative">
+          <button
+            type="button"
+            class="rounded-full cursor-pointer"
+            @click.stop="toggleUserMenu"
+            aria-label="Menu do usuário"
+          >
+            <img
+              :src="authStore.avatarUrl ?? undefined"
+              alt="Avatar"
+              class="w-9 h-9 rounded-full"
+            />
+          </button>
+          <UserMenu v-if="showUserMenu" @close="closeUserMenu" class="hidden lg:block" />
+          <MobileUserMenu v-model:visible="showUserMenu" class="lg:hidden" />
+        </div>
       </div>
     </header>
 
     <MobileMoreMenu v-model:visible="isMoreMenuOpen" />
 
     <div class="relative flex">
-      <main class="flex-grow p-6 pb-24 lg:pb-6">
+      <main class="flex-grow p-2 px-6 pb-24 lg:pb-6 rounded-2xl">
         <RouterView />
       </main>
 
@@ -229,10 +237,16 @@ const logoSrc = computed(() => {
             <span class="text-sm font-semibold">Assistente</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="globalChatbotStore.toggleChatbotModal()" class="text-surface-600 hover:text-surface-900 lg:hidden">
+            <button
+              @click="globalChatbotStore.toggleChatbotModal()"
+              class="text-surface-600 hover:text-surface-900 lg:hidden"
+            >
               <i class="material-icons" style="font-size: 15px !important">close</i>
             </button>
-            <button @click="toggleChatbotMaximize" class="text-surface-600 hover:text-surface-900 hidden lg:block">
+            <button
+              @click="toggleChatbotMaximize"
+              class="text-surface-600 hover:text-surface-900 hidden lg:block"
+            >
               <i class="material-icons" style="font-size: 15px !important">{{
                 isChatbotMaximized ? 'close_fullscreen' : 'open_in_full'
               }}</i>
@@ -256,9 +270,11 @@ const logoSrc = computed(() => {
       }}</span>
     </button>
 
-      
-
-    <BottomNavBar @toggleMobileMenu="isMoreMenuOpen = !isMoreMenuOpen" @toggleUserMenu="showUserMenu = !showUserMenu" />
+    <BottomNavBar
+      v-if="!showUserMenu"
+      @toggleMobileMenu="isMoreMenuOpen = !isMoreMenuOpen"
+      @toggleUserMenu="showUserMenu = !showUserMenu"
+    />
   </div>
   <div v-else>
     <RouterView />

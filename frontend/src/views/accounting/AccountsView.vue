@@ -192,7 +192,7 @@ onMounted(async () => {
             type="text"
             v-model="searchTerm"
             placeholder="Busque uma conta"
-            class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950"
+            class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950 placeholder:text-sm"
           />
           <i
             class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 transform text-surface-400"

@@ -129,8 +129,6 @@ function getBalanceClass(account: TAccount) {
 <template>
   <div>
     <div class="max-w-7xl mx-auto">
-      <h1 class="text-3xl font-bold text-surface-800 mb-6 text-center">Razão (Ledger)</h1>
-
       <div class="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div class="flex-grow">
           <label for="startDate" class="text-surface-700 font-medium mb-1">Data Inicial:</label>

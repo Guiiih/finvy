@@ -334,12 +334,12 @@ function onPageChange(event: { page: number; first: number; rows: number; pageCo
 
     <!-- Filters and Actions -->
     <div class="mb-6 flex flex-wrap items-center gap-4">
-      <div class="relative flex-1 min-w-[200px]">
+      <div class="relative flex-1">
         <input
           type="text"
           v-model="searchTerm"
           placeholder="Busque um produto"
-          class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950"
+          class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950 placeholder:text-sm"
         />
         <i
           class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 transform text-surface-400"
@@ -369,7 +369,7 @@ function onPageChange(event: { page: number; first: number; rows: number; pageCo
       </OverlayPanel>
 
       <Button
-        icon="pi pi-info-circle"
+        icon="pi pi-cog"
         @click="showAnalyticsModal = true"
         severity="secondary"
         size="small"
