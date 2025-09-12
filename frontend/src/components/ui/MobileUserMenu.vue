@@ -45,11 +45,17 @@ const handleHelpClick = () => {
 
       <!-- User Info -->
       <div class="flex items-center px-4 py-3">
-        <img
-          :src="authStore.avatarUrl ?? undefined"
-          alt="Avatar"
-          class="h-12 w-12 rounded-full mr-4"
-        />
+        <div
+          class="h-12 w-12 rounded-full mr-4 bg-surface-200 flex items-center justify-center text-surface-500 text-sm"
+        >
+          <img
+            v-if="authStore.avatarUrl"
+            :src="authStore.avatarUrl ?? undefined"
+            alt="User Avatar"
+            class="h-full w-full rounded-full object-cover"
+          />
+          <span v-else>Avatar</span>
+        </div>
         <div>
           <p class="text-lg font-semibold">
             {{ authStore.username || authStore.user?.email }}

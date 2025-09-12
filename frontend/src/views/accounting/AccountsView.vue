@@ -10,8 +10,8 @@ import Paginator from 'primevue/paginator'
 import Button from 'primevue/button'
 import OverlayPanel from 'primevue/overlaypanel'
 
-import AccountFormModal from '@/components/AccountFormModal.vue'
-import AccountAnalyticsModal from '@/components/AccountAnalyticsModal.vue'
+import AccountFormModal from '@/components/account/AccountFormModal.vue'
+import AccountAnalyticsModal from '@/components/account/AccountAnalyticsModal.vue'
 
 const accountStore = useAccountStore()
 const toast = useToast()

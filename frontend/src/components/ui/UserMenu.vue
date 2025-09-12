@@ -46,11 +46,17 @@ onUnmounted(() => {
     role="menu"
   >
     <div class="flex items-center px-4 py-3 border-b border-surface-200">
-      <img
-        :src="authStore.avatarUrl ?? undefined"
-        alt="Avatar"
-        class="h-10 w-10 rounded-full mr-3"
-      />
+      <div
+        class="h-10 w-10 rounded-full mr-3 bg-surface-200 flex items-center justify-center text-surface-500 text-xs"
+      >
+        <img
+          v-if="authStore.avatarUrl"
+          :src="authStore.avatarUrl ?? undefined"
+          alt="User Avatar"
+          class="h-full w-full rounded-full object-cover"
+        />
+        <span v-else>Avatar</span>
+      </div>
       <div>
         <p class="text-sm font-medium text-surface-900">
           {{ authStore.username || authStore.user?.email }}

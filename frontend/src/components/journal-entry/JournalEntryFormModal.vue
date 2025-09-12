@@ -11,10 +11,10 @@ import { api } from '@/services/api'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
-import Imposto from '@/components/ImpostoComponent.vue'
-import JournalEntryBasicForm from '@/components/JournalEntryBasicForm.vue'
-import JournalEntryLinesForm from '@/components/JournalEntryLinesForm.vue'
-import JournalEntryProductForm from '@/components/JournalEntryProductForm.vue'
+import Imposto from '@/components/tax/ImpostoComponent.vue'
+import JournalEntryBasicForm from '@/components/journal-entry/JournalEntryBasicForm.vue'
+import JournalEntryLinesForm from '@/components/journal-entry/JournalEntryLinesForm.vue'
+import JournalEntryProductForm from '@/components/journal-entry/JournalEntryProductForm.vue'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()

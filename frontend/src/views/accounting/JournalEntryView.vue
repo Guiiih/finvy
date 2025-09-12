@@ -11,10 +11,10 @@ import OverlayPanel from 'primevue/overlaypanel'
 import Checkbox from 'primevue/checkbox'
 
 import Paginator from 'primevue/paginator'
-import JournalEntryFormModal from '@/components/JournalEntryFormModal.vue'
-import JournalEntryAdvancedFiltersModal from '@/components/JournalEntryAdvancedFiltersModal.vue'
-import JournalEntryBulkActionsModal from '@/components/JournalEntryBulkActionsModal.vue'
-import JournalEntryViewModal from '@/components/JournalEntryViewModal.vue'
+import JournalEntryFormModal from '@/components/journal-entry/JournalEntryFormModal.vue'
+import JournalEntryAdvancedFiltersModal from '@/components/journal-entry/JournalEntryAdvancedFiltersModal.vue'
+import JournalEntryBulkActionsModal from '@/components/journal-entry/JournalEntryBulkActionsModal.vue'
+import JournalEntryViewModal from '@/components/journal-entry/JournalEntryViewModal.vue'
 
 const journalEntryStore = useJournalEntryStore()
 const accountStore = useAccountStore()

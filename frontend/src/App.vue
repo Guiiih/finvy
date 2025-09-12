@@ -8,15 +8,15 @@ import { useUserPresenceStore } from '@/stores/userPresenceStore'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { setToast } from '@/services/notificationService'
-import UserMenu from '@/components/UserMenu.vue'
-import MobileUserMenu from '@/components/MobileUserMenu.vue'
-import ChatbotWindow from '@/components/ChatbotWindow.vue'
-import UserAvatarWithPresence from '@/components/UserAvatarWithPresence.vue'
+import UserMenu from '@/components/ui/UserMenu.vue'
+import MobileUserMenu from '@/components/ui/MobileUserMenu.vue'
+import ChatbotWindow from '@/components/chatbot/ChatbotWindow.vue'
+import UserAvatarWithPresence from '@/components/ui/UserAvatarWithPresence.vue'
 import { useGlobalChatbotStore } from '@/stores/globalChatbotStore'
 import FinvyLogo from './assets/FinvyLogo.svg'
 import FinvyLogoBlack from './assets/FinvyLogoBlack.svg'
-import BottomNavBar from '@/components/BottomNavBar.vue'
-import MobileMoreMenu from '@/components/MobileMoreMenu.vue'
+import BottomNavBar from '@/components/ui/BottomNavBar.vue'
+import MobileMoreMenu from '@/components/ui/MobileMoreMenu.vue'
 
 const route = useRoute()
 
@@ -141,7 +141,7 @@ const logoSrc = computed(() => {
           v-if="accountingPeriodStore.activeAccountingPeriod"
           class="flex items-center space-x-2 px-3 py-1 text-sm font-medium text-surface-700 bg-surface-200 rounded-full shadow-inner cursor-pointer hover:bg-surface-300 transition-colors duration-200"
         >
-          <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
+          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="Período Ativo"></div>
           <span>{{ accountingPeriodStore.activeAccountingPeriod.fiscal_year }}</span>
         </router-link>
 
@@ -156,7 +156,17 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img :src="authStore.avatarUrl ?? undefined" alt="Avatar" class="w-9 rounded-full" />
+            <div
+              class="w-9 h-9 rounded-full bg-surface-200 flex items-center justify-center text-surface-500 text-xs"
+            >
+              <img
+                v-if="authStore.avatarUrl"
+                :src="authStore.avatarUrl ?? undefined"
+                alt="User Avatar"
+                class="h-full w-full rounded-full object-cover"
+              />
+              <span v-else>Avatar</span>
+            </div>
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" class="hidden lg:block" />
           <MobileUserMenu v-model:visible="showUserMenu" class="lg:hidden" />
@@ -187,7 +197,7 @@ const logoSrc = computed(() => {
           v-if="accountingPeriodStore.activeAccountingPeriod"
           class="flex items-center space-x-2 px-3 py-1 text-sm font-medium text-surface-700 bg-surface-200 rounded-full shadow-inner cursor-pointer hover:bg-surface-300 transition-colors duration-200"
         >
-          <div class="w-3 h-3 bg-green-500 rounded-full" title="Período Ativo"></div>
+          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="Período Ativo"></div>
           <span>{{ accountingPeriodStore.activeAccountingPeriod.fiscal_year }}</span>
         </router-link>
 
@@ -202,11 +212,17 @@ const logoSrc = computed(() => {
             @click.stop="toggleUserMenu"
             aria-label="Menu do usuário"
           >
-            <img
-              :src="authStore.avatarUrl ?? undefined"
-              alt="Avatar"
-              class="w-9 h-9 rounded-full"
-            />
+            <div
+              class="w-9 h-9 rounded-full bg-surface-200 flex items-center justify-center text-surface-500 text-xs"
+            >
+              <img
+                v-if="authStore.avatarUrl"
+                :src="authStore.avatarUrl ?? undefined"
+                alt="User Avatar"
+                class="h-full w-full rounded-full object-cover"
+              />
+              <span v-else>Avatar</span>
+            </div>
           </button>
           <UserMenu v-if="showUserMenu" @close="closeUserMenu" class="hidden lg:block" />
           <MobileUserMenu v-model:visible="showUserMenu" class="lg:hidden" />
@@ -247,9 +263,7 @@ const logoSrc = computed(() => {
               @click="toggleChatbotMaximize"
               class="text-surface-600 hover:text-surface-900 hidden lg:block"
             >
-              <i class="material-icons" style="font-size: 15px !important">{{
-                isChatbotMaximized ? 'close_fullscreen' : 'open_in_full'
-              }}</i>
+              <i class="material-icons" style="font-size: 15px !important">{{ isChatbotMaximized ? 'close_fullscreen' : 'open_in_full' }}</i>
             </button>
           </div>
         </div>
@@ -265,9 +279,7 @@ const logoSrc = computed(() => {
       aria-label="Abrir Chatbot"
       @click="globalChatbotStore.toggleChatbotModal()"
     >
-      <span class="material-icons" style="font-size: 20px !important">{{
-        globalChatbotStore.isChatbotModalVisible ? 'south_east' : 'chat_bubble'
-      }}</span>
+      <span class="material-icons" style="font-size: 20px !important">{{ globalChatbotStore.isChatbotModalVisible ? 'south_east' : 'chat_bubble' }}</span>
     </button>
 
     <BottomNavBar

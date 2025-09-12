@@ -4,11 +4,17 @@
     <div class="mb-8">
       <h2 class="text-base font-medium text-surface-800 mb-4">Foto de perfil</h2>
       <div class="flex items-center gap-6">
-        <img
-          :src="tempAvatarPreview ?? authStore.avatarUrl ?? undefined"
-          alt="Avatar"
-          class="h-20 w-20 rounded-full object-cover bg-surface-200 cursor-pointer"
-        />
+        <div
+          class="h-20 w-20 rounded-full bg-surface-200 cursor-pointer flex items-center justify-center text-surface-500 text-sm"
+        >
+          <img
+            v-if="tempAvatarPreview || authStore.avatarUrl"
+            :src="tempAvatarPreview ?? authStore.avatarUrl ?? undefined"
+            alt="User Avatar"
+            class="h-full w-full rounded-full object-cover"
+          />
+          <span v-else>Avatar</span>
+        </div>
         <input
           type="file"
           ref="fileInput"

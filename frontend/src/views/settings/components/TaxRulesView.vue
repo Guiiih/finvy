@@ -9,7 +9,6 @@ import Card from 'primevue/card'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
 import InputNumber from 'primevue/inputnumber'
 
@@ -86,14 +85,17 @@ const deleteRule = (id: string) => {
 
     <!-- Filters and Actions -->
     <div class="flex flex-col sm:flex-row gap-4 mb-4">
-      <div class="relative flex-grow">
-        <i class="pi pi-search absolute top-1/2 -mt-2 left-3 text-gray-400" />
-        <InputText
+      <div class="relative flex-1">
+        <input
+          type="text"
           v-model="searchTerm"
           placeholder="Buscar por UF, NCM, Imposto..."
-          class="w-full pl-10"
-          size="small"
+          class="w-full rounded-lg border border-surface-300 py-1 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-zinc-950 placeholder:text-sm"
         />
+        <i
+          class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 transform text-surface-400"
+          style="font-size: 15px"
+        ></i>
       </div>
       <Button label="Nova Regra" icon="pi pi-plus" @click="openNewRuleModal" size="small" />
     </div>

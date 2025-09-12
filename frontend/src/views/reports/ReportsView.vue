@@ -22,7 +22,6 @@ import Toast from 'primevue/toast'
 const toast = useToast()
 const reportStore = useReportStore()
 
-const selectedPeriod = ref('current-month')
 const showConfigModal = ref(false)
 const showScheduleModal = ref(false)
 const showCustomReportModal = ref(false)
@@ -61,14 +60,6 @@ const customReport = reactive({
   includeSubaccounts: true,
   showZeroBalances: false,
 })
-
-const periodOptions = [
-  { value: 'current-month', label: 'Mês atual' },
-  { value: 'last-month', label: 'Mês anterior' },
-  { value: 'current-quarter', label: 'Trimestre atual' },
-  { value: 'current-year', label: 'Ano atual' },
-  { value: 'last-year', label: 'Ano anterior' },
-]
 
 interface ReportType {
   id: string
@@ -282,21 +273,7 @@ const groupedReports = computed(() => {
   </div>
 
   <main v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
-          <i class="pi pi-calendar"></i>
-          <span class="font-medium">Período de Análise:</span>
-        </div>
-        <Dropdown
-          v-model="selectedPeriod"
-          :options="periodOptions"
-          optionLabel="label"
-          optionValue="value"
-          class="w-48"
-        />
-      </div>
-
+    <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-8">
       <Button @click="showCustomReportModal = true">
         <i class="pi pi-filter mr-2"></i>
         Relatório Personalizado
