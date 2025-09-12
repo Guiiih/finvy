@@ -218,7 +218,7 @@ onMounted(async () => {
         </OverlayPanel>
         <Button
           icon="pi pi-info-circle"
-          class="p-button-secondary"
+          severity="secondary"
           @click="showAnalyticsModal = true"
           size="small"
         />

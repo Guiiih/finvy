@@ -369,7 +369,7 @@ function onPageChange(event: { page: number; first: number; rows: number; pageCo
       </OverlayPanel>
 
       <Button
-        icon="pi pi-cog"
+        icon="pi pi-info-circle"
         @click="showAnalyticsModal = true"
         severity="secondary"
         size="small"

@@ -9,10 +9,10 @@ import accountIcon from '@/assets/Account.png'
 import journalIcon from '@/assets/Journal.png'
 
 interface NavItem {
-  to: string;
-  label: string;
-  icon?: string;
-  image?: string;
+  to: string
+  label: string
+  icon?: string
+  image?: string
 }
 
 const visible = defineModel<boolean>('visible')

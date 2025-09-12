@@ -248,20 +248,18 @@ onMounted(async () => {
         </div>
 
         <Button
-          type="button"
           icon="pi pi-filter"
           @click="toggleFilter"
           aria-haspopup="true"
           aria-controls="overlay_panel"
-          class="p-button-secondary"
+          severity="secondary"
           size="small"
         />
 
         <Button
-          type="button"
           icon="pi pi-cog"
           @click="showAdvancedFiltersModal = true"
-          class="p-button-secondary"
+          severity="secondary"
           size="small"
         />
 
