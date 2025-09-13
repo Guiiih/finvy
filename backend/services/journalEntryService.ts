@@ -147,6 +147,29 @@ export async function createJournalEntry(
 ): Promise<JournalEntry | null> {
   const userSupabase = getSupabaseClient(token)
 
+  // 1. Fetch the accounting period dates
+  const { data: accountingPeriod, error: periodError } = await userSupabase
+    .from('accounting_periods')
+    .select('start_date, end_date')
+    .eq('id', active_accounting_period_id)
+    .single()
+
+  if (periodError || !accountingPeriod) {
+    logger.error({ periodError }, 'Journal Entries Service: Erro ao buscar período contábil para validação:')
+    throw new Error('Período contábil ativo não encontrado ou inacessível.')
+  }
+
+  // 2. Validate entry_date against accounting period dates
+  const entryDate = new Date(newEntry.entry_date)
+  const periodStartDate = new Date(accountingPeriod.start_date)
+  const periodEndDate = new Date(accountingPeriod.end_date)
+
+  if (entryDate < periodStartDate || entryDate > periodEndDate) {
+    throw new Error(
+      `A data do lançamento (${newEntry.entry_date}) está fora do período contábil ativo (${accountingPeriod.start_date} a ${accountingPeriod.end_date}).`,
+    )
+  }
+
   const { data, error: dbError } = await userSupabase
     .from('journal_entries')
     .insert([

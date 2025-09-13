@@ -10,6 +10,10 @@ import { exportReportSchema } from '../../utils/schemas.js'
 import ExcelJS from 'exceljs'
 import PDFDocument from 'pdfkit'
 
+// Este handler é responsável por gerar relatórios consolidados de lançamentos contábeis,
+// exportando os dados brutos das entradas de diário agrupadas por mês.
+// Não realiza cálculos de balanço ou DRE, apenas a consolidação de entradas.
+
 interface EntryLine {
   account_id: string
   debit: number

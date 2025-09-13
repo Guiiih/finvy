@@ -309,10 +309,10 @@ onMounted(() => {
               }}
             </p>
             <p class="text-xs text-surface-400 flex items-center">
-              <i class="pi pi-arrow-up text-green-500 mr-1"></i>+18% em relação ao mês anterior
+              +18% em relação ao mês anterior
             </p>
           </div>
-          <i class="pi pi-dollar p-2 bg-surface-100 text-surface-600 rounded-full"></i>
+          
         </div>
         <div class="h-16 mt-4">
           <Chart type="line" :data="revenueMiniChartData" :options="miniChartOptions" />
@@ -330,10 +330,10 @@ onMounted(() => {
               }}
             </p>
             <p class="text-xs text-surface-400 flex items-center">
-              <i class="pi pi-arrow-down text-red-500 mr-1"></i>+5% em relação ao mês anterior
+              +5% em relação ao mês anterior
             </p>
           </div>
-          <i class="pi pi-arrow-down p-2 bg-surface-100 text-surface-600 rounded-full"></i>
+          
         </div>
         <div class="h-16 mt-4">
           <Chart type="line" :data="expenseMiniChartData" :options="miniChartOptions" />
@@ -351,10 +351,10 @@ onMounted(() => {
               }}
             </p>
             <p class="text-xs text-surface-400 flex items-center">
-              <i class="pi pi-arrow-up text-green-500 mr-1"></i>+24% em relação ao mês anterior
+              +24% em relação ao mês anterior
             </p>
           </div>
-          <i class="pi pi-chart-line p-2 bg-surface-100 text-surface-600 rounded-full"></i>
+          
         </div>
         <div class="h-16 mt-4">
           <Chart type="line" :data="profitMiniChartData" :options="miniChartOptions" />
@@ -373,7 +373,7 @@ onMounted(() => {
             </p>
             <p class="text-xs text-surface-400">Saldo disponível em caixa</p>
           </div>
-          <i class="pi pi-wallet p-2 bg-surface-100 text-surface-600 rounded-full"></i>
+          
         </div>
         <div class="h-16 mt-4">
           <Chart type="line" :data="cashflowMiniChartData" :options="miniChartOptions" />

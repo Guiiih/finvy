@@ -433,9 +433,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <p v-else-if="journalEntryStore.error" class="text-red-400 text-center p-8">
-          {{ journalEntryStore.error }}
-        </p>
         <p
           v-else-if="journalEntryStore.journalEntries.length === 0"
           class="text-surface-400 text-center p-8"

@@ -126,7 +126,7 @@ async function protectedRoutesHandler(
   }
   if (finalUrlPath.startsWith('/user-presence')) {
     if (req.method === 'POST') {
-      return updateUserPresence(req, res, user_id)
+      return updateUserPresence(req, res, user_id, token)
     }
     if (req.method === 'GET') {
       return getOnlineUsers(req, res)

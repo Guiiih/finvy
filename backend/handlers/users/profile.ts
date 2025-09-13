@@ -134,6 +134,39 @@ export default async function handler(
         )
       }
 
+      // Logic to update active accounting period in accounting_periods table
+      if (updateData.active_accounting_period_id !== undefined) {
+        const organizationId = data.organization_id; // Get organization_id from the updated profile data
+        const newActivePeriodId = updateData.active_accounting_period_id;
+
+        if (organizationId) {
+          // 1. Deactivate all periods for this organization
+          const { error: deactivateError } = await userSupabase
+            .from('accounting_periods')
+            .update({ is_active: false })
+            .eq('organization_id', organizationId);
+
+          if (deactivateError) {
+            logger.error({ deactivateError }, 'Erro ao desativar períodos contábeis antigos:');
+            // Continue, but log the error
+          }
+
+          // 2. Activate the newly selected period
+          if (newActivePeriodId) {
+            const { error: activateError } = await userSupabase
+              .from('accounting_periods')
+              .update({ is_active: true })
+              .eq('id', newActivePeriodId)
+              .eq('organization_id', organizationId);
+
+            if (activateError) {
+              logger.error({ activateError }, 'Erro ao ativar novo período contábil:');
+              // Continue, but log the error
+            }
+          }
+        }
+      }
+
       return res.status(200).json(data)
     } catch (error: unknown) {
       logger.error({ error }, 'Erro inesperado na API de atualização de perfil:')

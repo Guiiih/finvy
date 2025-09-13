@@ -412,6 +412,7 @@ export const useAuthStore = defineStore(
       updateUserProfile,
       deleteUserAccount,
       uploadAvatar,
+      fetchUserProfile,
     }
   },
   {

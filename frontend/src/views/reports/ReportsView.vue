@@ -8,7 +8,6 @@ import { useReportStore } from '@/stores/reportStore'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Dropdown from 'primevue/dropdown'
-import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
@@ -71,100 +70,117 @@ interface ReportType {
   status: string
 }
 
-const reportTypes = computed<ReportType[]>(() => [
-  {
-    id: 'balance-sheet',
-    title: 'Balanço Patrimonial',
-    description: 'Demonstração da posição financeira da empresa',
-    icon: 'pi pi-chart-bar',
-    category: 'Demonstrações Financeiras',
-    lastGenerated: '01/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'income-statement',
-    title: 'Demonstração de Resultado',
-    description: 'Análise de receitas, custos e despesas do período',
-    icon: 'pi pi-arrow-up-right',
-    category: 'Demonstrações Financeiras',
-    lastGenerated: '01/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'cash-flow',
-    title: 'Fluxo de Caixa',
-    description: 'Movimentações de entrada e saída de recursos',
-    icon: 'pi pi-dollar',
-    category: 'Demonstrações Financeiras',
-    lastGenerated: '02/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'trial-balance',
-    title: 'Balancete de Verificação',
-    description: 'Saldos de todas as contas contábeis',
-    icon: 'pi pi-file',
-    category: 'Relatórios Auxiliares',
-    lastGenerated: '02/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'accounts-receivable',
-    title: 'Contas a Receber',
-    description: 'Relatório de valores a receber de clientes',
-    icon: 'pi pi-chart-pie',
-    category: 'Relatórios Gerenciais',
-    lastGenerated: '01/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'accounts-payable',
-    title: 'Contas a Pagar',
-    description: 'Relatório de valores a pagar para fornecedores',
-    icon: 'pi pi-arrow-down-left',
-    category: 'Relatórios Gerenciais',
-    lastGenerated: '01/08/2025',
-    status: 'Disponível',
-  },
-  {
-    id: 'inventory-report',
-    title: 'Relatório de Estoque',
-    description: 'Posição atual do inventário de produtos',
-    icon: 'pi pi-box',
-    category: 'Relatórios Operacionais',
-    lastGenerated: '02/08/2025',
-    status: 'Disponível',
-  },
-])
+const reportTypes = computed<ReportType[]>(() => {
+  const allReportDefinitions: Omit<ReportType, 'lastGenerated' | 'status'>[] = [
+    {
+      id: 'balance-sheet',
+      title: 'Balanço Patrimonial',
+      description: 'Demonstração da posição financeira da empresa',
+      icon: 'pi pi-chart-bar',
+      category: 'Demonstrações Financeiras',
+    },
+    {
+      id: 'income-statement',
+      title: 'Demonstração de Resultado',
+      description: 'Análise de receitas, custos e despesas do período',
+      icon: 'pi pi-arrow-up-right',
+      category: 'Demonstrações Financeiras',
+    },
+    {
+      id: 'cash-flow',
+      title: 'Fluxo de Caixa',
+      description: 'Movimentações de entrada e saída de recursos',
+      icon: 'pi pi-dollar',
+      category: 'Demonstrações Financeiras',
+    },
+    {
+      id: 'trial-balance',
+      title: 'Balancete de Verificação',
+      description: 'Saldos de todas as contas contábeis',
+      icon: 'pi pi-file',
+      category: 'Relatórios Auxiliares',
+    },
+    {
+      id: 'accounts-receivable',
+      title: 'Contas a Receber',
+      description: 'Relatório de valores a receber de clientes',
+      icon: 'pi pi-chart-pie',
+      category: 'Relatórios Gerenciais',
+    },
+    {
+      id: 'accounts-payable',
+      title: 'Contas a Pagar',
+      description: 'Relatório de valores a pagar para fornecedores',
+      icon: 'pi pi-arrow-down-left',
+      category: 'Relatórios Gerenciais',
+    },
+    {
+      id: 'inventory-report',
+      title: 'Relatório de Estoque',
+      description: 'Posição atual do inventário de produtos',
+      icon: 'pi pi-box',
+      category: 'Relatórios Operacionais',
+    },
+  ]
+
+  return allReportDefinitions.map((reportDef) => {
+    let lastGenerated = 'N/A'
+    let status = 'Indisponível'
+    let reportData: { generatedAt?: string } | undefined
+
+    switch (reportDef.id) {
+      case 'balance-sheet':
+        reportData = reportStore.balanceSheet
+        break
+      case 'income-statement':
+        reportData = reportStore.incomeStatement
+        break
+      case 'cash-flow':
+        reportData = reportStore.cashFlow
+        break
+      case 'trial-balance':
+        reportData = reportStore.trialBalance
+        break
+      case 'accounts-receivable':
+        reportData = reportStore.accountsReceivable
+        break
+      case 'accounts-payable':
+        reportData = reportStore.accountsPayable
+        break
+      case 'inventory-report':
+        reportData = reportStore.inventory
+        break
+    }
+
+    if (reportData && reportData.generatedAt) {
+      lastGenerated = new Date(reportData.generatedAt).toLocaleDateString()
+      status = 'Disponível'
+    }
+
+    return { ...reportDef, lastGenerated, status }
+  })
+})
 
 const quickStats = computed(() => [
   {
     title: 'Receita Bruta',
     value: reportStore.incomeStatement?.summary.totalRevenue || 0,
     change: '',
-    trend: 'up',
-    icon: 'pi pi-arrow-up-right',
   },
   {
     title: 'Despesas Totais',
     value: reportStore.incomeStatement?.summary.totalExpenses || 0,
     change: '',
-    trend: 'up',
-    icon: 'pi pi-arrow-down-left',
   },
   {
     title: 'Lucro Líquido',
     value: reportStore.incomeStatement?.summary.netIncome || 0,
     change: '',
-    trend: 'up',
-    icon: 'pi pi-dollar',
   },
   {
     title: 'Margem Bruta',
     value: reportStore.incomeStatement?.summary.margin || 0,
     change: '',
-    trend: 'up',
-    icon: 'pi pi-chart-bar',
     isPercentage: true,
   },
 ])
@@ -173,10 +189,18 @@ onMounted(() => {
   reportStore.fetchReports()
 })
 
-const generateReport = (reportId: string) => {
+const generateReport = async (reportId: string) => {
   const report = reportTypes.value.find((r) => r.id === reportId)
   if (report) {
     viewingReport.value = { id: reportId, title: report.title }
+    const fullReportConfig = {
+      reportId,
+      ...reportConfig,
+      detailLevel: reportConfig.detailLevel as 'summary' | 'detailed' | 'full',
+      format: reportConfig.format as 'pdf' | 'excel' | 'csv',
+      orientation: reportConfig.orientation as 'portrait' | 'landscape',
+    };
+    await reportStore.generateReport(reportId, fullReportConfig)
   }
 }
 
@@ -198,21 +222,78 @@ const handleExportReport = async () => {
     })
     return
   }
-  // TODO: Implementar a chamada real da API para exportar o relatório
+  try {
+    const fullReportConfig = {
+      reportId: exportReportId.value,
+      ...reportConfig,
+      detailLevel: reportConfig.detailLevel as 'summary' | 'detailed' | 'full',
+      format: reportConfig.format as 'pdf' | 'excel' | 'csv',
+      orientation: reportConfig.orientation as 'portrait' | 'landscape',
+    };
+    await reportStore.generateReport(exportReportId.value, fullReportConfig)
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Relatório exportado com sucesso!',
+      life: 3000,
+    })
+    showExportModal.value = false
+  } catch (err: unknown) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: `Falha ao exportar relatório: ${(err as Error).message}`,
+      life: 3000,
+    })
+  }
 }
 
 const handleConfigureReport = (reportId: string) => {
   selectedReport.value = reportId
+  // Load existing config if available
+  const existingConfig = reportStore.reportConfigs.find(config => config.reportId === reportId);
+  if (existingConfig) {
+    Object.assign(reportConfig, existingConfig);
+  }
   showConfigModal.value = true
 }
 
 const handleScheduleReport = (reportId: string) => {
   selectedReport.value = reportId
+  // Load existing schedule if available
+  const existingSchedule = reportStore.scheduledReports.find(schedule => schedule.reportId === reportId);
+  if (existingSchedule) {
+    Object.assign(scheduleConfig, existingSchedule);
+  }
   showScheduleModal.value = true
 }
 
 const handleSaveConfig = async () => {
-  // TODO: Implementar a chamada real da API para salvar configurações do relatório
+  if (!selectedReport.value) return;
+  try {
+    const fullReportConfig = {
+      reportId: selectedReport.value,
+      ...reportConfig,
+      detailLevel: reportConfig.detailLevel as 'summary' | 'detailed' | 'full',
+      format: reportConfig.format as 'pdf' | 'excel' | 'csv',
+      orientation: reportConfig.orientation as 'portrait' | 'landscape',
+    };
+    await reportStore.saveReportConfig(selectedReport.value, fullReportConfig);
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Configurações salvas com sucesso!',
+      life: 3000,
+    });
+    showConfigModal.value = false;
+  } catch (err: unknown) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: `Falha ao salvar configurações: ${(err as Error).message}`,
+      life: 3000,
+    });
+  }
 }
 
 const handleSaveSchedule = async () => {
@@ -225,7 +306,30 @@ const handleSaveSchedule = async () => {
     })
     return
   }
-  // TODO: Implementar a chamada real da API para agendar o relatório
+  if (!selectedReport.value) return;
+  try {
+    const fullScheduleConfig = {
+      reportId: selectedReport.value,
+      ...scheduleConfig,
+      frequency: scheduleConfig.frequency as 'weekly' | 'monthly' | 'quarterly' | 'yearly',
+      dayOfWeek: scheduleConfig.dayOfWeek as 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday',
+    };
+    await reportStore.scheduleReport(selectedReport.value, fullScheduleConfig);
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Agendamento salvo com sucesso!',
+      life: 3000,
+    });
+    showScheduleModal.value = false;
+  } catch (err: unknown) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: `Falha ao salvar agendamento: ${(err as Error).message}`,
+      life: 3000,
+    });
+  }
 }
 
 const handleCreateCustomReport = async () => {
@@ -238,7 +342,26 @@ const handleCreateCustomReport = async () => {
     })
     return
   }
-  // TODO: Implementar a chamada real da API para criar relatório personalizado
+  try {
+    await reportStore.createCustomReport({
+      ...customReport,
+      groupBy: customReport.groupBy as 'account' | 'category' | 'date' | 'month',
+    });
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Relatório personalizado criado com sucesso!',
+      life: 3000,
+    });
+    showCustomReportModal.value = false;
+  } catch (err: unknown) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: `Falha ao criar relatório personalizado: ${(err as Error).message}`,
+      life: 3000,
+    });
+  }
 }
 
 const addRecipient = () => {
@@ -274,18 +397,20 @@ const groupedReports = computed(() => {
 
   <main v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-8">
-      <Button @click="showCustomReportModal = true">
-        <i class="pi pi-filter mr-2"></i>
-        Relatório Personalizado
-      </Button>
+      <Button 
+        @click="showCustomReportModal = true"
+        label="Relatório Personalizado"
+        icon="pi pi-filter"
+        size="small"
+      />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Desktop View (md and larger) -->
+    <div class="hidden md:grid grid-cols-4 gap-6 mb-8">
       <Card v-for="(stat, index) in quickStats" :key="index">
         <template #title>
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium">{{ stat.title }}</span>
-            <i :class="stat.icon" class="text-surface-500 dark:text-surface-400"></i>
           </div>
         </template>
         <template #content>
@@ -299,23 +424,39 @@ const groupedReports = computed(() => {
             }}
           </div>
           <p class="text-xs text-surface-500 dark:text-surface-400">
-            <span
-              :class="[
-                'inline-flex items-center',
-                stat.trend === 'up' ? 'text-green-500' : 'text-red-500',
-              ]"
-            >
-              <i :class="[stat.trend === 'up' ? 'pi pi-arrow-up' : 'pi pi-arrow-down', 'mr-1']"></i>
-              {{ stat.change }}
-            </span>
-            desde o período anterior
+            {{ stat.change }} desde o período anterior
+          </p>
+        </template>
+      </Card>
+    </div>
+
+    <!-- Mobile View (below md) -->
+    <div class="block md:hidden grid grid-cols-2 gap-6 mb-8">
+      <Card v-for="(stat, index) in quickStats" :key="index" class="min-w-[180px]">
+        <template #title>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">{{ stat.title }}</span>
+          </div>
+        </template>
+        <template #content>
+          <div class="text-2xl font-bold">
+            {{
+              stat.isPercentage
+                ? `${stat.value}%`
+                : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    stat.value,
+                  )
+            }}
+          </div>
+          <p class="text-xs text-surface-500 dark:text-surface-400">
+            {{ stat.change }} desde o período anterior
           </p>
         </template>
       </Card>
     </div>
 
     <Card class="mb-8">
-      <template #title>Indicadores de Saúde Financeira</template>
+      <template #title><span class="font-base">Indicadores de Saúde Financeira</span></template>
       <template #subtitle>Principais métricas da situação financeira atual</template>
       <template #content>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -378,14 +519,14 @@ const groupedReports = computed(() => {
               <div class="flex items-start justify-between p-4">
                 <div class="flex-1">
                   <h3 class="flex items-center gap-2 font-bold">
-                    <i :class="report.icon" class="text-lg"></i>
                     {{ report.title }}
                   </h3>
                   <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">
                     {{ report.description }}
                   </p>
                 </div>
-                <Tag severity="success" :value="report.status"></Tag>
+                <div v-if="report.status === 'Disponível'" class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div v-else class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
               </div>
             </template>
             <template #content>
@@ -399,6 +540,7 @@ const groupedReports = computed(() => {
                     class="flex-1"
                     @click="generateReport(report.id)"
                     :loading="reportStore.loading"
+                    :disabled="report.status === 'Indisponível'"
                   >
                     <i class="pi pi-eye mr-1"></i>
                     Visualizar

@@ -137,7 +137,8 @@ export const useAccountingPeriodStore = defineStore('accountingPeriod', () => {
         // Reset active period in authStore via organizationSelectionStore
         if (authStore.user?.id) {
           // Usar user.id do authStore para garantir que o usuário está logado
-          await api.put('/profile', { active_accounting_period_id: null })
+          // IMPORTANT: Refresh user profile to get the new active accounting period from backend
+          await authStore.fetchUserProfile(); // This will update authStore.userActiveAccountingPeriodId
         }
       }
     } catch (err: unknown) {

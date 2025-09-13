@@ -74,15 +74,7 @@ const deleteRule = (id: string) => {
 </script>
 
 <template>
-  <main class="py-8">
-    <div class="mb-8">
-      <h1 class="text-xl font-bold mb-2">Gestão de Impostos</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-        Sistema inteligente para gestão tributária e cálculo automático de impostos nos lançamentos
-        contábeis.
-      </p>
-    </div>
-
+  <main>
     <!-- Filters and Actions -->
     <div class="flex flex-col sm:flex-row gap-4 mb-4">
       <div class="relative flex-1">

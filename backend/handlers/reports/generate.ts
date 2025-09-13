@@ -1,5 +1,8 @@
 import logger from '../../utils/logger.js'
 
+// Este handler é responsável por gerar relatórios financeiros para exibição no frontend.
+// Os cálculos e a lógica de agregação dos dados são realizados no reportService.js.
+
 // TODO: Para otimização de relatórios com grandes conjuntos de dados, considerar:
 // 1. Implementar streaming na geração do relatório (se o PDFKit/ExcelJS suportarem).
 // 2. Para exports muito grandes, implementar um mecanismo de fila de tarefas e workers em segundo plano

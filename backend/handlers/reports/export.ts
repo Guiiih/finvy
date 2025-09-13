@@ -13,6 +13,9 @@ import type { Account, JournalEntry } from '../../types/index.js'
 import ExcelJS from 'exceljs'
 import PDFDocument from 'pdfkit'
 
+// Este handler é responsável por exportar relatórios financeiros (Balancete, DRE, Balanço, Razão Detalhado).
+// Os cálculos e a lógica de agregação dos dados são realizados no reportService.js.
+
 interface TrialBalanceData {
   account_id: string
   accountName: string

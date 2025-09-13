@@ -11,6 +11,7 @@ import InputNumber from 'primevue/inputnumber'
 // Props and Emits
 const props = defineProps<{
   visible: boolean
+  initialPeriod?: AccountingPeriod | null // Optional: for editing existing period
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +22,8 @@ const emit = defineEmits<{
 const accountingPeriodStore = useAccountingPeriodStore()
 const toast = useToast()
 
-const newPeriod = ref<Partial<AccountingPeriod>>({
+const isEditing = ref(false)
+const periodForm = ref<Partial<AccountingPeriod>>({
   fiscal_year: new Date().getFullYear(),
   regime: null,
   annex: null,
@@ -42,30 +44,50 @@ const annexOptions = ref([
 ])
 
 watch(
-  () => newPeriod.value.fiscal_year,
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      if (props.initialPeriod) {
+        isEditing.value = true
+        periodForm.value = { ...props.initialPeriod }
+      } else {
+        isEditing.value = false
+        periodForm.value = {
+          fiscal_year: new Date().getFullYear(),
+          regime: null,
+          annex: null,
+        }
+      }
+    }
+  },
+  { immediate: true, deep: true },
+)
+
+watch(
+  () => periodForm.value.fiscal_year,
   (newYear) => {
     if (newYear) {
-      newPeriod.value.start_date = `${newYear}-01-01`
-      newPeriod.value.end_date = `${newYear}-12-31`
+      periodForm.value.start_date = `${newYear}-01-01`
+      periodForm.value.end_date = `${newYear}-12-31`
     } else {
-      newPeriod.value.start_date = undefined
-      newPeriod.value.end_date = undefined
+      periodForm.value.start_date = undefined
+      periodForm.value.end_date = undefined
     }
   },
   { immediate: true },
 )
 
 watch(
-  () => newPeriod.value.regime,
+  () => periodForm.value.regime,
   (newRegime) => {
     if (newRegime !== 'simples_nacional') {
-      newPeriod.value.annex = null
+      periodForm.value.annex = null
     }
   },
 )
 
-const handleCreatePeriod = async () => {
-  if (!newPeriod.value.fiscal_year || !newPeriod.value.regime) {
+const handleSubmit = async () => {
+  if (!periodForm.value.fiscal_year || !periodForm.value.regime || !periodForm.value.start_date || !periodForm.value.end_date) {
     toast.add({
       severity: 'warn',
       summary: 'Atenção',
@@ -75,7 +97,7 @@ const handleCreatePeriod = async () => {
     return
   }
 
-  if (newPeriod.value.regime === 'simples_nacional' && !newPeriod.value.annex) {
+  if (periodForm.value.regime === 'simples_nacional' && !periodForm.value.annex) {
     toast.add({
       severity: 'warn',
       summary: 'Atenção',
@@ -86,38 +108,49 @@ const handleCreatePeriod = async () => {
   }
 
   try {
-    const newAccountingPeriod = await accountingPeriodStore.addAccountingPeriod({
-      fiscal_year: newPeriod.value.fiscal_year,
-      start_date: newPeriod.value.start_date as string,
-      end_date: newPeriod.value.end_date as string,
-      regime: newPeriod.value.regime as TaxRegime,
-      annex: newPeriod.value.annex as string,
-      is_active: true,
-    })
+    if (isEditing.value && periodForm.value.id) {
+      await accountingPeriodStore.updateAccountingPeriod(periodForm.value.id, {
+        fiscal_year: periodForm.value.fiscal_year,
+        start_date: periodForm.value.start_date,
+        end_date: periodForm.value.end_date,
+        regime: periodForm.value.regime || undefined,
+        annex: periodForm.value.annex || undefined,
+      })
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Ano fiscal atualizado com sucesso!',
+        life: 3000,
+      })
+    } else {
+      const newAccountingPeriod = await accountingPeriodStore.addAccountingPeriod({
+        fiscal_year: periodForm.value.fiscal_year,
+        start_date: periodForm.value.start_date as string,
+        end_date: periodForm.value.end_date as string,
+        regime: periodForm.value.regime as TaxRegime,
+        annex: periodForm.value.annex as string,
+        is_active: true,
+      })
 
-    if (newAccountingPeriod) {
-      await accountingPeriodStore.setActivePeriod(newAccountingPeriod.id)
+      if (newAccountingPeriod) {
+        await accountingPeriodStore.setActivePeriod(newAccountingPeriod.id)
+      }
+
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Ano fiscal criado e ativado com sucesso!',
+        life: 3000,
+      })
     }
 
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Ano fiscal criado e ativado com sucesso!',
-      life: 3000,
-    })
-
-    // Reset form
-    newPeriod.value = {
-      fiscal_year: new Date().getFullYear(),
-      regime: null,
-      annex: null,
-    }
     emit('submitSuccess')
+    closeModal()
   } catch (err: unknown) {
     toast.add({
       severity: 'error',
       summary: 'Erro',
-      detail: err instanceof Error ? err.message : 'Falha ao criar ano fiscal.',
+      detail: err instanceof Error ? err.message : 'Falha ao salvar ano fiscal.',
       life: 3000,
     })
   }
@@ -139,19 +172,21 @@ const closeModal = () => {
   >
     <template #header>
       <div class="flex flex-col gap-1">
-        <h3 class="text-xl font-bold text-gray-900">Criar Novo Ano Fiscal</h3>
+        <h3 class="text-xl font-bold text-gray-900">
+          {{ isEditing ? `Editar Ano Fiscal: ${periodForm.fiscal_year}` : 'Criar Novo Ano Fiscal' }}
+        </h3>
         <p class="text-sm text-gray-500">
-          Configure um novo ano fiscal com seus períodos contábeis.
+          {{ isEditing ? 'Ajuste as configurações do seu ano fiscal.' : 'Configure um novo ano fiscal' }}
         </p>
       </div>
     </template>
 
-    <form @submit.prevent="handleCreatePeriod" class="flex flex-col gap-6 pt-4">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-6 pt-4">
       <div class="flex flex-col gap-2">
         <label for="fiscalYear" class="text-sm font-medium text-gray-800">Ano Fiscal</label>
         <InputNumber
           id="fiscalYear"
-          v-model="newPeriod.fiscal_year"
+          v-model="periodForm.fiscal_year"
           mode="decimal"
           :useGrouping="false"
           required
@@ -163,7 +198,7 @@ const closeModal = () => {
         <label for="regime" class="text-sm font-medium text-gray-800">Regime Tributário</label>
         <Dropdown
           id="regime"
-          v-model="newPeriod.regime"
+          v-model="periodForm.regime"
           :options="regimeOptions"
           optionLabel="label"
           optionValue="value"
@@ -173,13 +208,13 @@ const closeModal = () => {
         />
       </div>
 
-      <div v-if="newPeriod.regime === 'simples_nacional'" class="flex flex-col gap-2">
+      <div v-if="periodForm.regime === 'simples_nacional'" class="flex flex-col gap-2">
         <label for="annex" class="text-sm font-medium text-gray-800"
           >Anexo do Simples Nacional</label
         >
         <Dropdown
           id="annex"
-          v-model="newPeriod.annex"
+          v-model="periodForm.annex"
           :options="annexOptions"
           optionLabel="label"
           optionValue="value"
@@ -200,14 +235,11 @@ const closeModal = () => {
         <Button
           :loading="accountingPeriodStore.loading"
           type="submit"
-          :label="accountingPeriodStore.loading ? 'Criando...' : 'Criar Ano Fiscal'"
+          :label="isEditing ? 'Atualizar Período' : 'Criar Ano Fiscal'"
           class="!bg-gray-900 !text-white"
           size="small"
         />
       </div>
     </form>
-    <p v-if="accountingPeriodStore.error" class="text-red-500 text-sm mt-2">
-      {{ accountingPeriodStore.error }}
-    </p>
   </Dialog>
 </template>

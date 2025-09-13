@@ -237,7 +237,21 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       if (!accountingPeriodStore.activeAccountingPeriod?.id) {
         throw new Error('Nenhum período contábil ativo selecionado.')
       }
-      const { lines, ...entryHeader } = entry
+      const { lines, ...entryHeader } = entry;
+
+      // --- START: Move line-level validations here ---
+      console.log('journalEntryData received in store:', entry);
+      for (const line of lines) {
+        console.log('Processing line:', line);
+        if (line.amount <= 0) {
+          throw new Error('O valor do lançamento deve ser maior que zero.');
+        }
+        if (!['debit', 'credit'].includes(line.type)) {
+          throw new Error('O tipo de lançamento (débito/crédito) é inválido.');
+        }
+      }
+      // --- END: Move line-level validations here ---
+
       const payload: JournalEntryPayload = {
         ...entryHeader,
         organization_id: accountingPeriodStore.activeAccountingPeriod.organization_id,
@@ -249,13 +263,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
       )
 
       const newLines: EntryLine[] = []
-      for (const line of lines) {
-        if (line.amount <= 0) {
-          throw new Error('O valor do lançamento deve ser maior que zero.')
-        }
-        if (!['debit', 'credit'].includes(line.type)) {
-          throw new Error('O tipo de lançamento (débito/crédito) é inválido.')
-        }
+      for (const line of lines) { // This loop now only processes valid lines
 
         const lineToSend = {
           journal_entry_id: newJournalEntry.id,

@@ -154,7 +154,7 @@ export default async function handler(
       const { data: accountingPeriod, error: dbError } = await userSupabase
         .from('accounting_periods')
         .insert([
-          { fiscal_year, start_date, end_date, organization_id, annex, period_type: 'yearly' },
+          { fiscal_year, start_date, end_date, organization_id, annex, period_type: 'yearly', regime },
         ])
         .select()
         .single()
@@ -258,6 +258,21 @@ export default async function handler(
         `[Accounting Periods] Organização e período encontrados para user_id ${user_id}: Org ID ${userOrgAndPeriod.organization_id}, Period ID ${userOrgAndPeriod.active_accounting_period_id}`,
       )
       const { organization_id } = userOrgAndPeriod
+      logger.info(`[Accounting Periods] User auth.uid(): ${user_id}`);
+      logger.info(`[Accounting Periods] User profiles.organization_id from getUserOrganizationAndPeriod: ${organization_id}`);
+
+      // Explicitly fetch organization_id from profiles table for RLS verification
+      const { data: profileOrg, error: profileOrgError } = await userSupabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user_id)
+        .single();
+
+      if (profileOrgError || !profileOrg) {
+        logger.error(`[Accounting Periods] Erro ao buscar organization_id do perfil para RLS: ${profileOrgError?.message || 'Perfil não encontrado.'}`);
+        return handleErrorResponse(res, 500, 'Erro interno: Não foi possível verificar permissões de organização.');
+      }
+      logger.info(`[Accounting Periods] User profiles.organization_id directly from profiles table: ${profileOrg.organization_id}`);
 
       if (req.method === 'GET') {
         logger.info(
@@ -302,6 +317,11 @@ export default async function handler(
         if (updateData.end_date !== undefined)
           accountingPeriodUpdateData.end_date = updateData.end_date
         if (updateData.annex !== undefined) accountingPeriodUpdateData.annex = updateData.annex
+        if (newRegime !== undefined) accountingPeriodUpdateData.regime = newRegime;
+        // If regime is not Simples Nacional, ensure annex is null
+        if (newRegime && newRegime !== 'simples_nacional') {
+          accountingPeriodUpdateData.annex = null;
+        }
 
         if (Object.keys(accountingPeriodUpdateData).length === 0 && !newRegime) {
           logger.warn(
@@ -311,9 +331,10 @@ export default async function handler(
         }
 
         // Fetch current accounting period to get original dates if not updated
+        logger.info(`[Accounting Periods] Buscando período contábil atual ${id} para PUT.`);
         const { data: currentPeriod, error: fetchCurrentPeriodError } = await userSupabase
           .from('accounting_periods')
-          .select('fiscal_year, start_date, end_date, annex')
+          .select('fiscal_year, start_date, end_date, annex, regime')
           .eq('id', id)
           .single()
 
@@ -321,7 +342,7 @@ export default async function handler(
           logger.error(
             `[Accounting Periods] Erro ao buscar período contábil atual ${id}: ${fetchCurrentPeriodError?.message || 'Período contábil não encontrado.'}`,
           )
-          return handleErrorResponse(res, 404, 'Período contábil não encontrado.')
+          return handleErrorResponse(res, 404, `Período contábil não encontrado: ${fetchCurrentPeriodError?.message || 'Detalhes desconhecidos.'}`)
         }
 
         const newStartDate = updateData.start_date || currentPeriod.start_date
@@ -329,25 +350,35 @@ export default async function handler(
 
         // Validação de sobreposição de datas para tax_regime_history no PUT
         if (newRegime || updateData.start_date || updateData.end_date) {
+          logger.info(`[Accounting Periods] Buscando taxRegimeToUpdate para PUT.`);
           const { data: taxRegimeToUpdate } = await userSupabase
             .from('tax_regime_history')
-            .select('id, fiscal_year, annex')
+            .select('id, regime') // Select regime to compare
             .eq('organization_id', organization_id)
             .eq('start_date', currentPeriod.start_date)
             .eq('end_date', currentPeriod.end_date)
             .single()
+          logger.info(`[Accounting Periods] taxRegimeToUpdate: ${JSON.stringify(taxRegimeToUpdate)}`);
 
-          const { data: existingRegimes, error: fetchError } = await userSupabase
+          logger.info(`[Accounting Periods] Buscando existingRegimes para PUT.`);
+          let query = userSupabase
             .from('tax_regime_history')
             .select('id, start_date, end_date')
-            .eq('organization_id', organization_id)
-            .neq('id', taxRegimeToUpdate?.id || '') // Excluir o regime atual da verificação de sobreposição
+            .eq('organization_id', organization_id);
+
+          // Conditionally add the .neq clause back
+          if (taxRegimeToUpdate?.id) {
+            query = query.neq('id', taxRegimeToUpdate.id);
+          }
+
+          const { data: existingRegimes, error: fetchError } = await query;
+          logger.info(`[Accounting Periods] existingRegimes: ${JSON.stringify(existingRegimes)}`);
 
           if (fetchError) {
             logger.error(
               `[Accounting Periods] Erro ao buscar regimes existentes para PUT: ${fetchError.message}`,
             )
-            throw fetchError
+            return handleErrorResponse(res, 500, `Erro ao buscar regimes existentes: ${fetchError.message}`)
           }
 
           const updatedStartDate = new Date(newStartDate)
@@ -361,50 +392,53 @@ export default async function handler(
             )
           }
 
-          for (const existing of existingRegimes) {
-            const existingStartDate = new Date(existing.start_date)
-            const existingEndDate = new Date(existing.end_date)
+          // Only iterate if existingRegimes is not null and is an array
+          if (existingRegimes) {
+            for (const existing of existingRegimes) {
+              const existingStartDate = new Date(existing.start_date)
+              const existingEndDate = new Date(existing.end_date)
 
-            if (updatedStartDate <= existingEndDate && updatedEndDate >= existingStartDate) {
-              return handleErrorResponse(
-                res,
-                400,
-                'O período do regime tributário atualizado se sobrepõe a um regime tributário existente.',
-              )
+              if (updatedStartDate <= existingEndDate && updatedEndDate >= existingStartDate) {
+                return handleErrorResponse(
+                  res,
+                  400,
+                  `O período do regime tributário atualizado se sobrepõe a um regime tributário existente: ${existing.start_date} a ${existing.end_date}`,
+                )
+              }
             }
           }
 
           // Atualizar ou inserir no tax_regime_history
-          const { data: existingTaxRegime } = await userSupabase
-            .from('tax_regime_history')
-            .select('id')
-            .eq('organization_id', organization_id)
-            .eq('start_date', currentPeriod.start_date) // Assuming start_date is unique for a period
-            .eq('end_date', currentPeriod.end_date)
-            .single()
+          logger.info(`[Accounting Periods] Organization ID for tax_regime_history update/insert: ${organization_id}`);
 
-          if (existingTaxRegime) {
-            // Update existing tax regime history entry
-            const { error: updateTaxError } = await userSupabase
+          // Delete existing tax regime history entry if found
+          if (taxRegimeToUpdate) {
+            logger.info(`[Accounting Periods] Deletando regime tributário existente para PUT: ${taxRegimeToUpdate.id}`);
+            const { error: deleteTaxError, count: deletedTaxCount } = await userSupabase
               .from('tax_regime_history')
-              .update({
-                regime: newRegime || undefined,
-                start_date: newStartDate,
-                end_date: newEndDate,
-              })
-              .eq('id', existingTaxRegime.id)
+              .delete()
+              .eq('id', taxRegimeToUpdate.id);
 
-            if (updateTaxError) {
+            if (deleteTaxError) {
               logger.error(
-                `[Accounting Periods] Erro ao atualizar regime tributário existente: ${updateTaxError.message}`,
-              )
-              throw updateTaxError
+                `[Accounting Periods] Erro ao deletar regime tributário existente: ${deleteTaxError.message}`,
+              );
+              return handleErrorResponse(res, 500, `Erro ao deletar regime tributário existente: ${deleteTaxError.message}`);
             }
-          } else if (newRegime) {
-            // Insert new tax regime history entry if it doesn't exist and a regime is provided
+            if (deletedTaxCount === 0) {
+              logger.warn(`[Accounting Periods] RLS pode ter bloqueado a exclusão do regime tributário para ${taxRegimeToUpdate.id}.`);
+              // Continue, but log a warning, as the delete might have been blocked by RLS
+            }
+          }
+
+          // Always insert a new tax regime history entry if a new regime is provided or dates changed
+          if (newRegime || updateData.start_date || updateData.end_date) {
+            logger.info(`[Accounting Periods] Inserindo novo regime tributário para PUT.`);
+            logger.info(`[Accounting Periods] Insert values: regime=${newRegime}, start_date=${newStartDate}, end_date=${newEndDate}, annex=${updateData.annex}`);
+
             const { error: insertTaxError } = await userSupabase.from('tax_regime_history').insert({
               organization_id,
-              regime: newRegime,
+              regime: newRegime || currentPeriod.regime, // Use newRegime if provided, else currentPeriod's regime
               start_date: newStartDate,
               end_date: newEndDate,
             })
@@ -413,11 +447,12 @@ export default async function handler(
               logger.error(
                 `[Accounting Periods] Erro ao inserir novo regime tributário: ${insertTaxError.message}`,
               )
-              throw insertTaxError
+              return handleErrorResponse(res, 500, `Erro ao inserir novo regime tributário: ${insertTaxError.message}`)
             }
           }
         }
 
+        logger.info(`[Accounting Periods] Atualizando período contábil no banco de dados para PUT.`);
         const { data, error: dbError } = await userSupabase
           .from('accounting_periods')
           .update(accountingPeriodUpdateData)
@@ -430,7 +465,7 @@ export default async function handler(
           logger.error(
             `[Accounting Periods] Erro ao atualizar período contábil ${id}: ${dbError.message}`,
           )
-          throw dbError
+          return handleErrorResponse(res, 500, `Erro ao atualizar período contábil: ${dbError.message}`)
         }
         if (!data) {
           logger.warn(
@@ -439,10 +474,32 @@ export default async function handler(
           return handleErrorResponse(
             res,
             404,
-            'Período contábil não encontrado ou você não tem permissão para atualizar este período.',
+            `Período contábil ${id} não encontrado ou você não tem permissão para atualizar este período.`,
           )
         }
         logger.info(`[Accounting Periods] Período contábil ${id} atualizado com sucesso.`)
+
+        // Update associated monthly periods if the annual period's regime or annex changed
+        if (newRegime !== undefined || updateData.annex !== undefined) {
+          logger.info(`[Accounting Periods] Atualizando períodos mensais associados para o ano fiscal ${currentPeriod.fiscal_year}.`);
+          const { error: monthlyUpdateError } = await userSupabase
+            .from('accounting_periods')
+            .update({
+              regime: newRegime || currentPeriod.regime,
+              annex: (newRegime && newRegime !== 'simples_nacional') ? null : (updateData.annex || currentPeriod.annex),
+            })
+            .eq('organization_id', organization_id)
+            .eq('fiscal_year', currentPeriod.fiscal_year)
+            .eq('period_type', 'monthly');
+
+          if (monthlyUpdateError) {
+            logger.error(
+              `[Accounting Periods] Erro ao atualizar períodos mensais associados: ${monthlyUpdateError.message}`,
+            );
+            // Do not return error here, as the main annual period update was successful
+          }
+        }
+
         return res.status(200).json(data)
       } else if (req.method === 'DELETE') {
         const id = req.url?.split('?')[0].split('/').pop() as string
@@ -453,7 +510,7 @@ export default async function handler(
         // Fetch the accounting period to get its start_date and end_date
         const { data: accountingPeriodToDelete, error: fetchPeriodError } = await userSupabase
           .from('accounting_periods')
-          .select('fiscal_year, start_date, end_date, annex')
+          .select('fiscal_year, start_date, end_date, annex, regime, period_type') // Added period_type
           .eq('id', id)
           .single()
 
@@ -466,6 +523,26 @@ export default async function handler(
             404,
             'Período contábil não encontrado ou você não tem permissão para deletar este período.',
           )
+        }
+
+        // If the period to delete is a yearly period, delete its associated monthly periods
+        if (accountingPeriodToDelete.period_type === 'yearly') {
+          logger.info(`[Accounting Periods] Deletando períodos mensais associados ao ano fiscal ${accountingPeriodToDelete.fiscal_year}.`);
+          const { error: deleteMonthlyPeriodsError, count: monthlyPeriodsCount } = await userSupabase
+            .from('accounting_periods')
+            .delete()
+            .eq('organization_id', organization_id)
+            .eq('fiscal_year', accountingPeriodToDelete.fiscal_year)
+            .eq('period_type', 'monthly');
+
+          if (deleteMonthlyPeriodsError) {
+            logger.error(
+              `[Accounting Periods] Erro ao deletar períodos mensais associados: ${deleteMonthlyPeriodsError.message}`,
+            );
+            // Do not throw error here, as the main annual period deletion should still proceed
+          } else {
+            logger.info(`[Accounting Periods] ${monthlyPeriodsCount} períodos mensais associados deletados.`);
+          }
         }
 
         // Delete corresponding tax_regime_history entry
@@ -486,6 +563,67 @@ export default async function handler(
           logger.warn(
             `[Accounting Periods] Nenhum regime tributário associado encontrado para o período ${id}.`,
           )
+        }
+
+        // Logic to set previous period as active if the deleted one was active
+        const { data: userProfile, error: profileFetchError } = await userSupabase
+          .from('profiles')
+          .select('active_accounting_period_id, organization_id')
+          .eq('id', user_id)
+          .single();
+
+        if (profileFetchError) {
+          logger.error(`[Accounting Periods] Erro ao buscar perfil do usuário para verificar período ativo: ${profileFetchError.message}`);
+          // Continue, as the main delete was successful
+        } else if (userProfile && userProfile.active_accounting_period_id === id) {
+          // The deleted period was the active one for this user
+          logger.info(`[Accounting Periods] Período deletado ${id} era o período ativo do usuário. Buscando próximo período ativo.`);
+
+          const { data: previousPeriods, error: previousPeriodsError } = await userSupabase
+            .from('accounting_periods')
+            .select('id')
+            .eq('organization_id', userProfile.organization_id)
+            .eq('period_type', 'yearly') // Assuming we want to find the previous yearly period
+            .lt('start_date', accountingPeriodToDelete.start_date) // Find periods before the deleted one
+            .order('start_date', { ascending: false }) // Get the most recent previous one
+            .limit(1);
+
+          if (previousPeriodsError) {
+            logger.error(`[Accounting Periods] Erro ao buscar períodos anteriores: ${previousPeriodsError.message}`);
+          }
+
+          let newActivePeriodId: string | null = null;
+          if (previousPeriods && previousPeriods.length > 0) {
+            newActivePeriodId = previousPeriods[0].id;
+            logger.info(`[Accounting Periods] Definindo período ${newActivePeriodId} como novo período ativo.`);
+          } else {
+            logger.info(`[Accounting Periods] Nenhum período anterior encontrado para definir como ativo.`);
+          }
+
+          // FIRST: Update user_presence to reflect the change in active_accounting_period_id
+          const { error: updateUserPresenceError } = await userSupabase
+            .from('user_presence')
+            .update({ active_accounting_period_id: newActivePeriodId })
+            .eq('user_id', user_id);
+
+          if (updateUserPresenceError) {
+            logger.error(`[Accounting Periods] Erro ao atualizar período ativo na presença do usuário: ${updateUserPresenceError.message}`);
+            // Do not throw error here, as the main annual period update was successful
+          } else {
+            logger.info(`[Accounting Periods] Período ativo na presença do usuário atualizado para ${newActivePeriodId || 'NULL'}.`);
+          }
+
+          // THEN: Update profiles table
+          const { error: updateProfileError } = await userSupabase
+            .from('profiles')
+            .update({ active_accounting_period_id: newActivePeriodId })
+            .eq('id', user_id);
+
+          if (updateProfileError) {
+            logger.error(`[Accounting Periods] Erro ao atualizar período ativo no perfil do usuário: ${updateProfileError.message}`);
+          } else {
+            logger.info(`[Accounting Periods] Período ativo do usuário atualizado para ${newActivePeriodId || 'NULL'}.`);
+          }
         }
 
         const { error: dbError, count } = await userSupabase
@@ -510,7 +648,8 @@ export default async function handler(
             'Período contábil não encontrado ou você não tem permissão para deletar este período.',
           )
         }
-        logger.info(`[Accounting Periods] Período contábil ${id} deletado com sucesso.`)
+        logger.info(`[Accounting Periods] Período contábil ${id} deletado com sucesso.`);
+
         return res.status(204).send('')
       }
     }

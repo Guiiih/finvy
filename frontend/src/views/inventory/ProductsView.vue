@@ -435,9 +435,6 @@ function onPageChange(event: { page: number; first: number; rows: number; pageCo
             </div>
           </div>
         </div>
-        <p v-else-if="productStore.error" class="text-red-400 text-center p-8">
-          {{ productStore.error }}
-        </p>
         <p v-else-if="productStore.products.length === 0" class="text-surface-400 text-center p-8">
           Nenhum produto encontrado.
         </p>

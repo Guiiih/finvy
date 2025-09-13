@@ -258,9 +258,6 @@ onMounted(async () => {
           <Skeleton height="3rem" class="mb-2 bg-surface-200" />
           <Skeleton height="3rem" class="bg-surface-200" />
         </div>
-        <p v-else-if="accountStore.error" class="text-red-400 text-center p-8">
-          {{ accountStore.error }}
-        </p>
         <p v-else-if="paginatedAccounts.length === 0" class="text-surface-400 text-center p-8">
           Nenhuma conta encontrada.
         </p>

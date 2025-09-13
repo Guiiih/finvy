@@ -1,4 +1,5 @@
 export interface AccountsPayable {
+  generatedAt?: string;
   summary: {
     totalToPay: number
     overdue: number
@@ -17,6 +18,7 @@ export interface AccountsPayable {
 }
 
 export interface AccountsReceivable {
+  generatedAt?: string;
   summary: {
     totalToReceive: number
     overdue: number
@@ -35,6 +37,7 @@ export interface AccountsReceivable {
 }
 
 export interface BalanceSheet {
+  generatedAt?: string;
   summary: {
     totalAssets: number
     shareholdersEquity: number
@@ -65,6 +68,7 @@ export interface BalanceSheet {
 }
 
 export interface CashFlow {
+  generatedAt?: string;
   summary: {
     operational: number
     investment: number
@@ -85,6 +89,7 @@ export interface CashFlow {
 }
 
 export interface IncomeStatement {
+  generatedAt?: string;
   summary: {
     totalRevenue: number
     totalExpenses: number
@@ -96,10 +101,12 @@ export interface IncomeStatement {
 }
 
 export interface InventoryReport {
+  generatedAt?: string;
   placeholder?: unknown
 }
 
 export interface TrialBalance {
+  generatedAt?: string;
   summary: {
     totalDebits: number
     totalCredits: number
@@ -113,4 +120,39 @@ export interface TrialBalance {
     credit: number | null
     balance: number
   }[]
+}
+
+export interface ReportConfig {
+  reportId: string;
+  includeGraphics: boolean;
+  includeComparisons: boolean;
+  detailLevel: 'summary' | 'detailed' | 'full';
+  format: 'pdf' | 'excel' | 'csv';
+  orientation: 'portrait' | 'landscape';
+  includeWatermark: boolean;
+  customTitle: string;
+  customFooter: string;
+}
+
+export interface ReportSchedule {
+  reportId: string;
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  dayOfMonth?: number;
+  dayOfWeek?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+  time: string;
+  recipients: string[];
+  includeAttachment: boolean;
+  autoGenerate: boolean;
+}
+
+export interface CustomReport {
+  name: string;
+  description: string;
+  accounts: string[];
+  dateRange: 'custom' | string;
+  startDate: Date;
+  endDate: Date;
+  groupBy: 'account' | 'category' | 'date' | 'month';
+  includeSubaccounts: boolean;
+  showZeroBalances: boolean;
 }

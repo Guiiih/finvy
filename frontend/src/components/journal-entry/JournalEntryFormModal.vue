@@ -498,6 +498,7 @@ async function submitEntry() {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.'
     toast.add({ severity: 'error', summary: 'Erro', detail: message, life: 3000 })
+    return // Prevent further execution on error
   }
 }
 </script>

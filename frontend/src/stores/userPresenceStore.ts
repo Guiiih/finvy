@@ -24,19 +24,24 @@ export const useUserPresenceStore = defineStore('userPresence', {
       const organizationId = authStore.userOrganizationId
       const activeAccountingPeriodId = authStore.userActiveAccountingPeriodId
 
-      if (userId && organizationId && activeAccountingPeriodId && authStore.profileLoaded) {
+      // Send presence update even if activeAccountingPeriodId is null,
+      // as it might be intentionally null after a period deletion.
+      if (userId && organizationId && authStore.profileLoaded) {
         try {
-          // Call backend to update presence
+          const requestBody: { organizationId: string; activeAccountingPeriodId?: string | null } = {
+            organizationId,
+          };
+          if (activeAccountingPeriodId !== null) { // Only include if not null
+            requestBody.activeAccountingPeriodId = activeAccountingPeriodId;
+          }
+
           await fetch('/api/user-presence', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${authStore.token}`,
             },
-            body: JSON.stringify({
-              organizationId,
-              activeAccountingPeriodId,
-            }),
+            body: JSON.stringify(requestBody),
           })
         } catch (error) {
           console.error('Erro ao atualizar presença:', error)
